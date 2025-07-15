@@ -1,13 +1,13 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-50">
     <!-- Skip to main content for accessibility -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-pink-600 text-white p-2 rounded">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 rounded">
       Aller au contenu principal
     </a>
 
     <!-- Global notification area -->
     <div v-if="notification" class="fixed top-0 left-0 right-0 z-50">
-      <div class="bg-pink-600 text-white px-4 py-3 text-center">
+      <div class="bg-blue-600 text-white px-4 py-3 text-center">
         <p class="text-sm">{{ notification }}</p>
       </div>
     </div>
@@ -22,10 +22,10 @@
             <div class="flex items-center">
               <div class="flex-shrink-0">
                 <NuxtLink to="/" class="flex items-center">
-                  <div class="h-8 w-8 bg-pink-600 rounded-lg flex items-center justify-center mr-3">
+                  <div class="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                     <span class="text-white font-bold text-sm">CS</span>
                   </div>
-                  <h1 class="text-xl font-bold text-pink-600">ChatSeller</h1>
+                  <h1 class="text-xl font-bold text-blue-600">ChatSeller</h1>
                 </NuxtLink>
               </div>
               
@@ -74,7 +74,7 @@
               <!-- Test widget button -->
               <button
                 @click="testWidget"
-                class="bg-pink-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-pink-700 transition-colors"
+                class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
                 title="Tester le widget"
               >
                 Voir le widget
@@ -195,7 +195,7 @@
     <!-- Loading overlay -->
     <div v-if="isLoading" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-600"></div>
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
         <span class="text-gray-900">Chargement...</span>
       </div>
     </div>

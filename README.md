@@ -195,7 +195,7 @@ Le dashboard utilise Tailwind CSS avec une palette de couleurs personnalisée :
 
 ```css
 /* Couleurs principales */
-primary: #ec4899 (rose ChatSeller)
+primary: #3B82F6 (rose ChatSeller)
 gray: Palette standard Tailwind
 success: #10b981 (vert)
 warning: #f59e0b (orange)

@@ -36,13 +36,13 @@
     @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
   }
 
-  /* Button variants */
+  /* Button variants - COULEUR CHATSELLER BLEUE */
   .btn {
     @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
   
   .btn-primary {
-    @apply bg-pink-600 text-white hover:bg-pink-700 focus:ring-pink-500;
+    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
   }
   
   .btn-secondary {
@@ -50,14 +50,14 @@
   }
   
   .btn-outline {
-    @apply border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-pink-500;
+    @apply border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-blue-500;
   }
   
   .btn-danger {
     @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
   }
 
-  /* Form styles */
+  /* Form styles - COULEUR CHATSELLER BLEUE */
   .form-group {
     @apply mb-6;
   }
@@ -67,15 +67,15 @@
   }
   
   .form-input {
-    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm;
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
   }
   
   .form-textarea {
-    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm;
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
   }
   
   .form-select {
-    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm;
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
   }
   
   .form-error {
@@ -132,13 +132,13 @@
     @apply bg-gray-100 text-gray-800;
   }
 
-  /* Navigation styles */
+  /* Navigation styles - COULEUR CHATSELLER BLEUE */
   .nav-link {
     @apply text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent transition-colors;
   }
 
   .nav-link-active {
-    @apply text-gray-900 border-pink-500;
+    @apply text-gray-900 border-blue-500;
   }
 
   .mobile-nav-link {
@@ -146,7 +146,7 @@
   }
 
   .mobile-nav-link-active {
-    @apply text-pink-600 bg-pink-50;
+    @apply text-blue-600 bg-blue-50;
   }
 
   /* Loading states */
@@ -215,9 +215,9 @@
 
 /* Utility classes */
 @layer utilities {
-  /* Focus styles */
+  /* Focus styles - COULEUR CHATSELLER BLEUE */
   .focus-primary {
-    @apply focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
   }
   
   /* Smooth transitions */
@@ -225,9 +225,9 @@
     @apply transition-all duration-200 ease-in-out;
   }
   
-  /* Text gradients */
+  /* Text gradients - COULEUR CHATSELLER BLEUE */
   .text-gradient {
-    @apply bg-gradient-to-r from-pink-600 to-pink-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent;
   }
   
   /* Hover effects */
@@ -238,4 +238,26 @@
   .hover-shadow {
     @apply hover:shadow-lg transition-shadow duration-200;
   }
+}
+
+/* Navigation styles for dashboard - COULEUR CHATSELLER BLEUE */
+.nav-item {
+  @apply flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors relative;
+}
+
+.nav-item-active {
+  @apply bg-blue-50 text-blue-700 hover:text-blue-800;
+}
+
+.nav-item-active::before {
+  content: '';
+  @apply absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r;
+}
+
+.nav-icon {
+  @apply h-5 w-5 mr-3 flex-shrink-0;
+}
+
+.nav-badge {
+  @apply ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-600 rounded-full;
 }

@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+// @ts-ignore
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
@@ -52,9 +53,11 @@ export default defineNuxtConfig({
     strict: true
   },
 
-  // Auto-imports configuration
+  // Auto-imports configuration - CORRIGÉ
   imports: {
-    autoImport: true
+    dirs: [
+      'composables/**'
+    ]
   },
 
   // Ensure compatibility
@@ -68,6 +71,3 @@ export default defineNuxtConfig({
     }
   }
 })
-function defineNuxtConfig(config: any) {
-  return config;
-}
