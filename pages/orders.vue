@@ -98,7 +98,7 @@
             <div class="p-5">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
-                  <div class="h-8 w-8 bg-pink-100 rounded-md flex items-center justify-center">
+                  <div class="h-8 w-8 bg-blue-100 rounded-md flex items-center justify-center">
                     <ChartBarIcon class="h-5 w-5 text-blue-600" />
                   </div>
                 </div>
@@ -283,7 +283,7 @@
                     <div class="flex items-center space-x-2">
                       <button
                         @click="viewOrder(order)"
-                        class="text-blue-600 hover:text-pink-900"
+                        class="text-blue-600 hover:text-blue-900"
                         title="Voir détails"
                       >
                         <EyeIcon class="h-4 w-4" />

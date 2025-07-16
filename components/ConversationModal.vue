@@ -57,7 +57,7 @@
                         <div class="space-y-4">
                           <!-- Mock messages -->
                           <div class="flex items-start space-x-3">
-                            <div class="h-8 w-8 bg-pink-100 rounded-full flex items-center justify-center">
+                            <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
                               <span class="text-blue-600 font-medium text-sm">AI</span>
                             </div>
                             <div class="bg-white rounded-lg px-4 py-2 shadow-sm">
@@ -73,7 +73,7 @@
                               <p class="text-sm">
                                 Bonjour, je cherche un smartphone avec une bonne caméra
                               </p>
-                              <p class="text-xs text-pink-200 mt-1">10:31</p>
+                              <p class="text-xs text-blue-200 mt-1">10:31</p>
                             </div>
                             <div class="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
                               <span class="text-gray-600 font-medium text-sm">{{ getInitials(conversation?.visitorName) }}</span>
@@ -81,7 +81,7 @@
                           </div>
 
                           <div class="flex items-start space-x-3">
-                            <div class="h-8 w-8 bg-pink-100 rounded-full flex items-center justify-center">
+                            <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
                               <span class="text-blue-600 font-medium text-sm">AI</span>
                             </div>
                             <div class="bg-white rounded-lg px-4 py-2 shadow-sm">

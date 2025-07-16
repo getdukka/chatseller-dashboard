@@ -1,373 +1,402 @@
-<!-- pages/index.vue -->
 <template>
-  <div class="p-6">
-    <div class="max-w-7xl mx-auto">
-      <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Aperçu du Dashboard</h1>
-            <p class="mt-1 text-sm text-gray-600">
-              Suivez les performances de votre Agent IA Commercial ChatSeller.
-            </p>
-          </div>
+  <div class="space-y-6">
+    <!-- Header avec actions rapides -->
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold">
+            Bonjour {{ userProfile?.firstName || 'Marchand' }} ! 👋
+          </h1>
+          <p class="text-blue-100 mt-1">
+            Voici un aperçu de votre Agent IA Commercial aujourd'hui
+          </p>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <button
+            @click="refreshData"
+            :disabled="loading"
+            class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-md transition-colors duration-200 disabled:opacity-50"
+          >
+            <ArrowPathIcon :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
+            Actualiser
+          </button>
           
-          <!-- Quick actions -->
-          <div class="mt-4 sm:mt-0 flex space-x-3">
-            <button @click="testWidget" class="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              <EyeIcon class="h-4 w-4 inline mr-2" />
-              Tester le widget
-            </button>
-            <button class="bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors">
-              <PlusIcon class="h-4 w-4 inline mr-2" />
-              Nouveau projet
-            </button>
-          </div>
+          <NuxtLink
+            to="/settings"
+            class="inline-flex items-center px-4 py-2 bg-white text-blue-600 hover:bg-gray-50 rounded-md font-medium transition-colors duration-200"
+          >
+            <Cog6ToothIcon class="h-4 w-4 mr-2" />
+            Configurer
+          </NuxtLink>
         </div>
+      </div>
+    </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <!-- Total Conversations -->
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="h-10 w-10 bg-blue-100 rounded-md flex items-center justify-center">
-                    <ChatBubbleLeftRightIcon class="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Conversations totales</dt>
-                    <dd class="flex items-baseline">
-                      <div class="text-2xl font-semibold text-gray-900">{{ analytics.totalConversations }}</div>
-                      <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
-                        <ArrowUpIcon class="h-3 w-3 flex-shrink-0 self-center" />
-                        <span class="sr-only">Augmentation de</span>
-                        12%
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Conversions -->
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="h-10 w-10 bg-green-100 rounded-md flex items-center justify-center">
-                    <CheckCircleIcon class="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Conversions</dt>
-                    <dd class="flex items-baseline">
-                      <div class="text-2xl font-semibold text-gray-900">{{ analytics.convertedConversations }}</div>
-                      <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
-                        <ArrowUpIcon class="h-3 w-3 flex-shrink-0 self-center" />
-                        <span class="sr-only">Augmentation de</span>
-                        8%
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Conversion Rate -->
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="h-10 w-10 bg-pink-100 rounded-md flex items-center justify-center">
-                    <ChartBarIcon class="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Taux de conversion</dt>
-                    <dd class="flex items-baseline">
-                      <div class="text-2xl font-semibold text-gray-900">{{ Math.round(analytics.conversionRate) }}%</div>
-                      <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
-                        <ArrowUpIcon class="h-3 w-3 flex-shrink-0 self-center" />
-                        <span class="sr-only">Augmentation de</span>
-                        2.1%
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Revenue -->
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="h-10 w-10 bg-yellow-100 rounded-md flex items-center justify-center">
-                    <CurrencyDollarIcon class="h-6 w-6 text-yellow-600" />
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Revenus générés</dt>
-                    <dd class="flex items-baseline">
-                      <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(analytics.totalRevenue) }}</div>
-                      <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
-                        <ArrowUpIcon class="h-3 w-3 flex-shrink-0 self-center" />
-                        <span class="sr-only">Augmentation de</span>
-                        15%
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Charts Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Conversations Chart -->
-          <div class="bg-white shadow rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-lg font-medium text-gray-900">Conversations des 7 derniers jours</h3>
-            </div>
-            <div class="p-6">
-              <div class="h-64 flex items-center justify-center text-gray-500">
-                <div class="text-center">
-                  <ChartBarIcon class="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                  <p>Graphique des conversations</p>
-                  <p class="text-sm">(À implémenter avec Chart.js)</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Activity -->
-          <div class="bg-white shadow rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-lg font-medium text-gray-900">Activité récente</h3>
-            </div>
-            <div class="p-6">
-              <div class="flow-root">
-                <ul class="-mb-8">
-                  <li v-for="(activity, index) in recentActivities" :key="index">
-                    <div class="relative pb-8" :class="{ 'pb-0': index === recentActivities.length - 1 }">
-                      <span v-if="index !== recentActivities.length - 1" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></span>
-                      <div class="relative flex space-x-3">
-                        <div>
-                          <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white" :class="activity.iconBg">
-                            <component :is="activity.icon" class="h-4 w-4 text-white" />
-                          </span>
-                        </div>
-                        <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                          <div>
-                            <p class="text-sm text-gray-500">{{ activity.content }}</p>
-                          </div>
-                          <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                            {{ activity.time }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="bg-white shadow rounded-lg">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Actions rapides</h3>
-          </div>
-          <div class="p-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <button
-                @click="testWidget"
-                class="group relative bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div>
-                  <span class="rounded-lg inline-flex p-3 bg-blue-50 text-blue-700 ring-4 ring-white">
-                    <EyeIcon class="h-6 w-6" />
-                  </span>
-                </div>
-                <div class="mt-8">
-                  <h3 class="text-lg font-medium text-gray-900">
-                    <span class="absolute inset-0"></span>
-                    Tester le widget
-                  </h3>
-                  <p class="mt-2 text-sm text-gray-500">
-                    Voir à quoi ressemble votre agent IA sur votre site
-                  </p>
-                </div>
-              </button>
-
-              <NuxtLink
-                to="/knowledge"
-                class="group relative bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div>
-                  <span class="rounded-lg inline-flex p-3 bg-blue-50 text-blue-700 ring-4 ring-white">
-                    <BookOpenIcon class="h-6 w-6" />
-                  </span>
-                </div>
-                <div class="mt-8">
-                  <h3 class="text-lg font-medium text-gray-900">
-                    <span class="absolute inset-0"></span>
-                    Gérer la base de connaissance
-                  </h3>
-                  <p class="mt-2 text-sm text-gray-500">
-                    Ajouter du contenu pour améliorer les réponses de l'IA
-                  </p>
-                </div>
-              </NuxtLink>
-
-              <NuxtLink
-                to="/conversations"
-                class="group relative bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div>
-                  <span class="rounded-lg inline-flex p-3 bg-green-50 text-green-700 ring-4 ring-white">
-                    <ChatBubbleLeftRightIcon class="h-6 w-6" />
-                  </span>
-                </div>
-                <div class="mt-8">
-                  <h3 class="text-lg font-medium text-gray-900">
-                    <span class="absolute inset-0"></span>
-                    Voir les conversations
-                  </h3>
-                  <p class="mt-2 text-sm text-gray-500">
-                    Suivre les interactions de vos visiteurs
-                  </p>
-                </div>
-              </NuxtLink>
-
-              <NuxtLink
-                to="/settings"
-                class="group relative bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div>
-                  <span class="rounded-lg inline-flex p-3 bg-purple-50 text-purple-700 ring-4 ring-white">
-                    <Cog6ToothIcon class="h-6 w-6" />
-                  </span>
-                </div>
-                <div class="mt-8">
-                  <h3 class="text-lg font-medium text-gray-900">
-                    <span class="absolute inset-0"></span>
-                    Configurer l'agent
-                  </h3>
-                  <p class="mt-2 text-sm text-gray-500">
-                    Personnaliser l'apparence et le comportement
-                  </p>
-                </div>
-              </NuxtLink>
-            </div>
-          </div>
-        </div>
-
-        <!-- Integration Code -->
-        <div class="bg-white shadow rounded-lg">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Code d'intégration</h3>
-            <p class="mt-1 text-sm text-gray-600">
-              Copiez ce code dans votre site web pour activer ChatSeller
+    <!-- Métriques principales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <!-- Conversations totales -->
+      <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Conversations totales</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">
+              {{ metrics.totalConversations.toLocaleString() }}
             </p>
-          </div>
-          <div class="p-6">
-            <div class="bg-gray-900 rounded-md p-4">
-              <pre class="text-green-400 text-sm font-mono"><code>&lt;script src="{{ config.public.widgetUrl }}/widget.js" data-shop-id="{{ user?.id }}"&gt;&lt;/script&gt;</code></pre>
+            <div class="flex items-center mt-2">
+              <span :class="[
+                'text-sm font-medium',
+                metrics.conversationsGrowth >= 0 ? 'text-green-600' : 'text-red-600'
+              ]">
+                {{ metrics.conversationsGrowth >= 0 ? '+' : '' }}{{ metrics.conversationsGrowth }}%
+              </span>
+              <span class="text-sm text-gray-500 ml-1">vs hier</span>
             </div>
-            <div class="mt-4 flex justify-between">
-              <p class="text-sm text-gray-500">
-                Remplacez <code class="bg-gray-100 px-1 rounded">data-shop-id</code> par votre ID unique
-              </p>
-              <button
-                @click="copyIntegrationCode"
-                class="text-sm font-medium text-blue-600 hover:text-blue-500"
-              >
-                Copier le code
-              </button>
+          </div>
+          <div class="p-3 bg-blue-50 rounded-full">
+            <ChatBubbleLeftRightIcon class="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Taux de conversion -->
+      <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Taux de conversion</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">
+              {{ metrics.conversionRate }}%
+            </p>
+            <div class="flex items-center mt-2">
+              <span :class="[
+                'text-sm font-medium',
+                metrics.conversionGrowth >= 0 ? 'text-green-600' : 'text-red-600'
+              ]">
+                {{ metrics.conversionGrowth >= 0 ? '+' : '' }}{{ metrics.conversionGrowth }}%
+              </span>
+              <span class="text-sm text-gray-500 ml-1">vs hier</span>
+            </div>
+          </div>
+          <div class="p-3 bg-green-50 rounded-full">
+            <ChartBarIcon class="h-8 w-8 text-green-600" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenus générés -->
+      <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Revenus générés</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">
+              {{ formatCurrency(metrics.revenue) }}
+            </p>
+            <div class="flex items-center mt-2">
+              <span :class="[
+                'text-sm font-medium',
+                metrics.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'
+              ]">
+                {{ metrics.revenueGrowth >= 0 ? '+' : '' }}{{ metrics.revenueGrowth }}%
+              </span>
+              <span class="text-sm text-gray-500 ml-1">vs hier</span>
+            </div>
+          </div>
+          <div class="p-3 bg-blue-50 rounded-full">
+            <CurrencyDollarIcon class="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Panier moyen -->
+      <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Panier moyen</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">
+              {{ formatCurrency(metrics.averageOrderValue) }}
+            </p>
+            <div class="flex items-center mt-2">
+              <span :class="[
+                'text-sm font-medium',
+                metrics.aovGrowth >= 0 ? 'text-green-600' : 'text-red-600'
+              ]">
+                {{ metrics.aovGrowth >= 0 ? '+' : '' }}{{ metrics.aovGrowth }}%
+              </span>
+              <span class="text-sm text-gray-500 ml-1">vs hier</span>
+            </div>
+          </div>
+          <div class="p-3 bg-orange-50 rounded-full">
+            <ShoppingBagIcon class="h-8 w-8 text-orange-600" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphiques et activité -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <!-- Graphique des conversations (2/3) -->
+      <div class="xl:col-span-2 bg-white rounded-lg border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">
+            Conversations des 7 derniers jours
+          </h3>
+          <div class="flex items-center space-x-2">
+            <button
+              v-for="period in chartPeriods"
+              :key="period.value"
+              @click="selectedPeriod = period.value"
+              :class="[
+                'px-3 py-1 text-sm rounded-md transition-colors duration-200',
+                selectedPeriod === period.value
+                  ? 'bg-blue-100 text-blue-600 font-medium'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              ]"
+            >
+              {{ period.label }}
+            </button>
+          </div>
+        </div>
+        
+        <!-- Placeholder pour Chart.js -->
+        <div class="h-80 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
+          <div class="text-center">
+            <ChartBarIcon class="h-12 w-12 text-gray-400 mx-auto mb-2" />
+            <p class="text-sm text-gray-500">Graphique des conversations</p>
+            <p class="text-xs text-gray-400 mt-1">(À implémenter avec Chart.js)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activité récente (1/3) -->
+      <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Activité récente</h3>
+          <NuxtLink
+            to="/conversations"
+            class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Voir tout
+          </NuxtLink>
+        </div>
+        
+        <div class="space-y-4">
+          <div 
+            v-for="activity in recentActivity" 
+            :key="activity.id"
+            class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+          >
+            <div :class="[
+              'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
+              activity.type === 'conversation' && 'bg-blue-100 text-blue-700',
+              activity.type === 'order' && 'bg-green-100 text-green-700',
+              activity.type === 'visitor' && 'bg-purple-100 text-purple-700'
+            ]">
+              <component :is="getActivityIcon(activity.type)" class="h-4 w-4" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-900">{{ activity.message }}</p>
+              <p class="text-xs text-gray-500 mt-1">{{ formatTime(activity.timestamp) }}</p>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Actions rapides et statut -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Actions rapides -->
+      <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Actions rapides</h3>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <button
+            @click="$router.push('/settings')"
+            class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
+          >
+            <Cog6ToothIcon class="h-8 w-8 text-gray-400 group-hover:text-blue-600 mb-2" />
+            <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700">
+              Configurer l'agent
+            </span>
+          </button>
+          
+          <button
+            @click="$router.push('/knowledge')"
+            class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
+          >
+            <BookOpenIcon class="h-8 w-8 text-gray-400 group-hover:text-blue-600 mb-2" />
+            <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700">
+              Base de connaissance
+            </span>
+          </button>
+          
+          <button
+            @click="showIntegrationModal = true"
+            class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
+          >
+            <CodeBracketIcon class="h-8 w-8 text-gray-400 group-hover:text-blue-600 mb-2" />
+            <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700">
+              Code d'intégration
+            </span>
+          </button>
+          
+          <button
+            @click="$router.push('/analytics')"
+            class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
+          >
+            <ChartBarIcon class="h-8 w-8 text-gray-400 group-hover:text-blue-600 mb-2" />
+            <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700">
+              Analytics détaillées
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Statut du widget -->
+      <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Statut du widget</h3>
+        
+        <div class="space-y-4">
+          <!-- Statut principal -->
+          <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+            <div class="flex items-center">
+              <div class="h-3 w-3 bg-green-400 rounded-full mr-3 animate-pulse"></div>
+              <div>
+                <p class="text-sm font-medium text-green-800">Widget actif</p>
+                <p class="text-xs text-green-600">Dernière activité il y a 2 minutes</p>
+              </div>
+            </div>
+            <CheckCircleIcon class="h-6 w-6 text-green-500" />
+          </div>
+          
+          <!-- Métriques du widget -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center p-3 bg-gray-50 rounded-lg">
+              <p class="text-2xl font-bold text-gray-900">{{ widgetStats.impressions }}</p>
+              <p class="text-xs text-gray-500">Vues aujourd'hui</p>
+            </div>
+            <div class="text-center p-3 bg-gray-50 rounded-lg">
+              <p class="text-2xl font-bold text-gray-900">{{ widgetStats.clicks }}</p>
+              <p class="text-xs text-gray-500">Clics aujourd'hui</p>
+            </div>
+          </div>
+          
+          <!-- Configuration rapide -->
+          <div class="pt-4 border-t border-gray-200">
+            <p class="text-sm text-gray-600 mb-3">Configuration actuelle :</p>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-500">Nom de l'agent :</span>
+                <span class="font-medium">{{ widgetConfig.agentName }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">Couleur principale :</span>
+                <div class="flex items-center">
+                  <div 
+                    class="w-4 h-4 rounded mr-2" 
+                    :style="{ backgroundColor: widgetConfig.primaryColor }"
+                  ></div>
+                  <span class="font-medium">{{ widgetConfig.primaryColor }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal code d'intégration -->
+    <IntegrationModal 
+      v-model:show="showIntegrationModal" 
+      :user-id="userProfile?.id" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
 import {
-  EyeIcon,
-  PlusIcon,
   ChatBubbleLeftRightIcon,
-  CheckCircleIcon,
   ChartBarIcon,
   CurrencyDollarIcon,
-  ArrowUpIcon,
-  BookOpenIcon,
-  Cog6ToothIcon,
   ShoppingBagIcon,
-  UserIcon
+  ArrowPathIcon,
+  Cog6ToothIcon,
+  BookOpenIcon,
+  CodeBracketIcon,
+  CheckCircleIcon,
+  UserIcon,
+  ShoppingCartIcon,
+  EyeIcon
 } from '@heroicons/vue/24/outline'
 
-// Define the page meta with dashboard layout
-definePageMeta({
-  layout: 'dashboard',
-  title: 'Dashboard ChatSeller'
-  // Suppression du middleware qui cause une erreur
-})
+// Authentification
+const { userProfile } = useAuth()
 
-// Auth & config
-// Auth & config - Correction auto-import
-const { user } = useAuth()
-const config = useRuntimeConfig()
+// État local
+const loading = ref(false)
+const showIntegrationModal = ref(false)
+const selectedPeriod = ref('7d')
 
-// Data
-const analytics = ref({
+// Périodes pour le graphique
+const chartPeriods = [
+  { label: '7j', value: '7d' },
+  { label: '30j', value: '30d' },
+  { label: '90j', value: '90d' }
+]
+
+// Métriques principales (à connecter avec l'API)
+const metrics = ref({
   totalConversations: 127,
-  convertedConversations: 43,
-  conversionRate: 33.9,
-  totalRevenue: 602000,
-  totalOrders: 43
+  conversationsGrowth: 12,
+  conversionRate: 34,
+  conversionGrowth: 2.1,
+  revenue: 602000,
+  revenueGrowth: 15,
+  averageOrderValue: 63953,
+  aovGrowth: -1.2
 })
 
-const recentActivities = ref([
+// Activité récente (à connecter avec l'API)
+const recentActivity = ref([
   {
-    icon: ChatBubbleLeftRightIcon,
-    iconBg: 'bg-blue-500',
-    content: 'Nouvelle conversation démarrée par client@example.com',
-    time: 'Il y a 2 min'
+    id: 1,
+    type: 'conversation',
+    message: 'Nouvelle conversation démarrée par client@example.com',
+    timestamp: new Date(Date.now() - 2 * 60 * 1000) // Il y a 2 minutes
   },
   {
-    icon: ShoppingBagIcon,
-    iconBg: 'bg-green-500',
-    content: 'Commande générée: 45,000 CFA',
-    time: 'Il y a 10 min'
+    id: 2,
+    type: 'order',
+    message: 'Commande générée : 45,000 F CFA',
+    timestamp: new Date(Date.now() - 10 * 60 * 1000) // Il y a 10 minutes
   },
   {
-    icon: UserIcon,
-    iconBg: 'bg-purple-500',
-    content: 'Nouveau visiteur sur la page produit',
-    time: 'Il y a 15 min'
+    id: 3,
+    type: 'visitor',
+    message: 'Nouveau visiteur sur la page produit',
+    timestamp: new Date(Date.now() - 15 * 60 * 1000) // Il y a 15 minutes
   },
   {
-    icon: ChatBubbleLeftRightIcon,
-    iconBg: 'bg-blue-500',
-    content: 'Conversation terminée avec succès',
-    time: 'Il y a 30 min'
+    id: 4,
+    type: 'conversation',
+    message: 'Conversation terminée avec succès',
+    timestamp: new Date(Date.now() - 30 * 60 * 1000) // Il y a 30 minutes
   }
 ])
 
-// Methods
+// Stats du widget
+const widgetStats = ref({
+  impressions: 1547,
+  clicks: 234
+})
+
+// Configuration du widget
+const widgetConfig = ref({
+  agentName: 'Sophie',
+  primaryColor: '#ec4899'
+})
+
+// Fonctions utilitaires
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -376,21 +405,77 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-const testWidget = () => {
-  window.open(`${config.public.widgetUrl}/`, '_blank')
+const formatTime = (date: Date) => {
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const minutes = Math.floor(diff / (1000 * 60))
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  
+  if (minutes < 1) return 'À l\'instant'
+  if (minutes < 60) return `Il y a ${minutes} min`
+  if (hours < 24) return `Il y a ${hours}h`
+  
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
-const copyIntegrationCode = async () => {
-  const scriptTag = '<' + 'script src="' + config.public.widgetUrl + '/widget.js" data-shop-id="' + user.value?.id + '"><' + '/script>'
-  
+const getActivityIcon = (type: string) => {
+  const icons: Record<string, any> = {
+    conversation: ChatBubbleLeftRightIcon,
+    order: ShoppingCartIcon,
+    visitor: EyeIcon
+  }
+  return icons[type] || UserIcon
+}
+
+// Actions
+const refreshData = async () => {
+  loading.value = true
   try {
-    await navigator.clipboard.writeText(scriptTag)
+    // Simuler un appel API
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // Show notification
-    const setNotification = inject('setNotification') as (message: string) => void
-    setNotification('Code d\'intégration copié dans le presse-papiers!')
-  } catch (err) {
-    console.error('Failed to copy: ', err)
+    // Ici, faire les vrais appels API pour récupérer les données
+    console.log('Données actualisées')
+  } catch (error) {
+    console.error('Erreur lors de l\'actualisation:', error)
+  } finally {
+    loading.value = false
   }
 }
+
+// Métadonnées de la page
+definePageMeta({
+  layout: 'default'
+})
+
+useSeoMeta({
+  title: 'Dashboard - ChatSeller',
+  description: 'Tableau de bord de votre Agent IA Commercial'
+})
+
+// Charger les données au montage
+onMounted(() => {
+  // Ici, charger les vraies données depuis l'API
+  console.log('Dashboard monté, chargement des données...')
+})
 </script>
+
+<style scoped>
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+</style>

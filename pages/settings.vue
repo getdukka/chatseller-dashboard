@@ -1,811 +1,656 @@
-<!-- pages/settings.vue -->
 <template>
-  <div class="p-6">
-    <div class="max-w-7xl mx-auto">
-      <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Configuration</h1>
-            <p class="mt-1 text-sm text-gray-600">
-              Personnalisez votre Agent IA Commercial et gérez les paramètres de votre compte.
-            </p>
+  <div class="max-w-6xl mx-auto">
+    <!-- Navigation par onglets -->
+    <div class="border-b border-gray-200 mb-8">
+      <nav class="-mb-px flex space-x-8">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          @click="activeTab = tab.id"
+          :class="[
+            activeTab === tab.id
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+            'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200'
+          ]"
+        >
+          <component :is="tab.icon" class="h-5 w-5 mr-2" />
+          {{ tab.name }}
+        </button>
+      </nav>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Configuration (2/3) -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Onglet Agent IA -->
+        <div v-show="activeTab === 'agent'" class="space-y-6">
+          <!-- Apparence de l'agent -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Apparence de l'agent</h3>
+            
+            <div class="space-y-6">
+              <!-- Nom de l'agent -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Nom de l'agent
+                </label>
+                <input
+                  v-model="agentConfig.name"
+                  type="text"
+                  placeholder="ex: Sophie, Marc, Aïcha..."
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                  Le nom affiché dans le chat
+                </p>
+              </div>
+
+              <!-- Avatar de l'agent -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Avatar de l'agent
+                </label>
+                <div class="flex items-center space-x-4">
+                  <div class="flex-shrink-0">
+                    <img
+                      :src="agentConfig.avatarUrl || '/default-agent.png'"
+                      :alt="agentConfig.name"
+                      class="h-16 w-16 rounded-full object-cover border-2 border-gray-200"
+                    />
+                  </div>
+                  <div class="flex-1">
+                    <button
+                      @click="uploadAvatar"
+                      class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <PhotoIcon class="h-4 w-4 mr-2" />
+                      Changer l'avatar
+                    </button>
+                    <p class="text-xs text-gray-500 mt-1">
+                      JPG, PNG max 2MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message de bienvenue -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Message de bienvenue
+                </label>
+                <textarea
+                  v-model="agentConfig.welcomeMessage"
+                  rows="3"
+                  placeholder="Bonjour ! Je suis Sophie, votre assistante virtuelle. Comment puis-je vous aider à trouver le produit parfait ?"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+                <p class="text-xs text-gray-500 mt-1">
+                  Premier message affiché aux visiteurs
+                </p>
+              </div>
+
+              <!-- Langue principale -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Langue principale
+                </label>
+                <select
+                  v-model="agentConfig.language"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="fr">Français</option>
+                  <option value="en">English</option>
+                  <option value="pt">Português</option>
+                </select>
+              </div>
+            </div>
           </div>
-          
-          <!-- Save Button -->
-          <div class="mt-4 sm:mt-0">
-            <button
-              @click="saveAllSettings"
-              :disabled="!hasUnsavedChanges || saving"
-              class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span v-if="saving" class="flex items-center">
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Sauvegarde...
-              </span>
-              <span v-else>
-                <CheckIcon class="h-4 w-4 inline mr-2" />
-                Sauvegarder
-              </span>
-            </button>
+
+          <!-- Comportement de l'agent -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Comportement de l'agent</h3>
+            
+            <div class="space-y-6">
+              <!-- Style de réponse -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Style de réponse
+                </label>
+                <select
+                  v-model="agentConfig.responseStyle"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="friendly">Amical et décontracté</option>
+                  <option value="professional">Professionnel</option>
+                  <option value="expert">Expert technique</option>
+                  <option value="enthusiastic">Enthousiaste</option>
+                </select>
+              </div>
+
+              <!-- Longueur des réponses -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Longueur des réponses
+                </label>
+                <select
+                  v-model="agentConfig.responseLength"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="short">Courtes</option>
+                  <option value="medium">Moyennes</option>
+                  <option value="long">Détaillées</option>
+                </select>
+              </div>
+
+              <!-- Options avancées -->
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="text-sm font-medium text-gray-700">Mode proactif</label>
+                    <p class="text-xs text-gray-500">L'agent propose des produits sans attendre qu'on lui demande</p>
+                  </div>
+                  <ToggleSwitch v-model="agentConfig.proactiveMode" />
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="text-sm font-medium text-gray-700">Vente additionnelle automatique</label>
+                    <p class="text-xs text-gray-500">L'agent propose des produits complémentaires</p>
+                  </div>
+                  <ToggleSwitch v-model="agentConfig.upsellEnabled" />
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="text-sm font-medium text-gray-700">Collecte d'email automatique</label>
+                    <p class="text-xs text-gray-500">Demander l'email avant de finaliser une commande</p>
+                  </div>
+                  <ToggleSwitch v-model="agentConfig.emailCollection" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Settings Tabs -->
-        <div class="bg-white shadow rounded-lg">
-          <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8 px-6">
-              <button
-                v-for="tab in settingsTabs"
-                :key="tab.id"
-                @click="activeTab = tab.id"
-                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
-                :class="activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        <!-- Onglet Widget -->
+        <div v-show="activeTab === 'widget'" class="space-y-6">
+          <!-- Apparence du widget -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Apparence du widget</h3>
+            
+            <div class="space-y-6">
+              <!-- Texte du bouton -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Texte du bouton
+                </label>
+                <input
+                  v-model="widgetConfig.buttonText"
+                  type="text"
+                  placeholder="Parler à la vendeuse"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <!-- Couleur principale -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur principale
+                </label>
+                <div class="flex items-center space-x-4">
+                  <input
+                    v-model="widgetConfig.primaryColor"
+                    type="color"
+                    class="h-10 w-16 rounded border border-gray-300"
+                  />
+                  <input
+                    v-model="widgetConfig.primaryColor"
+                    type="text"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <!-- Position du bouton -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Position du bouton
+                </label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      v-model="widgetConfig.buttonPosition"
+                      type="radio"
+                      value="above-cart"
+                      class="text-blue-600 focus:ring-blue-500"
+                    />
+                    <span class="ml-2 text-sm">Au-dessus du panier</span>
+                  </label>
+                  <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      v-model="widgetConfig.buttonPosition"
+                      type="radio"
+                      value="below-cart"
+                      class="text-blue-600 focus:ring-blue-500"
+                    />
+                    <span class="ml-2 text-sm">En-dessous du panier</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Taille du bouton -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Taille du bouton
+                </label>
+                <select
+                  v-model="widgetConfig.buttonSize"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="small">Petit</option>
+                  <option value="medium">Moyen</option>
+                  <option value="large">Grand</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Boutons d'action rapides -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Boutons d'action rapides</h3>
+            
+            <div class="space-y-4">
+              <div 
+                v-for="(button, index) in widgetConfig.quickButtons" 
+                :key="index"
+                class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg"
               >
-                <component :is="tab.icon" class="h-5 w-5 inline mr-2" />
-                {{ tab.name }}
+                <input
+                  v-model="button.text"
+                  type="text"
+                  placeholder="Texte du bouton"
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button
+                  @click="removeQuickButton(index)"
+                  class="p-2 text-red-600 hover:text-red-700"
+                >
+                  <TrashIcon class="h-4 w-4" />
+                </button>
+              </div>
+              
+              <button
+                @click="addQuickButton"
+                class="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors duration-200"
+              >
+                <PlusIcon class="h-4 w-4 mx-auto mb-1" />
+                Ajouter un bouton
               </button>
-            </nav>
+            </div>
+          </div>
+        </div>
+
+        <!-- Onglet Intégrations -->
+        <div v-show="activeTab === 'integrations'" class="space-y-6">
+          <!-- Plateforme e-commerce -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Plateforme e-commerce</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <label class="flex flex-col items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                <input
+                  v-model="integrationConfig.platform"
+                  type="radio"
+                  value="shopify"
+                  class="text-blue-600 focus:ring-blue-500 mb-2"
+                />
+                <img src="/platforms/shopify.png" alt="Shopify" class="h-8 w-8 mb-2" />
+                <span class="text-sm font-medium">Shopify</span>
+              </label>
+              
+              <label class="flex flex-col items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                <input
+                  v-model="integrationConfig.platform"
+                  type="radio"
+                  value="woocommerce"
+                  class="text-blue-600 focus:ring-blue-500 mb-2"
+                />
+                <img src="/platforms/woocommerce.png" alt="WooCommerce" class="h-8 w-8 mb-2" />
+                <span class="text-sm font-medium">WooCommerce</span>
+              </label>
+              
+              <label class="flex flex-col items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                <input
+                  v-model="integrationConfig.platform"
+                  type="radio"
+                  value="custom"
+                  class="text-blue-600 focus:ring-blue-500 mb-2"
+                />
+                <CodeBracketIcon class="h-8 w-8 text-gray-400 mb-2" />
+                <span class="text-sm font-medium">Site personnalisé</span>
+              </label>
+            </div>
           </div>
 
-          <!-- Tab Content -->
-          <div class="p-6">
-            <!-- Agent Settings -->
-            <div v-if="activeTab === 'agent'" class="space-y-8">
-              <!-- Agent Appearance -->
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="space-y-6">
-                  <div>
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Apparence de l'agent</h3>
-                    
-                    <!-- Agent Name -->
-                    <div class="mb-6">
-                      <label for="agent-name" class="block text-sm font-medium text-gray-700 mb-2">
-                        Nom de l'agent
-                      </label>
-                      <input
-                        id="agent-name"
-                        v-model="settings.agent.name"
-                        type="text"
-                        class="form-input"
-                        placeholder="Ex: Sophie, Assistant virtuel..."
-                      />
-                    </div>
+          <!-- Code d'intégration -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Code d'intégration</h3>
+            
+            <div class="bg-gray-900 rounded-lg p-4 text-sm text-gray-100 font-mono overflow-x-auto">
+              <pre><code>&lt;!-- ChatSeller Widget --&gt;
+&lt;script src="https://widget.chatseller.app/widget.js" 
+        data-shop-id="{{ userProfile?.id || 'YOUR_SHOP_ID' }}"
+        data-button-text="{{ widgetConfig.buttonText }}"
+        data-primary-color="{{ widgetConfig.primaryColor }}"
+        data-position="{{ widgetConfig.buttonPosition }}"
+        data-size="{{ widgetConfig.buttonSize }}"&gt;&lt;/script&gt;</code></pre>
+            </div>
+            
+            <div class="mt-4 flex justify-end">
+              <button
+                @click="copyIntegrationCode"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <ClipboardIcon class="mr-2 h-4 w-4" />
+                Copier le code
+              </button>
+            </div>
+          </div>
+        </div>
 
-                    <!-- Avatar -->
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Avatar de l'agent
-                      </label>
-                      <div class="flex items-center space-x-4">
-                        <div class="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                          <span class="text-white font-bold text-xl">
-                            {{ settings.agent.name.charAt(0).toUpperCase() || 'A' }}
-                          </span>
-                        </div>
-                        <div>
-                          <button class="bg-white border border-gray-300 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Changer l'avatar
-                          </button>
-                          <p class="text-xs text-gray-500 mt-1">JPG, PNG max 2MB</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Welcome Message -->
-                    <div class="mb-6">
-                      <label for="welcome-message" class="block text-sm font-medium text-gray-700 mb-2">
-                        Message de bienvenue
-                      </label>
-                      <textarea
-                        id="welcome-message"
-                        v-model="settings.agent.welcomeMessage"
-                        rows="3"
-                        class="form-textarea"
-                        placeholder="Bonjour ! Je suis là pour vous aider à trouver le produit parfait..."
-                      ></textarea>
-                    </div>
-
-                    <!-- Language -->
-                    <div class="mb-6">
-                      <label for="language" class="block text-sm font-medium text-gray-700 mb-2">
-                        Langue principale
-                      </label>
-                      <select
-                        id="language"
-                        v-model="settings.agent.language"
-                        class="form-select"
-                      >
-                        <option value="fr">Français</option>
-                        <option value="en">English</option>
-                        <option value="auto">Détection automatique</option>
-                      </select>
-                    </div>
-                  </div>
+        <!-- Onglet Notifications -->
+        <div v-show="activeTab === 'notifications'" class="space-y-6">
+          <!-- Notifications email -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Notifications email</h3>
+            
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Nouvelles conversations</label>
+                  <p class="text-xs text-gray-500">Recevoir un email à chaque nouvelle conversation</p>
                 </div>
-
-                <!-- Live Preview -->
-                <div class="space-y-6">
-                  <div>
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Aperçu en temps réel</h3>
-                    
-                    <!-- Chat Preview -->
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div class="bg-white rounded-lg shadow-sm max-w-sm mx-auto">
-                        <!-- Chat Header -->
-                        <div class="flex items-center p-4 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
-                          <div class="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center mr-3">
-                            <span class="text-white font-medium text-sm">
-                              {{ settings.agent.name.charAt(0).toUpperCase() || 'A' }}
-                            </span>
-                          </div>
-                          <div class="flex-1">
-                            <h4 class="font-medium text-sm">{{ settings.agent.name || 'Assistant virtuel' }}</h4>
-                            <p class="text-xs text-white/80">En ligne</p>
-                          </div>
-                        </div>
-                        
-                        <!-- Chat Messages -->
-                        <div class="p-4 space-y-3 min-h-[200px]">
-                          <div class="flex items-start space-x-2">
-                            <div class="h-6 w-6 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
-                              <span class="text-blue-600 font-medium text-xs">
-                                {{ settings.agent.name.charAt(0).toUpperCase() || 'A' }}
-                              </span>
-                            </div>
-                            <div class="bg-gray-100 rounded-lg px-3 py-2 max-w-[80%]">
-                              <p class="text-sm text-gray-800">
-                                {{ settings.agent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?' }}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div class="flex justify-end">
-                            <div class="bg-blue-600 text-white rounded-lg px-3 py-2 max-w-[80%]">
-                              <p class="text-sm">Je cherche un smartphone</p>
-                            </div>
-                          </div>
-                          
-                          <div class="flex items-start space-x-2">
-                            <div class="h-6 w-6 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
-                              <span class="text-blue-600 font-medium text-xs">
-                                {{ settings.agent.name.charAt(0).toUpperCase() || 'A' }}
-                              </span>
-                            </div>
-                            <div class="bg-gray-100 rounded-lg px-3 py-2 max-w-[80%]">
-                              <p class="text-sm text-gray-800">
-                                Parfait ! J'ai plusieurs excellents smartphones à vous proposer. Quel est votre budget approximatif ?
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <!-- Chat Input -->
-                        <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-                          <div class="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm"
-                              placeholder="Tapez votre message..."
-                              disabled
-                            />
-                            <button class="bg-blue-600 text-white rounded-full p-2">
-                              <PaperAirplaneIcon class="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <ToggleSwitch v-model="notificationConfig.newConversations" />
               </div>
 
-              <!-- Behavior Settings -->
-              <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Comportement de l'agent</h3>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <!-- Response Style -->
-                  <div>
-                    <label for="response-style" class="block text-sm font-medium text-gray-700 mb-2">
-                      Style de réponse
-                    </label>
-                    <select
-                      id="response-style"
-                      v-model="settings.agent.responseStyle"
-                      class="form-select"
-                    >
-                      <option value="professional">Professionnel</option>
-                      <option value="friendly">Amical</option>
-                      <option value="casual">Décontracté</option>
-                    </select>
-                  </div>
-
-                  <!-- Response Length -->
-                  <div>
-                    <label for="response-length" class="block text-sm font-medium text-gray-700 mb-2">
-                      Longueur des réponses
-                    </label>
-                    <select
-                      id="response-length"
-                      v-model="settings.agent.responseLength"
-                      class="form-select"
-                    >
-                      <option value="short">Courtes</option>
-                      <option value="medium">Moyennes</option>
-                      <option value="detailed">Détaillées</option>
-                    </select>
-                  </div>
-
-                  <!-- Proactivity -->
-                  <div>
-                    <label class="flex items-center">
-                      <input
-                        v-model="settings.agent.proactive"
-                        type="checkbox"
-                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Mode proactif</span>
-                    </label>
-                    <p class="text-xs text-gray-500 mt-1">L'agent propose des produits sans attendre qu'on lui demande</p>
-                  </div>
-
-                  <!-- Upselling -->
-                  <div>
-                    <label class="flex items-center">
-                      <input
-                        v-model="settings.agent.enableUpselling"
-                        type="checkbox"
-                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Vente additionnelle automatique</span>
-                    </label>
-                    <p class="text-xs text-gray-500 mt-1">L'agent propose des produits complémentaires</p>
-                  </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Nouvelles commandes</label>
+                  <p class="text-xs text-gray-500">Recevoir un email à chaque nouvelle commande</p>
                 </div>
+                <ToggleSwitch v-model="notificationConfig.newOrders" />
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Rapport quotidien</label>
+                  <p class="text-xs text-gray-500">Résumé quotidien des performances</p>
+                </div>
+                <ToggleSwitch v-model="notificationConfig.dailyReport" />
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Rapport hebdomadaire</label>
+                  <p class="text-xs text-gray-500">Analyse hebdomadaire détaillée</p>
+                </div>
+                <ToggleSwitch v-model="notificationConfig.weeklyReport" />
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- Widget Settings -->
-            <div v-if="activeTab === 'widget'" class="space-y-8">
-              <!-- Widget Appearance -->
-              <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Apparence du widget</h3>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div class="space-y-6">
-                    <!-- Widget Position -->
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Position du bouton
-                      </label>
-                      <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <input
-                            v-model="settings.widget.position"
-                            type="radio"
-                            value="bottom-right"
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span class="ml-2 text-sm">En bas à droite</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <input
-                            v-model="settings.widget.position"
-                            type="radio"
-                            value="bottom-left"
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span class="ml-2 text-sm">En bas à gauche</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <!-- Primary Color -->
-                    <div>
-                      <label for="primary-color" class="block text-sm font-medium text-gray-700 mb-2">
-                        Couleur principale
-                      </label>
-                      <div class="flex items-center space-x-3">
-                        <input
-                          id="primary-color"
-                          v-model="settings.widget.primaryColor"
-                          type="color"
-                          class="h-10 w-20 border border-gray-300 rounded-md"
-                        />
-                        <input
-                          v-model="settings.widget.primaryColor"
-                          type="text"
-                          class="form-input flex-1"
-                          placeholder="#3B82F6"
-                        />
-                      </div>
-                    </div>
-
-                    <!-- Button Text -->
-                    <div>
-                      <label for="button-text" class="block text-sm font-medium text-gray-700 mb-2">
-                        Texte du bouton
-                      </label>
-                      <input
-                        id="button-text"
-                        v-model="settings.widget.buttonText"
-                        type="text"
-                        class="form-input"
-                        placeholder="Besoin d'aide ?"
-                      />
-                    </div>
-
-                    <!-- Auto-open -->
-                    <div>
-                      <label class="flex items-center">
-                        <input
-                          v-model="settings.widget.autoOpen"
-                          type="checkbox"
-                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span class="ml-2 text-sm text-gray-700">Ouverture automatique</span>
-                      </label>
-                      <p class="text-xs text-gray-500 mt-1">Le chat s'ouvre automatiquement après 30 secondes</p>
-                    </div>
-
-                    <!-- Show on Mobile -->
-                    <div>
-                      <label class="flex items-center">
-                        <input
-                          v-model="settings.widget.showOnMobile"
-                          type="checkbox"
-                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span class="ml-2 text-sm text-gray-700">Afficher sur mobile</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <!-- Widget Preview -->
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-700 mb-4">Aperçu du widget</h4>
-                    <div class="bg-gray-100 rounded-lg p-8 relative h-64">
-                      <!-- Mock website content -->
-                      <div class="space-y-2 mb-4">
-                        <div class="h-3 bg-gray-300 rounded w-3/4"></div>
-                        <div class="h-3 bg-gray-300 rounded w-1/2"></div>
-                        <div class="h-3 bg-gray-300 rounded w-2/3"></div>
-                      </div>
-                      
-                      <!-- Widget Button -->
-                      <button
-                        class="absolute rounded-full p-3 text-white font-medium text-sm shadow-lg"
-                        :class="settings.widget.position === 'bottom-right' ? 'bottom-4 right-4' : 'bottom-4 left-4'"
-                        :style="{ backgroundColor: settings.widget.primaryColor }"
-                      >
-                        {{ settings.widget.buttonText || 'Besoin d\'aide ?' }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+      <!-- Prévisualisation (1/3) -->
+      <div class="lg:col-span-1">
+        <div class="sticky top-6">
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Aperçu en temps réel</h3>
+            
+            <!-- Prévisualisation du widget -->
+            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div class="mb-4">
+                <button
+                  :style="{ 
+                    backgroundColor: widgetConfig.primaryColor,
+                    fontSize: widgetConfig.buttonSize === 'small' ? '14px' : widgetConfig.buttonSize === 'large' ? '18px' : '16px',
+                    padding: widgetConfig.buttonSize === 'small' ? '8px 16px' : widgetConfig.buttonSize === 'large' ? '16px 32px' : '12px 24px'
+                  }"
+                  class="w-full text-white rounded-md font-medium hover:opacity-90 transition-opacity duration-200"
+                >
+                  {{ widgetConfig.buttonText }}
+                </button>
               </div>
-
-              <!-- Integration Code -->
-              <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Code d'intégration</h3>
-                <div class="bg-gray-900 rounded-lg p-4">
-                  <code class="text-green-400 text-sm font-mono block whitespace-pre">
-                    &lt;script src="{{ config.public.widgetUrl }}/widget.js"
-                    data-shop-id="{{ user?.id }}"
-                    data-primary-color="{{ settings.widget.primaryColor }}"
-                    data-position="{{ settings.widget.position }}"
-                    data-button-text="{{ settings.widget.buttonText }}"&gt;
-                    &lt;/script&gt;</code>
+              
+              <!-- Interface de chat simulée -->
+              <div class="bg-white rounded-lg border border-gray-200 p-4 max-h-80 overflow-y-auto">
+                <!-- Header du chat -->
+                <div class="flex items-center mb-4 pb-2 border-b border-gray-200">
+                  <img
+                    :src="agentConfig.avatarUrl || '/default-agent.png'"
+                    :alt="agentConfig.name"
+                    class="h-8 w-8 rounded-full object-cover"
+                  />
+                  <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">{{ agentConfig.name }}</p>
+                    <p class="text-xs text-green-600">En ligne</p>
+                  </div>
                 </div>
-                <div class="mt-4 flex justify-between">
-                  <p class="text-sm text-gray-500">
-                    Copiez ce code dans votre site web pour activer ChatSeller
-                  </p>
+                
+                <!-- Message de bienvenue -->
+                <div class="mb-4">
+                  <div class="bg-gray-100 rounded-lg p-3">
+                    <p class="text-sm text-gray-800">{{ agentConfig.welcomeMessage }}</p>
+                  </div>
+                </div>
+                
+                <!-- Boutons rapides -->
+                <div v-if="widgetConfig.quickButtons.length > 0" class="space-y-2">
                   <button
-                    @click="copyIntegrationCode"
-                    class="text-sm font-medium text-blue-600 hover:text-blue-500"
+                    v-for="(button, index) in widgetConfig.quickButtons"
+                    :key="index"
+                    class="w-full p-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 text-left"
                   >
-                    Copier le code
+                    {{ button.text }}
                   </button>
                 </div>
-              </div>
-            </div>
-
-            <!-- Account Settings -->
-            <div v-if="activeTab === 'account'" class="space-y-8">
-              <!-- Profile Information -->
-              <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Informations du profil</h3>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label for="first-name" class="block text-sm font-medium text-gray-700 mb-2">
-                      Prénom
-                    </label>
+                <!-- Zone de saisie -->
+                <div class="mt-4 pt-2 border-t border-gray-200">
+                  <div class="flex items-center space-x-2">
                     <input
-                      id="first-name"
-                      v-model="settings.account.firstName"
                       type="text"
-                      class="form-input"
+                      placeholder="Tapez votre message..."
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      disabled
                     />
-                  </div>
-
-                  <div>
-                    <label for="last-name" class="block text-sm font-medium text-gray-700 mb-2">
-                      Nom
-                    </label>
-                    <input
-                      id="last-name"
-                      v-model="settings.account.lastName"
-                      type="text"
-                      class="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <input
-                      id="email"
-                      v-model="settings.account.email"
-                      type="email"
-                      class="form-input"
-                      readonly
-                    />
-                    <p class="text-xs text-gray-500 mt-1">Contactez le support pour changer d'email</p>
-                  </div>
-
-                  <div>
-                    <label for="company" class="block text-sm font-medium text-gray-700 mb-2">
-                      Entreprise
-                    </label>
-                    <input
-                      id="company"
-                      v-model="settings.account.company"
-                      type="text"
-                      class="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label for="website" class="block text-sm font-medium text-gray-700 mb-2">
-                      Site web
-                    </label>
-                    <input
-                      id="website"
-                      v-model="settings.account.website"
-                      type="url"
-                      class="form-input"
-                      placeholder="https://votre-site.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-                      Téléphone
-                    </label>
-                    <input
-                      id="phone"
-                      v-model="settings.account.phone"
-                      type="tel"
-                      class="form-input"
-                      placeholder="+225 07 00 00 00 00"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Password Change -->
-              <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Changer le mot de passe</h3>
-                <div class="max-w-md space-y-4">
-                  <div>
-                    <label for="current-password" class="block text-sm font-medium text-gray-700 mb-2">
-                      Mot de passe actuel
-                    </label>
-                    <input
-                      id="current-password"
-                      v-model="passwordForm.current"
-                      type="password"
-                      class="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label for="new-password" class="block text-sm font-medium text-gray-700 mb-2">
-                      Nouveau mot de passe
-                    </label>
-                    <input
-                      id="new-password"
-                      v-model="passwordForm.new"
-                      type="password"
-                      class="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-2">
-                      Confirmer le nouveau mot de passe
-                    </label>
-                    <input
-                      id="confirm-password"
-                      v-model="passwordForm.confirm"
-                      type="password"
-                      class="form-input"
-                    />
-                  </div>
-
-                  <button
-                    @click="changePassword"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    Changer le mot de passe
-                  </button>
-                </div>
-              </div>
-
-              <!-- Danger Zone -->
-              <div class="border-t border-red-200 pt-8">
-                <h3 class="text-lg font-medium text-red-900 mb-4">Zone dangereuse</h3>
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div class="flex items-start">
-                    <ExclamationTriangleIcon class="h-5 w-5 text-red-400 mt-0.5 mr-3" />
-                    <div class="flex-1">
-                      <h4 class="text-sm font-medium text-red-800">Supprimer le compte</h4>
-                      <p class="text-sm text-red-700 mt-1">
-                        Cette action est irréversible. Toutes vos données seront définitivement supprimées.
-                      </p>
-                      <button
-                        @click="showDeleteModal = true"
-                        class="mt-3 bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
-                      >
-                        Supprimer mon compte
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Notifications Settings -->
-            <div v-if="activeTab === 'notifications'" class="space-y-8">
-              <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Préférences de notifications</h3>
-                
-                <div class="space-y-6">
-                  <!-- Email Notifications -->
-                  <div>
-                    <h4 class="text-base font-medium text-gray-900 mb-3">Notifications par email</h4>
-                    <div class="space-y-3">
-                      <label class="flex items-center">
-                        <input
-                          v-model="settings.notifications.newOrder"
-                          type="checkbox"
-                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span class="ml-3 text-sm text-gray-700">Nouvelles commandes</span>
-                      </label>
-                      
-                      <label class="flex items-center">
-                        <input
-                          v-model="settings.notifications.newConversation"
-                          type="checkbox"
-                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span class="ml-3 text-sm text-gray-700">Nouvelles conversations</span>
-                      </label>
-                      
-                      <label class="flex items-center">
-                        <input
-                          v-model="settings.notifications.weeklyReport"
-                          type="checkbox"
-                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span class="ml-3 text-gray-700">Rapport hebdomadaire</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <!-- Browser Notifications -->
-                  <div>
-                    <h4 class="text-base font-medium text-gray-900 mb-3">Notifications navigateur</h4>
-                    <div class="space-y-3">
-                      <label class="flex items-center">
-                        <input
-                          v-model="settings.notifications.browserNotifications"
-                          type="checkbox"
-                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span class="ml-3 text-sm text-gray-700">Activer les notifications navigateur</span>
-                      </label>
-                    </div>
+                    <button
+                      :style="{ backgroundColor: widgetConfig.primaryColor }"
+                      class="p-2 text-white rounded-md"
+                      disabled
+                    >
+                      <PaperAirplaneIcon class="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Delete Account Modal -->
-        <DeleteAccountModal
-          :is-open="showDeleteModal"
-          @close="showDeleteModal = false"
-          @confirm="deleteAccount"
-        />
+    <!-- Boutons d'action -->
+    <div class="mt-8 flex justify-between">
+      <button
+        @click="resetToDefaults"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+      >
+        Restaurer les valeurs par défaut
+      </button>
+      
+      <div class="flex space-x-3">
+        <button
+          @click="saveConfig"
+          :disabled="saving"
+          class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+        >
+          <span v-if="saving" class="mr-2">
+            <div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+          </span>
+          {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, reactive } from 'vue'
 import {
-  CpuChipIcon,
-  Cog6ToothIcon,
   UserIcon,
+  CogIcon,
+  CodeBracketIcon,
   BellIcon,
-  CheckIcon,
-  PaperAirplaneIcon,
-  ExclamationTriangleIcon
+  PhotoIcon,
+  TrashIcon,
+  PlusIcon,
+  ClipboardIcon,
+  PaperAirplaneIcon
 } from '@heroicons/vue/24/outline'
 
-// Define page meta
-definePageMeta({
-  layout: 'dashboard',
-  title: 'Configuration - ChatSeller'
-})
+// Authentification
+const { userProfile } = useAuth()
 
-// Auth & config
-const { user } = useAuth()
-const config = useRuntimeConfig()
-
-// State
+// État local
 const activeTab = ref('agent')
-const hasUnsavedChanges = ref(false)
 const saving = ref(false)
-const showDeleteModal = ref(false)
 
-// Settings Tabs
-const settingsTabs = [
-  { id: 'agent', name: 'Agent IA', icon: CpuChipIcon },
-  { id: 'widget', name: 'Widget', icon: Cog6ToothIcon },
-  { id: 'account', name: 'Compte', icon: UserIcon },
+// Configuration des onglets
+const tabs = [
+  { id: 'agent', name: 'Agent IA', icon: UserIcon },
+  { id: 'widget', name: 'Widget', icon: CogIcon },
+  { id: 'integrations', name: 'Intégrations', icon: CodeBracketIcon },
   { id: 'notifications', name: 'Notifications', icon: BellIcon }
 ]
 
-// Settings Data
-const settings = reactive({
-  agent: {
-    name: 'Sophie',
-    welcomeMessage: 'Bonjour ! Je suis Sophie, votre assistante virtuelle. Comment puis-je vous aider à trouver le produit parfait ?',
-    language: 'fr',
-    responseStyle: 'friendly',
-    responseLength: 'medium',
-    proactive: true,
-    enableUpselling: true
-  },
-  widget: {
-    position: 'bottom-right',
-    primaryColor: '#3B82F6',
-    buttonText: 'Besoin d\'aide ?',
-    autoOpen: false,
-    showOnMobile: true
-  },
-  account: {
-    firstName: user.value?.user_metadata?.firstName || '',
-    lastName: user.value?.user_metadata?.lastName || '',
-    email: user.value?.email || '',
-    company: user.value?.user_metadata?.company || '',
-    website: user.value?.user_metadata?.website || '',
-    phone: ''
-  },
-  notifications: {
-    newOrder: true,
-    newConversation: true,
-    weeklyReport: true,
-    browserNotifications: false
-  }
+// Configuration de l'agent
+const agentConfig = reactive({
+  name: 'Sophie',
+  avatarUrl: '',
+  welcomeMessage: 'Bonjour ! Je suis Sophie, votre assistante virtuelle. Comment puis-je vous aider à trouver le produit parfait ?',
+  language: 'fr',
+  responseStyle: 'friendly',
+  responseLength: 'medium',
+  proactiveMode: true,
+  upsellEnabled: true,
+  emailCollection: true
 })
 
-// Password form
-const passwordForm = reactive({
-  current: '',
-  new: '',
-  confirm: ''
+// Configuration du widget
+const widgetConfig = reactive({
+  buttonText: 'Parler à la vendeuse',
+  primaryColor: '#ec4899',
+  buttonPosition: 'above-cart',
+  buttonSize: 'medium',
+  quickButtons: [
+    { text: 'Je veux l\'acheter maintenant' },
+    { text: 'J\'ai des questions à poser' },
+    { text: 'Je veux en savoir plus' }
+  ]
 })
 
-// Watch for changes
-watch(settings, () => {
-  hasUnsavedChanges.value = true
-}, { deep: true })
+// Configuration des intégrations
+const integrationConfig = reactive({
+  platform: 'custom'
+})
 
-// Methods
-const saveAllSettings = async () => {
-  saving.value = true
-  
+// Configuration des notifications
+const notificationConfig = reactive({
+  newConversations: true,
+  newOrders: true,
+  dailyReport: false,
+  weeklyReport: true
+})
+
+// Actions
+const uploadAvatar = () => {
+  // Simuler l'upload d'avatar
+  console.log('Upload d\'avatar')
+}
+
+const addQuickButton = () => {
+  widgetConfig.quickButtons.push({ text: '' })
+}
+
+const removeQuickButton = (index: number) => {
+  widgetConfig.quickButtons.splice(index, 1)
+}
+
+const copyIntegrationCode = async () => {
+  const userId = userProfile.value?.id || 'YOUR_SHOP_ID'
+  const code = `<!-- ChatSeller Widget -->
+<script src="https://widget.chatseller.app/widget.js" 
+        data-shop-id="${userId}"
+        data-button-text="${widgetConfig.buttonText}"
+        data-primary-color="${widgetConfig.primaryColor}"
+        data-position="${widgetConfig.buttonPosition}"
+        data-size="${widgetConfig.buttonSize}"><\/script>`
+
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    hasUnsavedChanges.value = false
-    
-    const notification = inject('setNotification') as (message: string) => void
-    notification('Paramètres sauvegardés avec succès!')
+    await navigator.clipboard.writeText(code)
+    // Ici ajouter une notification de succès
+    console.log('Code copié avec succès !')
   } catch (error) {
-    console.error('Save settings error:', error)
+    console.error('Erreur lors de la copie:', error)
+  }
+}
+
+const saveConfig = async () => {
+  saving.value = true
+  try {
+    // Simuler la sauvegarde
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Ici faire l'appel API pour sauvegarder la configuration
+    console.log('Configuration sauvegardée')
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde:', error)
   } finally {
     saving.value = false
   }
 }
 
-const changePassword = async () => {
-  if (passwordForm.new !== passwordForm.confirm) {
-    alert('Les mots de passe ne correspondent pas')
-    return
-  }
-  
-  if (passwordForm.new.length < 8) {
-    alert('Le mot de passe doit contenir au moins 8 caractères')
-    return
-  }
-  
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    passwordForm.current = ''
-    passwordForm.new = ''
-    passwordForm.confirm = ''
-    
-    const notification = inject('setNotification') as (message: string) => void
-    notification('Mot de passe changé avec succès!')
-  } catch (error) {
-    console.error('Change password error:', error)
-  }
+const resetToDefaults = () => {
+  // Restaurer les valeurs par défaut
+  console.log('Restauration des valeurs par défaut')
 }
 
-const copyIntegrationCode = async () => {
-  const scriptStart = '<' + 'script src="' + config.public.widgetUrl + '/widget.js"'
-  const dataShopId = ' data-shop-id="' + user.value?.id + '"'
-  const dataPrimaryColor = ' data-primary-color="' + settings.widget.primaryColor + '"'
-  const dataPosition = ' data-position="' + settings.widget.position + '"'
-  const dataButtonText = ' data-button-text="' + settings.widget.buttonText + '"'
-  const scriptEnd = '><' + '/script>'
-  
-  const code = scriptStart + dataShopId + dataPrimaryColor + dataPosition + dataButtonText + scriptEnd
-  
-  try {
-    await navigator.clipboard.writeText(code)
-    
-    const notification = inject('setNotification') as (message: string) => void
-    notification('Code d\'intégration copié dans le presse-papiers!')
-  } catch (err) {
-    console.error('Failed to copy: ', err)
-  }
-}
+// Métadonnées de la page
+definePageMeta({
+  layout: 'default'
+})
 
-const deleteAccount = async () => {
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Sign out and redirect
-    const { signOut } = useAuth()
-    await signOut()
-  } catch (error) {
-    console.error('Delete account error:', error)
-  }
-}
-
-// Load initial settings on mount
-onMounted(() => {
-  // Load settings from API
-  // For now, we use the reactive defaults
+useSeoMeta({
+  title: 'Configuration - ChatSeller',
+  description: 'Configurez votre Agent IA Commercial et personnalisez le widget'
 })
 </script>
+
+<style scoped>
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

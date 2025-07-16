@@ -93,7 +93,7 @@
             <div class="p-5">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
-                  <div class="h-8 w-8 bg-pink-100 rounded-md flex items-center justify-center">
+                  <div class="h-8 w-8 bg-blue-100 rounded-md flex items-center justify-center">
                     <ClockIcon class="h-5 w-5 text-blue-600" />
                   </div>
                 </div>

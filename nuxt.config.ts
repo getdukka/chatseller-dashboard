@@ -1,73 +1,66 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-// @ts-ignore
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
+  // Modules - SANS @nuxtjs/supabase
   modules: [
-    '@nuxtjs/tailwindcss',
-    '@pinia/nuxt',
-    '@vueuse/nuxt'
+    '@nuxtjs/tailwindcss'
   ],
 
+  // CSS
   css: ['~/assets/css/main.css'],
 
+  // Runtime config
   runtimeConfig: {
-    // Private keys (only available on server-side)
-    supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,
-    
-    // Public keys (exposed to client-side)
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
-      apiUrl: process.env.API_URL || 'http://localhost:3001',
+      apiUrl: process.env.API_URL || 'https://api.chatseller.app',
       widgetUrl: process.env.WIDGET_URL || 'https://widget.chatseller.app',
-      appUrl: process.env.APP_URL || 'http://localhost:3000'
+      appUrl: process.env.APP_URL || 'https://dashboard.chatseller.app'
     }
   },
 
+  // TypeScript configuration
+  typescript: {
+    strict: false,
+    typeCheck: false
+  },
+
+  // Auto-imports
+  imports: {
+    dirs: [
+      'composables',
+      'composables/**',
+      'utils'
+    ]
+  },
+
+  // Components auto-import
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false,
+    }
+  ],
+
+  // App configuration
   app: {
     head: {
       title: 'ChatSeller Dashboard',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Dashboard pour configurer et analyser votre Agent IA Commercial ChatSeller' }
+        { name: 'description', content: 'Dashboard de votre Agent IA Commercial ChatSeller' }
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap' }
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
       ]
     }
   },
 
-  // Configuration pour build et déploiement
-  nitro: {
-    preset: 'vercel'
-  },
-
-  // TypeScript configuration
-  typescript: {
-    typeCheck: false,
-    strict: true
-  },
-
-  // Auto-imports configuration - CORRIGÉ
-  imports: {
-    dirs: [
-      'composables/**'
-    ]
-  },
-
-  // Ensure compatibility
-  ssr: true,
-  
-  // Vite configuration
-  vite: {
-    define: {
-      __VUE_OPTIONS_API__: true,
-      __VUE_PROD_DEVTOOLS__: false,
-    }
+  // Build configuration
+  build: {
+    transpile: ['@headlessui/vue', '@supabase/supabase-js']
   }
 })
