@@ -1,6 +1,6 @@
 <template>
-  <div class="flex h-screen bg-gray-50 overflow-hidden">
-    <!-- Sidebar fixe -->
+  <div class="h-screen flex bg-gray-50">
+    <!-- Sidebar -->
     <aside 
       :class="[
         'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out',
@@ -9,12 +9,12 @@
     >
       <!-- Header Sidebar -->
       <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-        <div class="flex items-center">
+        <NuxtLink to="/" class="flex items-center">
           <div class="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
             <span class="text-white font-bold text-sm">CS</span>
           </div>
-          <span class="ml-3 text-lg font-semibold text-gray-900">ChatSeller</span>
-        </div>
+          <span class="ml-3 text-lg font-bold text-gray-900">ChatSeller</span>
+        </NuxtLink>
         
         <!-- Bouton fermer mobile -->
         <button 
@@ -26,47 +26,47 @@
       </div>
       
       <!-- Navigation principale -->
-      <nav class="mt-6 px-3 flex-1 overflow-y-auto">
-        <div class="space-y-1">
-          <NuxtLink
-            v-for="item in navigation"
-            :key="item.name"
-            :to="item.href"
+      <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <NuxtLink
+          v-for="item in navigation"
+          :key="item.name"
+          :to="item.href"
+          :class="[
+            isActiveRoute(item.href) 
+              ? 'bg-blue-50 border-blue-500 text-blue-700 border-r-2' 
+              : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+            'group flex items-center px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-l-md'
+          ]"
+          @click="sidebarOpen = false"
+        >
+          <component 
+            :is="item.icon" 
             :class="[
-              isActiveRoute(item.href) 
-                ? 'bg-blue-50 border-blue-500 text-blue-700' 
-                : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-              'group flex items-center px-3 py-2 text-sm font-medium border-l-4 transition-colors duration-200'
-            ]"
+              isActiveRoute(item.href) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500',
+              'mr-3 h-5 w-5 flex-shrink-0'
+            ]" 
+          />
+          {{ item.name }}
+          
+          <!-- Badge pour notifications -->
+          <span 
+            v-if="item.badge" 
+            class="ml-auto inline-block py-0.5 px-2 text-xs font-medium rounded-full"
+            :class="item.badgeColor || 'bg-blue-100 text-blue-800'"
           >
-            <component 
-              :is="item.icon" 
-              :class="[
-                isActiveRoute(item.href) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500',
-                'mr-3 h-5 w-5'
-              ]" 
-            />
-            {{ item.name }}
-            
-            <!-- Badge pour notifications -->
-            <span 
-              v-if="item.badge" 
-              class="ml-auto inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-blue-100 text-blue-800"
-            >
-              {{ item.badge }}
-            </span>
-          </NuxtLink>
-        </div>
+            {{ item.badge }}
+          </span>
+        </NuxtLink>
         
         <!-- Section intégration -->
-        <div class="mt-8 px-3">
-          <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <div class="pt-6 mt-6 border-t border-gray-200">
+          <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Intégration
           </h3>
-          <div class="mt-3 space-y-1">
+          <div class="space-y-2">
             <button
               @click="showIntegrationCode = true"
-              class="group flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+              class="group flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-l-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
             >
               <CodeBracketIcon class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
               Code d'intégration
@@ -74,81 +74,91 @@
             
             <NuxtLink
               to="/widget-preview"
-              class="group flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+              class="group flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-l-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
             >
               <EyeIcon class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-              Tester le widget
+              Aperçu du widget
             </NuxtLink>
           </div>
         </div>
       </nav>
       
-      <!-- Profil utilisateur en bas -->
+      <!-- Statut widget en bas -->
       <div class="flex-shrink-0 border-t border-gray-200 p-4">
-        <div class="flex items-center group">
-          <div class="flex-shrink-0">
-            <img 
-              :src="user?.user_metadata?.avatar_url || '/default-avatar.png'" 
-              :alt="user?.user_metadata?.full_name || 'Utilisateur'"
-              class="h-8 w-8 rounded-full object-cover"
-            />
-          </div>
-          <div class="ml-3 flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">
-              {{ user?.user_metadata?.full_name || 'Utilisateur' }}
-            </p>
-            <p class="text-xs text-gray-500 truncate">
-              {{ user?.email }}
-            </p>
-          </div>
-          
-          <!-- Menu dropdown -->
-          <Menu as="div" class="relative ml-3">
-            <MenuButton class="flex-shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <EllipsisVerticalIcon class="h-5 w-5" />
-            </MenuButton>
-            
-            <transition
-              enter-active-class="transition ease-out duration-100"
-              enter-from-class="transform opacity-0 scale-95"
-              enter-to-class="transform opacity-100 scale-100"
-              leave-active-class="transition ease-in duration-75"
-              leave-from-class="transform opacity-100 scale-100"
-              leave-to-class="transform opacity-0 scale-95"
-            >
-              <MenuItems class="origin-bottom-left absolute bottom-full left-0 mb-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                <div class="py-1">
-                  <MenuItem v-slot="{ active }">
-                    <NuxtLink
-                      to="/profile"
-                      :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']"
-                    >
-                      Mon profil
-                    </NuxtLink>
-                  </MenuItem>
-                  <MenuItem v-slot="{ active }">
-                    <button
-                      @click="signOut"
-                      :class="[active ? 'bg-gray-100' : '', 'block w-full text-left px-4 py-2 text-sm text-gray-700']"
-                    >
-                      Se déconnecter
-                    </button>
-                  </MenuItem>
-                </div>
-              </MenuItems>
-            </transition>
-          </Menu>
-        </div>
-        
-        <!-- Indicateur de statut -->
-        <div class="mt-3 flex items-center text-xs text-gray-500">
+        <div class="flex items-center text-sm">
           <div class="flex items-center">
             <div class="h-2 w-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-            Widget actif
+            <span class="text-green-600 font-medium">Widget actif</span>
           </div>
-          <span class="mx-2">•</span>
-          <span>{{ stats.conversationsToday }} conversations aujourd'hui</span>
+          <span class="mx-2 text-gray-300">•</span>
+          <span class="text-gray-500">{{ stats.conversationsToday }} conversations</span>
         </div>
+      </div>
+      
+      <!-- Profil utilisateur en bas -->
+      <div class="flex-shrink-0 border-t border-gray-200 p-4">
+        <Menu as="div" class="relative">
+          <MenuButton class="flex items-center w-full text-left group">
+            <div class="flex-shrink-0">
+              <div class="h-8 w-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                <span class="text-white font-medium text-sm">
+                  {{ userInitials }}
+                </span>
+              </div>
+            </div>
+            <div class="ml-3 flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">
+                {{ user?.user_metadata?.firstName }} {{ user?.user_metadata?.lastName }}
+              </p>
+              <p class="text-xs text-gray-500 truncate">
+                {{ user?.email }}
+              </p>
+            </div>
+            <ChevronUpDownIcon class="h-4 w-4 text-gray-400 group-hover:text-gray-500" />
+          </MenuButton>
+          
+          <transition
+            enter-active-class="transition ease-out duration-100"
+            enter-from-class="transform opacity-0 scale-95"
+            enter-to-class="transform opacity-100 scale-100"
+            leave-active-class="transition ease-in duration-75"
+            leave-from-class="transform opacity-100 scale-100"
+            leave-to-class="transform opacity-0 scale-95"
+          >
+            <MenuItems class="origin-bottom-left absolute bottom-full left-0 mb-1 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div class="py-1">
+                <MenuItem v-slot="{ active }">
+                  <NuxtLink
+                    to="/profile"
+                    :class="[active ? 'bg-gray-100' : '', 'flex items-center px-4 py-2 text-sm text-gray-700']"
+                  >
+                    <UserIcon class="h-4 w-4 mr-3" />
+                    Mon profil
+                  </NuxtLink>
+                </MenuItem>
+                <MenuItem v-slot="{ active }">
+                  <NuxtLink
+                    to="/settings"
+                    :class="[active ? 'bg-gray-100' : '', 'flex items-center px-4 py-2 text-sm text-gray-700']"
+                  >
+                    <Cog6ToothIcon class="h-4 w-4 mr-3" />
+                    Paramètres
+                  </NuxtLink>
+                </MenuItem>
+                <div class="border-t border-gray-100"></div>
+                <MenuItem v-slot="{ active }">
+                  <button
+                    @click="handleSignOut"
+                    :class="[active ? 'bg-gray-100' : '', 'flex items-center w-full text-left px-4 py-2 text-sm text-gray-700']"
+                  >
+                    <ArrowRightOnRectangleIcon class="h-4 w-4 mr-3" />
+                    Se déconnecter
+                  </button>
+                </MenuItem>
+              </div>
+            </MenuItems>
+          </transition>
+        </Menu>
       </div>
     </aside>
 
@@ -176,16 +186,19 @@
             </h1>
           </div>
           
-          <!-- Notifications mobile -->
-          <button class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
-            <BellIcon class="h-6 w-6" />
-            <span 
-              v-if="notifications.unread > 0"
-              class="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center"
-            >
-              {{ notifications.unread }}
-            </span>
-          </button>
+          <!-- Actions mobiles -->
+          <div class="flex items-center space-x-2">
+            <!-- Notifications mobile -->
+            <button class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
+              <BellIcon class="h-6 w-6" />
+              <span 
+                v-if="notifications.unread > 0"
+                class="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center"
+              >
+                {{ notifications.unread }}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
       
@@ -193,7 +206,7 @@
       <div class="hidden lg:block bg-white border-b border-gray-200 px-6 py-4">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-semibold text-gray-900">{{ pageTitle }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{{ pageTitle }}</h1>
             <p class="mt-1 text-sm text-gray-500">{{ pageDescription }}</p>
           </div>
           
@@ -204,12 +217,12 @@
               <input
                 type="text"
                 placeholder="Rechercher..."
-                class="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 w-64"
               />
             </div>
             
             <!-- Notifications -->
-            <button class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
+            <button class="p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
               <BellIcon class="h-6 w-6" />
               <span 
                 v-if="notifications.unread > 0"
@@ -222,7 +235,7 @@
             <!-- Bouton CTA principal -->
             <button
               @click="showIntegrationCode = true"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             >
               <CodeBracketIcon class="mr-2 h-4 w-4" />
               Intégrer le widget
@@ -238,80 +251,55 @@
     </main>
 
     <!-- Modal code d'intégration -->
-    <TransitionRoot :show="showIntegrationCode" as="template">
-      <Dialog @close="showIntegrationCode = false" class="relative z-50">
-        <TransitionChild
-          as="template"
-          enter="ease-out duration-300"
-          enter-from="opacity-0"
-          enter-to="opacity-100"
-          leave="ease-in duration-200"
-          leave-from="opacity-100"
-          leave-to="opacity-0"
-        >
-          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-        </TransitionChild>
+    <IntegrationModal 
+      :show="showIntegrationCode"
+      @close="showIntegrationCode = false"
+      :user-id="user?.id"
+    />
 
-        <div class="fixed inset-0 z-10 overflow-y-auto">
-          <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <TransitionChild
-              as="template"
-              enter="ease-out duration-300"
-              enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enter-to="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leave-from="opacity-100 translate-y-0 sm:scale-100"
-              leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-              <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-                <div class="bg-white px-6 py-6">
-                  <div class="flex items-center justify-between mb-4">
-                    <DialogTitle class="text-lg font-semibold text-gray-900">
-                      Code d'intégration ChatSeller
-                    </DialogTitle>
-                    <button
-                      @click="showIntegrationCode = false"
-                      class="rounded-md text-gray-400 hover:text-gray-500"
-                    >
-                      <XMarkIcon class="h-6 w-6" />
-                    </button>
-                  </div>
-                  
-                  <p class="text-sm text-gray-600 mb-4">
-                    Copiez ce code et collez-le sur vos pages produit où vous souhaitez afficher le bouton ChatSeller.
-                  </p>
-                  
-                  <div class="bg-gray-900 rounded-lg p-4 text-sm text-gray-100 font-mono overflow-x-auto">
-                    <pre><code>&lt;!-- ChatSeller Widget --&gt;
-&lt;script src="https://widget.chatseller.app/widget.js" 
-        data-shop-id="{{ user?.id }}"
-        data-button-text="Parler à la vendeuse"
-        data-primary-color="#ec4899"&gt;&lt;/script&gt;</code></pre>
-                  </div>
-                  
-                  <div class="mt-4 flex justify-end">
-                    <button
-                      @click="copyToClipboard"
-                      class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                    >
-                      <ClipboardIcon class="mr-2 h-4 w-4" />
-                      Copier le code
-                    </button>
-                  </div>
-                </div>
-              </DialogPanel>
-            </TransitionChild>
-          </div>
+    <!-- Notifications toast -->
+    <div 
+      v-if="notification.message" 
+      class="fixed top-4 right-4 z-50 max-w-sm"
+    >
+      <div 
+        :class="[
+          'p-4 rounded-lg shadow-lg border',
+          notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+          notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+          'bg-blue-50 border-blue-200 text-blue-800'
+        ]"
+      >
+        <div class="flex items-center">
+          <component 
+            :is="getNotificationIcon(notification.type)" 
+            class="h-5 w-5 mr-3" 
+          />
+          <p class="text-sm font-medium">{{ notification.message }}</p>
+          <button 
+            @click="clearNotification"
+            class="ml-auto text-gray-400 hover:text-gray-600"
+          >
+            <XMarkIcon class="h-4 w-4" />
+          </button>
         </div>
-      </Dialog>
-    </TransitionRoot>
+      </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div v-if="isLoading" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 flex items-center space-x-3 shadow-xl">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <span class="text-gray-900 font-medium">Chargement...</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, provide } from 'vue'
 import { useRoute } from 'vue-router'
-import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import {
   HomeIcon,
   ChatBubbleLeftRightIcon,
@@ -325,22 +313,34 @@ import {
   MagnifyingGlassIcon,
   Bars3Icon,
   XMarkIcon,
-  EllipsisVerticalIcon,
-  ClipboardIcon
+  UserIcon,
+  ChevronUpDownIcon,
+  ArrowRightOnRectangleIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  InformationCircleIcon
 } from '@heroicons/vue/24/outline'
 
 // Authentification
-const { user, userProfile, signOut } = useAuth()
+const { user, signOut } = useAuth()
 
 // État local
 const sidebarOpen = ref(false)
 const showIntegrationCode = ref(false)
+const isLoading = ref(false)
+
+// Notification système
+const notification = ref({
+  message: '',
+  type: 'info', // 'success' | 'error' | 'info'
+  visible: false
+})
 
 // Navigation
 const navigation = [
   { name: 'Aperçu', href: '/', icon: HomeIcon },
-  { name: 'Conversations', href: '/conversations', icon: ChatBubbleLeftRightIcon, badge: '3' },
-  { name: 'Commandes', href: '/orders', icon: ShoppingBagIcon },
+  { name: 'Conversations', href: '/conversations', icon: ChatBubbleLeftRightIcon, badge: '3', badgeColor: 'bg-blue-100 text-blue-800' },
+  { name: 'Commandes', href: '/orders', icon: ShoppingBagIcon, badge: '5', badgeColor: 'bg-green-100 text-green-800' },
   { name: 'Base de connaissance', href: '/knowledge', icon: BookOpenIcon },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
   { name: 'Configuration', href: '/settings', icon: Cog6ToothIcon },
@@ -382,43 +382,61 @@ const notifications = ref({
   unread: 3
 })
 
-// Fonction pour copier le code
-const copyToClipboard = async () => {
-  const userId = user.value?.id || 'YOUR_SHOP_ID'
-  const code = `<!-- ChatSeller Widget -->
-<script src="https://widget.chatseller.app/widget.js" 
-        data-shop-id="${userId}"
-        data-button-text="Parler à la vendeuse"
-        data-primary-color="#ec4899"><\/script>`
-  
-  try {
-    await navigator.clipboard.writeText(code)
-    // Ajouter notification toast
-    console.log('Code copié !')
-  } catch (error) {
-    console.error('Erreur lors de la copie:', error)
-  }
-}
-
-// Meta pour le SEO
-useSeoMeta({
-  title: `${pageTitle.value} - ChatSeller Dashboard`,
-  description: pageDescription.value
+// Computed
+const userInitials = computed(() => {
+  if (!user.value?.user_metadata) return 'U'
+  const firstName = user.value.user_metadata.firstName || ''
+  const lastName = user.value.user_metadata.lastName || ''
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 })
+
+// Méthodes
+const handleSignOut = async () => {
+  isLoading.value = true
+  try {
+    await signOut()
+  } catch (error) {
+    showNotification('Erreur lors de la déconnexion', 'error')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  notification.value = {
+    message,
+    type,
+    visible: true
+  }
+  
+  setTimeout(() => {
+    clearNotification()
+  }, 5000)
+}
+
+const clearNotification = () => {
+  notification.value = {
+    message: '',
+    type: 'info',
+    visible: false
+  }
+}
+
+const getNotificationIcon = (type: string) => {
+  const icons: Record<string, any> = {
+    success: CheckCircleIcon,
+    error: ExclamationCircleIcon,
+    info: InformationCircleIcon
+  }
+  return icons[type] || InformationCircleIcon
+}
+
+// Close mobile menu on route change
+watch(() => route.path, () => {
+  sidebarOpen.value = false
+})
+
+// Provide global state
+provide('isLoading', isLoading)
+provide('showNotification', showNotification)
 </script>
-
-<style scoped>
-/* Animations personnalisées */
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .5;
-  }
-}
-</style>

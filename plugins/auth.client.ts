@@ -1,5 +1,3 @@
-import { useAuth } from "~/composables/useAuth"
-
 // plugins/auth.client.ts
 export default defineNuxtPlugin(async () => {
   const { initialize } = useAuth()

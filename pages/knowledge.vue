@@ -1,30 +1,29 @@
-<!-- pages/knowledge.vue -->
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-semibold text-gray-900">Base de connaissance</h1>
-          <p class="mt-1 text-sm text-gray-600">
+          <h1 class="text-2xl font-bold text-gray-900">Base de connaissance</h1>
+          <p class="text-sm text-gray-500 mt-1">
             Gérez le contenu qui permet à votre Agent IA de répondre intelligemment aux questions des visiteurs
           </p>
         </div>
         
         <!-- Actions -->
-        <div class="mt-4 sm:mt-0 flex space-x-3">
+        <div class="flex items-center gap-3">
           <button
             @click="refreshKnowledge"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
             :disabled="loading"
           >
-            <ArrowPathIcon class="h-4 w-4 mr-2" :class="{ 'animate-spin': loading }" />
+            <ArrowPathIcon :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
             Actualiser
           </button>
           
           <button 
             @click="showUploadModal = true"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
           >
             <DocumentPlusIcon class="h-4 w-4 mr-2" />
             Ajouter du contenu
@@ -35,10 +34,10 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <div class="p-3 bg-blue-50 rounded-full">
+            <div class="p-3 bg-blue-50 rounded-xl">
               <DocumentTextIcon class="h-6 w-6 text-blue-600" />
             </div>
           </div>
@@ -49,10 +48,10 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <div class="p-3 bg-green-50 rounded-full">
+            <div class="p-3 bg-green-50 rounded-xl">
               <ChatBubbleBottomCenterTextIcon class="h-6 w-6 text-green-600" />
             </div>
           </div>
@@ -63,10 +62,10 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <div class="p-3 bg-yellow-50 rounded-full">
+            <div class="p-3 bg-yellow-50 rounded-xl">
               <TagIcon class="h-6 w-6 text-yellow-600" />
             </div>
           </div>
@@ -77,34 +76,34 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <div class="p-3 bg-blue-50 rounded-full">
-              <ClockIcon class="h-6 w-6 text-blue-600" />
+            <div class="p-3 bg-purple-50 rounded-xl">
+              <ClockIcon class="h-6 w-6 text-purple-600" />
             </div>
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Dernière MAJ</p>
-            <p class="text-2xl font-bold text-gray-900">{{ formatRelativeTime(stats.lastUpdate) }}</p>
+            <p class="text-lg font-bold text-gray-900">{{ formatRelativeTime(stats.lastUpdate) }}</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white rounded-lg border border-gray-200">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
       <div class="border-b border-gray-200">
-        <nav class="-mb-px flex space-x-8 px-6">
+        <nav class="-mb-px flex px-6">
           <button
             v-for="tab in tabs"
             :key="tab.id"
             @click="activeTab = tab.id"
             :class="[
-              activeTab === tab.id
-                ? 'border-blue-500 text-blue-600'
+              activeTab === tab.id 
+                ? 'border-blue-500 text-blue-600 bg-blue-50' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-              'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200'
+              'flex items-center py-4 px-4 border-b-2 font-medium text-sm transition-all duration-200 rounded-t-lg'
             ]"
           >
             <component :is="tab.icon" class="h-5 w-5 mr-2" />
@@ -121,11 +120,11 @@
         <!-- Documents Tab -->
         <div v-if="activeTab === 'documents'" class="space-y-6">
           <!-- Filters -->
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-            <div class="flex space-x-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex flex-wrap gap-4">
               <select
                 v-model="filters.documentType"
-                class="block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Tous les types</option>
                 <option value="pdf">PDF</option>
@@ -136,7 +135,7 @@
 
               <select
                 v-model="filters.category"
-                class="block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Toutes les catégories</option>
                 <option value="products">Produits</option>
@@ -147,14 +146,12 @@
             </div>
 
             <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
-              </div>
+              <MagnifyingGlassIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 v-model="filters.search"
                 type="text"
-                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Rechercher un document..."
+                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
               />
             </div>
           </div>
@@ -164,36 +161,36 @@
             <div
               v-for="document in filteredDocuments"
               :key="document.id"
-              class="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors cursor-pointer border border-gray-200"
+              class="bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-all duration-200 cursor-pointer border border-gray-200 group"
               @click="viewDocument(document)"
             >
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-3">
-                  <div class="h-10 w-10 rounded-md flex items-center justify-center" :class="getDocumentIconBg(document.type)">
+                  <div class="h-10 w-10 rounded-lg flex items-center justify-center" :class="getDocumentIconBg(document.type)">
                     <component :is="getDocumentIcon(document.type)" class="h-6 w-6 text-white" />
                   </div>
-                  <div>
+                  <div class="flex-1 min-w-0">
                     <h3 class="text-sm font-medium text-gray-900 truncate">{{ document.name }}</h3>
                     <p class="text-xs text-gray-500">{{ document.type.toUpperCase() }} • {{ formatFileSize(document.size) }}</p>
                   </div>
                 </div>
-                <div class="flex items-center space-x-1">
+                <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <button
                     @click.stop="editDocument(document)"
-                    class="text-gray-400 hover:text-gray-600"
+                    class="p-1 text-gray-400 hover:text-gray-600 rounded"
                   >
                     <PencilIcon class="h-4 w-4" />
                   </button>
                   <button
                     @click.stop="deleteDocument(document)"
-                    class="text-gray-400 hover:text-red-600"
+                    class="p-1 text-gray-400 hover:text-red-600 rounded"
                   >
                     <TrashIcon class="h-4 w-4" />
                   </button>
                 </div>
               </div>
               
-              <div class="space-y-2">
+              <div class="space-y-3">
                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                   {{ getCategoryText(document.category) }}
                 </span>
@@ -207,11 +204,11 @@
             <!-- Upload Card -->
             <div
               @click="showUploadModal = true"
-              class="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer group"
+              class="bg-white border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 cursor-pointer group"
             >
               <div class="text-center">
-                <DocumentPlusIcon class="h-12 w-12 text-gray-400 group-hover:text-blue-500 mx-auto mb-4" />
-                <h3 class="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+                <DocumentPlusIcon class="h-12 w-12 text-gray-400 group-hover:text-blue-500 mx-auto mb-4 transition-colors duration-200" />
+                <h3 class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
                   Ajouter un document
                 </h3>
                 <p class="text-xs text-gray-500 mt-2">
@@ -228,7 +225,7 @@
             <h3 class="text-lg font-medium text-gray-900">Questions fréquentes</h3>
             <button
               @click="showFAQModal = true"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
             >
               <PlusIcon class="h-4 w-4 mr-2" />
               Ajouter une FAQ
@@ -239,27 +236,29 @@
             <div
               v-for="faq in faqs"
               :key="faq.id"
-              class="bg-gray-50 rounded-lg p-4 border border-gray-200"
+              class="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-sm transition-all duration-200"
             >
               <div class="flex items-start justify-between">
                 <div class="flex-1">
                   <h4 class="text-sm font-medium text-gray-900 mb-2">{{ faq.question }}</h4>
-                  <p class="text-sm text-gray-600">{{ faq.answer }}</p>
-                  <div class="mt-2 flex items-center space-x-4 text-xs text-gray-500">
-                    <span>Catégorie: {{ getCategoryText(faq.category) }}</span>
+                  <p class="text-sm text-gray-600 mb-3">{{ faq.answer }}</p>
+                  <div class="flex items-center space-x-4 text-xs text-gray-500">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+                      {{ getCategoryText(faq.category) }}
+                    </span>
                     <span>{{ formatDate(faq.createdAt) }}</span>
                   </div>
                 </div>
                 <div class="flex items-center space-x-2 ml-4">
                   <button
                     @click="editFAQ(faq)"
-                    class="text-gray-400 hover:text-gray-600"
+                    class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-colors duration-200"
                   >
                     <PencilIcon class="h-4 w-4" />
                   </button>
                   <button
                     @click="deleteFAQ(faq)"
-                    class="text-gray-400 hover:text-red-600"
+                    class="p-2 text-gray-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors duration-200"
                   >
                     <TrashIcon class="h-4 w-4" />
                   </button>
@@ -277,11 +276,30 @@
             <p class="text-sm text-gray-600 max-w-md mx-auto mb-6">
               L'IA s'entraîne automatiquement avec votre contenu. Vous pouvez voir ici les performances et optimiser les réponses.
             </p>
+            
+            <!-- Training Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-3xl mx-auto">
+              <div class="bg-blue-50 rounded-xl p-6">
+                <h4 class="text-lg font-bold text-blue-900">94%</h4>
+                <p class="text-sm text-blue-600">Précision des réponses</p>
+              </div>
+              <div class="bg-green-50 rounded-xl p-6">
+                <h4 class="text-lg font-bold text-green-900">1,247</h4>
+                <p class="text-sm text-green-600">Phrases analysées</p>
+              </div>
+              <div class="bg-purple-50 rounded-xl p-6">
+                <h4 class="text-lg font-bold text-purple-900">12</h4>
+                <p class="text-sm text-purple-600">Catégories détectées</p>
+              </div>
+            </div>
+            
             <div class="flex justify-center space-x-4">
-              <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+              <button class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                <ChartBarIcon class="h-4 w-4 mr-2" />
                 Analyser les performances
               </button>
-              <button class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium bg-white hover:bg-gray-50 transition-colors">
+              <button class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 transition-colors duration-200">
+                <ArrowPathIcon class="h-4 w-4 mr-2" />
                 Réentraîner le modèle
               </button>
             </div>
@@ -320,16 +338,11 @@ import {
   TrashIcon,
   CpuChipIcon,
   DocumentIcon,
-  PlusIcon
+  PlusIcon,
+  ChartBarIcon
 } from '@heroicons/vue/24/outline'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
-
-// Define page meta
-definePageMeta({
-  layout: 'default',
-  title: 'Base de connaissance - ChatSeller'
-})
 
 // State
 const loading = ref(false)
@@ -463,33 +476,23 @@ const getDocumentIcon = (type: string) => {
 }
 
 const getDocumentIconBg = (type: string) => {
-  switch (type) {
-    case 'pdf':
-      return 'bg-red-500'
-    case 'docx':
-      return 'bg-blue-500'
-    case 'csv':
-      return 'bg-green-500'
-    case 'txt':
-      return 'bg-gray-500'
-    default:
-      return 'bg-gray-500'
+  const colors = {
+    pdf: 'bg-red-500',
+    docx: 'bg-blue-500',
+    csv: 'bg-green-500',
+    txt: 'bg-gray-500'
   }
+  return colors[type as keyof typeof colors] || 'bg-gray-500'
 }
 
 const getCategoryText = (category: string) => {
-  switch (category) {
-    case 'products':
-      return 'Produits'
-    case 'policies':
-      return 'Politiques'
-    case 'shipping':
-      return 'Livraison'
-    case 'payment':
-      return 'Paiement'
-    default:
-      return 'Autre'
+  const categories = {
+    products: 'Produits',
+    policies: 'Politiques',
+    shipping: 'Livraison',
+    payment: 'Paiement'
   }
+  return categories[category as keyof typeof categories] || 'Autre'
 }
 
 const formatFileSize = (bytes: number) => {
@@ -516,14 +519,27 @@ const refreshKnowledge = async () => {
   loading.value = true
   await new Promise(resolve => setTimeout(resolve, 1000))
   loading.value = false
+  
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Base de connaissance actualisée avec succès !', 'success')
+  }
 }
 
 const viewDocument = (document: any) => {
   console.log('Viewing document:', document.id)
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification(`Ouverture du document: ${document.name}`, 'info')
+  }
 }
 
 const editDocument = (document: any) => {
   console.log('Editing document:', document.id)
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Modification de document à implémenter', 'info')
+  }
 }
 
 const deleteDocument = (document: any) => {
@@ -532,6 +548,11 @@ const deleteDocument = (document: any) => {
     if (index !== -1) {
       documents.value.splice(index, 1)
       stats.value.totalDocuments--
+      
+      const showNotification = inject('showNotification') as (message: string, type: string) => void
+      if (showNotification) {
+        showNotification('Document supprimé avec succès !', 'success')
+      }
     }
   }
 }
@@ -547,6 +568,11 @@ const deleteFAQ = (faq: any) => {
     if (index !== -1) {
       faqs.value.splice(index, 1)
       stats.value.totalFAQ--
+      
+      const showNotification = inject('showNotification') as (message: string, type: string) => void
+      if (showNotification) {
+        showNotification('FAQ supprimée avec succès !', 'success')
+      }
     }
   }
 }
@@ -560,9 +586,9 @@ const handleFileUpload = (files: FileList) => {
   console.log('Uploading files:', files)
   showUploadModal.value = false
   
-  const setNotification = inject('setNotification') as (message: string) => void
-  if (setNotification) {
-    setNotification('Fichier(s) uploadé(s) avec succès!')
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Fichier(s) uploadé(s) avec succès !', 'success')
   }
 }
 
@@ -584,27 +610,24 @@ const handleFAQSave = (faqData: any) => {
   
   closeFAQModal()
   
-  const setNotification = inject('setNotification') as (message: string) => void
-  if (setNotification) {
-    setNotification('FAQ sauvegardée avec succès!')
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('FAQ sauvegardée avec succès !', 'success')
   }
 }
+
+// Métadonnées de la page
+definePageMeta({
+  layout: 'default'
+})
+
+useSeoMeta({
+  title: 'Base de connaissance - ChatSeller',
+  description: 'Gérez le contenu qui alimente votre Agent IA'
+})
 </script>
 
 <style scoped>
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;

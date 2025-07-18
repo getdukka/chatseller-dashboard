@@ -1,5 +1,3 @@
-import { useAuth } from "~/composables/useAuth"
-
 // middleware/auth.global.ts
 export default defineNuxtRouteMiddleware((to) => {
   // Pages publiques qui ne nécessitent pas d'authentification

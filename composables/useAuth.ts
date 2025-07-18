@@ -6,6 +6,7 @@ interface AuthState {
   user: User | null
   loading: boolean
   error: string | null
+  initialized: boolean
 }
 
 interface SignInCredentials {
@@ -34,9 +35,13 @@ export const useAuth = () => {
   const user = ref<User | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const initialized = ref(false)
   
   // État calculé
   const isAuthenticated = computed(() => !!user.value)
+  const isLoggedIn = computed(() => !!user.value) // Alias pour compatibilité
+  const isLoading = computed(() => loading.value) // Alias pour compatibilité
+  
   const userProfile = computed(() => {
     if (!user.value) return null
     
@@ -57,6 +62,7 @@ export const useAuth = () => {
   // Initialiser l'utilisateur depuis la session
   const initializeAuth = async () => {
     try {
+      loading.value = true
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         user.value = session.user
@@ -66,15 +72,23 @@ export const useAuth = () => {
       supabase.auth.onAuthStateChange((event, session) => {
         user.value = session?.user || null
       })
+      
+      initialized.value = true
     } catch (error) {
       console.error('Erreur initialisation auth:', error)
+      initialized.value = true
+    } finally {
+      loading.value = false
     }
   }
+
+  // Alias pour compatibilité avec le plugin
+  const initialize = initializeAuth
 
   /**
    * Connexion utilisateur
    */
-  const signIn = async ({ email, password }: SignInCredentials) => {
+  const signIn = async (email: string, password: string) => {
     loading.value = true
     error.value = null
     
@@ -85,11 +99,17 @@ export const useAuth = () => {
       })
       
       if (authError) {
-        throw authError
+        return {
+          data: null,
+          error: authError
+        }
       }
       
       if (!data.user) {
-        throw new Error('Aucun utilisateur retourné après connexion')
+        return {
+          data: null,
+          error: { message: 'Aucun utilisateur retourné après connexion' }
+        }
       }
       
       user.value = data.user
@@ -125,12 +145,10 @@ export const useAuth = () => {
         }
       }
       
-      // Redirection vers le dashboard - utiliser navigateTo dans le bon contexte
-      if (process.client) {
-        await navigateTo('/')
+      return { 
+        data: data,
+        error: null
       }
-      
-      return { success: true, user: data.user }
       
     } catch (err: any) {
       const errorMessage = getErrorMessage(err)
@@ -139,8 +157,8 @@ export const useAuth = () => {
       console.error('Erreur de connexion:', err)
       
       return { 
-        success: false, 
-        error: errorMessage 
+        data: null,
+        error: { message: errorMessage }
       }
     } finally {
       loading.value = false
@@ -150,37 +168,42 @@ export const useAuth = () => {
   /**
    * Inscription utilisateur
    */
-  const signUp = async (userData: SignUpData) => {
+  const signUp = async (email: string, password: string, metadata: { firstName: string, lastName: string, company: string, website?: string }) => {
     loading.value = true
     error.value = null
     
     try {
       const { data, error: authError } = await supabase.auth.signUp({
-        email: userData.email.trim().toLowerCase(),
-        password: userData.password,
+        email: email.trim().toLowerCase(),
+        password: password,
         options: {
           data: {
-            first_name: userData.firstName.trim(),
-            last_name: userData.lastName.trim(),
-            business_name: userData.businessName.trim(),
-            phone: userData.phone?.trim(),
-            full_name: `${userData.firstName.trim()} ${userData.lastName.trim()}`
+            first_name: metadata.firstName.trim(),
+            last_name: metadata.lastName.trim(),
+            business_name: metadata.company.trim(),
+            website: metadata.website?.trim(),
+            full_name: `${metadata.firstName.trim()} ${metadata.lastName.trim()}`
           }
         }
       })
       
       if (authError) {
-        throw authError
+        return {
+          data: null,
+          error: authError
+        }
       }
       
       if (!data.user) {
-        throw new Error('Erreur lors de la création du compte')
+        return {
+          data: null,
+          error: { message: 'Erreur lors de la création du compte' }
+        }
       }
       
       return { 
-        success: true, 
-        user: data.user,
-        needsConfirmation: !data.session
+        data: data,
+        error: null
       }
       
     } catch (err: any) {
@@ -190,8 +213,8 @@ export const useAuth = () => {
       console.error('Erreur d\'inscription:', err)
       
       return { 
-        success: false, 
-        error: errorMessage 
+        data: null,
+        error: { message: errorMessage }
       }
     } finally {
       loading.value = false
@@ -252,18 +275,19 @@ export const useAuth = () => {
       )
       
       if (resetError) {
-        throw resetError
+        return {
+          error: resetError
+        }
       }
       
-      return { success: true }
+      return { error: null }
       
     } catch (err: any) {
       const errorMessage = getErrorMessage(err)
       error.value = errorMessage
       
       return { 
-        success: false, 
-        error: errorMessage 
+        error: { message: errorMessage }
       }
     } finally {
       loading.value = false
@@ -358,10 +382,14 @@ export const useAuth = () => {
       'Invalid login credentials': 'Email ou mot de passe incorrect',
       'Email not confirmed': 'Veuillez confirmer votre email avant de vous connecter',
       'User already exists': 'Un compte existe déjà avec cet email',
+      'User already registered': 'Un compte existe déjà avec cet email',
       'Password should be at least 6 characters': 'Le mot de passe doit contenir au moins 6 caractères',
+      'Signup requires a valid password': 'Le mot de passe n\'est pas valide',
       'Invalid email': 'Format d\'email invalide',
       'Signup is disabled': 'Les inscriptions sont temporairement désactivées',
       'Email rate limit exceeded': 'Trop de tentatives, veuillez patienter',
+      'Too many requests': 'Trop de tentatives de connexion. Veuillez réessayer plus tard',
+      'User not found': 'Aucun compte trouvé avec cette adresse email',
       'Invalid credentials': 'Identifiants invalides',
       'Authentication failed': 'Échec de l\'authentification'
     }
@@ -369,7 +397,7 @@ export const useAuth = () => {
     const message = error.message || error.toString()
     
     return errorMessages[message] || 
-           `Erreur d'authentification: ${message}`
+           `Une erreur est survenue. Veuillez réessayer`
   }
 
   /**
@@ -379,16 +407,16 @@ export const useAuth = () => {
     error.value = null
   }
 
-  // Initialiser l'auth au montage du composable
-  initializeAuth()
-
   return {
     // État
     user: readonly(user),
     userProfile,
     loading: readonly(loading),
+    isLoading, // Alias
     error: readonly(error),
     isAuthenticated,
+    isLoggedIn, // Alias
+    initialized: readonly(initialized),
     
     // Actions
     signIn,
@@ -397,6 +425,8 @@ export const useAuth = () => {
     resetPassword,
     updateProfile,
     checkAuth,
-    clearError
+    clearError,
+    initialize, // Alias pour initializeAuth
+    initializeAuth // Fonction originale
   }
 }

@@ -1,390 +1,361 @@
-<!-- pages/orders.vue -->
 <template>
-  <div class="p-6">
-    <div class="max-w-7xl mx-auto">
-      <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Commandes</h1>
+          <p class="text-sm text-gray-500 mt-1">
+            Gérez et suivez toutes les commandes générées par votre Agent IA Commercial
+          </p>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex items-center gap-3">
+          <button
+            @click="refreshOrders"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+            :disabled="loading"
+          >
+            <ArrowPathIcon :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
+            Actualiser
+          </button>
+          
+          <button 
+            @click="exportOrders"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+          >
+            <DocumentArrowDownIcon class="h-4 w-4 mr-2" />
+            Exporter CSV
+          </button>
+          
+          <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+            <PlusIcon class="h-4 w-4 mr-2" />
+            Nouvelle commande
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtres -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+        <!-- Status filter -->
+        <select
+          v-model="filters.status"
+          class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Tous les statuts</option>
+          <option value="pending">En attente</option>
+          <option value="confirmed">Confirmée</option>
+          <option value="processing">En traitement</option>
+          <option value="shipped">Expédiée</option>
+          <option value="delivered">Livrée</option>
+          <option value="cancelled">Annulée</option>
+        </select>
+
+        <!-- Payment filter -->
+        <select
+          v-model="filters.paymentMethod"
+          class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Tous les paiements</option>
+          <option value="mobile_money">Mobile Money</option>
+          <option value="cash">Espèces</option>
+          <option value="card">Carte bancaire</option>
+          <option value="bank_transfer">Virement</option>
+        </select>
+
+        <!-- Date filter -->
+        <select
+          v-model="filters.period"
+          class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="today">Aujourd'hui</option>
+          <option value="week">Cette semaine</option>
+          <option value="month">Ce mois</option>
+          <option value="all">Toutes</option>
+        </select>
+
+        <!-- Search -->
+        <div class="relative flex-1 max-w-md">
+          <MagnifyingGlassIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            v-model="filters.search"
+            type="text"
+            placeholder="Rechercher une commande..."
+            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center">
+              <ShoppingBagIcon class="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Total commandes</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.totalOrders }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="h-12 w-12 bg-green-50 rounded-xl flex items-center justify-center">
+              <CurrencyDollarIcon class="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Chiffre d'affaires</p>
+            <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(stats.totalRevenue) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="h-12 w-12 bg-yellow-50 rounded-xl flex items-center justify-center">
+              <ClockIcon class="h-6 w-6 text-yellow-600" />
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">En attente</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.pendingOrders }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="h-12 w-12 bg-purple-50 rounded-xl flex items-center justify-center">
+              <ChartBarIcon class="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Panier moyen</p>
+            <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(stats.averageOrderValue) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">
+          Commandes récentes ({{ filteredOrders.length }})
+        </h3>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Commande
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Client
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Produits
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Montant
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Paiement
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Statut
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="order in paginatedOrders" :key="order.id" class="hover:bg-gray-50 transition-colors duration-200">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">
+                  #{{ order.orderNumber }}
+                </div>
+                <div class="text-sm text-gray-500">
+                  {{ order.conversationId }}
+                </div>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 bg-gradient-to-r from-blue-400 to-purple-600 rounded-full flex items-center justify-center">
+                    <span class="text-white font-medium text-sm">
+                      {{ getInitials(order.customerName) }}
+                    </span>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">
+                      {{ order.customerName }}
+                    </div>
+                    <div class="text-sm text-gray-500">
+                      {{ order.customerPhone }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              
+              <td class="px-6 py-4">
+                <div class="text-sm text-gray-900">
+                  <span class="font-medium">{{ order.items.length }}</span> 
+                  produit{{ order.items.length > 1 ? 's' : '' }}
+                </div>
+                <div class="text-sm text-gray-500 max-w-xs truncate">
+                  {{ order.items.map(item => item.name).join(', ') }}
+                </div>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">
+                  {{ formatCurrency(order.totalAmount) }}
+                </div>
+                <div class="text-sm text-gray-500">
+                  Qté: {{ order.items.reduce((sum, item) => sum + item.quantity, 0) }}
+                </div>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span :class="getPaymentBadgeClass(order.paymentMethod)">
+                  {{ getPaymentText(order.paymentMethod) }}
+                </span>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span :class="getStatusBadgeClass(order.status)">
+                  {{ getStatusText(order.status) }}
+                </span>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ formatDate(order.createdAt) }}
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <div class="flex items-center space-x-2">
+                  <button
+                    @click="viewOrder(order)"
+                    class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                    title="Voir détails"
+                  >
+                    <EyeIcon class="h-4 w-4" />
+                  </button>
+                  <button
+                    @click="editOrder(order)"
+                    class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                    title="Modifier"
+                  >
+                    <PencilIcon class="h-4 w-4" />
+                  </button>
+                  <button
+                    v-if="order.status !== 'delivered' && order.status !== 'cancelled'"
+                    @click="updateOrderStatus(order)"
+                    class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                    title="Mettre à jour le statut"
+                  >
+                    <CheckCircleIcon class="h-4 w-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+        <div class="flex-1 flex justify-between sm:hidden">
+          <button
+            @click="previousPage"
+            :disabled="currentPage === 1"
+            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Précédent
+          </button>
+          <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
+            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Suivant
+          </button>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">Commandes</h1>
-            <p class="mt-1 text-sm text-gray-600">
-              Gérez et suivez toutes les commandes générées par votre Agent IA Commercial.
+            <p class="text-sm text-gray-700">
+              Affichage de <span class="font-medium">{{ startIndex }}</span> à
+              <span class="font-medium">{{ endIndex }}</span> sur
+              <span class="font-medium">{{ filteredOrders.length }}</span> résultats
             </p>
           </div>
-          
-          <!-- Actions -->
-          <div class="mt-4 sm:mt-0 flex space-x-3">
-            <button
-              @click="refreshOrders"
-              class="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              :disabled="loading"
-            >
-              <ArrowPathIcon class="h-4 w-4 inline mr-2" :class="{ 'animate-spin': loading }" />
-              Actualiser
-            </button>
-            
-            <button 
-              @click="exportOrders"
-              class="bg-green-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-green-700 transition-colors"
-            >
-              <DocumentArrowDownIcon class="h-4 w-4 inline mr-2" />
-              Exporter CSV
-            </button>
-            
-            <button class="bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors">
-              <PlusIcon class="h-4 w-4 inline mr-2" />
-              Nouvelle commande
-            </button>
-          </div>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="h-8 w-8 bg-blue-100 rounded-md flex items-center justify-center">
-                    <ShoppingBagIcon class="h-5 w-5 text-blue-600" />
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Total commandes</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.totalOrders }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="h-8 w-8 bg-green-100 rounded-md flex items-center justify-center">
-                    <CurrencyDollarIcon class="h-5 w-5 text-green-600" />
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Chiffre d'affaires</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ formatCurrency(stats.totalRevenue) }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="h-8 w-8 bg-yellow-100 rounded-md flex items-center justify-center">
-                    <ClockIcon class="h-5 w-5 text-yellow-600" />
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">En attente</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.pendingOrders }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="h-8 w-8 bg-blue-100 rounded-md flex items-center justify-center">
-                    <ChartBarIcon class="h-5 w-5 text-blue-600" />
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Panier moyen</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ formatCurrency(stats.averageOrderValue) }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="bg-white shadow rounded-lg">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-              <div class="flex space-x-4">
-                <!-- Status filter -->
-                <select
-                  v-model="filters.status"
-                  class="block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                >
-                  <option value="">Tous les statuts</option>
-                  <option value="pending">En attente</option>
-                  <option value="confirmed">Confirmée</option>
-                  <option value="processing">En traitement</option>
-                  <option value="shipped">Expédiée</option>
-                  <option value="delivered">Livrée</option>
-                  <option value="cancelled">Annulée</option>
-                </select>
-
-                <!-- Payment filter -->
-                <select
-                  v-model="filters.paymentMethod"
-                  class="block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                >
-                  <option value="">Tous les paiements</option>
-                  <option value="mobile_money">Mobile Money</option>
-                  <option value="cash">Espèces</option>
-                  <option value="card">Carte bancaire</option>
-                  <option value="bank_transfer">Virement</option>
-                </select>
-
-                <!-- Date filter -->
-                <select
-                  v-model="filters.period"
-                  class="block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                >
-                  <option value="today">Aujourd'hui</option>
-                  <option value="week">Cette semaine</option>
-                  <option value="month">Ce mois</option>
-                  <option value="all">Toutes</option>
-                </select>
-              </div>
-
-              <!-- Search -->
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  v-model="filters.search"
-                  type="text"
-                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Rechercher une commande..."
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Orders Table -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">
-              Commandes ({{ filteredOrders.length }})
-            </h3>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Commande
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Produits
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Montant
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Paiement
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th scope="col" class="relative px-6 py-3">
-                    <span class="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="order in paginatedOrders" :key="order.id" class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">
-                      #{{ order.orderNumber }}
-                    </div>
-                    <div class="text-sm text-gray-500">
-                      {{ order.conversationId }}
-                    </div>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                      <div class="h-8 w-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span class="text-white font-medium text-xs">
-                          {{ getInitials(order.customerName) }}
-                        </span>
-                      </div>
-                      <div class="ml-3">
-                        <div class="text-sm font-medium text-gray-900">
-                          {{ order.customerName }}
-                        </div>
-                        <div class="text-sm text-gray-500">
-                          {{ order.customerPhone }}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  
-                  <td class="px-6 py-4">
-                    <div class="text-sm text-gray-900">
-                      {{ order.items.length }} produit{{ order.items.length > 1 ? 's' : '' }}
-                    </div>
-                    <div class="text-sm text-gray-500">
-                      {{ order.items.map(item => item.name).join(', ') }}
-                    </div>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">
-                      {{ formatCurrency(order.totalAmount) }}
-                    </div>
-                    <div class="text-sm text-gray-500">
-                      Qté: {{ order.items.reduce((sum, item) => sum + item.quantity, 0) }}
-                    </div>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                      :class="getPaymentBadgeClass(order.paymentMethod)"
-                    >
-                      {{ getPaymentText(order.paymentMethod) }}
-                    </span>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                      :class="getStatusBadgeClass(order.status)"
-                    >
-                      {{ getStatusText(order.status) }}
-                    </span>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ formatDate(order.createdAt) }}
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div class="flex items-center space-x-2">
-                      <button
-                        @click="viewOrder(order)"
-                        class="text-blue-600 hover:text-blue-900"
-                        title="Voir détails"
-                      >
-                        <EyeIcon class="h-4 w-4" />
-                      </button>
-                      <button
-                        @click="editOrder(order)"
-                        class="text-blue-600 hover:text-blue-900"
-                        title="Modifier"
-                      >
-                        <PencilIcon class="h-4 w-4" />
-                      </button>
-                      <button
-                        v-if="order.status !== 'delivered' && order.status !== 'cancelled'"
-                        @click="updateOrderStatus(order)"
-                        class="text-green-600 hover:text-green-900"
-                        title="Mettre à jour le statut"
-                      >
-                        <CheckCircleIcon class="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination -->
-          <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-            <div class="flex-1 flex justify-between sm:hidden">
+          <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
               <button
                 @click="previousPage"
                 :disabled="currentPage === 1"
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Précédent
+                <ChevronLeftIcon class="h-5 w-5" />
               </button>
+              
+              <button
+                v-for="page in visiblePages"
+                :key="page"
+                @click="goToPage(page)"
+                :class="[
+                  page === currentPage 
+                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
+                  'relative inline-flex items-center px-4 py-2 border text-sm font-medium'
+                ]"
+              >
+                {{ page }}
+              </button>
+              
               <button
                 @click="nextPage"
                 :disabled="currentPage === totalPages"
-                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Suivant
+                <ChevronRightIcon class="h-5 w-5" />
               </button>
-            </div>
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p class="text-sm text-gray-700">
-                  Affichage de <span class="font-medium">{{ startIndex }}</span> à
-                  <span class="font-medium">{{ endIndex }}</span> sur
-                  <span class="font-medium">{{ filteredOrders.length }}</span> résultats
-                </p>
-              </div>
-              <div>
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  <button
-                    @click="previousPage"
-                    :disabled="currentPage === 1"
-                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeftIcon class="h-5 w-5" />
-                  </button>
-                  
-                  <button
-                    v-for="page in visiblePages"
-                    :key="page"
-                    @click="goToPage(page)"
-                    class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                    :class="page === currentPage 
-                      ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
-                  >
-                    {{ page }}
-                  </button>
-                  
-                  <button
-                    @click="nextPage"
-                    :disabled="currentPage === totalPages"
-                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRightIcon class="h-5 w-5" />
-                  </button>
-                </nav>
-              </div>
-            </div>
+            </nav>
           </div>
         </div>
-
-        <!-- Order Details Modal -->
-        <OrderDetailsModal
-          v-if="selectedOrder"
-          :order="selectedOrder"
-          :is-open="isModalOpen"
-          @close="closeModal"
-          @update="handleOrderUpdate"
-        />
       </div>
     </div>
+
+    <!-- Order Details Modal -->
+    <OrderDetailsModal
+      v-if="selectedOrder"
+      :order="selectedOrder"
+      :is-open="isModalOpen"
+      @close="closeModal"
+      @update="handleOrderUpdate"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch } from 'vue'
 import {
   ShoppingBagIcon,
   CurrencyDollarIcon,
@@ -403,12 +374,6 @@ import {
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-// Define page meta
-definePageMeta({
-  layout: 'dashboard',
-  title: 'Commandes - ChatSeller'
-})
-
 // State
 const loading = ref(false)
 const currentPage = ref(1)
@@ -416,8 +381,8 @@ const itemsPerPage = 10
 const selectedOrder = ref(null)
 const isModalOpen = ref(false)
 
-// Filters
-const filters = reactive({
+// Filtres
+const filters = ref({
   status: '',
   paymentMethod: '',
   period: 'month',
@@ -432,7 +397,7 @@ const stats = ref({
   averageOrderValue: 63953
 })
 
-// Mock orders data
+// Mock orders data (données améliorées)
 const orders = ref([
   {
     id: '1',
@@ -524,18 +489,18 @@ const filteredOrders = computed(() => {
   let filtered = orders.value
 
   // Filter by status
-  if (filters.status) {
-    filtered = filtered.filter(order => order.status === filters.status)
+  if (filters.value.status) {
+    filtered = filtered.filter(order => order.status === filters.value.status)
   }
 
   // Filter by payment method
-  if (filters.paymentMethod) {
-    filtered = filtered.filter(order => order.paymentMethod === filters.paymentMethod)
+  if (filters.value.paymentMethod) {
+    filtered = filtered.filter(order => order.paymentMethod === filters.value.paymentMethod)
   }
 
   // Filter by search
-  if (filters.search) {
-    const search = filters.search.toLowerCase()
+  if (filters.value.search) {
+    const search = filters.value.search.toLowerCase()
     filtered = filtered.filter(order => 
       order.orderNumber.toLowerCase().includes(search) ||
       order.customerName.toLowerCase().includes(search) ||
@@ -548,7 +513,7 @@ const filteredOrders = computed(() => {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   
-  switch (filters.period) {
+  switch (filters.value.period) {
     case 'today':
       filtered = filtered.filter(order => order.createdAt >= today)
       break
@@ -560,7 +525,6 @@ const filteredOrders = computed(() => {
       const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate())
       filtered = filtered.filter(order => order.createdAt >= monthAgo)
       break
-    // 'all' - no filter
   }
 
   return filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
@@ -595,71 +559,47 @@ const getInitials = (name: string) => {
 }
 
 const getStatusBadgeClass = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800'
-    case 'confirmed':
-      return 'bg-blue-100 text-blue-800'
-    case 'processing':
-      return 'bg-purple-100 text-purple-800'
-    case 'shipped':
-      return 'bg-indigo-100 text-indigo-800'
-    case 'delivered':
-      return 'bg-green-100 text-green-800'
-    case 'cancelled':
-      return 'bg-red-100 text-red-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
+  const classes = {
+    pending: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800',
+    confirmed: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800',
+    processing: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800',
+    shipped: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800',
+    delivered: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800',
+    cancelled: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800'
   }
+  return classes[status as keyof typeof classes] || classes.pending
 }
 
 const getStatusText = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return 'En attente'
-    case 'confirmed':
-      return 'Confirmée'
-    case 'processing':
-      return 'En traitement'
-    case 'shipped':
-      return 'Expédiée'
-    case 'delivered':
-      return 'Livrée'
-    case 'cancelled':
-      return 'Annulée'
-    default:
-      return 'Inconnue'
+  const texts = {
+    pending: 'En attente',
+    confirmed: 'Confirmée',
+    processing: 'En traitement',
+    shipped: 'Expédiée',
+    delivered: 'Livrée',
+    cancelled: 'Annulée'
   }
+  return texts[status as keyof typeof texts] || 'Inconnue'
 }
 
 const getPaymentBadgeClass = (paymentMethod: string) => {
-  switch (paymentMethod) {
-    case 'mobile_money':
-      return 'bg-orange-100 text-orange-800'
-    case 'cash':
-      return 'bg-green-100 text-green-800'
-    case 'card':
-      return 'bg-blue-100 text-blue-800'
-    case 'bank_transfer':
-      return 'bg-purple-100 text-purple-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
+  const classes = {
+    mobile_money: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800',
+    cash: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800',
+    card: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800',
+    bank_transfer: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800'
   }
+  return classes[paymentMethod as keyof typeof classes] || classes.cash
 }
 
 const getPaymentText = (paymentMethod: string) => {
-  switch (paymentMethod) {
-    case 'mobile_money':
-      return 'Mobile Money'
-    case 'cash':
-      return 'Espèces'
-    case 'card':
-      return 'Carte'
-    case 'bank_transfer':
-      return 'Virement'
-    default:
-      return 'Autre'
+  const texts = {
+    mobile_money: 'Mobile Money',
+    cash: 'Espèces',
+    card: 'Carte',
+    bank_transfer: 'Virement'
   }
+  return texts[paymentMethod as keyof typeof texts] || 'Autre'
 }
 
 const formatCurrency = (amount: number) => {
@@ -676,17 +616,21 @@ const formatDate = (date: Date) => {
 
 const refreshOrders = async () => {
   loading.value = true
-  // Simulate API call
   await new Promise(resolve => setTimeout(resolve, 1000))
   loading.value = false
+  
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Commandes actualisées avec succès !', 'success')
+  }
 }
 
 const exportOrders = () => {
-  // Implement CSV export
   console.log('Exporting orders to CSV...')
-  
-  const notification = inject('setNotification') as (message: string) => void
-  notification('Export CSV démarré! Le fichier sera téléchargé sous peu.')
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Export CSV démarré ! Le fichier sera téléchargé sous peu.', 'info')
+  }
 }
 
 const viewOrder = (order: any) => {
@@ -695,13 +639,19 @@ const viewOrder = (order: any) => {
 }
 
 const editOrder = (order: any) => {
-  // Implement order editing
   console.log('Editing order:', order.id)
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Modification de commande à implémenter', 'info')
+  }
 }
 
 const updateOrderStatus = (order: any) => {
-  // Implement status update
   console.log('Updating order status:', order.id)
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Mise à jour du statut à implémenter', 'info')
+  }
 }
 
 const closeModal = () => {
@@ -710,10 +660,15 @@ const closeModal = () => {
 }
 
 const handleOrderUpdate = (updatedOrder: any) => {
-  // Update the order in the list
   const index = orders.value.findIndex(order => order.id === updatedOrder.id)
   if (index !== -1) {
     orders.value[index] = updatedOrder
+  }
+  closeModal()
+  
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Commande mise à jour avec succès !', 'success')
   }
 }
 
@@ -737,5 +692,15 @@ const goToPage = (page: number) => {
 // Reset pagination when filters change
 watch(filters, () => {
   currentPage.value = 1
+}, { deep: true })
+
+// Métadonnées de la page
+definePageMeta({
+  layout: 'default'
+})
+
+useSeoMeta({
+  title: 'Commandes - ChatSeller',
+  description: 'Gérez et suivez toutes les commandes générées par votre Agent IA Commercial'
 })
 </script>

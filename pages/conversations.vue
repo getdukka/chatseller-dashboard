@@ -1,19 +1,19 @@
 <template>
   <div class="space-y-6">
     <!-- Header avec filtres -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-      <div class="flex items-center justify-between mb-4">
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
         <div>
-          <h1 class="text-2xl font-semibold text-gray-900">Conversations</h1>
+          <h1 class="text-2xl font-bold text-gray-900">Conversations</h1>
           <p class="text-sm text-gray-500 mt-1">
-            Gérez et supervisez toutes les conversations clients
+            Gérez et supervisez toutes les conversations clients en temps réel
           </p>
         </div>
         
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center gap-3">
           <button
             @click="exportConversations"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
           >
             <ArrowDownTrayIcon class="h-4 w-4 mr-2" />
             Exporter CSV
@@ -22,7 +22,7 @@
           <button
             @click="refreshData"
             :disabled="loading"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
           >
             <ArrowPathIcon :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
             Actualiser
@@ -31,10 +31,10 @@
       </div>
       
       <!-- Filtres -->
-      <div class="flex items-center space-x-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-4">
         <select
           v-model="filters.status"
-          class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+          class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">Tous les statuts</option>
           <option value="active">En cours</option>
@@ -44,20 +44,21 @@
         
         <select
           v-model="filters.period"
-          class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+          class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="today">Aujourd'hui</option>
           <option value="week">Cette semaine</option>
           <option value="month">Ce mois</option>
+          <option value="all">Toutes</option>
         </select>
         
-        <div class="relative">
+        <div class="relative flex-1 max-w-md">
           <MagnifyingGlassIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             v-model="filters.search"
             type="text"
             placeholder="Rechercher un client..."
-            class="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
       </div>
@@ -65,10 +66,10 @@
 
     <!-- Métriques rapides -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <div class="p-3 bg-blue-50 rounded-full">
+            <div class="p-3 bg-blue-50 rounded-xl">
               <ChatBubbleLeftRightIcon class="h-6 w-6 text-blue-600" />
             </div>
           </div>
@@ -79,10 +80,10 @@
         </div>
       </div>
       
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <div class="p-3 bg-green-50 rounded-full">
+            <div class="p-3 bg-green-50 rounded-xl">
               <CheckCircleIcon class="h-6 w-6 text-green-600" />
             </div>
           </div>
@@ -93,10 +94,10 @@
         </div>
       </div>
       
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <div class="p-3 bg-yellow-50 rounded-full">
+            <div class="p-3 bg-yellow-50 rounded-xl">
               <ClockIcon class="h-6 w-6 text-yellow-600" />
             </div>
           </div>
@@ -107,11 +108,11 @@
         </div>
       </div>
       
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <div class="p-3 bg-gray-50 rounded-full">
-              <ClockIcon class="h-6 w-6 text-gray-600" />
+            <div class="p-3 bg-purple-50 rounded-xl">
+              <ClockIcon class="h-6 w-6 text-purple-600" />
             </div>
           </div>
           <div class="ml-4">
@@ -123,10 +124,10 @@
     </div>
 
     <!-- Liste des conversations -->
-    <div class="bg-white rounded-lg border border-gray-200">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900">
-          Liste des conversations ({{ filteredConversations.length }})
+          Conversations récentes ({{ filteredConversations.length }})
         </h3>
       </div>
       
@@ -156,18 +157,20 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr 
-              v-for="conversation in filteredConversations" 
+              v-for="conversation in paginatedConversations" 
               :key="conversation.id"
-              class="hover:bg-gray-50"
+              class="hover:bg-gray-50 transition-colors duration-200"
             >
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <div class="flex-shrink-0 h-8 w-8">
-                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      <UserIcon class="h-4 w-4 text-gray-500" />
+                  <div class="flex-shrink-0 h-10 w-10">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
+                      <span class="text-white font-medium text-sm">
+                        {{ getInitials(conversation.visitor_email || 'Visiteur') }}
+                      </span>
                     </div>
                   </div>
-                  <div class="ml-3">
+                  <div class="ml-4">
                     <p class="text-sm font-medium text-gray-900">
                       {{ conversation.visitor_email || 'Visiteur anonyme' }}
                     </p>
@@ -184,8 +187,13 @@
                 </span>
               </td>
               
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ conversation.message_count }} messages
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
+                  <span class="font-medium">{{ conversation.message_count }}</span> messages
+                </div>
+                <div class="text-xs text-gray-500">
+                  Dernière activité il y a {{ getTimeAgo(conversation.last_activity) }}
+                </div>
               </td>
               
               <td class="px-6 py-4 whitespace-nowrap">
@@ -197,27 +205,38 @@
                     {{ conversation.order_status }}
                   </p>
                 </div>
-                <span v-else class="text-sm text-gray-500">-</span>
+                <span v-else class="text-sm text-gray-400">Aucune commande</span>
               </td>
               
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ formatDate(conversation.created_at) }}
               </td>
               
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                <button
-                  @click="viewConversation(conversation.id)"
-                  class="text-blue-600 hover:text-blue-900"
-                >
-                  Voir
-                </button>
-                <button
-                  v-if="conversation.status === 'active'"
-                  @click="takeoverConversation(conversation.id)"
-                  class="text-blue-600 hover:text-blue-900"
-                >
-                  Prendre le contrôle
-                </button>
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <div class="flex items-center space-x-2">
+                  <button
+                    @click="viewConversation(conversation.id)"
+                    class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                    title="Voir détails"
+                  >
+                    <EyeIcon class="h-4 w-4" />
+                  </button>
+                  <button
+                    v-if="conversation.status === 'active'"
+                    @click="takeoverConversation(conversation.id)"
+                    class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                    title="Prendre le contrôle"
+                  >
+                    <UserIcon class="h-4 w-4" />
+                  </button>
+                  <button
+                    @click="deleteConversation(conversation.id)"
+                    class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                    title="Supprimer"
+                  >
+                    <TrashIcon class="h-4 w-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -228,14 +247,16 @@
       <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
         <div class="flex-1 flex justify-between sm:hidden">
           <button
+            @click="previousPage"
             :disabled="currentPage === 1"
-            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Précédent
           </button>
           <button
+            @click="nextPage"
             :disabled="currentPage === totalPages"
-            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Suivant
           </button>
@@ -244,26 +265,42 @@
         <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
             <p class="text-sm text-gray-700">
-              Affichage de <span class="font-medium">{{ (currentPage - 1) * perPage + 1 }}</span>
-              à <span class="font-medium">{{ Math.min(currentPage * perPage, conversations.length) }}</span>
-              sur <span class="font-medium">{{ conversations.length }}</span> résultats
+              Affichage de <span class="font-medium">{{ startIndex }}</span>
+              à <span class="font-medium">{{ endIndex }}</span>
+              sur <span class="font-medium">{{ filteredConversations.length }}</span> résultats
             </p>
           </div>
           
           <div>
             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
               <button
+                @click="previousPage"
+                :disabled="currentPage === 1"
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeftIcon class="h-5 w-5" />
+              </button>
+              
+              <button
                 v-for="page in visiblePages"
                 :key="page"
                 @click="currentPage = page"
                 :class="[
-                  page === currentPage
+                  page === currentPage 
                     ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                     : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
                   'relative inline-flex items-center px-4 py-2 border text-sm font-medium'
                 ]"
               >
                 {{ page }}
+              </button>
+              
+              <button
+                @click="nextPage"
+                :disabled="currentPage === totalPages"
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRightIcon class="h-5 w-5" />
               </button>
             </nav>
           </div>
@@ -272,8 +309,9 @@
     </div>
 
     <!-- Modal détail conversation -->
-    <ConversationModal 
-      v-model:show="showConversationModal"
+    <ConversationMod 
+      :show="showConversationModal"
+      @close="showConversationModal = false"
       :conversation-id="selectedConversationId"
     />
   </div>
@@ -288,9 +326,12 @@ import {
   UserIcon,
   MagnifyingGlassIcon,
   ArrowPathIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  EyeIcon,
+  TrashIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/vue/24/outline'
-import ConversationModal from '~/components/ui/ConversationModal.vue'
 
 // État local
 const loading = ref(false)
@@ -314,17 +355,18 @@ const stats = ref({
   averageTime: 12
 })
 
-// Conversations (données simulées)
+// Conversations (données simulées améliorées)
 const conversations = ref([
   {
     id: '1',
-    visitor_email: 'client@example.com',
+    visitor_email: 'marie.dubois@email.com',
     visitor_ip: '192.168.1.1',
     status: 'completed',
     message_count: 15,
     order_amount: 45000,
     order_status: 'confirmée',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    last_activity: new Date(Date.now() - 10 * 60 * 1000)
   },
   {
     id: '2',
@@ -334,17 +376,30 @@ const conversations = ref([
     message_count: 3,
     order_amount: null,
     order_status: null,
-    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    last_activity: new Date(Date.now() - 2 * 60 * 1000)
   },
   {
     id: '3',
-    visitor_email: 'marie@test.com',
+    visitor_email: 'jean.martin@test.com',
     visitor_ip: '192.168.1.3',
     status: 'abandoned',
     message_count: 8,
     order_amount: null,
     order_status: null,
-    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    last_activity: new Date(Date.now() - 2 * 60 * 60 * 1000)
+  },
+  {
+    id: '4',
+    visitor_email: 'sophie.laurent@gmail.com',
+    visitor_ip: '192.168.1.4',
+    status: 'completed',
+    message_count: 12,
+    order_amount: 75000,
+    order_status: 'en traitement',
+    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+    last_activity: new Date(Date.now() - 4 * 60 * 60 * 1000)
   }
 ])
 
@@ -364,11 +419,20 @@ const filteredConversations = computed(() => {
     )
   }
 
-  return filtered
+  return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 })
 
 // Pagination
 const totalPages = computed(() => Math.ceil(filteredConversations.value.length / perPage))
+const startIndex = computed(() => (currentPage.value - 1) * perPage + 1)
+const endIndex = computed(() => Math.min(currentPage.value * perPage, filteredConversations.value.length))
+
+const paginatedConversations = computed(() => {
+  const start = (currentPage.value - 1) * perPage
+  const end = start + perPage
+  return filteredConversations.value.slice(start, end)
+})
+
 const visiblePages = computed(() => {
   const pages = []
   const start = Math.max(1, currentPage.value - 2)
@@ -382,10 +446,15 @@ const visiblePages = computed(() => {
 })
 
 // Fonctions utilitaires
+const getInitials = (name: string) => {
+  if (!name) return 'V'
+  return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)
+}
+
 const getStatusClass = (status: string) => {
   const classes: Record<string, string> = {
-    active: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800',
-    completed: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800',
+    active: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800',
+    completed: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800',
     abandoned: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800'
   }
   return classes[status] || classes.abandoned
@@ -410,31 +479,35 @@ const formatCurrency = (amount: number) => {
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const getTimeAgo = (date: Date) => {
   const now = new Date()
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
   
-  if (diffInMinutes < 60) {
-    return `Il y a ${diffInMinutes} min`
-  } else if (diffInMinutes < 24 * 60) {
-    const hours = Math.floor(diffInMinutes / 60)
-    return `Il y a ${hours}h`
-  } else {
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+  if (diffInMinutes < 1) return 'à l\'instant'
+  if (diffInMinutes < 60) return `${diffInMinutes} min`
+  const hours = Math.floor(diffInMinutes / 60)
+  if (hours < 24) return `${hours}h`
+  const days = Math.floor(hours / 24)
+  return `${days}j`
 }
 
 // Actions
 const refreshData = async () => {
   loading.value = true
   try {
-    // Simuler un appel API
     await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('Données actualisées')
+    const showNotification = inject('showNotification') as (message: string, type: string) => void
+    if (showNotification) {
+      showNotification('Conversations actualisées avec succès !', 'success')
+    }
   } catch (error) {
     console.error('Erreur lors de l\'actualisation:', error)
   } finally {
@@ -444,7 +517,10 @@ const refreshData = async () => {
 
 const exportConversations = () => {
   console.log('Export des conversations')
-  // Ici implémenter l'export CSV
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Export CSV démarré ! Le fichier sera téléchargé sous peu.', 'info')
+  }
 }
 
 const viewConversation = (id: string) => {
@@ -454,8 +530,42 @@ const viewConversation = (id: string) => {
 
 const takeoverConversation = (id: string) => {
   console.log('Prise de contrôle de la conversation:', id)
-  // Ici implémenter la prise de contrôle
+  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  if (showNotification) {
+    showNotification('Prise de contrôle activée !', 'success')
+  }
 }
+
+const deleteConversation = (id: string) => {
+  if (confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+    const index = conversations.value.findIndex(conv => conv.id === id)
+    if (index !== -1) {
+      conversations.value.splice(index, 1)
+      const showNotification = inject('showNotification') as (message: string, type: string) => void
+      if (showNotification) {
+        showNotification('Conversation supprimée avec succès !', 'success')
+      }
+    }
+  }
+}
+
+// Pagination
+const previousPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+// Reset pagination when filters change
+watch(filters, () => {
+  currentPage.value = 1
+}, { deep: true })
 
 // Métadonnées de la page
 definePageMeta({
@@ -472,18 +582,3 @@ onMounted(() => {
   console.log('Page conversations montée')
 })
 </script>
-
-<style scoped>
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-</style>
