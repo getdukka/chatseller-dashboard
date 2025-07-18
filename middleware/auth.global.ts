@@ -1,31 +1,24 @@
-// middleware/auth.global.ts
-export default defineNuxtRouteMiddleware((to) => {
-  // Pages publiques qui ne nécessitent pas d'authentification
-  const publicPages = ['/login', '/register', '/reset-password']
+// middleware/auth.ts
+export default defineNuxtRouteMiddleware((to, from) => {
+  // Vérifier si on est côté client
+  if (process.client) {
+    const token = localStorage.getItem('auth_token')
+    const user = localStorage.getItem('user_data')
+    
+    // Si pas de token ou user, rediriger vers login
+    if (!token || !user) {
+      // Éviter la redirection infinie
+      if (to.path !== '/login' && to.path !== '/register') {
+        return navigateTo('/login')
+      }
+    }
+    
+    // Si connecté et qu'on va sur login/register, rediriger vers dashboard
+    if ((to.path === '/login' || to.path === '/register') && token && user) {
+      return navigateTo('/')
+    }
+  }
   
-  // Vérifier si la page actuelle est publique
-  const isPublicPage = publicPages.some(page => to.path.startsWith(page))
-
-  // Skip middleware on server-side during SSR
-  if (process.server) {
-    return
-  }
-
-  // Get auth state
-  const { isLoggedIn, initialized, isLoading } = useAuth()
-
-  // Si l'auth n'est pas encore initialisée, attendre
-  if (!initialized.value && isLoading.value) {
-    return
-  }
-
-  // Si l'utilisateur n'est pas connecté et essaie d'accéder à une page privée
-  if (!isLoggedIn.value && !isPublicPage) {
-    return navigateTo('/login')
-  }
-
-  // Si l'utilisateur est connecté et essaie d'accéder à une page d'auth
-  if (isLoggedIn.value && isPublicPage) {
-    return navigateTo('/')
-  }
+  // Côté serveur, permettre l'accès (la vérification se fera côté client)
+  return
 })

@@ -1,57 +1,70 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+// nuxt.config.ts
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
-  // Modules - SANS @nuxtjs/supabase
   modules: [
-    '@nuxtjs/tailwindcss'
+    '@nuxtjs/tailwindcss',
+    '@pinia/nuxt',
+    '@vueuse/nuxt',
+    '@nuxt/image'
+    // Supprimé '@supabase/nuxt' temporairement
   ],
 
-  // CSS
   css: ['~/assets/css/main.css'],
 
-  // Runtime config
   runtimeConfig: {
+    apiSecret: '',
     public: {
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
-      apiUrl: process.env.API_URL || 'https://api.chatseller.app',
-      widgetUrl: process.env.WIDGET_URL || 'https://widget.chatseller.app',
-      appUrl: process.env.APP_URL || 'https://dashboard.chatseller.app'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://api.chatseller.app',
+      environment: process.env.NODE_ENV || 'development'
+      // Supprimé les variables Supabase
     }
   },
 
-  // TypeScript configuration
-  typescript: {
-    strict: false,
-    typeCheck: false
+  nitro: {
+    preset: 'vercel'
   },
 
-  // Auto-imports
-  imports: {
-    dirs: [
-      'composables',
-      'composables/**',
-      'utils'
-    ]
+  build: {
+    transpile: ['@headlessui/vue', '@heroicons/vue']
   },
 
-  // Components auto-import
+  ssr: true,
+
   components: [
     {
       path: '~/components',
-      pathPrefix: false,
+      pathPrefix: false
     }
   ],
 
-  // App configuration
+  imports: {
+    dirs: [
+      'composables',
+      'utils',
+      'stores'
+    ]
+  },
+
+  typescript: {
+    typeCheck: false
+  },
+
+  tailwindcss: {
+    cssPath: '~/assets/css/main.css'
+  },
+
   app: {
     head: {
       title: 'ChatSeller Dashboard',
+      titleTemplate: '%s - ChatSeller',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Dashboard de votre Agent IA Commercial ChatSeller' }
+        { 
+          name: 'description', 
+          content: 'Dashboard pour gérer votre Agent IA Commercial ChatSeller' 
+        }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
@@ -59,8 +72,9 @@ export default defineNuxtConfig({
     }
   },
 
-  // Build configuration
-  build: {
-    transpile: ['@headlessui/vue', '@supabase/supabase-js']
+  vite: {
+    optimizeDeps: {
+      include: ['date-fns', 'pinia']
+    }
   }
 })

@@ -309,16 +309,16 @@
     </div>
 
     <!-- Modal détail conversation -->
-    <ConversationMod 
+    <ConversationModal 
       :show="showConversationModal"
-      @close="showConversationModal = false"
+      @update:show="showConversationModal = $event"
       :conversation-id="selectedConversationId"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, inject } from 'vue'
 import {
   ChatBubbleLeftRightIcon,
   CheckCircleIcon,
@@ -504,7 +504,7 @@ const refreshData = async () => {
   loading.value = true
   try {
     await new Promise(resolve => setTimeout(resolve, 1000))
-    const showNotification = inject('showNotification') as (message: string, type: string) => void
+    const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
     if (showNotification) {
       showNotification('Conversations actualisées avec succès !', 'success')
     }
@@ -517,7 +517,7 @@ const refreshData = async () => {
 
 const exportConversations = () => {
   console.log('Export des conversations')
-  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
   if (showNotification) {
     showNotification('Export CSV démarré ! Le fichier sera téléchargé sous peu.', 'info')
   }
@@ -530,7 +530,7 @@ const viewConversation = (id: string) => {
 
 const takeoverConversation = (id: string) => {
   console.log('Prise de contrôle de la conversation:', id)
-  const showNotification = inject('showNotification') as (message: string, type: string) => void
+  const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
   if (showNotification) {
     showNotification('Prise de contrôle activée !', 'success')
   }
@@ -541,7 +541,7 @@ const deleteConversation = (id: string) => {
     const index = conversations.value.findIndex(conv => conv.id === id)
     if (index !== -1) {
       conversations.value.splice(index, 1)
-      const showNotification = inject('showNotification') as (message: string, type: string) => void
+      const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
       if (showNotification) {
         showNotification('Conversation supprimée avec succès !', 'success')
       }
@@ -569,7 +569,18 @@ watch(filters, () => {
 
 // Métadonnées de la page
 definePageMeta({
-  layout: 'default'
+  middleware: defineNuxtRouteMiddleware((to) => {
+    if (process.client) {
+      const token = localStorage.getItem('auth_token')
+      const user = localStorage.getItem('user_data')
+      
+      if (!token || !user) {
+        if (to.path !== '/login' && to.path !== '/register') {
+          return navigateTo('/login')
+        }
+      }
+    }
+  })
 })
 
 useSeoMeta({

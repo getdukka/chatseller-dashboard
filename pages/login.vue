@@ -1,118 +1,64 @@
+<!-- Dans pages/login.vue, corriger la gestion d'erreur : -->
+
 <script setup lang="ts">
-import {
-  EnvelopeIcon,
-  LockClosedIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  ExclamationCircleIcon,
-  CheckIcon,
-  ShieldCheckIcon,
-  ClockIcon
-} from '@heroicons/vue/24/outline'
+import { ref } from 'vue'
+import { LockClosedIcon, XCircleIcon } from '@heroicons/vue/24/solid'
+import { useAuthStore } from '~/stores/auth'
 
-// Seo
+// Métadonnées
 definePageMeta({
-  layout: false,
-  title: 'Connexion - ChatSeller Dashboard'
+  layout: false
 })
 
-useSeoMeta({
-  title: 'Connexion - ChatSeller Dashboard',
-  description: 'Connectez-vous à votre dashboard ChatSeller pour gérer votre Agent IA Commercial'
-})
+// Store
+const authStore = useAuthStore()
 
-// Auth
-const { signIn } = useAuth()
-const router = useRouter()
-
-// Form state
-const form = reactive({
+// État du formulaire
+const form = ref({
   email: '',
   password: '',
-  rememberMe: false
+  remember: false
 })
 
-const errors = reactive({
-  email: '',
-  password: ''
-})
-
-const showPassword = ref(false)
 const loading = ref(false)
-const error = ref('')
+const errorMessage = ref('')
 
-// Validation rules
-const validateForm = () => {
-  errors.email = ''
-  errors.password = ''
-  
-  if (!form.email) {
-    errors.email = 'L\'adresse email est requise'
-    return false
+// ✅ Gestion de la connexion avec typage d'erreur correct
+const handleLogin = async () => {
+  if (!form.value.email || !form.value.password) {
+    errorMessage.value = 'Veuillez remplir tous les champs'
+    return
   }
-  
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = 'L\'adresse email n\'est pas valide'
-    return false
-  }
-  
-  if (!form.password) {
-    errors.password = 'Le mot de passe est requis'
-    return false
-  }
-  
-  if (form.password.length < 6) {
-    errors.password = 'Le mot de passe doit contenir au moins 6 caractères'
-    return false
-  }
-  
-  return true
-}
 
-// Handle form submission
-const handleSubmit = async () => {
-  if (!validateForm()) return
-  
   loading.value = true
-  error.value = ''
-  
+  errorMessage.value = ''
+
   try {
-    const { data, error: authError } = await signIn(form.email, form.password)
+    await authStore.login({
+      email: form.value.email,
+      password: form.value.password
+    })
     
-    if (authError) {
-      switch (authError.message) {
-        case 'Invalid login credentials':
-          error.value = 'Email ou mot de passe incorrect'
-          break
-        case 'Email not confirmed':
-          error.value = 'Veuillez confirmer votre email avant de vous connecter'
-          break
-        case 'Too many requests':
-          error.value = 'Trop de tentatives de connexion. Veuillez réessayer plus tard'
-          break
-        default:
-          error.value = 'Une erreur est survenue. Veuillez réessayer'
-      }
-      return
+    // Rediriger vers le dashboard
+    await navigateTo('/')
+  } catch (error: unknown) {
+    // ✅ Correction TypeScript : gestion correcte de l'erreur unknown
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else if (typeof error === 'string') {
+      errorMessage.value = error
+    } else {
+      errorMessage.value = 'Erreur de connexion inconnue'
     }
-    
-    if (data?.user) {
-      // Success - redirection automatique via le middleware
-      await router.push('/')
-    }
-  } catch (err) {
-    console.error('Login error:', err)
-    error.value = 'Une erreur inattendue est survenue'
   } finally {
     loading.value = false
   }
 }
 
-// Auto-focus on email field
-onMounted(() => {
-  const emailInput = document.getElementById('email')
-  if (emailInput) {
-    emailInput.focus()
-  }
-})
+// Connexion démo rapide
+const loginDemo = () => {
+  form.value.email = 'admin@chatseller.app'
+  form.value.password = 'password'
+  handleLogin()
+}
 </script>

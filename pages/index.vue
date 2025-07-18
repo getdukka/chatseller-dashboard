@@ -1,386 +1,323 @@
+<!-- pages/index.vue -->
 <template>
-  <div class="space-y-8">
-    <!-- Header avec actions rapides -->
-    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-8 text-white shadow-lg">
+  <div class="space-y-6">
+    <!-- Header de bienvenue -->
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl text-white p-6 shadow-sm">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold">
-            Bonjour {{ userProfile?.firstName || 'Marchand' }} ! 👋
+          <h1 class="text-2xl font-bold flex items-center">
+            Bonjour Marchand ! 👋
           </h1>
-          <p class="text-blue-100 mt-2 text-lg">
-            Voici un aperçu de votre Agent IA Commercial aujourd'hui
+          <p class="text-blue-100 mt-1">
+            Voici un aperçu de votre Agent IA Commercial aujourd'hui !
           </p>
         </div>
         
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-3">
           <button
             @click="refreshData"
             :disabled="loading"
-            class="inline-flex items-center px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center"
           >
-            <ArrowPathIcon :class="['h-5 w-5 mr-2', loading && 'animate-spin']" />
+            <ArrowPathIcon :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
             Actualiser
           </button>
           
-          <NuxtLink
-            to="/settings"
-            class="inline-flex items-center px-6 py-3 bg-white text-blue-600 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 shadow-md"
+          <button
+            @click="configureAgent"
+            class="bg-white text-blue-600 hover:bg-gray-50 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center font-medium"
           >
-            <Cog6ToothIcon class="h-5 w-5 mr-2" />
+            <Cog6ToothIcon class="h-4 w-4 mr-2" />
             Configurer
-          </NuxtLink>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Statut du widget en première position -->
+    <!-- Statut du widget -->
     <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-gray-900">Statut du widget</h2>
-        <div class="flex items-center space-x-2">
-          <div class="h-3 w-3 bg-green-400 rounded-full animate-pulse"></div>
-          <span class="text-sm font-medium text-green-600">En ligne</span>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+            <span class="text-lg font-semibold text-gray-900">Widget actif</span>
+          </div>
+          <span class="text-sm text-gray-500">
+            Dernière activité il y a 2 minutes
+          </span>
         </div>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Statut principal -->
-        <div class="col-span-1 md:col-span-2">
-          <div class="bg-green-50 rounded-lg p-6 border border-green-200">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-4">
-                <div class="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircleIcon class="h-7 w-7 text-green-600" />
-                </div>
-                <div>
-                  <h3 class="text-lg font-semibold text-green-800">Widget actif</h3>
-                  <p class="text-sm text-green-600">Dernière activité il y a 2 minutes</p>
-                </div>
-              </div>
-              <button
-                @click="previewWidget"
-                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
-              >
-                <EyeIcon class="h-4 w-4 mr-2" />
-                Aperçu
-              </button>
-            </div>
+        
+        <div class="flex items-center space-x-6">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-gray-900">{{ stats.todayViews }}</div>
+            <div class="text-sm text-gray-500">Vues aujourd'hui</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-gray-900">{{ stats.todayClicks }}</div>
+            <div class="text-sm text-gray-500">Clics aujourd'hui</div>
           </div>
         </div>
         
-        <!-- Métriques du widget -->
-        <div class="space-y-4">
-          <div class="text-center p-4 bg-gray-50 rounded-lg">
-            <p class="text-3xl font-bold text-gray-900">{{ widgetStats.impressions.toLocaleString() }}</p>
-            <p class="text-sm text-gray-500">Vues aujourd'hui</p>
-          </div>
-          <div class="text-center p-4 bg-gray-50 rounded-lg">
-            <p class="text-3xl font-bold text-gray-900">{{ widgetStats.clicks.toLocaleString() }}</p>
-            <p class="text-sm text-gray-500">Clics aujourd'hui</p>
-          </div>
-        </div>
+        <button
+          @click="previewWidget"
+          class="bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center"
+        >
+          <EyeIcon class="h-4 w-4 mr-2" />
+          Aperçu
+        </button>
       </div>
     </div>
 
     <!-- Métriques principales -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-      <!-- Conversations totales -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 group">
-        <div class="flex items-center justify-between">
-          <div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center">
+          <div class="p-3 bg-blue-50 rounded-xl">
+            <ChatBubbleLeftRightIcon class="h-6 w-6 text-blue-600" />
+          </div>
+          <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Conversations totales</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">
-              {{ metrics.totalConversations.toLocaleString() }}
+            <p class="text-2xl font-bold text-gray-900">{{ metrics.totalConversations }}</p>
+            <p class="text-xs text-green-600 flex items-center mt-1">
+              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
+              {{ metrics.conversationsGrowth }}% vs hier
             </p>
-            <div class="flex items-center mt-3">
-              <div :class="[
-                'flex items-center text-sm font-medium',
-                metrics.conversationsGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-              ]">
-                <component 
-                  :is="metrics.conversationsGrowth >= 0 ? 'ArrowTrendingUpIcon' : 'ArrowTrendingDownIcon'" 
-                  class="h-4 w-4 mr-1" 
-                />
-                {{ Math.abs(metrics.conversationsGrowth) }}%
-              </div>
-              <span class="text-sm text-gray-500 ml-2">vs hier</span>
-            </div>
-          </div>
-          <div class="p-4 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors duration-200">
-            <ChatBubbleLeftRightIcon class="h-8 w-8 text-blue-600" />
           </div>
         </div>
       </div>
-
-      <!-- Taux de conversion -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 group">
-        <div class="flex items-center justify-between">
-          <div>
+      
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center">
+          <div class="p-3 bg-green-50 rounded-xl">
+            <CheckCircleIcon class="h-6 w-6 text-green-600" />
+          </div>
+          <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Taux de conversion</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">
-              {{ metrics.conversionRate }}%
+            <p class="text-2xl font-bold text-gray-900">{{ metrics.conversionRate }}%</p>
+            <p class="text-xs text-green-600 flex items-center mt-1">
+              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
+              {{ metrics.conversionGrowth }}% vs hier
             </p>
-            <div class="flex items-center mt-3">
-              <div :class="[
-                'flex items-center text-sm font-medium',
-                metrics.conversionGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-              ]">
-                <component 
-                  :is="metrics.conversionGrowth >= 0 ? 'ArrowTrendingUpIcon' : 'ArrowTrendingDownIcon'" 
-                  class="h-4 w-4 mr-1" 
-                />
-                {{ Math.abs(metrics.conversionGrowth) }}%
-              </div>
-              <span class="text-sm text-gray-500 ml-2">vs hier</span>
-            </div>
-          </div>
-          <div class="p-4 bg-green-50 rounded-xl group-hover:bg-green-100 transition-colors duration-200">
-            <ChartBarIcon class="h-8 w-8 text-green-600" />
           </div>
         </div>
       </div>
-
-      <!-- Revenus générés -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 group">
-        <div class="flex items-center justify-between">
-          <div>
+      
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center">
+          <div class="p-3 bg-purple-50 rounded-xl">
+            <CurrencyDollarIcon class="h-6 w-6 text-purple-600" />
+          </div>
+          <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Revenus générés</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">
-              {{ formatCurrency(metrics.revenue) }}
+            <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(metrics.revenue) }}</p>
+            <p class="text-xs text-green-600 flex items-center mt-1">
+              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
+              {{ metrics.revenueGrowth }}% vs hier
             </p>
-            <div class="flex items-center mt-3">
-              <div :class="[
-                'flex items-center text-sm font-medium',
-                metrics.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-              ]">
-                <component 
-                  :is="metrics.revenueGrowth >= 0 ? 'ArrowTrendingUpIcon' : 'ArrowTrendingDownIcon'" 
-                  class="h-4 w-4 mr-1" 
-                />
-                {{ Math.abs(metrics.revenueGrowth) }}%
-              </div>
-              <span class="text-sm text-gray-500 ml-2">vs hier</span>
-            </div>
-          </div>
-          <div class="p-4 bg-purple-50 rounded-xl group-hover:bg-purple-100 transition-colors duration-200">
-            <CurrencyDollarIcon class="h-8 w-8 text-purple-600" />
           </div>
         </div>
       </div>
-
-      <!-- Panier moyen -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 group">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600">Panier moyen</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">
-              {{ formatCurrency(metrics.averageOrderValue) }}
-            </p>
-            <div class="flex items-center mt-3">
-              <div :class="[
-                'flex items-center text-sm font-medium',
-                metrics.aovGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-              ]">
-                <component 
-                  :is="metrics.aovGrowth >= 0 ? 'ArrowTrendingUpIcon' : 'ArrowTrendingDownIcon'" 
-                  class="h-4 w-4 mr-1" 
-                />
-                {{ Math.abs(metrics.aovGrowth) }}%
-              </div>
-              <span class="text-sm text-gray-500 ml-2">vs hier</span>
-            </div>
+      
+      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center">
+          <div class="p-3 bg-orange-50 rounded-xl">
+            <ShoppingBagIcon class="h-6 w-6 text-orange-600" />
           </div>
-          <div class="p-4 bg-orange-50 rounded-xl group-hover:bg-orange-100 transition-colors duration-200">
-            <ShoppingBagIcon class="h-8 w-8 text-orange-600" />
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Panier moyen</p>
+            <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(metrics.averageOrder) }}</p>
+            <p class="text-xs text-red-600 flex items-center mt-1">
+              <ArrowTrendingDownIcon class="h-3 w-3 mr-1" />
+              {{ metrics.averageOrderGrowth }}% vs hier
+            </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Contenu principal -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-      <!-- Activité récente (2/3) -->
-      <div class="xl:col-span-2 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Activité récente</h2>
-          <NuxtLink
-            to="/conversations"
-            class="text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Voir tout →
-          </NuxtLink>
+    <!-- Sections côte à côte -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Activité récente -->
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Activité récente</h3>
+            <NuxtLink
+              to="/conversations"
+              class="text-sm text-blue-600 hover:text-blue-500 font-medium"
+            >
+              Voir tout →
+            </NuxtLink>
+          </div>
         </div>
         
-        <div class="space-y-4">
-          <div 
-            v-for="activity in recentActivity" 
-            :key="activity.id"
-            class="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-          >
-            <div :class="[
-              'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center',
-              activity.type === 'conversation' && 'bg-blue-100',
-              activity.type === 'order' && 'bg-green-100',
-              activity.type === 'visitor' && 'bg-purple-100'
-            ]">
-              <component :is="getActivityIcon(activity.type)" :class="[
-                'h-5 w-5',
-                activity.type === 'conversation' && 'text-blue-600',
-                activity.type === 'order' && 'text-green-600',
-                activity.type === 'visitor' && 'text-purple-600'
-              ]" />
+        <div class="p-6">
+          <div class="space-y-4">
+            <div 
+              v-for="activity in recentActivity"
+              :key="activity.id"
+              class="flex items-start space-x-3"
+            >
+              <div :class="['p-2 rounded-lg', getActivityIconClass(activity.type)]">
+                <component :is="getActivityIcon(activity.type)" class="h-4 w-4" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900">{{ activity.title }}</p>
+                <p class="text-sm text-gray-500">{{ activity.description }}</p>
+                <p class="text-xs text-gray-400 mt-1">{{ formatTimeAgo(activity.timestamp) }}</p>
+              </div>
+              <div v-if="activity.amount" class="text-right">
+                <p class="text-sm font-medium text-green-600">{{ formatCurrency(activity.amount) }}</p>
+              </div>
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900">{{ activity.message }}</p>
-              <p class="text-xs text-gray-500 mt-1">{{ formatTime(activity.timestamp) }}</p>
-            </div>
-            <span v-if="activity.amount" class="text-sm font-semibold text-green-600">
-              {{ formatCurrency(activity.amount as number) }}
-            </span>
           </div>
         </div>
       </div>
-
-      <!-- Actions rapides (1/3) -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">Actions rapides</h2>
-        
-        <div class="space-y-4">
-          <button
-            @click="$router.push('/settings')"
-            class="w-full flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group text-left"
-          >
-            <div class="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors duration-200">
-              <Cog6ToothIcon class="h-6 w-6 text-blue-600" />
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-gray-900 group-hover:text-blue-700">
-                Configurer l'agent
-              </h3>
-              <p class="text-xs text-gray-500 mt-1">
-                Personnalisez votre IA
-              </p>
-            </div>
-          </button>
-          
-          <button
-            @click="$router.push('/knowledge')"
-            class="w-full flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 group text-left"
-          >
-            <div class="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors duration-200">
-              <BookOpenIcon class="h-6 w-6 text-green-600" />
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-gray-900 group-hover:text-green-700">
-                Base de connaissance
-              </h3>
-              <p class="text-xs text-gray-500 mt-1">
-                Ajouter du contenu
-              </p>
-            </div>
-          </button>
-          
-          <button
-            @click="showIntegrationModal = true"
-            class="w-full flex items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 group text-left"
-          >
-            <div class="p-3 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors duration-200">
-              <CodeBracketIcon class="h-6 w-6 text-purple-600" />
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-gray-900 group-hover:text-purple-700">
-                Code d'intégration
-              </h3>
-              <p class="text-xs text-gray-500 mt-1">
-                Installer le widget
-              </p>
-            </div>
-          </button>
-          
-          <button
-            @click="$router.push('/analytics')"
-            class="w-full flex items-center p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 group text-left"
-          >
-            <div class="p-3 bg-orange-50 rounded-lg group-hover:bg-orange-100 transition-colors duration-200">
-              <ChartBarIcon class="h-6 w-6 text-orange-600" />
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-gray-900 group-hover:text-orange-700">
-                Analytics détaillées
-              </h3>
-              <p class="text-xs text-gray-500 mt-1">
-                Voir les performances
-              </p>
-            </div>
-          </button>
+      
+      <!-- Actions rapides -->
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900">Actions rapides</h3>
         </div>
         
-        <!-- Configuration widget actuelle -->
-        <div class="mt-8 pt-6 border-t border-gray-200">
-          <h3 class="text-sm font-medium text-gray-900 mb-4">Configuration actuelle</h3>
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-500">Agent :</span>
-              <span class="font-medium">{{ widgetConfig.agentName }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-500">Couleur :</span>
-              <div class="flex items-center">
-                <div 
-                  class="w-4 h-4 rounded-full mr-2" 
-                  :style="{ backgroundColor: widgetConfig.primaryColor }"
-                ></div>
-                <span class="font-medium">{{ widgetConfig.primaryColor }}</span>
+        <div class="p-6">
+          <div class="grid grid-cols-1 gap-4">
+            <button
+              @click="navigateTo('/settings')"
+              class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
+            >
+              <div class="p-2 bg-blue-50 rounded-lg">
+                <Cog6ToothIcon class="h-5 w-5 text-blue-600" />
               </div>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-500">Statut :</span>
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                <div class="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
-                Actif
-              </span>
-            </div>
+              <div class="ml-4">
+                <p class="font-medium text-gray-900">Configurer l'agent</p>
+                <p class="text-sm text-gray-500">Personnalisez votre IA</p>
+              </div>
+            </button>
+            
+            <button
+              @click="navigateTo('/knowledge-base')"
+              class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
+            >
+              <div class="p-2 bg-green-50 rounded-lg">
+                <DocumentTextIcon class="h-5 w-5 text-green-600" />
+              </div>
+              <div class="ml-4">
+                <p class="font-medium text-gray-900">Base de connaissance</p>
+                <p class="text-sm text-gray-500">Ajouter du contenu</p>
+              </div>
+            </button>
+            
+            <button
+              @click="showIntegrationModal = true"
+              class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
+            >
+              <div class="p-2 bg-purple-50 rounded-lg">
+                <CodeBracketIcon class="h-5 w-5 text-purple-600" />
+              </div>
+              <div class="ml-4">
+                <p class="font-medium text-gray-900">Code d'intégration</p>
+                <p class="text-sm text-gray-500">Installer le widget</p>
+              </div>
+            </button>
+            
+            <button
+              @click="navigateTo('/analytics')"
+              class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
+            >
+              <div class="p-2 bg-yellow-50 rounded-lg">
+                <ChartBarIcon class="h-5 w-5 text-yellow-600" />
+              </div>
+              <div class="ml-4">
+                <p class="font-medium text-gray-900">Analytics détaillées</p>
+                <p class="text-sm text-gray-500">Voir les performances</p>
+              </div>
+            </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration actuelle -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-900">Configuration actuelle</h3>
+        <NuxtLink
+          to="/settings"
+          class="text-sm text-blue-600 hover:text-blue-500 font-medium"
+        >
+          Modifier →
+        </NuxtLink>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Agent :</dt>
+          <dd class="mt-1 text-sm text-gray-900">{{ config.agentName }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Couleur :</dt>
+          <dd class="mt-1 flex items-center">
+            <div 
+              class="w-4 h-4 rounded-full mr-2"
+              :style="{ backgroundColor: config.primaryColor }"
+            ></div>
+            <span class="text-sm text-gray-900">{{ config.primaryColor }}</span>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Statut :</dt>
+          <dd class="mt-1">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              ● Actif
+            </span>
+          </dd>
         </div>
       </div>
     </div>
 
     <!-- Modal d'intégration -->
     <IntegrationModal 
-      :show="showIntegrationModal" 
+      :show="showIntegrationModal"
       @close="showIntegrationModal = false"
-      :user-id="userProfile?.id" 
+      :user-id="authStore.user?.shopId"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
+import { formatDistanceToNow } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import {
-  ChatBubbleLeftRightIcon,
-  ChartBarIcon,
-  CurrencyDollarIcon,
-  ShoppingBagIcon,
   ArrowPathIcon,
   Cog6ToothIcon,
-  BookOpenIcon,
-  CodeBracketIcon,
-  CheckCircleIcon,
   EyeIcon,
-  UserIcon,
-  ShoppingCartIcon,
+  ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  ShoppingBagIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon
+  ArrowTrendingDownIcon,
+  DocumentTextIcon,
+  CodeBracketIcon,
+  ChartBarIcon,
+  ShoppingCartIcon,
+  UserIcon,
+  EyeSlashIcon
 } from '@heroicons/vue/24/outline'
-
-// Authentification
-const { userProfile } = useAuth()
 
 // État local
 const loading = ref(false)
 const showIntegrationModal = ref(false)
 
-// Métriques principales (à connecter avec l'API)
+// Statistiques du widget
+const stats = ref({
+  todayViews: 1547,
+  todayClicks: 234
+})
+
+// Métriques principales
 const metrics = ref({
   totalConversations: 127,
   conversationsGrowth: 12,
@@ -388,54 +325,54 @@ const metrics = ref({
   conversionGrowth: 2.1,
   revenue: 602000,
   revenueGrowth: 15,
-  averageOrderValue: 63953,
-  aovGrowth: -1.2
+  averageOrder: 63953,
+  averageOrderGrowth: -1.2
 })
 
-// Stats du widget
-const widgetStats = ref({
-  impressions: 1547,
-  clicks: 234
-})
-
-// Configuration du widget
-const widgetConfig = ref({
+// Configuration actuelle
+const config = ref({
   agentName: 'Sophie',
-  primaryColor: '#ec4899'
+  primaryColor: '#ec4899',
+  status: 'active'
 })
 
-// Activité récente (à connecter avec l'API)
+// Activité récente (données simulées)
 const recentActivity = ref([
   {
-    id: 1,
+    id: '1',
     type: 'order',
-    message: 'Nouvelle commande de Marie Dubois',
+    title: 'Nouvelle commande de Marie Dubois',
+    description: 'il y a 2 min',
     timestamp: new Date(Date.now() - 2 * 60 * 1000),
     amount: 45000
   },
   {
-    id: 2,
+    id: '2',
     type: 'conversation',
-    message: 'Conversation démarrée par client@example.com',
+    title: 'Conversation démarrée par client@example.com',
+    description: 'il y a 10 min',
     timestamp: new Date(Date.now() - 10 * 60 * 1000)
   },
   {
-    id: 3,
+    id: '3',
     type: 'visitor',
-    message: 'Nouveau visiteur sur la page produit iPhone',
+    title: 'Nouveau visiteur sur la page produit iPhone',
+    description: 'il y a 15 min',
     timestamp: new Date(Date.now() - 15 * 60 * 1000)
   },
   {
-    id: 4,
+    id: '4',
     type: 'order',
-    message: 'Commande finalisée par Jean Martin',
+    title: 'Commande finalisée par Jean Martin',
+    description: 'il y a 30 min',
     timestamp: new Date(Date.now() - 30 * 60 * 1000),
     amount: 75000
   },
   {
-    id: 5,
+    id: '5',
     type: 'conversation',
-    message: 'Conversation terminée avec succès',
+    title: 'Conversation terminée avec succès',
+    description: 'il y a 45 min',
     timestamp: new Date(Date.now() - 45 * 60 * 1000)
   }
 ])
@@ -449,71 +386,83 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-const formatTime = (date: Date) => {
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const minutes = Math.floor(diff / (1000 * 60))
-  const hours = Math.floor(diff / (1000 * 60 * 60))
-  
-  if (minutes < 1) return 'À l\'instant'
-  if (minutes < 60) return `Il y a ${minutes} min`
-  if (hours < 24) return `Il y a ${hours}h`
-  
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+const formatTimeAgo = (date: Date) => {
+  return formatDistanceToNow(date, { addSuffix: true, locale: fr })
 }
 
 const getActivityIcon = (type: string) => {
-  const icons: Record<string, any> = {
-    conversation: ChatBubbleLeftRightIcon,
+  const icons = {
     order: ShoppingCartIcon,
-    visitor: EyeIcon
+    conversation: ChatBubbleLeftRightIcon,
+    visitor: EyeIcon,
+    user: UserIcon
   }
-  return icons[type] || UserIcon
+  return icons[type] || EyeSlashIcon
+}
+
+const getActivityIconClass = (type: string) => {
+  const classes = {
+    order: 'bg-green-50 text-green-600',
+    conversation: 'bg-blue-50 text-blue-600',
+    visitor: 'bg-purple-50 text-purple-600',
+    user: 'bg-yellow-50 text-yellow-600'
+  }
+  return classes[type] || 'bg-gray-50 text-gray-600'
 }
 
 // Actions
 const refreshData = async () => {
   loading.value = true
   try {
-    // Simuler un appel API
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    const showNotification = inject('showNotification') as (message: string, type: string) => void
+    // Simuler mise à jour des stats
+    stats.value.todayViews += Math.floor(Math.random() * 10)
+    stats.value.todayClicks += Math.floor(Math.random() * 3)
+    
+    const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
     if (showNotification) {
       showNotification('Données actualisées avec succès !', 'success')
     }
   } catch (error) {
     console.error('Erreur lors de l\'actualisation:', error)
-    const showNotification = inject('showNotification') as (message: string, type: string) => void
-    if (showNotification) {
-      showNotification('Erreur lors de l\'actualisation', 'error')
-    }
   } finally {
     loading.value = false
   }
 }
 
+const configureAgent = () => {
+  navigateTo('/settings')
+}
+
 const previewWidget = () => {
+  // Ouvrir aperçu du widget dans nouvelle fenêtre
   window.open('https://widget.chatseller.app/preview', '_blank')
 }
 
 // Métadonnées de la page
 definePageMeta({
-  layout: 'default'
+  middleware: defineNuxtRouteMiddleware((to) => {
+    if (process.client) {
+      const token = localStorage.getItem('auth_token')
+      const user = localStorage.getItem('user_data')
+      
+      if (!token || !user) {
+        if (to.path !== '/login' && to.path !== '/register') {
+          return navigateTo('/login')
+        }
+      }
+    }
+  })
 })
 
 useSeoMeta({
   title: 'Dashboard - ChatSeller',
-  description: 'Tableau de bord de votre Agent IA Commercial'
+  description: 'Aperçu de votre Agent IA Commercial'
 })
 
 // Charger les données au montage
 onMounted(() => {
-  console.log('Dashboard monté, chargement des données...')
+  console.log('Page dashboard montée')
 })
 </script>
