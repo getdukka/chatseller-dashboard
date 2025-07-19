@@ -1,595 +1,596 @@
+<!-- pages/conversations.vue -->
 <template>
   <div class="space-y-6">
-    <!-- Header avec filtres -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Conversations</h1>
-          <p class="text-sm text-gray-500 mt-1">
-            Gérez et supervisez toutes les conversations clients en temps réel
-          </p>
-        </div>
-        
-        <div class="flex items-center gap-3">
-          <button
-            @click="exportConversations"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
-          >
-            <ArrowDownTrayIcon class="h-4 w-4 mr-2" />
-            Exporter CSV
-          </button>
-          
-          <button
-            @click="refreshData"
-            :disabled="loading"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-          >
-            <ArrowPathIcon :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
-            Actualiser
-          </button>
-        </div>
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">
+          Conversations
+        </h1>
+        <p class="text-gray-600 mt-1">
+          Gérez et suivez toutes vos conversations en temps réel
+        </p>
       </div>
       
-      <!-- Filtres -->
-      <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-        <select
-          v-model="filters.status"
-          class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+      <!-- Actions -->
+      <div class="flex items-center space-x-3">
+        <button
+          @click="refreshConversations"
+          :disabled="isLoading"
+          class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
-          <option value="">Tous les statuts</option>
-          <option value="active">En cours</option>
-          <option value="completed">Terminées</option>
-          <option value="abandoned">Abandonnées</option>
-        </select>
-        
-        <select
-          v-model="filters.period"
-          class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="today">Aujourd'hui</option>
-          <option value="week">Cette semaine</option>
-          <option value="month">Ce mois</option>
-          <option value="all">Toutes</option>
-        </select>
-        
-        <div class="relative flex-1 max-w-md">
-          <MagnifyingGlassIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            v-model="filters.search"
+          <svg class="w-4 h-4 mr-2 inline" :class="{ 'animate-spin': isLoading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Actualiser
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+          <div class="p-2 bg-green-100 rounded-lg">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">Conversations actives</p>
+            <p class="text-2xl font-bold text-green-600">{{ activeConversations.length }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+          <div class="p-2 bg-blue-100 rounded-lg">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">Terminées</p>
+            <p class="text-2xl font-bold text-blue-600">{{ completedConversations.length }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+          <div class="p-2 bg-gray-100 rounded-lg">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">Abandonnées</p>
+            <p class="text-2xl font-bold text-gray-600">{{ abandonedConversations.length }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex flex-wrap items-center gap-4">
+        <!-- Status Filter -->
+        <div class="flex items-center space-x-2">
+          <label class="text-sm font-medium text-gray-700">Statut:</label>
+          <select 
+            v-model="selectedStatus" 
+            @change="filterByStatus"
+            class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Tous</option>
+            <option value="active">Actives</option>
+            <option value="completed">Terminées</option>
+            <option value="abandoned">Abandonnées</option>
+          </select>
+        </div>
+
+        <!-- Search -->
+        <div class="flex items-center space-x-2 flex-1 max-w-md">
+          <label class="text-sm font-medium text-gray-700">Recherche:</label>
+          <input 
+            v-model="searchTerm"
             type="text"
-            placeholder="Rechercher un client..."
-            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Rechercher par visiteur, message..."
+            class="flex-1 px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
+        <!-- Clear filters -->
+        <button
+          @click="clearFilters"
+          class="px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
+        >
+          Effacer
+        </button>
       </div>
     </div>
 
-    <!-- Métriques rapides -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="p-3 bg-blue-50 rounded-xl">
-              <ChatBubbleLeftRightIcon class="h-6 w-6 text-blue-600" />
+    <!-- Conversations List -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+      <!-- Loading State -->
+      <div v-if="isLoading && conversations.length === 0" class="p-6">
+        <div class="animate-pulse space-y-4">
+          <div v-for="i in 5" :key="i" class="flex space-x-4">
+            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div class="h-3 bg-gray-200 rounded w-1/2"></div>
             </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total aujourd'hui</p>
-            <p class="text-2xl font-bold text-gray-900">{{ stats.totalToday }}</p>
+            <div class="h-4 bg-gray-200 rounded w-16"></div>
           </div>
         </div>
       </div>
-      
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="p-3 bg-green-50 rounded-xl">
-              <CheckCircleIcon class="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Converties</p>
-            <p class="text-2xl font-bold text-gray-900">{{ stats.converted }}</p>
-          </div>
-        </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="p-6 text-center">
+        <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-gray-500 mb-4">{{ error }}</p>
+        <button @click="refreshConversations" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Réessayer
+        </button>
       </div>
-      
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="p-3 bg-yellow-50 rounded-xl">
-              <ClockIcon class="h-6 w-6 text-yellow-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">En cours</p>
-            <p class="text-2xl font-bold text-gray-900">{{ stats.active }}</p>
-          </div>
-        </div>
+
+      <!-- Empty State -->
+      <div v-else-if="displayedConversations.length === 0" class="p-6 text-center">
+        <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <p class="text-gray-500">Aucune conversation trouvée</p>
       </div>
-      
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="p-3 bg-purple-50 rounded-xl">
-              <ClockIcon class="h-6 w-6 text-purple-600" />
+
+      <!-- Conversations List -->
+      <div v-else class="divide-y divide-gray-200">
+        <div
+          v-for="conversation in displayedConversations"
+          :key="conversation.id"
+          class="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
+          @click="openConversation(conversation)"
+        >
+          <div class="flex items-start justify-between">
+            <!-- Conversation Info -->
+            <div class="flex items-start space-x-4 flex-1">
+              <!-- Avatar -->
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span class="text-blue-600 font-medium text-sm">
+                    {{ getConversationSummary(conversation).visitorName.charAt(0) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                  <h3 class="text-sm font-medium text-gray-900 truncate">
+                    {{ getConversationSummary(conversation).visitorName }}
+                  </h3>
+                  <span 
+                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                    :class="getStatusClass(conversation.status)"
+                  >
+                    {{ getStatusLabel(conversation.status) }}
+                  </span>
+                </div>
+                
+                <p class="text-sm text-gray-600 truncate mb-2">
+                  {{ getConversationSummary(conversation).lastMessage }}
+                </p>
+                
+                <div class="flex items-center text-xs text-gray-500 space-x-4">
+                  <span>{{ getConversationSummary(conversation).messageCount }} messages</span>
+                  <span>{{ getConversationSummary(conversation).duration }}</span>
+                  <span>{{ formatDate(conversation.updatedAt) }}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Temps moyen</p>
-            <p class="text-2xl font-bold text-gray-900">{{ stats.averageTime }}min</p>
+
+            <!-- Actions -->
+            <div class="flex items-center space-x-2 ml-4">
+              <button
+                v-if="conversation.status === 'active'"
+                @click.stop="takeoverConversation(conversation.id)"
+                class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full hover:bg-yellow-200 transition-colors"
+                title="Prendre le contrôle"
+              >
+                Prendre contrôle
+              </button>
+              
+              <button
+                @click.stop="openConversation(conversation)"
+                class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full hover:bg-blue-200 transition-colors"
+              >
+                Voir détails
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Liste des conversations -->
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900">
-          Conversations récentes ({{ filteredConversations.length }})
-        </h3>
-      </div>
-      
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Visiteur
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Statut
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Messages
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Commande
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Démarrée
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr 
-              v-for="conversation in paginatedConversations" 
-              :key="conversation.id"
-              class="hover:bg-gray-50 transition-colors duration-200"
-            >
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10">
-                    <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
-                      <span class="text-white font-medium text-sm">
-                        {{ getInitials(conversation.visitor_email || 'Visiteur') }}
-                      </span>
-                    </div>
+    <!-- Conversation Details Modal -->
+    <div v-if="selectedConversation" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-4 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
+        <div class="space-y-6">
+          <!-- Header -->
+          <div class="flex justify-between items-center pb-4 border-b">
+            <div>
+              <h3 class="text-lg font-medium text-gray-900">
+                Conversation avec {{ getConversationSummary(selectedConversation).visitorName }}
+              </h3>
+              <p class="text-sm text-gray-500 mt-1">
+                {{ formatDate(selectedConversation.createdAt) }} • 
+                {{ getConversationSummary(selectedConversation).messageCount }} messages • 
+                {{ getConversationSummary(selectedConversation).duration }}
+              </p>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span 
+                class="inline-flex px-3 py-1 text-sm font-semibold rounded-full"
+                :class="getStatusClass(selectedConversation.status)"
+              >
+                {{ getStatusLabel(selectedConversation.status) }}
+              </span>
+              <button
+                @click="selectedConversation = null"
+                class="text-gray-400 hover:text-gray-600"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Conversation Metadata -->
+          <div v-if="selectedConversation.metadata" class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="text-sm font-medium text-gray-900 mb-3">Informations du visiteur</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div v-if="selectedConversation.metadata.visitorInfo">
+                <span class="text-gray-600">Visiteur:</span>
+                <span class="ml-2 text-gray-900">{{ selectedConversation.metadata.visitorInfo.name || 'Anonyme' }}</span>
+              </div>
+              <div v-if="selectedConversation.metadata.product">
+                <span class="text-gray-600">Produit d'intérêt:</span>
+                <span class="ml-2 text-gray-900">{{ selectedConversation.metadata.product.name }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div class="space-y-4 max-h-96 overflow-y-auto">
+            <h4 class="text-sm font-medium text-gray-900">Messages</h4>
+            <div class="space-y-3">
+              <div
+                v-for="message in selectedConversation.messages"
+                :key="message.id"
+                class="flex"
+                :class="message.type === 'visitor' ? 'justify-end' : 'justify-start'"
+              >
+                <div
+                  class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg"
+                  :class="getMessageClass(message.type)"
+                >
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-medium">
+                      {{ getMessageSender(message.type) }}
+                    </span>
+                    <span class="text-xs text-gray-500">
+                      {{ formatMessageTime(message.timestamp) }}
+                    </span>
                   </div>
-                  <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-900">
-                      {{ conversation.visitor_email || 'Visiteur anonyme' }}
-                    </p>
-                    <p class="text-xs text-gray-500">
-                      {{ conversation.visitor_ip }}
-                    </p>
-                  </div>
+                  <p class="text-sm">{{ message.content }}</p>
                 </div>
-              </td>
-              
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="getStatusClass(conversation.status)">
-                  {{ getStatusText(conversation.status) }}
-                </span>
-              </td>
-              
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">
-                  <span class="font-medium">{{ conversation.message_count }}</span> messages
-                </div>
-                <div class="text-xs text-gray-500">
-                  Dernière activité il y a {{ getTimeAgo(conversation.last_activity) }}
-                </div>
-              </td>
-              
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div v-if="conversation.order_amount" class="text-sm">
-                  <p class="font-medium text-green-600">
-                    {{ formatCurrency(conversation.order_amount) }}
-                  </p>
-                  <p class="text-xs text-gray-500">
-                    {{ conversation.order_status }}
-                  </p>
-                </div>
-                <span v-else class="text-sm text-gray-400">Aucune commande</span>
-              </td>
-              
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(conversation.created_at) }}
-              </td>
-              
-              <td class="px-6 py-4 whitespace-nowrap text-right">
-                <div class="flex items-center space-x-2">
-                  <button
-                    @click="viewConversation(conversation.id)"
-                    class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                    title="Voir détails"
-                  >
-                    <EyeIcon class="h-4 w-4" />
-                  </button>
-                  <button
-                    v-if="conversation.status === 'active'"
-                    @click="takeoverConversation(conversation.id)"
-                    class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                    title="Prendre le contrôle"
-                  >
-                    <UserIcon class="h-4 w-4" />
-                  </button>
-                  <button
-                    @click="deleteConversation(conversation.id)"
-                    class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                    title="Supprimer"
-                  >
-                    <TrashIcon class="h-4 w-4" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <!-- Pagination -->
-      <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-        <div class="flex-1 flex justify-between sm:hidden">
-          <button
-            @click="previousPage"
-            :disabled="currentPage === 1"
-            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Précédent
-          </button>
-          <button
-            @click="nextPage"
-            :disabled="currentPage === totalPages"
-            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Suivant
-          </button>
-        </div>
-        
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p class="text-sm text-gray-700">
-              Affichage de <span class="font-medium">{{ startIndex }}</span>
-              à <span class="font-medium">{{ endIndex }}</span>
-              sur <span class="font-medium">{{ filteredConversations.length }}</span> résultats
-            </p>
+              </div>
+            </div>
           </div>
-          
-          <div>
-            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+
+          <!-- Actions -->
+          <div class="flex justify-between items-center pt-4 border-t">
+            <div class="flex space-x-3">
               <button
-                @click="previousPage"
-                :disabled="currentPage === 1"
-                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                v-if="selectedConversation.status === 'active'"
+                @click="takeoverConversation(selectedConversation.id)"
+                class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
               >
-                <ChevronLeftIcon class="h-5 w-5" />
+                Prendre le contrôle
               </button>
-              
+            </div>
+            
+            <div class="flex space-x-3">
               <button
-                v-for="page in visiblePages"
-                :key="page"
-                @click="currentPage = page"
-                :class="[
-                  page === currentPage 
-                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
-                  'relative inline-flex items-center px-4 py-2 border text-sm font-medium'
-                ]"
+                @click="selectedConversation = null"
+                class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
               >
-                {{ page }}
+                Fermer
               </button>
-              
-              <button
-                @click="nextPage"
-                :disabled="currentPage === totalPages"
-                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRightIcon class="h-5 w-5" />
-              </button>
-            </nav>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Modal détail conversation -->
-    <ConversationModal 
-      :show="showConversationModal"
-      @update:show="showConversationModal = $event"
-      :conversation-id="selectedConversationId"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, inject } from 'vue'
-import {
-  ChatBubbleLeftRightIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  UserIcon,
-  MagnifyingGlassIcon,
-  ArrowPathIcon,
-  ArrowDownTrayIcon,
-  EyeIcon,
-  TrashIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon
-} from '@heroicons/vue/24/outline'
+import type { Conversation } from '~/composables/useApi'
 
-// État local
-const loading = ref(false)
-const showConversationModal = ref(false)
-const selectedConversationId = ref<string>('')
-const currentPage = ref(1)
-const perPage = 10
-
-// Filtres
-const filters = ref({
-  status: '',
-  period: 'today',
-  search: ''
+definePageMeta({
+  middleware: 'auth'
 })
 
-// Stats (données simulées)
-const stats = ref({
-  totalToday: 23,
-  converted: 8,
-  active: 3,
-  averageTime: 12
-})
+// =====================================
+// COMPOSABLES AND STORES
+// =====================================
 
-// Conversations (données simulées améliorées)
-const conversations = ref([
-  {
-    id: '1',
-    visitor_email: 'marie.dubois@email.com',
-    visitor_ip: '192.168.1.1',
-    status: 'completed',
-    message_count: 15,
-    order_amount: 45000,
-    order_status: 'confirmée',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    last_activity: new Date(Date.now() - 10 * 60 * 1000)
-  },
-  {
-    id: '2',
-    visitor_email: null,
-    visitor_ip: '192.168.1.2',
-    status: 'active',
-    message_count: 3,
-    order_amount: null,
-    order_status: null,
-    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    last_activity: new Date(Date.now() - 2 * 60 * 1000)
-  },
-  {
-    id: '3',
-    visitor_email: 'jean.martin@test.com',
-    visitor_ip: '192.168.1.3',
-    status: 'abandoned',
-    message_count: 8,
-    order_amount: null,
-    order_status: null,
-    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    last_activity: new Date(Date.now() - 2 * 60 * 60 * 1000)
-  },
-  {
-    id: '4',
-    visitor_email: 'sophie.laurent@gmail.com',
-    visitor_ip: '192.168.1.4',
-    status: 'completed',
-    message_count: 12,
-    order_amount: 75000,
-    order_status: 'en traitement',
-    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    last_activity: new Date(Date.now() - 4 * 60 * 60 * 1000)
-  }
-])
+const {
+  fetchConversations,
+  takeoverConversation: performTakeover,
+  isLoading,
+  error,
+  conversations,
+  activeConversations,
+  completedConversations,
+  abandonedConversations,
+  getConversationSummary,
+  clearError
+} = useConversations()
 
-// Conversations filtrées
-const filteredConversations = computed(() => {
+const { success, handleApiError, confirm } = useNotifications()
+const route = useRoute()
+
+// =====================================
+// REACTIVE STATE
+// =====================================
+
+const selectedConversation = ref<Conversation | null>(null)
+const selectedStatus = ref<'all' | 'active' | 'completed' | 'abandoned'>('all')
+const searchTerm = ref('')
+
+// =====================================
+// COMPUTED
+// =====================================
+
+const displayedConversations = computed(() => {
   let filtered = conversations.value
 
-  if (filters.value.status) {
-    filtered = filtered.filter(conv => conv.status === filters.value.status)
+  // Filter by status
+  if (selectedStatus.value !== 'all') {
+    filtered = filtered.filter(conv => conv.status === selectedStatus.value)
   }
 
-  if (filters.value.search) {
-    const search = filters.value.search.toLowerCase()
-    filtered = filtered.filter(conv => 
-      conv.visitor_email?.toLowerCase().includes(search) ||
-      conv.visitor_ip.includes(search)
-    )
+  // Filter by search term
+  if (searchTerm.value.trim()) {
+    const search = searchTerm.value.toLowerCase()
+    filtered = filtered.filter(conv => {
+      const summary = getConversationSummary(conv)
+      return summary.visitorName.toLowerCase().includes(search) ||
+             summary.lastMessage.toLowerCase().includes(search) ||
+             conv.messages.some(msg => msg.content.toLowerCase().includes(search))
+    })
   }
 
-  return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  return filtered.sort((a, b) => 
+    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  )
 })
 
-// Pagination
-const totalPages = computed(() => Math.ceil(filteredConversations.value.length / perPage))
-const startIndex = computed(() => (currentPage.value - 1) * perPage + 1)
-const endIndex = computed(() => Math.min(currentPage.value * perPage, filteredConversations.value.length))
+// =====================================
+// METHODS
+// =====================================
 
-const paginatedConversations = computed(() => {
-  const start = (currentPage.value - 1) * perPage
-  const end = start + perPage
-  return filteredConversations.value.slice(start, end)
-})
-
-const visiblePages = computed(() => {
-  const pages = []
-  const start = Math.max(1, currentPage.value - 2)
-  const end = Math.min(totalPages.value, start + 4)
-  
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
+/**
+ * Refresh conversations data
+ */
+const refreshConversations = async (): Promise<void> => {
+  try {
+    await fetchConversations(true)
+    success('Données actualisées', 'Les conversations ont été mises à jour')
+  } catch (error: any) {
+    handleApiError(error, 'Actualisation des conversations')
   }
-  
-  return pages
-})
-
-// Fonctions utilitaires
-const getInitials = (name: string) => {
-  if (!name) return 'V'
-  return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)
 }
 
-const getStatusClass = (status: string) => {
-  const classes: Record<string, string> = {
-    active: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800',
-    completed: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800',
-    abandoned: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800'
+/**
+ * Filter conversations by status
+ */
+const filterByStatus = (): void => {
+  // The computed property will handle the filtering
+}
+
+/**
+ * Clear all filters
+ */
+const clearFilters = (): void => {
+  selectedStatus.value = 'all'
+  searchTerm.value = ''
+}
+
+/**
+ * Open conversation details
+ */
+const openConversation = (conversation: Conversation): void => {
+  selectedConversation.value = conversation
+}
+
+/**
+ * Take over a conversation
+ */
+const takeoverConversation = async (conversationId: string): Promise<void> => {
+  confirm(
+    'Prendre le contrôle',
+    'Voulez-vous vraiment prendre le contrôle de cette conversation ? L\'IA sera désactivée.',
+    async () => {
+      try {
+        const success_takeover = await performTakeover(conversationId)
+        if (success_takeover) {
+          success('Contrôle pris', 'Vous contrôlez maintenant cette conversation')
+          
+          // Refresh the conversation if it's currently selected
+          if (selectedConversation.value?.id === conversationId) {
+            const updatedConv = conversations.value.find(c => c.id === conversationId)
+            if (updatedConv) {
+              selectedConversation.value = updatedConv
+            }
+          }
+        }
+      } catch (error: any) {
+        handleApiError(error, 'Prise de contrôle')
+      }
+    },
+    undefined,
+    {
+      confirmLabel: 'Prendre contrôle',
+      cancelLabel: 'Annuler',
+      type: 'warning'
+    }
+  )
+}
+
+/**
+ * Get status CSS class
+ */
+const getStatusClass = (status: Conversation['status']): string => {
+  switch (status) {
+    case 'active':
+      return 'bg-green-100 text-green-800'
+    case 'completed':
+      return 'bg-blue-100 text-blue-800'
+    case 'abandoned':
+      return 'bg-gray-100 text-gray-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
   }
-  return classes[status] || classes.abandoned
 }
 
-const getStatusText = (status: string) => {
-  const texts: Record<string, string> = {
-    active: 'En cours',
-    completed: 'Terminée',
-    abandoned: 'Abandonnée'
+/**
+ * Get status label
+ */
+const getStatusLabel = (status: Conversation['status']): string => {
+  switch (status) {
+    case 'active':
+      return 'Active'
+    case 'completed':
+      return 'Terminée'
+    case 'abandoned':
+      return 'Abandonnée'
+    default:
+      return 'Inconnue'
   }
-  return texts[status] || 'Inconnue'
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'XOF',
-    minimumFractionDigits: 0
-  }).format(amount)
+/**
+ * Get message CSS class
+ */
+const getMessageClass = (type: string): string => {
+  switch (type) {
+    case 'visitor':
+      return 'bg-blue-600 text-white'
+    case 'agent':
+      return 'bg-gray-200 text-gray-900'
+    case 'system':
+      return 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+    default:
+      return 'bg-gray-100 text-gray-900'
+  }
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
+/**
+ * Get message sender label
+ */
+const getMessageSender = (type: string): string => {
+  switch (type) {
+    case 'visitor':
+      return 'Visiteur'
+    case 'agent':
+      return 'Agent IA'
+    case 'system':
+      return 'Système'
+    default:
+      return 'Inconnu'
+  }
+}
+
+/**
+ * Format date
+ */
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString('fr-FR', {
+    year: 'numeric',
     month: 'short',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
   })
 }
 
-const getTimeAgo = (date: Date) => {
-  const now = new Date()
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-  
-  if (diffInMinutes < 1) return 'à l\'instant'
-  if (diffInMinutes < 60) return `${diffInMinutes} min`
-  const hours = Math.floor(diffInMinutes / 60)
-  if (hours < 24) return `${hours}h`
-  const days = Math.floor(hours / 24)
-  return `${days}j`
-}
-
-// Actions
-const refreshData = async () => {
-  loading.value = true
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
-    if (showNotification) {
-      showNotification('Conversations actualisées avec succès !', 'success')
-    }
-  } catch (error) {
-    console.error('Erreur lors de l\'actualisation:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-const exportConversations = () => {
-  console.log('Export des conversations')
-  const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
-  if (showNotification) {
-    showNotification('Export CSV démarré ! Le fichier sera téléchargé sous peu.', 'info')
-  }
-}
-
-const viewConversation = (id: string) => {
-  selectedConversationId.value = id
-  showConversationModal.value = true
-}
-
-const takeoverConversation = (id: string) => {
-  console.log('Prise de contrôle de la conversation:', id)
-  const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
-  if (showNotification) {
-    showNotification('Prise de contrôle activée !', 'success')
-  }
-}
-
-const deleteConversation = (id: string) => {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
-    const index = conversations.value.findIndex(conv => conv.id === id)
-    if (index !== -1) {
-      conversations.value.splice(index, 1)
-      const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
-      if (showNotification) {
-        showNotification('Conversation supprimée avec succès !', 'success')
-      }
-    }
-  }
-}
-
-// Pagination
-const previousPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
-
-// Reset pagination when filters change
-watch(filters, () => {
-  currentPage.value = 1
-}, { deep: true })
-
-// Métadonnées de la page
-definePageMeta({
-  middleware: defineNuxtRouteMiddleware((to) => {
-    if (process.client) {
-      const token = localStorage.getItem('auth_token')
-      const user = localStorage.getItem('user_data')
-      
-      if (!token || !user) {
-        if (to.path !== '/login' && to.path !== '/register') {
-          return navigateTo('/login')
-        }
-      }
-    }
+/**
+ * Format message time
+ */
+const formatMessageTime = (timestamp: string): string => {
+  return new Date(timestamp).toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit'
   })
+}
+
+// =====================================
+// LIFECYCLE
+// =====================================
+
+onMounted(async () => {
+  // Load conversations
+  await fetchConversations()
+  
+  // Check if we need to open a specific conversation from URL
+  const conversationId = route.query.id as string
+  if (conversationId) {
+    const conversation = conversations.value.find(c => c.id === conversationId)
+    if (conversation) {
+      selectedConversation.value = conversation
+    }
+  }
 })
 
-useSeoMeta({
-  title: 'Conversations - ChatSeller',
-  description: 'Gérez et supervisez toutes les conversations clients'
-})
+// =====================================
+// WATCHERS
+// =====================================
 
-// Charger les données au montage
+// Auto-refresh conversations every 30 seconds for active ones
+let refreshInterval: NodeJS.Timeout | null = null
+
 onMounted(() => {
-  console.log('Page conversations montée')
+  refreshInterval = setInterval(() => {
+    if (activeConversations.value.length > 0) {
+      fetchConversations(true)
+    }
+  }, 30000) // 30 seconds
+})
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
+})
+
+// =====================================
+// SEO
+// =====================================
+
+useHead({
+  title: 'Conversations - ChatSeller',
+  meta: [
+    {
+      name: 'description',
+      content: 'Gérez et suivez toutes vos conversations ChatSeller en temps réel.'
+    }
+  ]
 })
 </script>

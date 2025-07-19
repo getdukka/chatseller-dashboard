@@ -1,449 +1,485 @@
+<!-- pages/analytics.vue -->
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p class="text-sm text-gray-500 mt-1">
-            Suivez les performances de votre Agent IA Commercial
-          </p>
-        </div>
-        
-        <div class="flex items-center gap-3">
-          <select
-            v-model="selectedPeriod"
-            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="7">7 derniers jours</option>
-            <option value="30">30 derniers jours</option>
-            <option value="90">3 derniers mois</option>
-          </select>
-          
-          <button
-            @click="exportReport"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
-          >
-            <ArrowDownTrayIcon class="h-4 w-4 mr-2" />
-            Exporter
-          </button>
-          
-          <button
-            @click="refreshData"
-            :disabled="loading"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-          >
-            <ArrowPathIcon :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
-            Actualiser
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Métriques principales -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="p-3 bg-blue-50 rounded-xl">
-              <EyeIcon class="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Vues widget</p>
-            <p class="text-2xl font-bold text-gray-900">{{ metrics.views.toLocaleString() }}</p>
-            <p class="text-xs text-green-600 flex items-center mt-1">
-              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
-              {{ metrics.viewsGrowth }}% vs période précédente
-            </p>
-          </div>
-        </div>
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">
+          Analytics
+        </h1>
+        <p class="text-gray-600 mt-1">
+          Analysez les performances de votre agent IA commercial
+        </p>
       </div>
       
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="p-3 bg-green-50 rounded-xl">
-              <ChatBubbleLeftRightIcon class="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Conversations</p>
-            <p class="text-2xl font-bold text-gray-900">{{ metrics.conversations.toLocaleString() }}</p>
-            <p class="text-xs text-green-600 flex items-center mt-1">
-              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
-              {{ metrics.conversationsGrowth }}% vs période précédente
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="p-3 bg-yellow-50 rounded-xl">
-              <ShoppingCartIcon class="h-6 w-6 text-yellow-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Commandes</p>
-            <p class="text-2xl font-bold text-gray-900">{{ metrics.orders.toLocaleString() }}</p>
-            <p class="text-xs text-green-600 flex items-center mt-1">
-              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
-              {{ metrics.ordersGrowth }}% vs période précédente
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="p-3 bg-purple-50 rounded-xl">
-              <CurrencyDollarIcon class="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Revenus</p>
-            <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(metrics.revenue) }}</p>
-            <p class="text-xs text-green-600 flex items-center mt-1">
-              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
-              {{ metrics.revenueGrowth }}% vs période précédente
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Taux de conversion -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Taux de conversion</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="text-center">
-          <div class="text-3xl font-bold text-blue-600">{{ conversionRates.viewToConversation }}%</div>
-          <div class="text-sm text-gray-500 mt-1">Vue → Conversation</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-green-600">{{ conversionRates.conversationToOrder }}%</div>
-          <div class="text-sm text-gray-500 mt-1">Conversation → Commande</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-purple-600">{{ conversionRates.overall }}%</div>
-          <div class="text-sm text-gray-500 mt-1">Vue → Commande (Global)</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Graphiques -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Évolution des conversations -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Évolution des conversations</h3>
-        <div class="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
-          <div class="text-center">
-            <ChartBarIcon class="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p class="text-gray-500">Graphique des conversations</p>
-            <p class="text-xs text-gray-400 mt-1">Intégration Chart.js à venir</p>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Revenus par jour -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenus quotidiens</h3>
-        <div class="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
-          <div class="text-center">
-            <CurrencyDollarIcon class="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p class="text-gray-500">Graphique des revenus</p>
-            <p class="text-xs text-gray-400 mt-1">Intégration Chart.js à venir</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Top produits et pages -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Top produits vendus -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top produits vendus</h3>
-        <div class="space-y-4">
-          <div 
-            v-for="(product, index) in topProducts" 
-            :key="index"
-            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-          >
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span class="text-blue-600 font-medium text-sm">{{ index + 1 }}</span>
-              </div>
-              <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                <p class="text-xs text-gray-500">{{ product.sales }} ventes</p>
-              </div>
-            </div>
-            <div class="text-right">
-              <p class="text-sm font-medium text-gray-900">{{ formatCurrency(product.revenue) }}</p>
-              <p class="text-xs text-gray-500">{{ product.conversionRate }}% conv.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Top pages avec widget -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top pages performantes</h3>
-        <div class="space-y-4">
-          <div 
-            v-for="(page, index) in topPages" 
-            :key="index"
-            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-          >
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <span class="text-green-600 font-medium text-sm">{{ index + 1 }}</span>
-              </div>
-              <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">{{ page.url }}</p>
-                <p class="text-xs text-gray-500">{{ page.views }} vues</p>
-              </div>
-            </div>
-            <div class="text-right">
-              <p class="text-sm font-medium text-gray-900">{{ page.conversations }} conv.</p>
-              <p class="text-xs text-gray-500">{{ page.conversionRate }}% conv.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Détails temporels -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Activité par heure</h3>
-      <div class="grid grid-cols-12 gap-2">
-        <div 
-          v-for="hour in hourlyActivity" 
-          :key="hour.hour"
-          class="text-center"
+      <!-- Period & Actions -->
+      <div class="flex items-center space-x-3">
+        <!-- Period Selector -->
+        <select 
+          v-model="selectedPeriod" 
+          @change="handlePeriodChange"
+          class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <div 
-            :style="{ height: `${hour.activity * 2}px` }"
-            class="bg-blue-500 rounded-t-sm mx-auto mb-2 transition-all duration-300 hover:bg-blue-600"
-            :class="hour.activity === 0 ? 'bg-gray-200' : ''"
-            style="width: 20px; min-height: 4px;"
-          ></div>
-          <div class="text-xs text-gray-500">{{ hour.hour }}h</div>
+          <option value="7d">7 derniers jours</option>
+          <option value="30d">30 derniers jours</option>
+          <option value="90d">3 derniers mois</option>
+          <option value="1y">12 derniers mois</option>
+        </select>
+        
+        <!-- Export Button -->
+        <button
+          @click="exportAnalytics"
+          class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Exporter
+        </button>
+        
+        <!-- Refresh Button -->
+        <button
+          @click="refreshAnalytics"
+          :disabled="isLoading"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+        >
+          <svg class="w-4 h-4 mr-2 inline" :class="{ 'animate-spin': isLoading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Actualiser
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="isLoading && !data" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div v-for="i in 4" :key="i" class="bg-white p-6 rounded-lg shadow animate-pulse">
+          <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div class="h-8 bg-gray-200 rounded w-1/2"></div>
         </div>
       </div>
-      <div class="mt-4 text-xs text-gray-500 text-center">
-        Activité des conversations par heure ({{ selectedPeriod }} derniers jours)
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div v-for="i in 2" :key="i" class="bg-white p-6 rounded-lg shadow animate-pulse">
+          <div class="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <div>
+          <h3 class="text-red-800 font-medium">Erreur de chargement</h3>
+          <p class="text-red-700 text-sm mt-1">{{ error }}</p>
+        </div>
+      </div>
+      <button 
+        @click="refreshAnalytics" 
+        class="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+      >
+        Réessayer
+      </button>
+    </div>
+
+    <!-- Analytics Content -->
+    <div v-else-if="data" class="space-y-6">
+      <!-- Performance Indicators -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div
+          v-for="indicator in performanceIndicators"
+          :key="indicator.label"
+          class="bg-white p-6 rounded-lg shadow"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">{{ indicator.label }}</p>
+              <p class="text-2xl font-bold text-gray-900">
+                {{ formatIndicatorValue(indicator) }}
+              </p>
+            </div>
+            <div 
+              v-if="indicator.trend"
+              class="flex items-center"
+              :class="indicator.trend.isPositive ? 'text-green-600' : 'text-red-600'"
+            >
+              <svg 
+                class="w-4 h-4 mr-1"
+                :class="indicator.trend.isPositive ? 'transform rotate-180' : ''"
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+              <span class="text-sm font-medium">{{ indicator.trend.formatted }}</span>
+            </div>
+          </div>
+          
+          <!-- Progress bar for percentage metrics -->
+          <div v-if="indicator.type === 'percentage'" class="mt-4">
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                :style="{ width: `${Math.min(indicator.value, 100)}%` }"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Conversations Chart -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Évolution des conversations
+            </h3>
+            <span class="text-sm text-gray-500">{{ getPeriodLabel() }}</span>
+          </div>
+          
+          <div v-if="conversationsChartData.length > 0" class="space-y-4">
+            <!-- Simple Bar Chart -->
+            <div class="h-64 flex items-end justify-between space-x-1">
+              <div
+                v-for="(point, index) in conversationsChartData.slice(-20)"
+                :key="index"
+                class="bg-blue-500 rounded-t flex-1 flex flex-col justify-end group relative"
+                :style="{ height: `${Math.max(10, (point.value / Math.max(...conversationsChartData.map(p => p.value))) * 100)}%` }"
+              >
+                <!-- Tooltip -->
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  {{ point.date }}: {{ point.value }} conversations
+                </div>
+              </div>
+            </div>
+            
+            <!-- X-axis labels -->
+            <div class="flex justify-between text-xs text-gray-500">
+              <span>{{ conversationsChartData[0]?.date }}</span>
+              <span>{{ conversationsChartData[conversationsChartData.length - 1]?.date }}</span>
+            </div>
+          </div>
+          
+          <div v-else class="h-64 flex items-center justify-center text-gray-500">
+            <div class="text-center">
+              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <p>Aucune donnée disponible</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue Chart -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Évolution du chiffre d'affaires
+            </h3>
+            <span class="text-sm text-gray-500">{{ getPeriodLabel() }}</span>
+          </div>
+          
+          <div v-if="revenueChartData.length > 0" class="space-y-4">
+            <!-- Simple Bar Chart -->
+            <div class="h-64 flex items-end justify-between space-x-1">
+              <div
+                v-for="(point, index) in revenueChartData.slice(-20)"
+                :key="index"
+                class="bg-green-500 rounded-t flex-1 flex flex-col justify-end group relative"
+                :style="{ height: `${Math.max(10, (point.value / Math.max(...revenueChartData.map(p => p.value))) * 100)}%` }"
+              >
+                <!-- Tooltip -->
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  {{ point.date }}: {{ formatCurrency(point.value) }}
+                </div>
+              </div>
+            </div>
+            
+            <!-- X-axis labels -->
+            <div class="flex justify-between text-xs text-gray-500">
+              <span>{{ revenueChartData[0]?.date }}</span>
+              <span>{{ revenueChartData[revenueChartData.length - 1]?.date }}</span>
+            </div>
+          </div>
+          
+          <div v-else class="h-64 flex items-center justify-center text-gray-500">
+            <div class="text-center">
+              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+              <p>Aucune donnée disponible</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Analytics Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Top Products -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Produits les plus vendus
+          </h3>
+          
+          <div v-if="topProductsForDisplay.length > 0" class="space-y-3">
+            <div 
+              v-for="product in topProductsForDisplay" 
+              :key="product.name"
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
+              <div class="flex items-center">
+                <span class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm rounded-full mr-3">
+                  {{ product.rank }}
+                </span>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">
+                    {{ product.name }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ product.orders }} commandes
+                  </p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-medium text-gray-900">
+                  {{ product.formattedRevenue }}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="text-center py-8 text-gray-500">
+            <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <p class="text-sm">Aucune donnée produit</p>
+          </div>
+        </div>
+
+        <!-- Real-time Stats -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Statistiques en temps réel
+          </h3>
+          
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Visiteurs en ligne</span>
+              <div class="flex items-center">
+                <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                <span class="font-medium">{{ realTimeStats.activeNow }}</span>
+              </div>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Conversations aujourd'hui</span>
+              <span class="font-medium">{{ realTimeStats.todayConversations }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Revenus aujourd'hui</span>
+              <span class="font-medium">{{ formatCurrency(realTimeStats.todayRevenue) }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Temps de réponse moyen</span>
+              <span class="font-medium">{{ realTimeStats.responseTime }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Summary -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Résumé des performances
+          </h3>
+          
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-600">Taux de conversion</span>
+                <span class="text-sm font-medium">{{ formattedConversionRate }}</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  class="bg-green-500 h-2 rounded-full transition-all duration-300"
+                  :style="{ width: `${conversionRate * 100}%` }"
+                ></div>
+              </div>
+            </div>
+            
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-600">Satisfaction client</span>
+                <span class="text-sm font-medium">85%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full w-[85%] transition-all duration-300"></div>
+              </div>
+            </div>
+            
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-600">Résolution automatique</span>
+                <span class="text-sm font-medium">78%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-purple-500 h-2 rounded-full w-[78%] transition-all duration-300"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, inject } from 'vue'
-import {
-  EyeIcon,
-  ChatBubbleLeftRightIcon,
-  ShoppingCartIcon,
-  CurrencyDollarIcon,
-  ArrowTrendingUpIcon,
-  ChartBarIcon,
-  ArrowDownTrayIcon,
-  ArrowPathIcon
-} from '@heroicons/vue/24/outline'
-
-// État local
-const loading = ref(false)
-const selectedPeriod = ref(30)
-
-// Métriques principales (données simulées)
-const metrics = ref({
-  views: 15247,
-  viewsGrowth: 12.3,
-  conversations: 1284,
-  conversationsGrowth: 8.7,
-  orders: 347,
-  ordersGrowth: 15.2,
-  revenue: 2750000,
-  revenueGrowth: 18.5
+definePageMeta({
+  middleware: 'auth'
 })
 
-// Taux de conversion
-const conversionRates = computed(() => ({
-  viewToConversation: ((metrics.value.conversations / metrics.value.views) * 100).toFixed(1),
-  conversationToOrder: ((metrics.value.orders / metrics.value.conversations) * 100).toFixed(1),
-  overall: ((metrics.value.orders / metrics.value.views) * 100).toFixed(1)
-}))
+// =====================================
+// COMPOSABLES AND STORES
+// =====================================
 
-// Top produits
-const topProducts = ref([
-  {
-    name: 'iPhone 15 Pro Max',
-    sales: 45,
-    revenue: 675000,
-    conversionRate: 23.5
-  },
-  {
-    name: 'Samsung Galaxy S24',
-    sales: 38,
-    revenue: 456000,
-    conversionRate: 19.2
-  },
-  {
-    name: 'MacBook Air M3',
-    sales: 22,
-    revenue: 330000,
-    conversionRate: 15.8
-  },
-  {
-    name: 'AirPods Pro 2',
-    sales: 67,
-    revenue: 201000,
-    conversionRate: 28.3
-  },
-  {
-    name: 'iPad Pro 12.9"',
-    sales: 18,
-    revenue: 162000,
-    conversionRate: 12.4
+const { 
+  fetchAnalytics, 
+  isLoading, 
+  error,
+  data,
+  selectedPeriod,
+  setPeriod,
+  conversationsChartData,
+  revenueChartData,
+  topProductsForDisplay,
+  performanceIndicators,
+  formattedConversionRate,
+  conversionRate,
+  getPeriodLabel,
+  getRealTimeStats,
+  exportToCSV
+} = useAnalytics()
+
+const { success, handleApiError } = useNotifications()
+
+// =====================================
+// COMPUTED
+// =====================================
+
+const realTimeStats = computed(() => getRealTimeStats())
+
+// =====================================
+// METHODS
+// =====================================
+
+/**
+ * Refresh analytics data
+ */
+const refreshAnalytics = async (): Promise<void> => {
+  try {
+    await fetchAnalytics(true)
+    success('Données actualisées', 'Les analytics ont été mises à jour')
+  } catch (error: any) {
+    handleApiError(error, 'Actualisation des analytics')
   }
-])
+}
 
-// Top pages
-const topPages = ref([
-  {
-    url: '/produits/iphone-15-pro',
-    views: 2847,
-    conversations: 287,
-    conversionRate: 10.1
-  },
-  {
-    url: '/produits/samsung-galaxy-s24',
-    views: 2156,
-    conversations: 198,
-    conversionRate: 9.2
-  },
-  {
-    url: '/produits/macbook-air-m3',
-    views: 1923,
-    conversations: 156,
-    conversionRate: 8.1
-  },
-  {
-    url: '/produits/airpods-pro',
-    views: 1687,
-    conversations: 189,
-    conversionRate: 11.2
-  },
-  {
-    url: '/produits/ipad-pro',
-    views: 1534,
-    conversations: 134,
-    conversionRate: 8.7
+/**
+ * Handle period change
+ */
+const handlePeriodChange = (): void => {
+  setPeriod(selectedPeriod.value)
+}
+
+/**
+ * Export analytics data
+ */
+const exportAnalytics = (): void => {
+  try {
+    const csvContent = exportToCSV()
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `analytics_${selectedPeriod.value}_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+    
+    success('Export réussi', 'Le fichier CSV a été téléchargé')
+  } catch (error: any) {
+    handleApiError(error, 'Export des analytics')
   }
-])
+}
 
-// Activité horaire
-const hourlyActivity = ref([
-  { hour: 0, activity: 5 },
-  { hour: 1, activity: 2 },
-  { hour: 2, activity: 1 },
-  { hour: 3, activity: 0 },
-  { hour: 4, activity: 1 },
-  { hour: 5, activity: 3 },
-  { hour: 6, activity: 8 },
-  { hour: 7, activity: 15 },
-  { hour: 8, activity: 25 },
-  { hour: 9, activity: 35 },
-  { hour: 10, activity: 42 },
-  { hour: 11, activity: 38 },
-  { hour: 12, activity: 45 },
-  { hour: 13, activity: 40 },
-  { hour: 14, activity: 48 },
-  { hour: 15, activity: 52 },
-  { hour: 16, activity: 47 },
-  { hour: 17, activity: 35 },
-  { hour: 18, activity: 28 },
-  { hour: 19, activity: 22 },
-  { hour: 20, activity: 18 },
-  { hour: 21, activity: 12 },
-  { hour: 22, activity: 8 },
-  { hour: 23, activity: 6 }
-])
+/**
+ * Format indicator value based on type
+ */
+const formatIndicatorValue = (indicator: any): string => {
+  switch (indicator.type) {
+    case 'currency':
+      return formatCurrency(indicator.value)
+    case 'percentage':
+      return `${indicator.value.toFixed(1)}%`
+    case 'number':
+    default:
+      return indicator.value.toLocaleString()
+  }
+}
 
-// Fonctions utilitaires
-const formatCurrency = (amount: number) => {
+/**
+ * Format currency
+ */
+const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: 'XOF',
-    minimumFractionDigits: 0
+    currency: 'EUR'
   }).format(amount)
 }
 
-// Actions
-const refreshData = async () => {
-  loading.value = true
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Simuler mise à jour des données
-    metrics.value = {
-      ...metrics.value,
-      views: metrics.value.views + Math.floor(Math.random() * 100),
-      conversations: metrics.value.conversations + Math.floor(Math.random() * 10),
-      orders: metrics.value.orders + Math.floor(Math.random() * 5)
-    }
-    
-    const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
-    if (showNotification) {
-      showNotification('Analytics actualisées avec succès !', 'success')
-    }
-  } catch (error) {
-    console.error('Erreur lors de l\'actualisation:', error)
-  } finally {
-    loading.value = false
-  }
-}
+// =====================================
+// LIFECYCLE
+// =====================================
 
-const exportReport = () => {
-  console.log('Export du rapport analytics')
-  const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
-  if (showNotification) {
-    showNotification('Export du rapport démarré ! Le fichier sera téléchargé sous peu.', 'info')
-  }
-}
-
-// Watcher pour la période sélectionnée
-watch(selectedPeriod, (newPeriod) => {
-  console.log('Période changée:', newPeriod)
-  // Ici on rechargerait les données pour la nouvelle période
+onMounted(async () => {
+  await fetchAnalytics()
 })
 
-// Métadonnées de la page
-definePageMeta({
-  middleware: defineNuxtRouteMiddleware((to) => {
-    if (process.client) {
-      const token = localStorage.getItem('auth_token')
-      const user = localStorage.getItem('user_data')
-      
-      if (!token || !user) {
-        if (to.path !== '/login' && to.path !== '/register') {
-          return navigateTo('/login')
-        }
-      }
-    }
-  })
-})
+// Auto-refresh every 5 minutes
+let refreshInterval: NodeJS.Timeout | null = null
 
-useSeoMeta({
-  title: 'Analytics - ChatSeller',
-  description: 'Suivez les performances de votre Agent IA Commercial'
-})
-
-// Charger les données au montage
 onMounted(() => {
-  console.log('Page analytics montée')
+  refreshInterval = setInterval(() => {
+    fetchAnalytics(true)
+  }, 5 * 60 * 1000) // 5 minutes
+})
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
+})
+
+// =====================================
+// SEO
+// =====================================
+
+useHead({
+  title: 'Analytics - ChatSeller',
+  meta: [
+    {
+      name: 'description',
+      content: 'Analysez les performances de votre agent IA commercial ChatSeller.'
+    }
+  ]
 })
 </script>

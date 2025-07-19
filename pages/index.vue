@@ -1,468 +1,567 @@
 <!-- pages/index.vue -->
 <template>
   <div class="space-y-6">
-    <!-- Header de bienvenue -->
-    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl text-white p-6 shadow-sm">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold flex items-center">
-            Bonjour Marchand ! 👋
-          </h1>
-          <p class="text-blue-100 mt-1">
-            Voici un aperçu de votre Agent IA Commercial aujourd'hui !
-          </p>
-        </div>
-        
-        <div class="flex items-center space-x-3">
-          <button
-            @click="refreshData"
-            :disabled="loading"
-            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center"
-          >
-            <ArrowPathIcon :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
-            Actualiser
-          </button>
-          
-          <button
-            @click="configureAgent"
-            class="bg-white text-blue-600 hover:bg-gray-50 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center font-medium"
-          >
-            <Cog6ToothIcon class="h-4 w-4 mr-2" />
-            Configurer
-          </button>
-        </div>
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">
+          Tableau de bord
+        </h1>
+        <p class="text-gray-600 mt-1">
+          Vue d'ensemble de votre activité ChatSeller
+        </p>
       </div>
-    </div>
-
-    <!-- Statut du widget -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-            <span class="text-lg font-semibold text-gray-900">Widget actif</span>
-          </div>
-          <span class="text-sm text-gray-500">
-            Dernière activité il y a 2 minutes
-          </span>
-        </div>
-        
-        <div class="flex items-center space-x-6">
-          <div class="text-center">
-            <div class="text-2xl font-bold text-gray-900">{{ stats.todayViews }}</div>
-            <div class="text-sm text-gray-500">Vues aujourd'hui</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold text-gray-900">{{ stats.todayClicks }}</div>
-            <div class="text-sm text-gray-500">Clics aujourd'hui</div>
-          </div>
-        </div>
-        
-        <button
-          @click="previewWidget"
-          class="bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center"
+      
+      <!-- Period Selector -->
+      <div class="flex items-center space-x-2">
+        <label class="text-sm text-gray-700">Période :</label>
+        <select 
+          v-model="selectedPeriod" 
+          @change="handlePeriodChange"
+          class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <EyeIcon class="h-4 w-4 mr-2" />
-          Aperçu
+          <option value="7d">7 derniers jours</option>
+          <option value="30d">30 derniers jours</option>
+          <option value="90d">3 derniers mois</option>
+          <option value="1y">12 derniers mois</option>
+        </select>
+        
+        <button 
+          @click="refreshAllData"
+          :disabled="isRefreshing"
+          class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm disabled:opacity-50"
+          title="Actualiser les données"
+        >
+          <svg 
+            class="w-4 h-4" 
+            :class="{ 'animate-spin': isRefreshing }"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
         </button>
       </div>
     </div>
 
-    <!-- Métriques principales -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="p-3 bg-blue-50 rounded-xl">
-            <ChatBubbleLeftRightIcon class="h-6 w-6 text-blue-600" />
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Conversations totales</p>
-            <p class="text-2xl font-bold text-gray-900">{{ metrics.totalConversations }}</p>
-            <p class="text-xs text-green-600 flex items-center mt-1">
-              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
-              {{ metrics.conversationsGrowth }}% vs hier
-            </p>
-          </div>
+    <!-- Loading State -->
+    <div v-if="isInitialLoading" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div v-for="i in 4" :key="i" class="bg-white p-6 rounded-lg shadow animate-pulse">
+          <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div class="h-8 bg-gray-200 rounded w-1/2"></div>
         </div>
       </div>
-      
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="p-3 bg-green-50 rounded-xl">
-            <CheckCircleIcon class="h-6 w-6 text-green-600" />
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Taux de conversion</p>
-            <p class="text-2xl font-bold text-gray-900">{{ metrics.conversionRate }}%</p>
-            <p class="text-xs text-green-600 flex items-center mt-1">
-              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
-              {{ metrics.conversionGrowth }}% vs hier
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="p-3 bg-purple-50 rounded-xl">
-            <CurrencyDollarIcon class="h-6 w-6 text-purple-600" />
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Revenus générés</p>
-            <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(metrics.revenue) }}</p>
-            <p class="text-xs text-green-600 flex items-center mt-1">
-              <ArrowTrendingUpIcon class="h-3 w-3 mr-1" />
-              {{ metrics.revenueGrowth }}% vs hier
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div class="flex items-center">
-          <div class="p-3 bg-orange-50 rounded-xl">
-            <ShoppingBagIcon class="h-6 w-6 text-orange-600" />
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Panier moyen</p>
-            <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(metrics.averageOrder) }}</p>
-            <p class="text-xs text-red-600 flex items-center mt-1">
-              <ArrowTrendingDownIcon class="h-3 w-3 mr-1" />
-              {{ metrics.averageOrderGrowth }}% vs hier
-            </p>
-          </div>
-        </div>
+      <div class="bg-white p-6 rounded-lg shadow animate-pulse">
+        <div class="h-64 bg-gray-200 rounded"></div>
       </div>
     </div>
 
-    <!-- Sections côte à côte -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Activité récente -->
-      <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-200">
+    <!-- Error State -->
+    <div v-else-if="hasErrors" class="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <div>
+          <h3 class="text-red-800 font-medium">Erreur de chargement</h3>
+          <p class="text-red-700 text-sm mt-1">
+            Impossible de charger les données du dashboard.
+          </p>
+        </div>
+      </div>
+      <button 
+        @click="refreshAllData" 
+        class="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+      >
+        Réessayer
+      </button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div v-else class="space-y-6">
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Conversations -->
+        <div class="bg-white p-6 rounded-lg shadow">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Activité récente</h3>
-            <NuxtLink
-              to="/conversations"
-              class="text-sm text-blue-600 hover:text-blue-500 font-medium"
-            >
-              Voir tout →
-            </NuxtLink>
+            <div>
+              <p class="text-sm text-gray-600">Conversations totales</p>
+              <p class="text-2xl font-bold text-gray-900">
+                {{ totalConversations.toLocaleString() }}
+              </p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center text-sm">
+            <span class="text-green-600">{{ activeConversations }}</span>
+            <span class="text-gray-500 ml-1">actives en cours</span>
           </div>
         </div>
-        
-        <div class="p-6">
-          <div class="space-y-4">
-            <div 
-              v-for="activity in recentActivity"
-              :key="activity.id"
-              class="flex items-start space-x-3"
+
+        <!-- Orders -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Commandes</p>
+              <p class="text-2xl font-bold text-gray-900">
+                {{ completedOrders.toLocaleString() }}
+              </p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center text-sm">
+            <span class="text-blue-600">{{ formattedConversionRate }}</span>
+            <span class="text-gray-500 ml-1">taux de conversion</span>
+          </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Chiffre d'affaires</p>
+              <p class="text-2xl font-bold text-gray-900">
+                {{ formattedRevenue }}
+              </p>
+            </div>
+            <div class="p-3 bg-yellow-100 rounded-full">
+              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center text-sm">
+            <span class="text-green-600">{{ formattedAOV }}</span>
+            <span class="text-gray-500 ml-1">panier moyen</span>
+          </div>
+        </div>
+
+        <!-- Response Time -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Temps de réponse</p>
+              <p class="text-2xl font-bold text-gray-900">
+                {{ realTimeStats.responseTime }}
+              </p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-full">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center text-sm">
+            <span class="text-green-600">{{ realTimeStats.activeNow }}</span>
+            <span class="text-gray-500 ml-1">en ligne maintenant</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Conversations Chart -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Évolution des conversations
+          </h3>
+          <div v-if="conversationsChartData.length > 0" class="h-64">
+            <!-- Simple chart representation -->
+            <div class="flex items-end justify-between h-full space-x-1">
+              <div 
+                v-for="(point, index) in conversationsChartData.slice(-14)" 
+                :key="index"
+                class="bg-blue-500 rounded-t flex-1 flex flex-col justify-end"
+                :style="{ height: `${Math.max(10, (point.value / Math.max(...conversationsChartData.map(p => p.value))) * 100)}%` }"
+                :title="`${point.date}: ${point.value} conversations`"
+              >
+              </div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-2">
+              <span>{{ conversationsChartData[0]?.date }}</span>
+              <span>{{ conversationsChartData[conversationsChartData.length - 1]?.date }}</span>
+            </div>
+          </div>
+          <div v-else class="h-64 flex items-center justify-center text-gray-500">
+            <p>Aucune donnée disponible</p>
+          </div>
+        </div>
+
+        <!-- Revenue Chart -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Évolution du chiffre d'affaires
+          </h3>
+          <div v-if="revenueChartData.length > 0" class="h-64">
+            <!-- Simple chart representation -->
+            <div class="flex items-end justify-between h-full space-x-1">
+              <div 
+                v-for="(point, index) in revenueChartData.slice(-14)" 
+                :key="index"
+                class="bg-green-500 rounded-t flex-1 flex flex-col justify-end"
+                :style="{ height: `${Math.max(10, (point.value / Math.max(...revenueChartData.map(p => p.value))) * 100)}%` }"
+                :title="`${point.date}: ${point.value}€`"
+              >
+              </div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-2">
+              <span>{{ revenueChartData[0]?.date }}</span>
+              <span>{{ revenueChartData[revenueChartData.length - 1]?.date }}</span>
+            </div>
+          </div>
+          <div v-else class="h-64 flex items-center justify-center text-gray-500">
+            <p>Aucune donnée disponible</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Conversations -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Conversations récentes
+            </h3>
+            <NuxtLink 
+              to="/conversations"
+              class="text-sm text-blue-600 hover:text-blue-500"
             >
-              <div :class="['p-2 rounded-lg', getActivityIconClass(activity.type)]">
-                <component :is="getActivityIcon(activity.type)" class="h-4 w-4" />
+              Voir tout
+            </NuxtLink>
+          </div>
+          
+          <div v-if="latestConversations.length > 0" class="space-y-3">
+            <div 
+              v-for="conversation in latestConversations.slice(0, 5)" 
+              :key="conversation.id"
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">
+                  {{ getConversationSummary(conversation).visitorName }}
+                </p>
+                <p class="text-xs text-gray-500 truncate">
+                  {{ getConversationSummary(conversation).lastMessage.substring(0, 50) }}...
+                </p>
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900">{{ activity.title }}</p>
-                <p class="text-sm text-gray-500">{{ activity.description }}</p>
-                <p class="text-xs text-gray-400 mt-1">{{ formatTimeAgo(activity.timestamp) }}</p>
+              <div class="text-right">
+                <span 
+                  class="inline-flex px-2 py-1 text-xs rounded-full"
+                  :class="getStatusBadgeClass(conversation.status)"
+                >
+                  {{ getStatusLabel(conversation.status) }}
+                </span>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ getConversationSummary(conversation).duration }}
+                </p>
               </div>
-              <div v-if="activity.amount" class="text-right">
-                <p class="text-sm font-medium text-green-600">{{ formatCurrency(activity.amount) }}</p>
+            </div>
+          </div>
+          
+          <div v-else class="text-center py-8 text-gray-500">
+            <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p>Aucune conversation récente</p>
+          </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Produits populaires
+            </h3>
+            <NuxtLink 
+              to="/analytics"
+              class="text-sm text-blue-600 hover:text-blue-500"
+            >
+              Voir détails
+            </NuxtLink>
+          </div>
+          
+          <div v-if="topProductsForDisplay.length > 0" class="space-y-3">
+            <div 
+              v-for="product in topProductsForDisplay" 
+              :key="product.name"
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
+              <div class="flex items-center">
+                <span class="flex items-center justify-center w-6 h-6 bg-blue-600 text-white text-xs rounded-full mr-3">
+                  {{ product.rank }}
+                </span>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">
+                    {{ product.name }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ product.orders }} commandes
+                  </p>
+                </div>
               </div>
+              <div class="text-right">
+                <p class="text-sm font-medium text-gray-900">
+                  {{ product.formattedRevenue }}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="text-center py-8 text-gray-500">
+            <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <p>Aucune donnée produit</p>
+          </div>
+        </div>
+
+        <!-- Knowledge Base Status -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Base de connaissance
+            </h3>
+            <NuxtLink 
+              to="/knowledge-base"
+              class="text-sm text-blue-600 hover:text-blue-500"
+            >
+              Gérer
+            </NuxtLink>
+          </div>
+          
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Documents</span>
+              <span class="font-medium">{{ knowledgeBaseStatus.totalDocuments }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Statut</span>
+              <span 
+                class="inline-flex px-2 py-1 text-xs rounded-full"
+                :class="getReadinessClass(knowledgeBaseStatus.readiness)"
+              >
+                {{ getReadinessLabel(knowledgeBaseStatus.readiness) }}
+              </span>
+            </div>
+            
+            <div v-if="knowledgeBaseStatus.lastUpdate" class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Dernière MAJ</span>
+              <span class="text-sm">{{ knowledgeBaseStatus.lastUpdate }}</span>
+            </div>
+            
+            <div v-if="knowledgeBaseStatus.isEmpty" class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p class="text-sm text-yellow-800">
+                ⚠️ Aucun document dans votre base de connaissance. Ajoutez du contenu pour améliorer les réponses de votre agent IA.
+              </p>
             </div>
           </div>
         </div>
       </div>
-      
-      <!-- Actions rapides -->
-      <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Actions rapides</h3>
-        </div>
-        
-        <div class="p-6">
-          <div class="grid grid-cols-1 gap-4">
-            <button
-              @click="navigateTo('/settings')"
-              class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
-            >
-              <div class="p-2 bg-blue-50 rounded-lg">
-                <Cog6ToothIcon class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="ml-4">
-                <p class="font-medium text-gray-900">Configurer l'agent</p>
-                <p class="text-sm text-gray-500">Personnalisez votre IA</p>
-              </div>
-            </button>
-            
-            <button
-              @click="navigateTo('/knowledge-base')"
-              class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
-            >
-              <div class="p-2 bg-green-50 rounded-lg">
-                <DocumentTextIcon class="h-5 w-5 text-green-600" />
-              </div>
-              <div class="ml-4">
-                <p class="font-medium text-gray-900">Base de connaissance</p>
-                <p class="text-sm text-gray-500">Ajouter du contenu</p>
-              </div>
-            </button>
-            
-            <button
-              @click="showIntegrationModal = true"
-              class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
-            >
-              <div class="p-2 bg-purple-50 rounded-lg">
-                <CodeBracketIcon class="h-5 w-5 text-purple-600" />
-              </div>
-              <div class="ml-4">
-                <p class="font-medium text-gray-900">Code d'intégration</p>
-                <p class="text-sm text-gray-500">Installer le widget</p>
-              </div>
-            </button>
-            
-            <button
-              @click="navigateTo('/analytics')"
-              class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
-            >
-              <div class="p-2 bg-yellow-50 rounded-lg">
-                <ChartBarIcon class="h-5 w-5 text-yellow-600" />
-              </div>
-              <div class="ml-4">
-                <p class="font-medium text-gray-900">Analytics détaillées</p>
-                <p class="text-sm text-gray-500">Voir les performances</p>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
-
-    <!-- Configuration actuelle -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-semibold text-gray-900">Configuration actuelle</h3>
-        <NuxtLink
-          to="/settings"
-          class="text-sm text-blue-600 hover:text-blue-500 font-medium"
-        >
-          Modifier →
-        </NuxtLink>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <dt class="text-sm font-medium text-gray-500">Agent :</dt>
-          <dd class="mt-1 text-sm text-gray-900">{{ config.agentName }}</dd>
-        </div>
-        <div>
-          <dt class="text-sm font-medium text-gray-500">Couleur :</dt>
-          <dd class="mt-1 flex items-center">
-            <div 
-              class="w-4 h-4 rounded-full mr-2"
-              :style="{ backgroundColor: config.primaryColor }"
-            ></div>
-            <span class="text-sm text-gray-900">{{ config.primaryColor }}</span>
-          </dd>
-        </div>
-        <div>
-          <dt class="text-sm font-medium text-gray-500">Statut :</dt>
-          <dd class="mt-1">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              ● Actif
-            </span>
-          </dd>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal d'intégration -->
-    <IntegrationModal 
-      :show="showIntegrationModal"
-      @close="showIntegrationModal = false"
-      :user-id="authStore.user?.shopId"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject } from 'vue'
-import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
-import {
-  ArrowPathIcon,
-  Cog6ToothIcon,
-  EyeIcon,
-  ChatBubbleLeftRightIcon,
-  CheckCircleIcon,
-  CurrencyDollarIcon,
-  ShoppingBagIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  DocumentTextIcon,
-  CodeBracketIcon,
-  ChartBarIcon,
-  ShoppingCartIcon,
-  UserIcon,
-  EyeSlashIcon
-} from '@heroicons/vue/24/outline'
-
-// État local
-const loading = ref(false)
-const showIntegrationModal = ref(false)
-
-// Statistiques du widget
-const stats = ref({
-  todayViews: 1547,
-  todayClicks: 234
-})
-
-// Métriques principales
-const metrics = ref({
-  totalConversations: 127,
-  conversationsGrowth: 12,
-  conversionRate: 34,
-  conversionGrowth: 2.1,
-  revenue: 602000,
-  revenueGrowth: 15,
-  averageOrder: 63953,
-  averageOrderGrowth: -1.2
-})
-
-// Configuration actuelle
-const config = ref({
-  agentName: 'Sophie',
-  primaryColor: '#ec4899',
-  status: 'active'
-})
-
-// Activité récente (données simulées)
-const recentActivity = ref([
-  {
-    id: '1',
-    type: 'order',
-    title: 'Nouvelle commande de Marie Dubois',
-    description: 'il y a 2 min',
-    timestamp: new Date(Date.now() - 2 * 60 * 1000),
-    amount: 45000
-  },
-  {
-    id: '2',
-    type: 'conversation',
-    title: 'Conversation démarrée par client@example.com',
-    description: 'il y a 10 min',
-    timestamp: new Date(Date.now() - 10 * 60 * 1000)
-  },
-  {
-    id: '3',
-    type: 'visitor',
-    title: 'Nouveau visiteur sur la page produit iPhone',
-    description: 'il y a 15 min',
-    timestamp: new Date(Date.now() - 15 * 60 * 1000)
-  },
-  {
-    id: '4',
-    type: 'order',
-    title: 'Commande finalisée par Jean Martin',
-    description: 'il y a 30 min',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    amount: 75000
-  },
-  {
-    id: '5',
-    type: 'conversation',
-    title: 'Conversation terminée avec succès',
-    description: 'il y a 45 min',
-    timestamp: new Date(Date.now() - 45 * 60 * 1000)
-  }
-])
-
-// Fonctions utilitaires
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'XOF',
-    minimumFractionDigits: 0
-  }).format(amount)
-}
-
-const formatTimeAgo = (date: Date) => {
-  return formatDistanceToNow(date, { addSuffix: true, locale: fr })
-}
-
-const getActivityIcon = (type: string) => {
-  const icons = {
-    order: ShoppingCartIcon,
-    conversation: ChatBubbleLeftRightIcon,
-    visitor: EyeIcon,
-    user: UserIcon
-  }
-  return icons[type] || EyeSlashIcon
-}
-
-const getActivityIconClass = (type: string) => {
-  const classes = {
-    order: 'bg-green-50 text-green-600',
-    conversation: 'bg-blue-50 text-blue-600',
-    visitor: 'bg-purple-50 text-purple-600',
-    user: 'bg-yellow-50 text-yellow-600'
-  }
-  return classes[type] || 'bg-gray-50 text-gray-600'
-}
-
-// Actions
-const refreshData = async () => {
-  loading.value = true
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Simuler mise à jour des stats
-    stats.value.todayViews += Math.floor(Math.random() * 10)
-    stats.value.todayClicks += Math.floor(Math.random() * 3)
-    
-    const showNotification = inject('showNotification') as ((message: string, type: string) => void) | undefined
-    if (showNotification) {
-      showNotification('Données actualisées avec succès !', 'success')
-    }
-  } catch (error) {
-    console.error('Erreur lors de l\'actualisation:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-const configureAgent = () => {
-  navigateTo('/settings')
-}
-
-const previewWidget = () => {
-  // Ouvrir aperçu du widget dans nouvelle fenêtre
-  window.open('https://widget.chatseller.app/preview', '_blank')
-}
-
-// Métadonnées de la page
 definePageMeta({
-  middleware: defineNuxtRouteMiddleware((to) => {
-    if (process.client) {
-      const token = localStorage.getItem('auth_token')
-      const user = localStorage.getItem('user_data')
-      
-      if (!token || !user) {
-        if (to.path !== '/login' && to.path !== '/register') {
-          return navigateTo('/login')
-        }
-      }
-    }
-  })
+  middleware: 'auth'
 })
 
-useSeoMeta({
+// =====================================
+// COMPOSABLES AND STORES
+// =====================================
+
+const { 
+  fetchAnalytics, 
+  isLoading: analyticsLoading, 
+  error: analyticsError,
+  selectedPeriod,
+  setPeriod,
+  totalConversations,
+  activeConversations,
+  completedOrders,
+  formattedRevenue,
+  formattedAOV,
+  formattedConversionRate,
+  conversationsChartData,
+  revenueChartData,
+  topProductsForDisplay,
+  getRealTimeStats
+} = useAnalytics()
+
+const {
+  fetchConversations,
+  isLoading: conversationsLoading,
+  error: conversationsError,
+  latestConversations,
+  getConversationSummary
+} = useConversations()
+
+const {
+  fetchDocuments,
+  isLoading: knowledgeLoading,
+  error: knowledgeError,
+  getKnowledgeBaseStatus
+} = useKnowledgeBase()
+
+const { success, handleApiError } = useNotifications()
+
+// =====================================
+// REACTIVE STATE
+// =====================================
+
+const isRefreshing = ref(false)
+
+// =====================================
+// COMPUTED
+// =====================================
+
+const isInitialLoading = computed(() => 
+  analyticsLoading.value && conversationsLoading.value && knowledgeLoading.value
+)
+
+const hasErrors = computed(() => 
+  analyticsError.value || conversationsError.value || knowledgeError.value
+)
+
+const realTimeStats = computed(() => getRealTimeStats())
+const knowledgeBaseStatus = computed(() => getKnowledgeBaseStatus())
+
+// =====================================
+// METHODS
+// =====================================
+
+/**
+ * Refresh all dashboard data
+ */
+const refreshAllData = async (): Promise<void> => {
+  isRefreshing.value = true
+  
+  try {
+    await Promise.all([
+      fetchAnalytics(true),
+      fetchConversations(true),
+      fetchDocuments(true)
+    ])
+    
+    success('Données actualisées', 'Le dashboard a été mis à jour')
+  } catch (error: any) {
+    handleApiError(error, 'Actualisation des données')
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
+/**
+ * Handle period change
+ */
+const handlePeriodChange = (): void => {
+  setPeriod(selectedPeriod.value)
+}
+
+/**
+ * Get status badge class for conversations
+ */
+const getStatusBadgeClass = (status: string): string => {
+  switch (status) {
+    case 'active':
+      return 'bg-green-100 text-green-800'
+    case 'completed':
+      return 'bg-blue-100 text-blue-800'
+    case 'abandoned':
+      return 'bg-gray-100 text-gray-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
+/**
+ * Get status label for conversations
+ */
+const getStatusLabel = (status: string): string => {
+  switch (status) {
+    case 'active':
+      return 'Active'
+    case 'completed':
+      return 'Terminée'
+    case 'abandoned':
+      return 'Abandonnée'
+    default:
+      return 'Inconnue'
+  }
+}
+
+/**
+ * Get readiness class for knowledge base
+ */
+const getReadinessClass = (readiness: string): string => {
+  switch (readiness) {
+    case 'excellent':
+      return 'bg-green-100 text-green-800'
+    case 'good':
+      return 'bg-blue-100 text-blue-800'
+    case 'minimal':
+      return 'bg-yellow-100 text-yellow-800'
+    case 'empty':
+      return 'bg-red-100 text-red-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
+/**
+ * Get readiness label for knowledge base
+ */
+const getReadinessLabel = (readiness: string): string => {
+  switch (readiness) {
+    case 'excellent':
+      return 'Excellent'
+    case 'good':
+      return 'Bon'
+    case 'minimal':
+      return 'Minimal'
+    case 'empty':
+      return 'Vide'
+    default:
+      return 'Inconnu'
+  }
+}
+
+// =====================================
+// LIFECYCLE
+// =====================================
+
+onMounted(async () => {
+  // Load all data on mount
+  await Promise.all([
+    fetchAnalytics(),
+    fetchConversations(),
+    fetchDocuments()
+  ])
+})
+
+// =====================================
+// SEO
+// =====================================
+
+useHead({
   title: 'Dashboard - ChatSeller',
-  description: 'Aperçu de votre Agent IA Commercial'
-})
-
-// Charger les données au montage
-onMounted(() => {
-  console.log('Page dashboard montée')
+  meta: [
+    {
+      name: 'description',
+      content: 'Tableau de bord ChatSeller - Vue d\'ensemble de votre activité et performances.'
+    }
+  ]
 })
 </script>

@@ -1,149 +1,166 @@
-// stores/auth.ts 
+// stores/auth.ts
 import { defineStore } from 'pinia'
 
-export interface User {
+interface User {
   id: string
   email: string
-  name: string
-  avatar?: string
+  name?: string
   shopId?: string
 }
 
-export interface AuthState {
+interface AuthState {
   user: User | null
-  token: string | null
   isAuthenticated: boolean
-  loading: boolean
+  isLoading: boolean
+  error: string | null
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     user: null,
-    token: null,
     isAuthenticated: false,
-    loading: false
+    isLoading: false,
+    error: null
   }),
 
   getters: {
-    isLoggedIn: (state): boolean => state.isAuthenticated && !!state.token,
-    currentUser: (state): User | null => state.user,
-    userInitials: (state): string => {
-      if (!state.user?.name) return 'U'
-      return state.user.name
-        .split(' ')
-        .map(n => n.charAt(0))
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
+    // Current user info
+    currentUser: (state) => state.user,
+    
+    // Check if user is authenticated
+    isLoggedIn: (state) => state.isAuthenticated && !!state.user,
+    
+    // Get user's shop ID - Pour compatibilité avec vos stores
+    userShopId: (state) => state.user?.shopId || 'default-shop-id',
+    
+    // Get user display name
+    userDisplayName: (state) => {
+      if (!state.user) return 'Utilisateur'
+      return state.user.name || state.user.email.split('@')[0]
     }
   },
 
   actions: {
-    async initializeAuth(): Promise<void> {
-      if (process.client) {
-        const token = localStorage.getItem('auth_token')
-        const userData = localStorage.getItem('user_data')
-        
-        if (token && userData) {
-          try {
-            this.token = token
-            this.user = JSON.parse(userData)
-            this.isAuthenticated = true
-            
-            // Vérifier la validité du token avec la vraie API
-            await this.validateToken()
-          } catch (error) {
-            console.error('Erreur lors de l\'initialisation auth:', error)
-            this.logout()
-          }
-        }
-      }
-    },
-
-    // 🔥 VRAIE CONNEXION API
-    async login(credentials: { email: string; password: string }): Promise<{ success: boolean }> {
-      this.loading = true
+    // =====================================
+    // AUTHENTICATION ACTIONS SIMPLIFIÉES
+    // =====================================
+    
+    /**
+     * Login simple pour tests
+     */
+    async login(email: string, password: string): Promise<boolean> {
+      this.isLoading = true
+      this.error = null
       
       try {
-        // 🚀 APPEL À LA VRAIE API
-        const response = await $fetch('https://api.chatseller.app/auth/login', {
-          method: 'POST',
-          body: {
-            email: credentials.email,
-            password: credentials.password
+        // Pour les tests avec les credentials fournis
+        if (email === 'admin@chatseller.app' && password === 'password') {
+          this.user = {
+            id: 'test-user-id',
+            email: 'admin@chatseller.app',
+            name: 'Admin ChatSeller',
+            shopId: 'test-shop-id'
           }
-        })
-        
-        if (response.success) {
-          this.setAuthData(response.token, response.user)
-          return { success: true }
-        } else {
-          throw new Error(response.message || 'Échec de la connexion')
-        }
-      } catch (error: any) {
-        console.error('Erreur de connexion:', error)
-        throw new Error(error.data?.message || 'Erreur de connexion')
-      } finally {
-        this.loading = false
-      }
-    },
-
-    // 🔥 VRAIE VALIDATION TOKEN
-    async validateToken(): Promise<boolean> {
-      if (!this.token) return false
-      
-      try {
-        const response = await $fetch('https://api.chatseller.app/auth/verify', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${this.token}`
+          this.isAuthenticated = true
+          this.error = null
+          
+          // Stocker le token factice pour les tests
+          if (process.client) {
+            localStorage.setItem('chatseller_token', 'test-token-' + Date.now())
           }
-        })
-        
-        if (response.valid) {
+          
           return true
         } else {
-          this.logout()
+          this.error = 'Identifiants invalides'
           return false
         }
-      } catch (error) {
-        console.error('Token invalide:', error)
-        this.logout()
+      } catch (error: any) {
+        this.error = error.message || 'Erreur de connexion'
         return false
+      } finally {
+        this.isLoading = false
       }
     },
 
-    logout(): void {
-      this.user = null
-      this.token = null
-      this.isAuthenticated = false
-      
-      if (process.client) {
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('user_data')
-        window.location.href = '/login'
-      }
-    },
-
-    setAuthData(token: string, user: User): void {
-      this.token = token
-      this.user = user
-      this.isAuthenticated = true
-      
-      if (process.client) {
-        localStorage.setItem('auth_token', token)
-        localStorage.setItem('user_data', JSON.stringify(user))
-      }
-    },
-
-    updateUser(userData: Partial<User>): void {
-      if (this.user) {
-        this.user = { ...this.user, ...userData }
-        
+    /**
+     * Logout
+     */
+    async logout(): Promise<void> {
+      try {
+        // Clear storage
         if (process.client) {
-          localStorage.setItem('user_data', JSON.stringify(this.user))
+          localStorage.removeItem('chatseller_token')
+        }
+        
+        // Clear state
+        this.user = null
+        this.isAuthenticated = false
+        this.error = null
+        
+        // Redirect to login
+        await navigateTo('/login')
+      } catch (error) {
+        console.error('Logout error:', error)
+      }
+    },
+
+    /**
+     * Initialize - Vérifier si utilisateur connecté
+     */
+    async initialize(): Promise<void> {
+      if (process.client) {
+        const token = localStorage.getItem('chatseller_token')
+        if (token && token.startsWith('test-token-')) {
+          // Restaurer la session de test
+          this.user = {
+            id: 'test-user-id',
+            email: 'admin@chatseller.app',
+            name: 'Admin ChatSeller',
+            shopId: 'test-shop-id'
+          }
+          this.isAuthenticated = true
         }
       }
+    },
+
+    /**
+     * Clear any authentication errors
+     */
+    clearError(): void {
+      this.error = null
+    },
+
+    /**
+     * Check if current route requires authentication
+     */
+    requiresAuth(route: string): boolean {
+      const publicRoutes = ['/login', '/register', '/']
+      return !publicRoutes.includes(route)
     }
   }
 })
+
+// =====================================
+// COMPOSABLE COMPATIBLE
+// =====================================
+
+export const useAuth = () => {
+  const authStore = useAuthStore()
+  
+  return {
+    // State
+    user: computed(() => authStore.user),
+    isAuthenticated: computed(() => authStore.isAuthenticated),
+    isLoading: computed(() => authStore.isLoading),
+    error: computed(() => authStore.error),
+    userShopId: computed(() => authStore.userShopId),
+    userDisplayName: computed(() => authStore.userDisplayName),
+    
+    // Actions
+    login: authStore.login,
+    logout: authStore.logout,
+    initialize: authStore.initialize,
+    clearError: authStore.clearError,
+    requiresAuth: authStore.requiresAuth
+  }
+}
