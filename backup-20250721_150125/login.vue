@@ -3,9 +3,7 @@
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <div>
-        <div class="mx-auto h-12 w-auto flex items-center justify-center">
-          <div class="text-2xl font-bold text-blue-600">ChatSeller</div>
-        </div>
+        <img class="mx-auto h-12 w-auto" src="/logo.svg" alt="ChatSeller" />
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Connexion à votre dashboard
         </h2>

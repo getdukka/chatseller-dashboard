@@ -1,154 +1,63 @@
-// nuxt.config.ts
 export default defineNuxtConfig({
-  // =====================================
-  // DEVELOPMENT CONFIG
-  // =====================================
+  compatibilityDate: '2025-07-21',
   devtools: { enabled: true },
+  ssr: true,
   
-  // =====================================
-  // CSS & STYLING
-  // =====================================
-  css: ['~/assets/css/main.css'],
-  
-  // =====================================
-  // MODULES
-  // =====================================
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
-    '@nuxtjs/google-fonts'
+    '@vueuse/nuxt'
   ],
 
-  // =====================================
-  // GOOGLE FONTS
-  // =====================================
-  googleFonts: {
-    families: {
-      Inter: [400, 500, 600, 700]
-    },
-    display: 'swap'
-  },
-
-  // =====================================
-  // PINIA CONFIGURATION
-  // =====================================
-  pinia: {
-    storesDirs: ['./stores/**']
-  },
-
-  // =====================================
-  // RUNTIME CONFIG
-  // =====================================
-  runtimeConfig: {
-    // Private keys (only available on server-side)
-    
-    // Public keys (exposed to client-side)
-    public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'https://api.chatseller.app',
-      appEnv: process.env.NODE_ENV || 'development',
-      version: process.env.npm_package_version || '1.0.0'
-    }
-  },
-
-  // =====================================
-  // APP CONFIGURATION
-  // =====================================
-  app: {
-    head: {
-      title: 'ChatSeller Dashboard',
-      titleTemplate: '%s - ChatSeller',
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Dashboard ChatSeller - Gérez votre agent IA commercial' },
-        { name: 'author', content: 'ChatSeller Team' },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: 'ChatSeller Dashboard' },
-        { property: 'og:description', content: 'Dashboard ChatSeller - Gérez votre agent IA commercial' },
-        { property: 'og:site_name', content: 'ChatSeller' },
-        { name: 'twitter:card', content: 'summary' },
-        { name: 'twitter:title', content: 'ChatSeller Dashboard' },
-        { name: 'twitter:description', content: 'Dashboard ChatSeller - Gérez votre agent IA commercial' }
-      ],
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
-        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
-        { rel: 'manifest', href: '/site.webmanifest' }
-      ]
-    }
-  },
-
-  // =====================================
-  // SSR CONFIGURATION
-  // =====================================
-  ssr: false, // SPA mode for better client-side auth handling
-  
-  // =====================================
-  // NITRO CONFIGURATION
-  // =====================================
-  nitro: {
-    preset: 'vercel'
-  },
-
-  // =====================================
-  // BUILD CONFIGURATION
-  // =====================================
-  build: {
-    transpile: ['@headlessui/vue']
-  },
-
-  // =====================================
-  // TYPESCRIPT CONFIGURATION
-  // =====================================
   typescript: {
     strict: false,
     typeCheck: false
   },
 
-  // =====================================
-  // IMPORTS CONFIGURATION
-  // =====================================
-  imports: {
-    dirs: [
-      'composables/**',
-      'stores/**'
-    ]
-  },
+  css: ['~/assets/css/main.css'],
 
-  // =====================================
-  // EXPERIMENTAL FEATURES
-  // =====================================
-  experimental: {
-    payloadExtraction: false // Better for SPA
-  },
-
-  // =====================================
-  // ROUTER CONFIGURATION
-  // =====================================
-  router: {
-    options: {
-      scrollBehaviorType: 'smooth'
+  runtimeConfig: {
+    jwtSecret: process.env.JWT_SECRET,
+    supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,
+    
+    public: {
+      apiUrl: '/api', // ✅ Utiliser le proxy local au lieu de l'URL externe
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      widgetUrl: process.env.WIDGET_URL || 'https://widget.chatseller.app',
+      appUrl: process.env.APP_URL || 'http://localhost:3000'
     }
   },
 
-  // =====================================
-  // VITE CONFIGURATION
-  // =====================================
-  vite: {
-    define: {
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false
+  devServer: {
+    port: 3000,
+    host: 'localhost'
+  },
+
+  // Configuration Nitro avec proxy pour éviter CORS
+  nitro: {
+    routeRules: {
+      // Proxy vers l'API Railway pour éviter CORS
+      '/api/**': {
+        cors: true,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        },
+        proxy: {
+          to: 'https://chatseller-api-production.up.railway.app/**'
+        }
+      }
     },
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            // Split vendor chunks for better caching
-            'pinia': ['pinia'],
-            'vue': ['vue', '@vue/runtime-core'],
-            'utils': ['date-fns', 'lodash-es']
-          }
+    
+    // Configuration de développement
+    devProxy: {
+      '/api': {
+        target: 'https://chatseller-api-production.up.railway.app',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': '' // Enlever /api du début pour envoyer directement à Railway
         }
       }
     }

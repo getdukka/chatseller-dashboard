@@ -115,7 +115,7 @@ export interface AnalyticsData {
 
 export const useApi = () => {
   const config = useRuntimeConfig()
-  const baseURL = 'https://api.chatseller.app'
+  const baseURL = '/api'
   
   // Get auth token from localStorage
   const getAuthToken = (): string | null => {
@@ -197,21 +197,79 @@ export const useApi = () => {
   // =====================================
   
   const auth = {
-    // Login
+    // Login - Testons différents endpoints
     login: async (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> => {
-      const response = await apiCall<AuthResponse>('/auth/login', {
-        method: 'POST',
-        body: credentials
-      })
-      
-      if (response.success && response.data?.token) {
-        setAuthToken(response.data.token)
+      // Essayons d'abord l'endpoint simple
+      try {
+        console.log('🧪 Tentative 1: /auth/login')
+        const response = await apiCall<AuthResponse>('/auth/login', {
+          method: 'POST',
+          body: credentials
+        })
+        
+        if (response.success && response.data?.token) {
+          setAuthToken(response.data.token)
+          return response
+        }
+      } catch (error) {
+        console.log('❌ Endpoint /auth/login échoué, tentative suivante...')
       }
       
-      return response
+      // Si ça ne marche pas, essayons le endpoint avec /api/v1
+      try {
+        console.log('🧪 Tentative 2: /api/v1/auth/login')
+        const response = await apiCall<AuthResponse>('/api/v1/auth/login', {
+          method: 'POST',
+          body: credentials
+        })
+        
+        if (response.success && response.data?.token) {
+          setAuthToken(response.data.token)
+          return response
+        }
+      } catch (error) {
+        console.log('❌ Endpoint /api/v1/auth/login échoué')
+      }
+      
+      // Si ça ne marche toujours pas, essayons d'autres variantes
+      try {
+        console.log('🧪 Tentative 3: /login')
+        const response = await apiCall<AuthResponse>('/login', {
+          method: 'POST',
+          body: credentials
+        })
+        
+        if (response.success && response.data?.token) {
+          setAuthToken(response.data.token)
+          return response
+        }
+      } catch (error) {
+        console.log('❌ Endpoint /login échoué')
+      }
+      
+      return {
+        error: 'Tous les endpoints de login ont échoué. Problème CORS ou endpoints incorrects.',
+        success: false
+      }
     },
 
-    // Register
+    // Verify token - version simplifiée
+    verify: async (): Promise<ApiResponse<{ user: AuthResponse['user'] }>> => {
+      try {
+        return await apiCall<{ user: AuthResponse['user'] }>('/auth/verify')
+      } catch (error) {
+        try {
+          return await apiCall<{ user: AuthResponse['user'] }>('/api/v1/auth/verify')
+        } catch (error2) {
+          return {
+            error: 'Impossible de vérifier le token',
+            success: false
+          }
+        }
+      }
+    },
+
+    // Autres méthodes auth...
     register: async (credentials: LoginCredentials & { name: string }): Promise<ApiResponse<AuthResponse>> => {
       return apiCall<AuthResponse>('/auth/register', {
         method: 'POST',
@@ -219,12 +277,6 @@ export const useApi = () => {
       })
     },
 
-    // Verify token
-    verify: async (): Promise<ApiResponse<{ user: AuthResponse['user'] }>> => {
-      return apiCall<{ user: AuthResponse['user'] }>('/auth/verify')
-    },
-
-    // Refresh token
     refresh: async (): Promise<ApiResponse<{ token: string }>> => {
       const response = await apiCall<{ token: string }>('/auth/refresh', {
         method: 'POST'
@@ -237,7 +289,6 @@ export const useApi = () => {
       return response
     },
 
-    // Logout
     logout: () => {
       removeAuthToken()
     }

@@ -3,30 +3,7 @@
   "compilerOptions": {
     "strict": false,
     "noImplicitAny": false,
-    "noImplicitReturns": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "exactOptionalPropertyTypes": false,
-    "noImplicitOverride": false,
     "skipLibCheck": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "allowJs": true,
-    "sourceMap": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./*"],
-      "@/*": ["./*"]
-    }
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.vue",
-    ".nuxt/types/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    ".nuxt/dist"
-  ]
+    "allowJs": true
+  }
 }
