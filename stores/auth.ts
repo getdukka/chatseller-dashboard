@@ -1,4 +1,3 @@
-// stores/auth.ts
 import { defineStore } from 'pinia'
 
 export const useAuth = defineStore('auth', {
@@ -6,7 +5,8 @@ export const useAuth = defineStore('auth', {
     user: null as any,
     token: null as string | null,
     isLoading: false,
-    isAuthenticated: false
+    isAuthenticated: false,
+    initialized: false // ✅ NOUVEAU : Flag d'initialisation
   }),
 
   getters: {
@@ -22,23 +22,24 @@ export const useAuth = defineStore('auth', {
 
   actions: {
     async login(email: string, password: string) {
+      console.log('🔐 Store: Début login...', { email })
       this.isLoading = true
+      
       try {
-        // Utilisation directe de $fetch au lieu du composable
-        const response = await $fetch('/api/v1/auth/login', {
-          method: 'POST',
-          baseURL: useRuntimeConfig().public.apiUrl,
-          body: { email, password }
-        })
+        const api = useApi()
+        const response = await api.auth.login({ email, password })
 
         if (response.success && response.data) {
-          this.token = response.data.token
-          this.user = response.data.user
-          this.isAuthenticated = true
+          this.setAuthData(response.data.token, response.data.user)
           
-          // Stocker le token
+          console.log('✅ Store: Login réussi !', {
+            token: this.token ? 'Présent' : 'Manquant',
+            user: this.user,
+            isAuthenticated: this.isAuthenticated
+          })
+
           if (process.client) {
-            localStorage.setItem('chatseller_token', this.token)
+            window.location.replace('/')
           }
 
           return { success: true }
@@ -46,7 +47,7 @@ export const useAuth = defineStore('auth', {
           throw new Error(response.error || 'Échec de la connexion')
         }
       } catch (error: any) {
-        console.error('Login error:', error)
+        console.error('❌ Store: Erreur login:', error)
         return { 
           success: false, 
           error: error.message || 'Erreur de connexion'
@@ -57,27 +58,77 @@ export const useAuth = defineStore('auth', {
     },
 
     async logout() {
+      console.log('🚪 Store: Logout...')
+      
+      this.clearAuthData()
+
+      if (process.client) {
+        window.location.replace('/login')
+      }
+    },
+
+    // ✅ MÉTHODE CENTRALE : Définir les données d'auth
+    setAuthData(token: string, user: any) {
+      this.token = token
+      this.user = user
+      this.isAuthenticated = true
+      this.initialized = true
+      
+      // Sauvegarder dans localStorage
+      if (process.client) {
+        localStorage.setItem('chatseller_token', token)
+        localStorage.setItem('chatseller_user', JSON.stringify(user))
+      }
+      
+      console.log('✅ Store: Données auth définies et sauvegardées')
+    },
+
+    // ✅ MÉTHODE CENTRALE : Nettoyer les données d'auth
+    clearAuthData() {
       this.user = null
       this.token = null
       this.isAuthenticated = false
+      this.initialized = true
       
+      // Nettoyer localStorage
       if (process.client) {
         localStorage.removeItem('chatseller_token')
+        localStorage.removeItem('chatseller_user')
       }
-
-      await navigateTo('/login')
+      
+      console.log('✅ Store: Données auth nettoyées')
     },
 
-    async initializeAuth() {
-      if (process.client) {
+    // ✅ MÉTHODE CRITIQUE : Initialisation depuis localStorage
+    initializeFromStorage() {
+      if (process.client && !this.initialized) {
         const token = localStorage.getItem('chatseller_token')
-        if (token) {
-          this.token = token
-          this.isAuthenticated = true
-          // Simplification : on assume que si le token existe, l'utilisateur est connecté
-          this.user = { email: 'admin@chatseller.app' }
+        const userData = localStorage.getItem('chatseller_user')
+        
+        if (token && userData) {
+          try {
+            const user = JSON.parse(userData)
+            this.setAuthData(token, user)
+            console.log('✅ Store: État restauré depuis localStorage:', user.email)
+          } catch (error) {
+            console.error('❌ Store: Erreur parsing localStorage:', error)
+            this.clearAuthData()
+          }
+        } else {
+          this.initialized = true
+          console.log('🔍 Store: Aucune session sauvegardée')
         }
       }
+    },
+
+    // ✅ MÉTHODE UTILITAIRE : Vérifier si session existe
+    hasValidSession(): boolean {
+      if (process.client) {
+        const token = localStorage.getItem('chatseller_token')
+        const userData = localStorage.getItem('chatseller_user')
+        return !!(token && userData)
+      }
+      return false
     }
   }
 })

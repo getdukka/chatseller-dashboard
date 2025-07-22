@@ -1,3 +1,4 @@
+// nuxt.config.ts
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-21',
   devtools: { enabled: true },
@@ -17,11 +18,12 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
-    jwtSecret: process.env.JWT_SECRET,
+    jwtSecret: process.env.JWT_SECRET || 'chatseller-jwt-secret-dev',
     supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,
     
     public: {
-      apiUrl: '/api', // ✅ Utiliser le proxy local au lieu de l'URL externe
+      apiUrl: '/api', // Endpoints locaux Nuxt
+      externalApiUrl: 'https://chatseller-api-production.up.railway.app', // API Railway
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
       widgetUrl: process.env.WIDGET_URL || 'https://widget.chatseller.app',
@@ -34,11 +36,15 @@ export default defineNuxtConfig({
     host: 'localhost'
   },
 
-  // Configuration Nitro avec proxy pour éviter CORS
+  // CONFIGURATION NITRO CORRIGÉE - Séparation des endpoints
   nitro: {
+    experimental: {
+      wasm: false
+    },
+    
+    // Proxy SEULEMENT pour les routes externes spécifiques
     routeRules: {
-      // Proxy vers l'API Railway pour éviter CORS
-      '/api/**': {
+      '/external-api/**': {
         cors: true,
         headers: {
           'Access-Control-Allow-Origin': '*',
@@ -51,14 +57,11 @@ export default defineNuxtConfig({
       }
     },
     
-    // Configuration de développement
+    // DevProxy désactivé pour permettre les endpoints locaux
     devProxy: {
-      '/api': {
+      '/external-api': {
         target: 'https://chatseller-api-production.up.railway.app',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/api': '' // Enlever /api du début pour envoyer directement à Railway
-        }
+        changeOrigin: true
       }
     }
   }

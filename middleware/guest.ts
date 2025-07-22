@@ -1,7 +1,7 @@
-// middleware/auth.ts
+// middleware/guest.ts
 
 export default defineNuxtRouteMiddleware((to, from) => {
-  console.log('🔒 Middleware auth: Vérification...')
+  console.log('👤 Middleware guest: Vérification...')
   
   if (process.client) {
     const authStore = useAuth()
@@ -15,11 +15,11 @@ export default defineNuxtRouteMiddleware((to, from) => {
     const hasStoredSession = authStore.hasValidSession()
     const isStoreAuthenticated = authStore.isAuthenticated
     
-    if (!hasStoredSession || !isStoreAuthenticated) {
-      console.log('🔒 Middleware auth: Pas de session valide, redirection login')
-      return navigateTo('/login')
+    if (hasStoredSession && isStoreAuthenticated) {
+      console.log('🔄 Middleware guest: Session active, redirection dashboard')
+      return navigateTo('/')
     }
     
-    console.log('✅ Middleware auth: Session valide, accès autorisé')
+    console.log('✅ Middleware guest: Pas de session, accès page guest autorisé')
   }
 })

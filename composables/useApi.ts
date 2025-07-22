@@ -169,24 +169,30 @@ export const useApi = () => {
     }
   }
 
-  // Generic API call wrapper
+  // Generic API call wrapper - VERSION CORRIGÉE
   const apiCall = async <T>(
     endpoint: string, 
     options: any = {}
   ): Promise<ApiResponse<T>> => {
     try {
       const fetchOptions = createFetchOptions(options)
-      const response = await $fetch<T>(endpoint, fetchOptions)
+      const response = await $fetch(endpoint, fetchOptions) as any
       
+      // Si la réponse est déjà au format ApiResponse, la retourner
+      if (response && typeof response === 'object' && 'success' in response) {
+        return response as ApiResponse<T>
+      }
+      
+      // Sinon, wrapper la réponse dans le format ApiResponse
       return {
-        data: response,
+        data: response as T,
         success: true
       }
     } catch (error: any) {
       console.error('API call failed:', error)
       
       return {
-        error: error.message || 'Une erreur est survenue',
+        error: error.data?.message || error.message || 'Une erreur est survenue',
         success: false
       }
     }
@@ -197,79 +203,65 @@ export const useApi = () => {
   // =====================================
   
   const auth = {
-    // Login - Testons différents endpoints
+    // Login - VERSION CORRIGÉE pour mes endpoints
     login: async (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> => {
-      // Essayons d'abord l'endpoint simple
+      console.log('🔐 API: Tentative de login pour:', credentials.email)
+      
       try {
-        console.log('🧪 Tentative 1: /auth/login')
-        const response = await apiCall<AuthResponse>('/auth/login', {
+        const response = await apiCall<any>('/auth/login', {
           method: 'POST',
           body: credentials
         })
         
-        if (response.success && response.data?.token) {
-          setAuthToken(response.data.token)
-          return response
-        }
-      } catch (error) {
-        console.log('❌ Endpoint /auth/login échoué, tentative suivante...')
-      }
-      
-      // Si ça ne marche pas, essayons le endpoint avec /api/v1
-      try {
-        console.log('🧪 Tentative 2: /api/v1/auth/login')
-        const response = await apiCall<AuthResponse>('/api/v1/auth/login', {
-          method: 'POST',
-          body: credentials
-        })
+        console.log('📡 API: Réponse login:', response)
         
         if (response.success && response.data?.token) {
           setAuthToken(response.data.token)
-          return response
-        }
-      } catch (error) {
-        console.log('❌ Endpoint /api/v1/auth/login échoué')
-      }
-      
-      // Si ça ne marche toujours pas, essayons d'autres variantes
-      try {
-        console.log('🧪 Tentative 3: /login')
-        const response = await apiCall<AuthResponse>('/login', {
-          method: 'POST',
-          body: credentials
-        })
-        
-        if (response.success && response.data?.token) {
-          setAuthToken(response.data.token)
-          return response
-        }
-      } catch (error) {
-        console.log('❌ Endpoint /login échoué')
-      }
-      
-      return {
-        error: 'Tous les endpoints de login ont échoué. Problème CORS ou endpoints incorrects.',
-        success: false
-      }
-    },
-
-    // Verify token - version simplifiée
-    verify: async (): Promise<ApiResponse<{ user: AuthResponse['user'] }>> => {
-      try {
-        return await apiCall<{ user: AuthResponse['user'] }>('/auth/verify')
-      } catch (error) {
-        try {
-          return await apiCall<{ user: AuthResponse['user'] }>('/api/v1/auth/verify')
-        } catch (error2) {
+          
+          // Restructurer pour correspondre à AuthResponse
+          const authData: AuthResponse = {
+            token: response.data.token,
+            user: response.data.user
+          }
+          
           return {
-            error: 'Impossible de vérifier le token',
-            success: false
+            success: true,
+            data: authData
           }
         }
+        
+        return {
+          success: false,
+          error: response.error || 'Échec de la connexion'
+        }
+        
+      } catch (error: any) {
+        console.error('❌ API: Erreur login:', error)
+        return {
+          error: error.message || 'Erreur de connexion',
+          success: false
+        }
       }
     },
 
-    // Autres méthodes auth...
+    // Verify token - VERSION SIMPLIFIÉE
+    verify: async (): Promise<ApiResponse<{ user: AuthResponse['user'] }>> => {
+      const token = getAuthToken()
+      if (!token) {
+        return { success: false, error: 'Pas de token' }
+      }
+      
+      try {
+        return await apiCall<{ user: AuthResponse['user'] }>('/auth/verify', {
+          method: 'POST',
+          body: { token }
+        })
+      } catch (error) {
+        return { error: 'Impossible de vérifier le token', success: false }
+      }
+    },
+
+    // Register - pour compatibilité future
     register: async (credentials: LoginCredentials & { name: string }): Promise<ApiResponse<AuthResponse>> => {
       return apiCall<AuthResponse>('/auth/register', {
         method: 'POST',
@@ -277,6 +269,7 @@ export const useApi = () => {
       })
     },
 
+    // Refresh - pour compatibilité future
     refresh: async (): Promise<ApiResponse<{ token: string }>> => {
       const response = await apiCall<{ token: string }>('/auth/refresh', {
         method: 'POST'
@@ -301,12 +294,12 @@ export const useApi = () => {
   const shops = {
     // Get shop configuration
     get: async (shopId: string): Promise<ApiResponse<Shop>> => {
-      return apiCall<Shop>(`/api/v1/shops/${shopId}`)
+      return apiCall<Shop>(`/shops/${shopId}`)
     },
 
     // Update shop configuration
     update: async (shopId: string, settings: Partial<Shop['settings']>): Promise<ApiResponse<Shop>> => {
-      return apiCall<Shop>(`/api/v1/shops/${shopId}`, {
+      return apiCall<Shop>(`/shops/${shopId}`, {
         method: 'PUT',
         body: { settings }
       })
@@ -318,19 +311,19 @@ export const useApi = () => {
   // =====================================
   
   const conversations = {
-    // Get all conversations
-    list: async (shopId: string): Promise<ApiResponse<Conversation[]>> => {
-      return apiCall<Conversation[]>(`/api/v1/shops/${shopId}/conversations`)
+    // Get all conversations - ADAPTÉ pour mes endpoints
+    list: async (shopId?: string): Promise<ApiResponse<Conversation[]>> => {
+      return apiCall<Conversation[]>('/conversations')
     },
 
     // Get conversation details
     get: async (conversationId: string): Promise<ApiResponse<Conversation>> => {
-      return apiCall<Conversation>(`/api/v1/conversations/${conversationId}`)
+      return apiCall<Conversation>(`/conversations/${conversationId}`)
     },
 
     // Create new conversation
     create: async (shopId: string, data: { visitorId: string, metadata?: any }): Promise<ApiResponse<Conversation>> => {
-      return apiCall<Conversation>('/api/v1/conversations', {
+      return apiCall<Conversation>('/conversations', {
         method: 'POST',
         body: { shopId, ...data }
       })
@@ -338,7 +331,7 @@ export const useApi = () => {
 
     // Take over conversation (human agent)
     takeover: async (conversationId: string): Promise<ApiResponse<{ success: boolean }>> => {
-      return apiCall<{ success: boolean }>(`/api/v1/conversations/${conversationId}/takeover`, {
+      return apiCall<{ success: boolean }>(`/conversations/${conversationId}/takeover`, {
         method: 'POST'
       })
     }
@@ -349,19 +342,19 @@ export const useApi = () => {
   // =====================================
   
   const orders = {
-    // Get all orders
-    list: async (shopId: string): Promise<ApiResponse<Order[]>> => {
-      return apiCall<Order[]>(`/api/v1/shops/${shopId}/orders`)
+    // Get all orders - ADAPTÉ pour mes endpoints
+    list: async (shopId?: string): Promise<ApiResponse<Order[]>> => {
+      return apiCall<Order[]>('/orders')
     },
 
     // Get order details
     get: async (orderId: string): Promise<ApiResponse<Order>> => {
-      return apiCall<Order>(`/api/v1/orders/${orderId}`)
+      return apiCall<Order>(`/orders/${orderId}`)
     },
 
     // Create new order
     create: async (orderData: Omit<Order, 'id' | 'createdAt'>): Promise<ApiResponse<Order>> => {
-      return apiCall<Order>('/api/v1/orders', {
+      return apiCall<Order>('/orders', {
         method: 'POST',
         body: orderData
       })
@@ -373,9 +366,9 @@ export const useApi = () => {
   // =====================================
   
   const analytics = {
-    // Get dashboard metrics
-    dashboard: async (shopId: string): Promise<ApiResponse<AnalyticsData>> => {
-      return apiCall<AnalyticsData>(`/api/v1/shops/${shopId}/analytics`)
+    // Get dashboard metrics - ADAPTÉ pour mes endpoints
+    dashboard: async (shopId?: string): Promise<ApiResponse<AnalyticsData>> => {
+      return apiCall<AnalyticsData>('/analytics')
     },
 
     // Track event
@@ -384,7 +377,7 @@ export const useApi = () => {
       type: string
       data: any
     }): Promise<ApiResponse<{ success: boolean }>> => {
-      return apiCall<{ success: boolean }>('/api/v1/analytics/events', {
+      return apiCall<{ success: boolean }>('/analytics/events', {
         method: 'POST',
         body: eventData
       })
@@ -396,9 +389,9 @@ export const useApi = () => {
   // =====================================
   
   const knowledgeBase = {
-    // Get all documents
-    list: async (shopId: string): Promise<ApiResponse<KnowledgeBaseDocument[]>> => {
-      return apiCall<KnowledgeBaseDocument[]>(`/api/v1/shops/${shopId}/knowledge-base`)
+    // Get all documents - ADAPTÉ pour mes endpoints
+    list: async (shopId?: string): Promise<ApiResponse<KnowledgeBaseDocument[]>> => {
+      return apiCall<KnowledgeBaseDocument[]>('/knowledge-base')
     },
 
     // Upload document
@@ -407,7 +400,7 @@ export const useApi = () => {
       formData.append('file', file)
       formData.append('shopId', shopId)
 
-      return apiCall<KnowledgeBaseDocument>('/api/v1/knowledge-base/upload', {
+      return apiCall<KnowledgeBaseDocument>('/knowledge-base/upload', {
         method: 'POST',
         body: formData,
         headers: {} // Remove Content-Type to let browser set it for FormData
@@ -419,7 +412,7 @@ export const useApi = () => {
       title: string
       content: string
     }): Promise<ApiResponse<KnowledgeBaseDocument>> => {
-      return apiCall<KnowledgeBaseDocument>('/api/v1/knowledge-base/manual', {
+      return apiCall<KnowledgeBaseDocument>('/knowledge-base/manual', {
         method: 'POST',
         body: { shopId, ...data }
       })
@@ -427,9 +420,25 @@ export const useApi = () => {
 
     // Delete document
     delete: async (documentId: string): Promise<ApiResponse<{ success: boolean }>> => {
-      return apiCall<{ success: boolean }>(`/api/v1/knowledge-base/${documentId}`, {
+      return apiCall<{ success: boolean }>(`/knowledge-base/${documentId}`, {
         method: 'DELETE'
       })
+    }
+  }
+
+  // =====================================
+  // UTILITAIRES ADDITIONNELS
+  // =====================================
+  
+  const utils = {
+    // Test de connectivité
+    healthCheck: async (): Promise<ApiResponse<any>> => {
+      return apiCall<any>('/health')
+    },
+
+    // Test simple
+    test: async (): Promise<ApiResponse<any>> => {
+      return apiCall<any>('/test')
     }
   }
 
@@ -445,6 +454,7 @@ export const useApi = () => {
     conversations,
     orders,
     analytics,
-    knowledgeBase
+    knowledgeBase,
+    utils
   }
 }
