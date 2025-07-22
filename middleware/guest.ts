@@ -1,25 +1,28 @@
 // middleware/guest.ts
+export default defineNuxtRouteMiddleware(async (to) => {
+  // Éviter l'exécution côté serveur
+  if (process.server) return
 
-export default defineNuxtRouteMiddleware((to, from) => {
-  console.log('👤 Middleware guest: Vérification...')
+  const authStore = useAuthStore()
   
-  if (process.client) {
-    const authStore = useAuth()
-    
-    // S'assurer que le store est initialisé
-    if (!authStore.initialized) {
-      authStore.initializeFromStorage()
-    }
-    
-    // Double vérification : store ET localStorage
-    const hasStoredSession = authStore.hasValidSession()
-    const isStoreAuthenticated = authStore.isAuthenticated
-    
-    if (hasStoredSession && isStoreAuthenticated) {
-      console.log('🔄 Middleware guest: Session active, redirection dashboard')
-      return navigateTo('/')
-    }
-    
-    console.log('✅ Middleware guest: Pas de session, accès page guest autorisé')
+  // Initialiser l'authentification si pas encore fait
+  if (!authStore.user && !authStore.token) {
+    await authStore.initializeAuth()
   }
+
+  // Si l'utilisateur est authentifié, rediriger vers le dashboard
+  if (authStore.isAuthenticated && authStore.isSessionValid) {
+    console.log('👤 Utilisateur déjà connecté, redirection vers dashboard')
+    
+    // Vérifier s'il y a une URL de redirection dans les paramètres
+    const redirectUrl = to.query.redirect as string
+    if (redirectUrl && redirectUrl.startsWith('/') && redirectUrl !== '/login') {
+      await navigateTo(redirectUrl)
+    } else {
+      await navigateTo('/')
+    }
+    return
+  }
+
+  console.log('👤 Accès guest autorisé')
 })

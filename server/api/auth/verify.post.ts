@@ -1,3 +1,4 @@
+// server/api/auth/verify.post.ts
 import jwt from 'jsonwebtoken'
 
 export default defineEventHandler(async (event) => {

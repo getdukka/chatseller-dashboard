@@ -1,78 +1,112 @@
+// server/api/auth/login.post.ts
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody(event)
-    const { email, password } = body
+    const { email, password } = await readBody(event)
     
-    console.log('🔐 Tentative de login:', { email })
-    
-    // Validation des champs
+    // Validation des données
     if (!email || !password) {
       throw createError({
         statusCode: 400,
         statusMessage: 'Email et mot de passe requis'
       })
     }
+
+    // Simulation de vérification utilisateur (remplacer par votre DB)
+    const user = await findUserByEmail(email)
     
-    // Credentials de test (remplacer par vraie validation)
-    const testCredentials = {
-      'admin@chatseller.app': 'password123',
-      'demo@chatseller.app': 'demo123',
-      'test@chatseller.app': 'test123'
-    }
-    
-    if (testCredentials[email] !== password) {
+    if (!user || !await bcrypt.compare(password, user.hashedPassword)) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Identifiants invalides'
       })
     }
-    
-    // Génération du JWT
+
+    // Génération des tokens
     const config = useRuntimeConfig()
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       { 
-        userId: email,
-        email: email,
-        shopId: '1',
-        role: 'admin'
+        userId: user.id, 
+        email: user.email,
+        role: user.role 
       },
       config.jwtSecret,
       { expiresIn: '24h' }
     )
-    
-    // Données utilisateur
-    const user = {
-      id: '1',
-      email: email,
-      name: email === 'admin@chatseller.app' ? 'Administrateur ChatSeller' : 'Utilisateur Demo',
-      shopId: '1',
-      role: 'admin',
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=2563eb&color=fff`
-    }
-    
-    console.log('✅ Login réussi pour:', email)
-    
+
+    const refreshToken = jwt.sign(
+      { userId: user.id, type: 'refresh' },
+      config.jwtSecret,
+      { expiresIn: '30d' }
+    )
+
+    // Mise à jour de la dernière connexion
+    await updateLastLogin(user.id)
+
     return {
       success: true,
       data: {
-        token,
-        user,
-        expiresIn: 86400 // 24h en secondes
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          company: user.company,
+          role: user.role,
+          emailVerified: user.emailVerified,
+          createdAt: user.createdAt,
+          lastLoginAt: new Date().toISOString()
+        },
+        token: accessToken,
+        refreshToken
       }
     }
-    
-  } catch (error) {
-    console.error('❌ Erreur login:', error)
-    
-    if (error.statusCode) {
-      throw error
-    }
-    
+  } catch (error: any) {
+    console.error('Erreur login API:', error)
     throw createError({
-      statusCode: 500,
-      statusMessage: 'Erreur serveur lors de l\'authentification'
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || 'Erreur de connexion'
     })
   }
 })
+
+// Fonctions utilitaires simulées (remplacer par vos implémentations DB)
+async function findUserByEmail(email: string) {
+  // Test user pour demo
+  if (email === 'admin@chatseller.app') {
+    return {
+      id: 'user_123',
+      email: 'admin@chatseller.app',
+      hashedPassword: await bcrypt.hash('password123', 10),
+      firstName: 'Administrateur',
+      lastName: 'ChatSeller',
+      company: 'ChatSeller Demo',
+      role: 'admin',
+      emailVerified: true,
+      createdAt: new Date().toISOString()
+    }
+  }
+  return null
+}
+
+async function updateLastLogin(userId: string) {
+  // Mise à jour DB
+  console.log(`Dernière connexion mise à jour pour ${userId}`)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

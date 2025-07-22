@@ -1,784 +1,498 @@
 <!-- pages/knowledge-base.vue -->
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex justify-between items-start">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">
-          Base de connaissance
-        </h1>
-        <p class="text-gray-600 mt-1">
-          Gérez les documents qui alimentent votre agent IA
-        </p>
-      </div>
-      
-      <!-- Actions -->
-      <div class="flex items-center space-x-3">
-        <button
-          @click="showUploadModal = true"
-          class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          Uploader un fichier
-        </button>
-        
-        <button
-          @click="showManualModal = true"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-blue-700"
-        >
-          <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Ajouter du contenu
-        </button>
-        
-        <button
-          @click="refreshDocuments"
-          :disabled="isLoading"
-          class="px-4 py-2 bg-gray-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-gray-700 disabled:opacity-50"
-        >
-          <svg class="w-4 h-4 mr-2 inline" :class="{ 'animate-spin': isLoading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Actualiser
-        </button>
-      </div>
-    </div>
-
-    <!-- Knowledge Base Status -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">
-          Statut de la base de connaissance
-        </h3>
-        <span 
-          class="inline-flex px-3 py-1 text-sm font-semibold rounded-full"
-          :class="getReadinessClass(knowledgeBaseStatus.readiness)"
-        >
-          {{ getReadinessLabel(knowledgeBaseStatus.readiness) }}
-        </span>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="text-center">
-          <p class="text-3xl font-bold text-blue-600">{{ knowledgeBaseStatus.totalDocuments }}</p>
-          <p class="text-sm text-gray-600">Documents</p>
-        </div>
-        <div class="text-center">
-          <p class="text-3xl font-bold text-green-600">{{ Math.round(knowledgeBaseStatus.totalContent / 1000) }}k</p>
-          <p class="text-sm text-gray-600">Caractères</p>
-        </div>
-        <div class="text-center">
-          <p class="text-3xl font-bold text-purple-600">{{ knowledgeBaseStatus.lastUpdate || 'Jamais' }}</p>
-          <p class="text-sm text-gray-600">Dernière MAJ</p>
-        </div>
-      </div>
-      
-      <div v-if="knowledgeBaseStatus.isEmpty" class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <div class="flex">
-          <svg class="w-5 h-5 text-yellow-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-          </svg>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header de la page -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+      <div class="px-6 py-4">
+        <div class="flex items-center justify-between">
           <div>
-            <h4 class="text-yellow-800 font-medium">Base de connaissance vide</h4>
-            <p class="text-yellow-700 text-sm mt-1">
-              Votre agent IA n'a pas encore de contenu pour répondre aux questions. Ajoutez des documents ou du contenu manuel pour améliorer ses réponses.
+            <h1 class="text-2xl font-bold text-gray-900">Base de connaissance</h1>
+            <p class="mt-1 text-sm text-gray-600">
+              Gérez les documents qui alimentent votre agent IA commercial
             </p>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Document Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="bg-white p-6 rounded-lg shadow">
-        <div class="flex items-center">
-          <div class="p-2 bg-red-100 rounded-lg">
-            <span class="text-2xl">📄</span>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm text-gray-600">PDF</p>
-            <p class="text-2xl font-bold text-gray-900">{{ pdfDocuments.length }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-lg shadow">
-        <div class="flex items-center">
-          <div class="p-2 bg-blue-100 rounded-lg">
-            <span class="text-2xl">📝</span>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm text-gray-600">Word</p>
-            <p class="text-2xl font-bold text-gray-900">{{ wordDocuments.length }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-lg shadow">
-        <div class="flex items-center">
-          <div class="p-2 bg-green-100 rounded-lg">
-            <span class="text-2xl">📊</span>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm text-gray-600">CSV</p>
-            <p class="text-2xl font-bold text-gray-900">{{ csvDocuments.length }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-lg shadow">
-        <div class="flex items-center">
-          <div class="p-2 bg-purple-100 rounded-lg">
-            <span class="text-2xl">✍️</span>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm text-gray-600">Manuel</p>
-            <p class="text-2xl font-bold text-gray-900">{{ manualDocuments.length }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="bg-white p-4 rounded-lg shadow">
-      <div class="flex flex-wrap items-center gap-4">
-        <!-- Type Filter -->
-        <div class="flex items-center space-x-2">
-          <label class="text-sm font-medium text-gray-700">Type:</label>
-          <select 
-            v-model="filters.type" 
-            @change="setTypeFilter(filters.type)"
-            class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Tous</option>
-            <option value="pdf">PDF</option>
-            <option value="word">Word</option>
-            <option value="csv">CSV</option>
-            <option value="manual">Manuel</option>
-          </select>
-        </div>
-
-        <!-- Search -->
-        <div class="flex items-center space-x-2 flex-1 max-w-md">
-          <label class="text-sm font-medium text-gray-700">Recherche:</label>
-          <input 
-            v-model="filters.search"
-            @input="setSearchTerm(filters.search)"
-            type="text"
-            placeholder="Titre, contenu..."
-            class="flex-1 px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <!-- Clear filters -->
-        <button
-          @click="clearAllFilters"
-          class="px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
-        >
-          Effacer
-        </button>
-      </div>
-    </div>
-
-    <!-- Documents List -->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-      <!-- Loading State -->
-      <div v-if="isLoading && documents.length === 0" class="p-6">
-        <div class="animate-pulse space-y-4">
-          <div v-for="i in 3" :key="i" class="flex space-x-4">
-            <div class="w-8 h-8 bg-gray-200 rounded"></div>
-            <div class="flex-1 space-y-2">
-              <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div class="h-3 bg-gray-200 rounded w-1/2"></div>
-            </div>
-            <div class="h-4 bg-gray-200 rounded w-16"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Error State -->
-      <div v-else-if="error" class="p-6 text-center">
-        <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p class="text-gray-500 mb-4">{{ error }}</p>
-        <button @click="refreshDocuments" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Réessayer
-        </button>
-      </div>
-
-      <!-- Empty State -->
-      <div v-else-if="filteredDocuments.length === 0" class="p-6 text-center">
-        <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <p class="text-gray-500 mb-4">Aucun document trouvé</p>
-        <div class="space-x-2">
-          <button
-            @click="showUploadModal = true"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Uploader un fichier
-          </button>
-          <button
-            @click="showManualModal = true"
-            class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-          >
-            Ajouter du contenu
-          </button>
-        </div>
-      </div>
-
-      <!-- Documents List -->
-      <div v-else class="divide-y divide-gray-200">
-        <div
-          v-for="document in filteredDocuments"
-          :key="document.id"
-          class="p-6 hover:bg-gray-50"
-        >
-          <div class="flex items-start justify-between">
-            <!-- Document Info -->
-            <div class="flex items-start space-x-4 flex-1">
-              <!-- Icon -->
-              <div class="flex-shrink-0">
-                <span class="text-2xl">{{ getFileTypeIcon(document.type) }}</span>
-              </div>
-
-              <!-- Content -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-lg font-medium text-gray-900 truncate">
-                    {{ document.title }}
-                  </h3>
-                  <span class="text-sm text-gray-500">
-                    {{ getDocumentSummary(document).uploadDate }}
-                  </span>
-                </div>
-                
-                <p class="text-sm text-gray-600 mb-3">
-                  {{ getDocumentSummary(document).preview }}
-                </p>
-                
-                <div class="flex items-center text-xs text-gray-500 space-x-4">
-                  <span>{{ getDocumentSummary(document).wordCount }} mots</span>
-                  <span>{{ getDocumentSummary(document).size }}</span>
-                  <span v-if="document.fileName" class="truncate">{{ document.fileName }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex items-center space-x-2 ml-4">
-              <button
-                @click="viewDocument(document)"
-                class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full hover:bg-blue-200"
-              >
-                Voir
-              </button>
-              <button
-                @click="confirmDeleteDocument(document)"
-                class="px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full hover:bg-red-200"
-              >
-                Supprimer
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Upload Modal -->
-    <div v-if="showUploadModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
-        <div class="space-y-6">
-          <!-- Header -->
-          <div class="flex justify-between items-center">
-            <h3 class="text-lg font-medium text-gray-900">Uploader un fichier</h3>
+          <div class="flex items-center space-x-4">
             <button
-              @click="closeUploadModal"
-              class="text-gray-400 hover:text-gray-600"
+              @click="refreshDocuments"
+              :disabled="refreshing"
+              class="btn-secondary"
             >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <svg 
+                class="mr-2 h-4 w-4" 
+                :class="{ 'animate-spin': refreshing }"
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
+              {{ refreshing ? 'Actualisation...' : 'Actualiser' }}
+            </button>
+            
+            <button
+              @click="showUploadModal = true"
+              class="btn-primary"
+            >
+              <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Ajouter un document
             </button>
           </div>
+        </div>
+      </div>
+    </div>
 
-          <!-- Upload Area -->
-          <div 
-            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors"
-            :class="{ 'border-blue-400 bg-blue-50': isDragOver }"
-            @drop="handleFileDrop"
-            @dragover.prevent="isDragOver = true"
-            @dragleave="isDragOver = false"
-          >
-            <input
-              ref="fileInput"
-              type="file"
-              multiple
-              accept=".pdf,.doc,.docx,.csv"
-              @change="handleFileSelect"
-              class="hidden"
-            />
-            
-            <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            
-            <p class="text-gray-600 mb-2">
-              Glissez-déposez vos fichiers ici ou
-              <button
-                @click="$refs.fileInput.click()"
-                class="text-blue-600 hover:text-blue-500 font-medium"
-              >
-                parcourez
-              </button>
-            </p>
-            
-            <p class="text-xs text-gray-500">
-              Formats supportés: PDF, Word, CSV (max 10MB)
-            </p>
+    <!-- Contenu principal -->
+    <div class="p-6">
+      <!-- Statut de la base de connaissance -->
+      <div class="card mb-6">
+        <div class="flex items-center justify-between p-6">
+          <div class="flex items-center space-x-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg" :class="statusIconClass">
+              <svg class="h-6 w-6" :class="statusIconColor" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" v-if="knowledgeBaseStatus === 'ready'" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" v-else />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-medium text-gray-900">
+                {{ getStatusTitle(knowledgeBaseStatus) }}
+              </h3>
+              <p class="text-sm text-gray-600">
+                {{ getStatusDescription(knowledgeBaseStatus) }}
+              </p>
+            </div>
           </div>
+          <div class="text-right">
+            <div class="text-2xl font-bold text-gray-900">{{ stats.totalDocuments }}</div>
+            <div class="text-sm text-gray-500">documents</div>
+          </div>
+        </div>
+        
+        <!-- Barre de progression -->
+        <div v-if="trainingProgress > 0 && trainingProgress < 100" class="px-6 pb-6">
+          <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+            <span>Formation de l'IA en cours...</span>
+            <span>{{ trainingProgress }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div
+              class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              :style="{ width: `${trainingProgress}%` }"
+            ></div>
+          </div>
+        </div>
+      </div>
 
-          <!-- Selected Files -->
-          <div v-if="selectedFiles.length > 0" class="space-y-2">
-            <h4 class="text-sm font-medium text-gray-900">Fichiers sélectionnés:</h4>
-            <div class="space-y-2">
-              <div
-                v-for="(file, index) in selectedFiles"
-                :key="index"
-                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
-                <div class="flex items-center">
-                  <span class="text-sm text-gray-600">{{ getFileTypeIcon(getFileType(file.type)) }}</span>
-                  <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-900">{{ file.name }}</p>
-                    <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
+      <!-- Statistiques -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="card text-center">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 mx-auto mb-3">
+            <svg class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div class="text-2xl font-bold text-gray-900">{{ stats.pdfCount }}</div>
+          <div class="text-sm text-gray-600">Fichiers PDF</div>
+        </div>
+
+        <div class="card text-center">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 mx-auto mb-3">
+            <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div class="text-2xl font-bold text-gray-900">{{ stats.docCount }}</div>
+          <div class="text-sm text-gray-600">Documents Word</div>
+        </div>
+
+        <div class="card text-center">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 mx-auto mb-3">
+            <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2z" />
+            </svg>
+          </div>
+          <div class="text-2xl font-bold text-gray-900">{{ stats.csvCount }}</div>
+          <div class="text-sm text-gray-600">Tableaux CSV</div>
+        </div>
+
+        <div class="card text-center">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 mx-auto mb-3">
+            <svg class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+          <div class="text-2xl font-bold text-gray-900">{{ stats.manualCount }}</div>
+          <div class="text-sm text-gray-600">Contenu manuel</div>
+        </div>
+      </div>
+
+      <!-- Filtres et recherche -->
+      <div class="card mb-6">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Documents</h3>
+            <div class="flex items-center space-x-4">
+              <!-- Recherche -->
+              <div class="relative">
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Rechercher un document..."
+                  class="input-primary pl-10"
+                  style="min-width: 250px;"
+                />
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Filtre par type -->
+              <select v-model="selectedType" class="input-primary">
+                <option value="">Tous les types</option>
+                <option value="pdf">PDF</option>
+                <option value="doc">Word</option>
+                <option value="csv">CSV</option>
+                <option value="manual">Manuel</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des documents -->
+        <div v-if="loading" class="p-6">
+          <div class="space-y-4">
+            <div v-for="i in 5" :key="i" class="flex items-center space-x-4">
+              <div class="skeleton-avatar"></div>
+              <div class="flex-1 space-y-2">
+                <div class="skeleton-text w-1/3"></div>
+                <div class="skeleton-text w-2/3"></div>
+              </div>
+              <div class="skeleton-button"></div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="filteredDocuments.length > 0" class="divide-y divide-gray-200">
+          <div
+            v-for="document in paginatedDocuments"
+            :key="document.id"
+            class="p-6 hover:bg-gray-50 transition-colors"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-4">
+                <!-- Icône du type de fichier -->
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg" :class="getFileIconClass(document.type)">
+                  <component :is="getFileIcon(document.type)" class="h-5 w-5" />
+                </div>
+
+                <!-- Informations du document -->
+                <div class="flex-1">
+                  <div class="flex items-center space-x-2">
+                    <h4 class="text-sm font-medium text-gray-900">
+                      {{ document.name }}
+                    </h4>
+                    <span 
+                      class="badge"
+                      :class="getStatusBadgeClass(document.status)"
+                    >
+                      {{ getDocumentStatusLabel(document.status) }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">
+                    {{ document.description || 'Aucune description' }}
+                  </p>
+                  <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                    <span>{{ formatFileSize(document.size) }}</span>
+                    <span>{{ formatDate(document.uploadedAt) }}</span>
+                    <span v-if="document.processedAt">
+                      Traité le {{ formatDate(document.processedAt) }}
+                    </span>
                   </div>
                 </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex items-center space-x-2">
                 <button
-                  @click="removeSelectedFile(index)"
-                  class="text-red-600 hover:text-red-800"
+                  v-if="document.status === 'processed'"
+                  @click="viewDocument(document.id)"
+                  class="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100"
+                  title="Voir le contenu"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+                
+                <button
+                  @click="editDocument(document.id)"
+                  class="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100"
+                  title="Modifier"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+
+                <button
+                  @click="deleteDocument(document.id)"
+                  class="p-2 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50"
+                  title="Supprimer"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
               </div>
             </div>
           </div>
-
-          <!-- Upload Progress -->
-          <div v-if="isUploading" class="space-y-2">
-            <div class="flex justify-between text-sm">
-              <span>Upload en cours...</span>
-              <span>{{ uploadProgress }}%</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                :style="{ width: `${uploadProgress}%` }"
-              ></div>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex justify-end space-x-3">
-            <button
-              @click="closeUploadModal"
-              :disabled="isUploading"
-              class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
-            >
-              Annuler
-            </button>
-            <button
-              @click="uploadFiles"
-              :disabled="selectedFiles.length === 0 || isUploading"
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {{ isUploading ? 'Upload...' : 'Uploader' }}
-            </button>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Manual Content Modal -->
-    <div v-if="showManualModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white max-h-[80vh] overflow-y-auto">
-        <div class="space-y-6">
-          <!-- Header -->
-          <div class="flex justify-between items-center">
-            <h3 class="text-lg font-medium text-gray-900">Ajouter du contenu manuel</h3>
+        <!-- État vide -->
+        <div v-else class="p-12 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun document</h3>
+          <p class="mt-1 text-sm text-gray-500">
+            Commencez par ajouter des documents pour alimenter votre agent IA
+          </p>
+          <div class="mt-6">
             <button
-              @click="closeManualModal"
-              class="text-gray-400 hover:text-gray-600"
+              @click="showUploadModal = true"
+              class="btn-primary"
             >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
+              Ajouter votre premier document
             </button>
           </div>
+        </div>
 
-          <!-- Form -->
-          <div class="space-y-4">
-            <!-- Title -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Titre du document
-              </label>
-              <input
-                v-model="manualContent.title"
-                type="text"
-                placeholder="Ex: FAQ Produits, Conditions de vente..."
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+        <!-- Pagination -->
+        <div v-if="filteredDocuments.length > pageSize" class="px-6 py-4 border-t border-gray-200">
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+              Affichage de {{ ((currentPage - 1) * pageSize) + 1 }} à 
+              {{ Math.min(currentPage * pageSize, filteredDocuments.length) }} sur 
+              {{ filteredDocuments.length }} documents
             </div>
-
-            <!-- Content -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Contenu
-              </label>
-              <textarea
-                v-model="manualContent.content"
-                rows="12"
-                placeholder="Saisissez le contenu de votre document..."
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              ></textarea>
-              <p class="text-xs text-gray-500 mt-1">
-                {{ manualContent.content.length }} caractères
-              </p>
+            <div class="flex items-center space-x-2">
+              <button
+                @click="currentPage > 1 && (currentPage--)"
+                :disabled="currentPage <= 1"
+                class="btn-secondary btn-sm"
+              >
+                Précédent
+              </button>
+              <button
+                @click="currentPage < totalPages && (currentPage++)"
+                :disabled="currentPage >= totalPages"
+                class="btn-secondary btn-sm"
+              >
+                Suivant
+              </button>
             </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex justify-end space-x-3">
-            <button
-              @click="closeManualModal"
-              :disabled="isLoading"
-              class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
-            >
-              Annuler
-            </button>
-            <button
-              @click="saveManualContent"
-              :disabled="!manualContent.title.trim() || !manualContent.content.trim() || isLoading"
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {{ isLoading ? 'Sauvegarde...' : 'Sauvegarder' }}
-            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Document View Modal -->
-    <div v-if="selectedDocument" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white max-h-[80vh] overflow-y-auto">
-        <div class="space-y-6">
-          <!-- Header -->
-          <div class="flex justify-between items-center">
-            <div>
-              <h3 class="text-lg font-medium text-gray-900">{{ selectedDocument.title }}</h3>
-              <p class="text-sm text-gray-500 mt-1">
-                {{ getDocumentSummary(selectedDocument).uploadDate }} • 
-                {{ getDocumentSummary(selectedDocument).wordCount }} mots
-              </p>
+    <!-- Modal d'upload -->
+    <Modal v-model="showUploadModal" title="Ajouter un document" size="lg">
+      <div class="space-y-6">
+        <!-- Zone de drag & drop -->
+        <div
+          class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors"
+          :class="{ 'border-blue-400 bg-blue-50': isDragging }"
+          @drop="handleDrop"
+          @dragover.prevent="isDragging = true"
+          @dragleave="isDragging = false"
+        >
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <div class="text-lg font-medium text-gray-900 mb-2">
+            Glissez vos fichiers ici
+          </div>
+          <div class="text-sm text-gray-600 mb-4">
+            ou cliquez pour sélectionner
+          </div>
+          <input
+            ref="fileInput"
+            type="file"
+            multiple
+            accept=".pdf,.doc,.docx,.csv,.txt"
+            class="hidden"
+            @change="handleFileSelect"
+          />
+          <button
+            @click="$refs.fileInput.click()"
+            class="btn-primary"
+          >
+            Sélectionner des fichiers
+          </button>
+          <p class="text-xs text-gray-500 mt-4">
+            Formats acceptés: PDF, Word, CSV, TXT (max 10 Mo par fichier)
+          </p>
+        </div>
+
+        <!-- Fichiers sélectionnés -->
+        <div v-if="selectedFiles.length > 0" class="space-y-3">
+          <h4 class="text-sm font-medium text-gray-900">Fichiers sélectionnés:</h4>
+          <div class="space-y-2">
+            <div
+              v-for="(file, index) in selectedFiles"
+              :key="index"
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
+              <div class="flex items-center space-x-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-blue-100">
+                  <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-900">{{ file.name }}</div>
+                  <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
+                </div>
+              </div>
+              <button
+                @click="removeFile(index)"
+                class="text-red-400 hover:text-red-600"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <button
-              @click="selectedDocument = null"
-              class="text-gray-400 hover:text-gray-600"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Content -->
-          <div class="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-            <pre class="whitespace-pre-wrap text-sm text-gray-900">{{ selectedDocument.content }}</pre>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex justify-between">
-            <button
-              @click="confirmDeleteDocument(selectedDocument)"
-              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-            >
-              Supprimer
-            </button>
-            <button
-              @click="selectedDocument = null"
-              class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-            >
-              Fermer
-            </button>
           </div>
         </div>
       </div>
-    </div>
+
+      <template #footer>
+        <Button variant="secondary" @click="cancelUpload">
+          Annuler
+        </Button>
+        <Button 
+          variant="primary" 
+          :disabled="selectedFiles.length === 0 || uploading"
+          :loading="uploading"
+          @click="uploadFiles"
+        >
+          {{ uploading ? 'Upload en cours...' : `Uploader ${selectedFiles.length} fichier(s)` }}
+        </Button>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { KnowledgeBaseDocument } from '~/composables/useApi'
+import { ref, reactive, computed, onMounted } from 'vue'
 
+// Middleware d'authentification
 definePageMeta({
   middleware: 'auth'
 })
 
-// =====================================
-// COMPOSABLES AND STORES
-// =====================================
+// Types
+interface Document {
+  id: string
+  name: string
+  description?: string
+  type: 'pdf' | 'doc' | 'csv' | 'manual'
+  size: number
+  status: 'uploading' | 'processing' | 'processed' | 'error'
+  uploadedAt: string
+  processedAt?: string
+}
 
-const {
-  fetchDocuments,
-  uploadFile,
-  addManualContent,
-  deleteDocument,
-  isLoading,
-  isUploading,
-  error,
-  uploadProgress,
-  documents,
-  filteredDocuments,
-  pdfDocuments,
-  wordDocuments,
-  csvDocuments,
-  manualDocuments,
-  filters,
-  setTypeFilter,
-  setSearchTerm,
-  clearFilters,
-  getDocumentSummary,
-  validateFile,
-  getKnowledgeBaseStatus,
-  getFileTypeIcon,
-  clearError
-} = useKnowledgeBase()
+interface Stats {
+  totalDocuments: number
+  pdfCount: number
+  docCount: number
+  csvCount: number
+  manualCount: number
+}
 
-const { success, handleApiError, confirm } = useNotifications()
-
-// =====================================
-// REACTIVE STATE
-// =====================================
-
+// État du composant
+const loading = ref(true)
+const refreshing = ref(false)
 const showUploadModal = ref(false)
-const showManualModal = ref(false)
-const selectedDocument = ref<KnowledgeBaseDocument | null>(null)
+const uploading = ref(false)
+const isDragging = ref(false)
 const selectedFiles = ref<File[]>([])
-const isDragOver = ref(false)
+const searchQuery = ref('')
+const selectedType = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 
-const manualContent = reactive({
-  title: '',
-  content: ''
+const knowledgeBaseStatus = ref<'empty' | 'partial' | 'ready' | 'training'>('partial')
+const trainingProgress = ref(0)
+
+// Données
+const documents = ref<Document[]>([])
+const stats = reactive<Stats>({
+  totalDocuments: 0,
+  pdfCount: 0,
+  docCount: 0,
+  csvCount: 0,
+  manualCount: 0
 })
 
-const fileInput = ref<HTMLInputElement>()
+// Computed properties
+const filteredDocuments = computed(() => {
+  let filtered = documents.value
 
-// =====================================
-// COMPUTED
-// =====================================
-
-const knowledgeBaseStatus = computed(() => getKnowledgeBaseStatus())
-
-// =====================================
-// METHODS
-// =====================================
-
-/**
- * Refresh documents data
- */
-const refreshDocuments = async (): Promise<void> => {
-  try {
-    await fetchDocuments(true)
-    success('Données actualisées', 'Les documents ont été mis à jour')
-  } catch (error: any) {
-    handleApiError(error, 'Actualisation des documents')
-  }
-}
-
-/**
- * Clear all filters
- */
-const clearAllFilters = (): void => {
-  filters.value.type = 'all'
-  filters.value.search = ''
-  clearFilters()
-}
-
-/**
- * View document details
- */
-const viewDocument = (document: KnowledgeBaseDocument): void => {
-  selectedDocument.value = document
-}
-
-/**
- * Confirm and delete document
- */
-const confirmDeleteDocument = (document: KnowledgeBaseDocument): void => {
-  confirm(
-    'Supprimer le document',
-    `Êtes-vous sûr de vouloir supprimer "${document.title}" ? Cette action est irréversible.`,
-    async () => {
-      try {
-        const success_delete = await deleteDocument(document.id)
-        if (success_delete) {
-          success('Document supprimé', `"${document.title}" a été supprimé`)
-          
-          // Close modal if viewing deleted document
-          if (selectedDocument.value?.id === document.id) {
-            selectedDocument.value = null
-          }
-        }
-      } catch (error: any) {
-        handleApiError(error, 'Suppression du document')
-      }
-    },
-    undefined,
-    {
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
-      type: 'warning'
-    }
-  )
-}
-
-// =====================================
-// FILE UPLOAD METHODS
-// =====================================
-
-/**
- * Handle file selection from input
- */
-const handleFileSelect = (event: Event): void => {
-  const input = event.target as HTMLInputElement
-  if (input.files) {
-    addFiles(Array.from(input.files))
-  }
-}
-
-/**
- * Handle file drop
- */
-const handleFileDrop = (event: DragEvent): void => {
-  event.preventDefault()
-  isDragOver.value = false
-  
-  if (event.dataTransfer?.files) {
-    addFiles(Array.from(event.dataTransfer.files))
-  }
-}
-
-/**
- * Add files to selection
- */
-const addFiles = (files: File[]): void => {
-  const validFiles: File[] = []
-  
-  for (const file of files) {
-    const validation = validateFile(file)
-    if (validation.isValid) {
-      validFiles.push(file)
-    } else {
-      handleApiError(validation.error, 'Validation du fichier')
-    }
-  }
-  
-  selectedFiles.value.push(...validFiles)
-}
-
-/**
- * Remove selected file
- */
-const removeSelectedFile = (index: number): void => {
-  selectedFiles.value.splice(index, 1)
-}
-
-/**
- * Upload selected files
- */
-const uploadFiles = async (): Promise<void> => {
-  if (selectedFiles.value.length === 0) return
-
-  try {
-    for (const file of selectedFiles.value) {
-      await uploadFile(file)
-    }
-    
-    success('Upload réussi', `${selectedFiles.value.length} fichier(s) uploadé(s)`)
-    closeUploadModal()
-  } catch (error: any) {
-    handleApiError(error, 'Upload des fichiers')
-  }
-}
-
-/**
- * Close upload modal
- */
-const closeUploadModal = (): void => {
-  showUploadModal.value = false
-  selectedFiles.value = []
-  isDragOver.value = false
-  clearError()
-}
-
-// =====================================
-// MANUAL CONTENT METHODS
-// =====================================
-
-/**
- * Save manual content
- */
-const saveManualContent = async (): Promise<void> => {
-  if (!manualContent.title.trim() || !manualContent.content.trim()) {
-    return
+  if (searchQuery.value) {
+    filtered = filtered.filter(doc =>
+      doc.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      doc.description?.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
   }
 
-  try {
-    const document = await addManualContent(manualContent.title, manualContent.content)
-    if (document) {
-      success('Contenu ajouté', `"${manualContent.title}" a été ajouté à la base de connaissance`)
-      closeManualModal()
-    }
-  } catch (error: any) {
-    handleApiError(error, 'Ajout du contenu')
+  if (selectedType.value) {
+    filtered = filtered.filter(doc => doc.type === selectedType.value)
   }
-}
 
-/**
- * Close manual content modal
- */
-const closeManualModal = (): void => {
-  showManualModal.value = false
-  manualContent.title = ''
-  manualContent.content = ''
-  clearError()
-}
+  return filtered
+})
 
-// =====================================
-// UTILITY METHODS
-// =====================================
+const paginatedDocuments = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredDocuments.value.slice(start, end)
+})
 
-/**
- * Get file type from MIME type
- */
-const getFileType = (mimeType: string): KnowledgeBaseDocument['type'] => {
-  if (mimeType.includes('pdf')) return 'pdf'
-  if (mimeType.includes('word') || mimeType.includes('document')) return 'word'
-  if (mimeType.includes('csv') || mimeType.includes('spreadsheet')) return 'csv'
-  return 'pdf'
-}
+const totalPages = computed(() => 
+  Math.ceil(filteredDocuments.value.length / pageSize.value)
+)
 
-/**
- * Format file size
- */
+const statusIconClass = computed(() => {
+  switch (knowledgeBaseStatus.value) {
+    case 'ready': return 'bg-green-50'
+    case 'training': return 'bg-blue-50'
+    case 'partial': return 'bg-yellow-50'
+    default: return 'bg-gray-50'
+  }
+})
+
+const statusIconColor = computed(() => {
+  switch (knowledgeBaseStatus.value) {
+    case 'ready': return 'text-green-600'
+    case 'training': return 'text-blue-600'
+    case 'partial': return 'text-yellow-600'
+    default: return 'text-gray-600'
+  }
+})
+
+// Méthodes utilitaires
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 B'
   const k = 1024
@@ -787,61 +501,254 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
-/**
- * Get readiness class
- */
-const getReadinessClass = (readiness: string): string => {
-  switch (readiness) {
-    case 'excellent':
-      return 'bg-green-100 text-green-800'
-    case 'good':
-      return 'bg-blue-100 text-blue-800'
-    case 'minimal':
-      return 'bg-yellow-100 text-yellow-800'
-    case 'empty':
-      return 'bg-red-100 text-red-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
-  }
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
 }
 
-/**
- * Get readiness label
- */
-const getReadinessLabel = (readiness: string): string => {
-  switch (readiness) {
-    case 'excellent':
-      return 'Excellent'
-    case 'good':
-      return 'Bon'
-    case 'minimal':
-      return 'Minimal'
-    case 'empty':
-      return 'Vide'
-    default:
-      return 'Inconnu'
+const getStatusTitle = (status: string): string => {
+  const titles = {
+    empty: 'Base de connaissance vide',
+    partial: 'Configuration incomplète',
+    ready: 'Agent IA opérationnel',
+    training: 'Formation en cours'
   }
+  return titles[status as keyof typeof titles] || status
 }
 
-// =====================================
-// LIFECYCLE
-// =====================================
+const getStatusDescription = (status: string): string => {
+  const descriptions = {
+    empty: 'Ajoutez des documents pour commencer',
+    partial: 'Ajoutez plus de contenu pour améliorer les réponses',
+    ready: 'Votre agent IA est prêt à répondre aux clients',
+    training: 'L\'IA assimile les nouveaux documents'
+  }
+  return descriptions[status as keyof typeof descriptions] || status
+}
 
-onMounted(async () => {
-  await fetchDocuments()
-})
+const getFileIconClass = (type: string): string => {
+  const classes = {
+    pdf: 'bg-red-50',
+    doc: 'bg-blue-50',
+    csv: 'bg-green-50',
+    manual: 'bg-purple-50'
+  }
+  return classes[type as keyof typeof classes] || 'bg-gray-50'
+}
 
-// =====================================
-// SEO
-// =====================================
+const getFileIcon = (type: string) => {
+  // Retourne le nom du composant SVG basé sur le type
+  return 'svg' // Simplifié pour cet exemple
+}
 
-useHead({
-  title: 'Base de connaissance - ChatSeller',
-  meta: [
-    {
-      name: 'description',
-      content: 'Gérez les documents qui alimentent votre agent IA ChatSeller.'
+const getDocumentStatusLabel = (status: string): string => {
+  const labels = {
+    uploading: 'Upload...',
+    processing: 'Traitement...',
+    processed: 'Prêt',
+    error: 'Erreur'
+  }
+  return labels[status as keyof typeof labels] || status
+}
+
+const getStatusBadgeClass = (status: string): string => {
+  const classes = {
+    uploading: 'badge-warning',
+    processing: 'badge-info',
+    processed: 'badge-success',
+    error: 'badge-error'
+  }
+  return classes[status as keyof typeof classes] || 'badge-gray'
+}
+
+// Actions
+const loadDocuments = async () => {
+  loading.value = true
+  try {
+    // Simulation d'appel API
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Données simulées
+    documents.value = [
+      {
+        id: '1',
+        name: 'Guide produits 2025.pdf',
+        description: 'Catalogue complet des produits avec descriptions détaillées',
+        type: 'pdf',
+        size: 2500000,
+        status: 'processed',
+        uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        processedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: '2',
+        name: 'FAQ clients.docx',
+        description: 'Questions fréquentes et réponses standardisées',
+        type: 'doc',
+        size: 150000,
+        status: 'processed',
+        uploadedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        processedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: '3',
+        name: 'Tarifs et promotions.csv',
+        description: 'Grille tarifaire et offres promotionnelles en cours',
+        type: 'csv',
+        size: 45000,
+        status: 'processing',
+        uploadedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+      }
+    ]
+
+    // Mise à jour des statistiques
+    stats.totalDocuments = documents.value.length
+    stats.pdfCount = documents.value.filter(d => d.type === 'pdf').length
+    stats.docCount = documents.value.filter(d => d.type === 'doc').length
+    stats.csvCount = documents.value.filter(d => d.type === 'csv').length
+    stats.manualCount = documents.value.filter(d => d.type === 'manual').length
+
+    // Déterminer le statut de la base de connaissance
+    const processedCount = documents.value.filter(d => d.status === 'processed').length
+    if (processedCount === 0) {
+      knowledgeBaseStatus.value = 'empty'
+    } else if (processedCount < 3) {
+      knowledgeBaseStatus.value = 'partial'
+    } else {
+      knowledgeBaseStatus.value = 'ready'
     }
-  ]
+
+  } catch (error) {
+    console.error('Erreur lors du chargement des documents:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const refreshDocuments = async () => {
+  refreshing.value = true
+  try {
+    await loadDocuments()
+  } finally {
+    refreshing.value = false
+  }
+}
+
+// Gestion des fichiers
+const handleDrop = (event: DragEvent) => {
+  event.preventDefault()
+  isDragging.value = false
+  
+  const files = Array.from(event.dataTransfer?.files || [])
+  addFiles(files)
+}
+
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const files = Array.from(target.files || [])
+  addFiles(files)
+}
+
+const addFiles = (files: File[]) => {
+  const validFiles = files.filter(file => {
+    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/csv', 'text/plain']
+    const validSize = file.size <= 10 * 1024 * 1024 // 10 Mo
+    
+    return validTypes.includes(file.type) && validSize
+  })
+
+  selectedFiles.value.push(...validFiles)
+}
+
+const removeFile = (index: number) => {
+  selectedFiles.value.splice(index, 1)
+}
+
+const uploadFiles = async () => {
+  uploading.value = true
+  try {
+    // Simulation d'upload
+    for (const file of selectedFiles.value) {
+      const newDocument: Document = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        type: getFileType(file.type),
+        size: file.size,
+        status: 'uploading',
+        uploadedAt: new Date().toISOString()
+      }
+
+      documents.value.unshift(newDocument)
+
+      // Simulation du traitement
+      setTimeout(() => {
+        newDocument.status = 'processing'
+      }, 1000)
+
+      setTimeout(() => {
+        newDocument.status = 'processed'
+        newDocument.processedAt = new Date().toISOString()
+      }, 3000)
+    }
+
+    selectedFiles.value = []
+    showUploadModal.value = false
+    
+    // Mise à jour des stats
+    stats.totalDocuments = documents.value.length
+    
+  } catch (error) {
+    console.error('Erreur lors de l\'upload:', error)
+  } finally {
+    uploading.value = false
+  }
+}
+
+const getFileType = (mimeType: string): Document['type'] => {
+  if (mimeType.includes('pdf')) return 'pdf'
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'doc'
+  if (mimeType.includes('csv')) return 'csv'
+  return 'manual'
+}
+
+const cancelUpload = () => {
+  selectedFiles.value = []
+  showUploadModal.value = false
+}
+
+// Actions sur les documents
+const viewDocument = (id: string) => {
+  console.log('Voir document:', id)
+  // Logique pour afficher le contenu du document
+}
+
+const editDocument = (id: string) => {
+  console.log('Modifier document:', id)
+  // Logique pour modifier le document
+}
+
+const deleteDocument = async (id: string) => {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
+    return
+  }
+
+  try {
+    documents.value = documents.value.filter(doc => doc.id !== id)
+    stats.totalDocuments = documents.value.length
+  } catch (error) {
+    console.error('Erreur lors de la suppression:', error)
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  loadDocuments()
 })
 </script>
+
+<style scoped>
+/* Les styles sont définis dans le fichier CSS global */
+</style>
