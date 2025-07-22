@@ -1,11 +1,11 @@
 // server/api/auth/login.post.ts
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcrypt'
+import { findUserByEmail, validatePassword } from '~/server/utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
-    const { email, password } = await readBody(event)
-    
+    const { email, password, rememberMe } = await readBody(event)
+
     // Validation des données
     if (!email || !password) {
       throw createError({
@@ -14,18 +14,28 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Simulation de vérification utilisateur (remplacer par votre DB)
+    // Rechercher l'utilisateur
     const user = await findUserByEmail(email)
-    
-    if (!user || !await bcrypt.compare(password, user.hashedPassword)) {
+    if (!user) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Identifiants invalides'
+        statusMessage: 'Email ou mot de passe incorrect'
       })
     }
 
-    // Génération des tokens
+    // Vérifier le mot de passe
+    const isValidPassword = await validatePassword(password, user.hashed_password)
+    if (!isValidPassword) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Email ou mot de passe incorrect'
+      })
+    }
+
+    // Générer les tokens
     const config = useRuntimeConfig()
+    const tokenExpiry = rememberMe ? '30d' : '24h'
+    
     const accessToken = jwt.sign(
       { 
         userId: user.id, 
@@ -33,7 +43,7 @@ export default defineEventHandler(async (event) => {
         role: user.role 
       },
       config.jwtSecret,
-      { expiresIn: '24h' }
+      { expiresIn: tokenExpiry }
     )
 
     const refreshToken = jwt.sign(
@@ -42,8 +52,23 @@ export default defineEventHandler(async (event) => {
       { expiresIn: '30d' }
     )
 
-    // Mise à jour de la dernière connexion
-    await updateLastLogin(user.id)
+    // Mettre à jour la date de dernière connexion
+    const supabase = getSupabaseClient()
+    await supabase
+      .from('users')
+      .update({ 
+        last_login_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id)
+
+    // Définir le cookie d'authentification
+    setCookie(event, 'auth-token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60 // 30 jours ou 24h
+    })
 
     return {
       success: true,
@@ -51,12 +76,12 @@ export default defineEventHandler(async (event) => {
         user: {
           id: user.id,
           email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          firstName: user.first_name,
+          lastName: user.last_name,
           company: user.company,
           role: user.role,
-          emailVerified: user.emailVerified,
-          createdAt: user.createdAt,
+          emailVerified: user.email_verified,
+          createdAt: user.created_at,
           lastLoginAt: new Date().toISOString()
         },
         token: accessToken,
@@ -67,46 +92,16 @@ export default defineEventHandler(async (event) => {
     console.error('Erreur login API:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Erreur de connexion'
+      statusMessage: error.statusMessage || 'Erreur lors de la connexion'
     })
   }
 })
 
-// Fonctions utilitaires simulées (remplacer par vos implémentations DB)
-async function findUserByEmail(email: string) {
-  // Test user pour demo
-  if (email === 'admin@chatseller.app') {
-    return {
-      id: 'user_123',
-      email: 'admin@chatseller.app',
-      hashedPassword: await bcrypt.hash('password123', 10),
-      firstName: 'Administrateur',
-      lastName: 'ChatSeller',
-      company: 'ChatSeller Demo',
-      role: 'admin',
-      emailVerified: true,
-      createdAt: new Date().toISOString()
-    }
-  }
-  return null
+// Fonction helper pour Supabase
+function getSupabaseClient() {
+  const { createClient } = require('@supabase/supabase-js')
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  )
 }
-
-async function updateLastLogin(userId: string) {
-  // Mise à jour DB
-  console.log(`Dernière connexion mise à jour pour ${userId}`)
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,9 +1,10 @@
 // server/api/dashboard/stats.get.ts
+import { getCurrentUser, getDashboardStats } from '~/server/utils/database'
+
 export default defineEventHandler(async (event) => {
   try {
     const user = await getCurrentUser(event)
     
-    // Récupérer les statistiques
     const stats = await getDashboardStats(user.id)
     
     return {

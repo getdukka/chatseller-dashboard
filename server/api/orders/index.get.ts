@@ -1,4 +1,6 @@
 // server/api/orders/index.get.ts
+import { getCurrentUser, getOrders } from '~/server/utils/database'
+
 export default defineEventHandler(async (event) => {
   try {
     const user = await getCurrentUser(event)
@@ -22,19 +24,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       data: {
-        orders: orders.map(order => ({
-          id: order.id,
-          customerName: order.customerName,
-          customerEmail: order.customerEmail,
-          customerPhone: order.customerPhone,
-          shippingAddress: order.shippingAddress,
-          products: order.products,
-          total: order.total,
-          status: order.status,
-          source: order.source,
-          createdAt: order.createdAt,
-          updatedAt: order.updatedAt
-        })),
+        orders,
         pagination: {
           page,
           limit,

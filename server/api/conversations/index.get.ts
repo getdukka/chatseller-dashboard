@@ -1,17 +1,16 @@
 // server/api/conversations/index.get.ts
+import { getCurrentUser, getConversations } from '~/server/utils/database'
+
 export default defineEventHandler(async (event) => {
   try {
-    // Authentification
     const user = await getCurrentUser(event)
     
-    // Paramètres de requête
     const query = getQuery(event)
     const page = parseInt(query.page as string) || 1
     const limit = parseInt(query.limit as string) || 20
     const status = query.status as string
     const search = query.search as string
 
-    // Récupérer les conversations
     const { conversations, total } = await getConversations({
       userId: user.id,
       page,
@@ -23,17 +22,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       data: {
-        conversations: conversations.map(conv => ({
-          id: conv.id,
-          visitorName: conv.visitorName,
-          visitorEmail: conv.visitorEmail,
-          lastMessage: conv.lastMessage,
-          status: conv.status,
-          messageCount: conv.messageCount,
-          unreadCount: conv.unreadCount,
-          createdAt: conv.createdAt,
-          updatedAt: conv.updatedAt
-        })),
+        conversations,
         pagination: {
           page,
           limit,

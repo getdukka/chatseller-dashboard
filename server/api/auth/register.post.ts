@@ -1,6 +1,8 @@
 // server/api/auth/register.post.ts
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
+import { findUserByEmail, createUser, sendWelcomeEmail } from '~/server/utils/database'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -26,6 +28,15 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 400,
         statusMessage: 'Le mot de passe doit contenir au moins 8 caractères'
+      })
+    }
+
+    // Validation email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Format d\'email invalide'
       })
     }
 
@@ -76,8 +87,21 @@ export default defineEventHandler(async (event) => {
       { expiresIn: '30d' }
     )
 
+    // Définir le cookie d'authentification
+    setCookie(event, 'auth-token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 // 24h
+    })
+
     // Envoyer email de bienvenue (en arrière-plan)
-    await sendWelcomeEmail(newUser.email, newUser.firstName)
+    try {
+      await sendWelcomeEmail(newUser.email, newUser.firstName)
+    } catch (emailError) {
+      console.error('Erreur envoi email de bienvenue:', emailError)
+      // Ne pas faire échouer l'inscription si l'email ne peut pas être envoyé
+    }
 
     return {
       success: true,
@@ -104,13 +128,3 @@ export default defineEventHandler(async (event) => {
     })
   }
 })
-
-async function createUser(user: any) {
-  // Sauvegarde en DB
-  console.log('Utilisateur créé:', user.email)
-}
-
-async function sendWelcomeEmail(email: string, firstName: string) {
-  // Envoi email de bienvenue
-  console.log(`Email de bienvenue envoyé à ${email}`)
-}

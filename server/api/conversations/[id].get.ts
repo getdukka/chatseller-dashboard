@@ -1,4 +1,6 @@
 // server/api/conversations/[id].get.ts
+import { getCurrentUser, getConversationById, getConversationMessages } from '~/server/utils/database'
+
 export default defineEventHandler(async (event) => {
   try {
     const user = await getCurrentUser(event)
@@ -11,7 +13,6 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Récupérer la conversation
     const conversation = await getConversationById(conversationId, user.id)
     if (!conversation) {
       throw createError({
@@ -20,30 +21,13 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Récupérer les messages
     const messages = await getConversationMessages(conversationId)
 
     return {
       success: true,
       data: {
-        conversation: {
-          id: conversation.id,
-          visitorName: conversation.visitorName,
-          visitorEmail: conversation.visitorEmail,
-          visitorPhone: conversation.visitorPhone,
-          status: conversation.status,
-          unreadCount: conversation.unreadCount,
-          createdAt: conversation.createdAt,
-          updatedAt: conversation.updatedAt,
-          sourcePage: conversation.sourcePage
-        },
-        messages: messages.map(msg => ({
-          id: msg.id,
-          sender: msg.sender,
-          content: msg.content,
-          timestamp: msg.timestamp,
-          confidence: msg.confidence
-        }))
+        conversation,
+        messages
       }
     }
   } catch (error: any) {

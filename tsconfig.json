@@ -4,6 +4,36 @@
     "strict": false,
     "noImplicitAny": false,
     "skipLibCheck": true,
-    "allowJs": true
-  }
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "types": [
+      "node",
+      "@types/bcrypt",
+      "@types/jsonwebtoken",
+      "@types/uuid"
+    ],
+    "paths": {
+      "~/*": ["./src/*"],
+      "@/*": ["./src/*"],
+      "~~/*": ["./*"],
+      "@@/*": ["./*"],
+      "~/components/*": ["./components/*"],
+      "~/composables/*": ["./composables/*"],
+      "~/stores/*": ["./stores/*"],
+      "~/server/*": ["./server/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.vue",
+    "**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".nuxt"
+  ]
 }

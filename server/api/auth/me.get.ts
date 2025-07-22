@@ -1,28 +1,9 @@
 // server/api/auth/me.get.ts
+import { getCurrentUser } from '~/server/utils/database'
+
 export default defineEventHandler(async (event) => {
   try {
-    const token = getCookie(event, 'auth-token') || 
-                  getHeader(event, 'authorization')?.replace('Bearer ', '')
-
-    if (!token) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Token manquant'
-      })
-    }
-
-    // Vérifier le token
-    const config = useRuntimeConfig()
-    const decoded = jwt.verify(token, config.jwtSecret) as any
-
-    // Récupérer les données utilisateur
-    const user = await findUserById(decoded.userId)
-    if (!user) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Utilisateur non trouvé'
-      })
-    }
+    const user = await getCurrentUser(event)
 
     return {
       success: true,
@@ -30,39 +11,21 @@ export default defineEventHandler(async (event) => {
         user: {
           id: user.id,
           email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          firstName: user.first_name,
+          lastName: user.last_name,
           company: user.company,
           role: user.role,
-          emailVerified: user.emailVerified,
-          createdAt: user.createdAt,
-          lastLoginAt: user.lastLoginAt
+          emailVerified: user.email_verified,
+          createdAt: user.created_at,
+          lastLoginAt: user.last_login_at
         }
       }
     }
   } catch (error: any) {
     console.error('Erreur me API:', error)
     throw createError({
-      statusCode: 401,
-      statusMessage: 'Token invalide'
+      statusCode: error.statusCode || 401,
+      statusMessage: error.statusMessage || 'Token invalide'
     })
   }
 })
-
-async function findUserById(userId: string) {
-  // Recherche utilisateur par ID
-  if (userId === 'user_123') {
-    return {
-      id: 'user_123',
-      email: 'admin@chatseller.app',
-      firstName: 'Administrateur',
-      lastName: 'ChatSeller',
-      company: 'ChatSeller Demo',
-      role: 'admin',
-      emailVerified: true,
-      createdAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString()
-    }
-  }
-  return null
-}

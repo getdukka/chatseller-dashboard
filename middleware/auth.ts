@@ -1,65 +1,48 @@
 // middleware/auth.ts
-export default defineNuxtRouteMiddleware(async (to) => {
-  // Éviter l'exécution côté serveur pour le moment
-  if (process.server) return
-
+export default defineNuxtRouteMiddleware((to) => {
   const authStore = useAuthStore()
+
+  // Pages publiques qui n'ont pas besoin d'authentification
+  const publicPages = ['/login', '/register', '/reset-password', '/']
   
-  // Initialiser l'authentification si pas encore fait
-  if (!authStore.user && !authStore.token) {
-    await authStore.initializeAuth()
+  // Si on est sur une page publique, laisser passer
+  if (publicPages.includes(to.path)) {
+    return
   }
 
-  // Vérifier l'authentification
+  // Si l'utilisateur n'est pas authentifié, rediriger vers login
   if (!authStore.isAuthenticated) {
-    console.log('🔒 Accès refusé - Utilisateur non authentifié')
-    
-    // Sauvegarder l'URL de destination pour redirection après login
-    const targetPath = to.fullPath
-    if (targetPath && targetPath !== '/login') {
-      await navigateTo(`/login?redirect=${encodeURIComponent(targetPath)}`)
-    } else {
-      await navigateTo('/login')
-    }
-    return
+    return navigateTo('/login')
   }
 
-  // Vérifier la validité de la session
-  if (!authStore.isSessionValid) {
-    console.log('⏰ Session expirée')
-    await authStore.logout(false)
-    await navigateTo('/login?expired=true')
-    return
-  }
-
-  // Essayer de renouveler le token si nécessaire
-  try {
-    const tokenValid = await authStore.ensureValidToken()
-    if (!tokenValid) {
-      console.log('🔑 Token invalide')
-      await navigateTo('/login?invalid=true')
-      return
-    }
-  } catch (error) {
-    console.error('Erreur lors de la validation du token:', error)
-    await authStore.logout(false)
-    await navigateTo('/login?error=true')
-    return
-  }
-
-  // Mettre à jour l'activité utilisateur
-  authStore.updateActivity()
-
-  console.log('✅ Accès autorisé pour:', authStore.userFullName)
+  // Vérifier si le token est encore valide (optionnel)
+  // On pourrait ajouter une vérification de validité du token ici
 })
 
+// middleware/guest.ts - Pour les pages accessibles uniquement aux non-connectés
+export const guestMiddleware = defineNuxtRouteMiddleware(() => {
+  const authStore = useAuthStore()
 
+  // Si l'utilisateur est connecté, rediriger vers le dashboard
+  if (authStore.isAuthenticated) {
+    return navigateTo('/dashboard')
+  }
+})
 
+// middleware/admin.ts - Pour les pages admin uniquement
+export const adminMiddleware = defineNuxtRouteMiddleware(() => {
+  const authStore = useAuthStore()
 
+  // Vérifier l'authentification d'abord
+  if (!authStore.isAuthenticated) {
+    return navigateTo('/login')
+  }
 
-
-
-
-
-
-
+  // Vérifier le rôle admin
+  if (!authStore.isAdmin) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Accès refusé - Droits administrateur requis'
+    })
+  }
+})

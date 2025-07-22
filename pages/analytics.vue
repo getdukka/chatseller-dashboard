@@ -45,7 +45,7 @@
     <div class="p-6">
       <!-- Métriques principales -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="card">
+        <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center">
             <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
               <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,7 +62,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center">
             <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50">
               <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -79,7 +79,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center">
             <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-50">
               <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,7 +96,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center">
             <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-50">
               <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,13 +117,13 @@
       <!-- Graphiques -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Évolution des conversations -->
-        <div class="card">
+        <div class="bg-white rounded-lg shadow">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-medium text-gray-900">Évolution des conversations</h3>
           </div>
           <div class="p-6">
             <div class="h-64 flex items-center justify-center" v-if="loading">
-              <div class="skeleton h-full w-full"></div>
+              <div class="animate-pulse bg-gray-200 h-full w-full rounded"></div>
             </div>
             <LineChart
               v-else
@@ -135,13 +135,13 @@
         </div>
 
         <!-- Taux de conversion par jour -->
-        <div class="card">
+        <div class="bg-white rounded-lg shadow">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-medium text-gray-900">Taux de conversion</h3>
           </div>
           <div class="p-6">
             <div class="h-64 flex items-center justify-center" v-if="loading">
-              <div class="skeleton h-full w-full"></div>
+              <div class="animate-pulse bg-gray-200 h-full w-full rounded"></div>
             </div>
             <LineChart
               v-else
@@ -153,13 +153,13 @@
         </div>
 
         <!-- Répartition des sources de trafic -->
-        <div class="card">
+        <div class="bg-white rounded-lg shadow">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-medium text-gray-900">Sources de trafic</h3>
           </div>
           <div class="p-6">
             <div class="h-64 flex items-center justify-center" v-if="loading">
-              <div class="skeleton h-full w-full"></div>
+              <div class="animate-pulse bg-gray-200 h-full w-full rounded"></div>
             </div>
             <PieChart
               v-else
@@ -171,13 +171,13 @@
         </div>
 
         <!-- Performance horaire -->
-        <div class="card">
+        <div class="bg-white rounded-lg shadow">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-medium text-gray-900">Performance horaire</h3>
           </div>
           <div class="p-6">
             <div class="h-64 flex items-center justify-center" v-if="loading">
-              <div class="skeleton h-full w-full"></div>
+              <div class="animate-pulse bg-gray-200 h-full w-full rounded"></div>
             </div>
             <BarChart
               v-else
@@ -188,110 +188,16 @@
           </div>
         </div>
       </div>
-
-      <!-- Tableaux détaillés -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Pages les plus performantes -->
-        <div class="card">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Pages les plus performantes</h3>
-          </div>
-          <div class="overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Page
-                  </th>
-                  <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Conversations
-                  </th>
-                  <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Conversion
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="page in topPages" :key="page.url">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">
-                      {{ page.title }}
-                    </div>
-                    <div class="text-sm text-gray-500">
-                      {{ page.url }}
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-center">
-                    <div class="text-sm text-gray-900">{{ page.conversations }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-center">
-                    <span class="badge badge-success">{{ page.conversionRate }}%</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Questions fréquentes -->
-        <div class="card">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Questions les plus fréquentes</h3>
-          </div>
-          <div class="p-6">
-            <div class="space-y-4">
-              <div v-for="question in frequentQuestions" :key="question.id" class="flex items-center justify-between">
-                <div class="flex-1">
-                  <p class="text-sm font-medium text-gray-900">
-                    {{ question.text }}
-                  </p>
-                  <div class="mt-1 bg-gray-200 rounded-full h-2">
-                    <div
-                      class="bg-blue-600 h-2 rounded-full"
-                      :style="{ width: `${(question.count / frequentQuestions[0].count) * 100}%` }"
-                    ></div>
-                  </div>
-                </div>
-                <div class="ml-4 flex-shrink-0">
-                  <span class="text-sm font-medium text-gray-700">{{ question.count }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { LineChart, PieChart, BarChart } from 'vue-chartjs'
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  LineElement,
-  LinearScale,
-  CategoryScale,
-  PointElement,
-  ArcElement,
-  BarElement
-} from 'chart.js'
 
-// Enregistrement des composants Chart.js
-ChartJS.register(
-  Title,
-  Tooltip,
-  Legend,
-  LineElement,
-  LinearScale,
-  CategoryScale,
-  PointElement,
-  ArcElement,
-  BarElement
-)
+import { ref, reactive, computed, onMounted } from 'vue'
+import LineChart from '~/components/charts/LineChart.vue'
+import PieChart from '~/components/charts/PieChart.vue'
+import BarChart from '~/components/charts/BarChart.vue'
 
 // Middleware d'authentification
 definePageMeta({
@@ -316,19 +222,6 @@ interface ChartDataPoint {
   conversions: number
 }
 
-interface TopPage {
-  url: string
-  title: string
-  conversations: number
-  conversionRate: number
-}
-
-interface FrequentQuestion {
-  id: string
-  text: string
-  count: number
-}
-
 // État du composant
 const loading = ref(true)
 const refreshing = ref(false)
@@ -347,8 +240,6 @@ const analytics = reactive<Analytics>({
 })
 
 const chartData = ref<ChartDataPoint[]>([])
-const topPages = ref<TopPage[]>([])
-const frequentQuestions = ref<FrequentQuestion[]>([])
 
 // Configuration des graphiques
 const chartOptions = {
@@ -406,17 +297,6 @@ const pieChartOptions = {
       labels: {
         padding: 20,
         usePointStyle: true
-      }
-    },
-    tooltip: {
-      callbacks: {
-        label: (context: any) => {
-          const label = context.label || ''
-          const value = context.parsed || 0
-          const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0)
-          const percentage = ((value / total) * 100).toFixed(1)
-          return `${label}: ${percentage}%`
-        }
       }
     }
   }
@@ -547,24 +427,6 @@ const loadAnalytics = async () => {
 
     chartData.value = generatedData
 
-    // Données simulées pour les pages
-    topPages.value = [
-      { url: '/produit-premium', title: 'Produit Premium', conversations: 89, conversionRate: 42.1 },
-      { url: '/pack-starter', title: 'Pack Starter', conversations: 67, conversionRate: 38.5 },
-      { url: '/homepage', title: 'Page d\'accueil', conversations: 45, conversionRate: 28.9 },
-      { url: '/offre-special', title: 'Offre spéciale', conversations: 34, conversionRate: 51.2 },
-      { url: '/about', title: 'À propos', conversations: 12, conversionRate: 15.6 }
-    ]
-
-    // Questions fréquentes simulées
-    frequentQuestions.value = [
-      { id: '1', text: 'Quels sont les délais de livraison ?', count: 156 },
-      { id: '2', text: 'Comment fonctionne la garantie ?', count: 98 },
-      { id: '3', text: 'Proposez-vous des remises sur commande groupée ?', count: 87 },
-      { id: '4', text: 'Quels sont les modes de paiement acceptés ?', count: 76 },
-      { id: '5', text: 'Puis-je modifier ma commande après validation ?', count: 54 }
-    ]
-
   } catch (error) {
     console.error('Erreur lors du chargement des analytics:', error)
   } finally {
@@ -588,5 +450,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Les styles sont définis dans le fichier CSS global */
+.btn-secondary {
+  @apply inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.input-primary {
+  @apply mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+}
 </style>
