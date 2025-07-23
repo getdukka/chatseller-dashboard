@@ -236,4 +236,9 @@ function add_chatseller_widget() {
     console.error('Erreur lors de la copie:', error)
   }
 }
+
+
+function computed(arg0: () => string) {
+  throw new Error('Function not implemented.');
+}
 </script>

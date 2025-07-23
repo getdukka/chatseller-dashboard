@@ -1,12 +1,16 @@
 <!-- components/charts/LineChart.vue -->
 <template>
   <div class="relative">
-    <canvas ref="chartRef"></canvas>
+    <canvas
+      ref="chartRef"
+      :width="width"
+      :height="height"
+      class="max-w-full"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,10 +20,11 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  type ChartData,
+  type ChartOptions
 } from 'chart.js'
 
-// Enregistrer les composants Chart.js nécessaires
+// Enregistrement des composants Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -27,88 +32,98 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 )
 
 interface Props {
-  data: any
-  options?: any
+  data: ChartData<'line'>
+  options?: ChartOptions<'line'>
   width?: number
   height?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  options: () => ({}),
   width: 400,
   height: 200
 })
 
 const chartRef = ref<HTMLCanvasElement>()
-let chart: ChartJS | null = null
+let chartInstance: ChartJS<'line'> | null = null
 
-const defaultOptions = {
+const defaultOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'top'
+    },
+    tooltip: {
+      mode: 'index',
+      intersect: false
+    }
+  },
   scales: {
+    x: {
+      display: true,
+      grid: {
+        display: false
+      }
+    },
     y: {
+      display: true,
       beginAtZero: true,
       grid: {
         color: 'rgba(0, 0, 0, 0.1)'
       }
-    },
-    x: {
-      grid: {
-        display: false
-      }
     }
   },
-  plugins: {
-    legend: {
-      position: 'bottom' as const,
-      labels: {
-        padding: 20,
-        usePointStyle: true
-      }
+  elements: {
+    line: {
+      tension: 0.4
     },
-    tooltip: {
-      mode: 'index' as const,
-      intersect: false
+    point: {
+      radius: 4,
+      hoverRadius: 6
     }
   }
 }
+
+const mergedOptions = computed(() => ({
+  ...defaultOptions,
+  ...props.options
+}))
 
 const createChart = () => {
   if (!chartRef.value) return
 
-  chart = new ChartJS(chartRef.value, {
+  chartInstance = new ChartJS(chartRef.value, {
     type: 'line',
     data: props.data,
-    options: { ...defaultOptions, ...props.options }
+    options: mergedOptions.value
   })
 }
 
 const updateChart = () => {
-  if (chart) {
-    chart.data = props.data
-    chart.options = { ...defaultOptions, ...props.options }
-    chart.update()
+  if (chartInstance) {
+    chartInstance.data = props.data
+    chartInstance.options = mergedOptions.value
+    chartInstance.update()
   }
 }
 
-watch(() => props.data, updateChart, { deep: true })
-watch(() => props.options, updateChart, { deep: true })
-
 onMounted(() => {
-  createChart()
+  nextTick(() => {
+    createChart()
+  })
 })
 
 onUnmounted(() => {
-  if (chart) {
-    chart.destroy()
+  if (chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
   }
 })
+
+watch(() => props.data, updateChart, { deep: true })
+watch(() => props.options, updateChart, { deep: true })
 </script>
-
-
-
