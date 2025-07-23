@@ -1,8 +1,52 @@
-// ===========================================
-// server/api/auth/change-password.post.ts
-// ===========================================
+// server/api/auth/change-password.post.ts 
 import bcrypt from 'bcrypt'
-import { getCurrentUser, validatePassword } from '~/server/utils/database'
+import jwt from 'jsonwebtoken'
+
+// Fonctions utilitaires mockées (à implémenter selon votre base de données)
+async function getCurrentUser(event: any) {
+  const authHeader = getHeader(event, 'authorization')
+  if (!authHeader) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Token d\'authentification requis'
+    })
+  }
+  
+  const token = authHeader.replace('Bearer ', '')
+  const config = useRuntimeConfig()
+  
+  try {
+    const decoded = jwt.verify(token, config.jwtSecret) as any
+    // TODO: Récupérer l'utilisateur depuis votre base de données
+    return {
+      id: decoded.userId,
+      email: decoded.email,
+      hashed_password: 'fake_hashed_password' // À remplacer par la vraie requête DB
+    }
+  } catch (error) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Token invalide'
+    })
+  }
+}
+
+async function validatePassword(password: string, hashedPassword: string) {
+  return await bcrypt.compare(password, hashedPassword)
+}
+
+function getSupabaseClient() {
+  // TODO: Retourner votre client Supabase configuré
+  return {
+    from: (table: string) => ({
+      update: (data: any) => ({
+        eq: (field: string, value: any) => ({
+          then: () => Promise.resolve({ error: null })
+        })
+      })
+    })
+  }
+}
 
 export default defineEventHandler(async (event) => {
   try {

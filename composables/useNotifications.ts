@@ -1,41 +1,46 @@
-// composables/useNotifications.ts
+// composables/useNotifications.ts - CORRIGÉ SANS TYPES GÉNÉRIQUES
+
+import { ref, reactive } from 'vue'
+
+// ✅ TYPES LOCAUX POUR ÉVITER LES IMPORTS PROBLÉMATIQUES
 interface Notification {
   id: string
   type: 'success' | 'error' | 'warning' | 'info'
   title: string
   message?: string
   duration?: number
-  persistent?: boolean
+  timestamp: string
 }
 
 interface NotificationState {
   notifications: Notification[]
 }
 
-const state = reactive<NotificationState>({
-  notifications: []
-})
-
 export const useNotifications = () => {
-  const addNotification = (notification: Omit<Notification, 'id'>) => {
-    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9)
+  // ✅ UTILISER reactive SANS TYPE GÉNÉRIQUE
+  const state = reactive({
+    notifications: []
+  } as NotificationState)
+
+  // ✅ METHODS
+  const addNotification = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
     const newNotification: Notification = {
-      id,
-      duration: 5000,
-      persistent: false,
-      ...notification
+      ...notification,
+      id: generateId(),
+      timestamp: new Date().toISOString(),
+      duration: notification.duration || 5000
     }
 
     state.notifications.push(newNotification)
 
-    // Auto-remove après la durée définie (sauf si persistent)
-    if (!newNotification.persistent) {
+    // Auto-remove après duration
+    if (newNotification.duration && newNotification.duration > 0) {
       setTimeout(() => {
-        removeNotification(id)
+        removeNotification(newNotification.id)
       }, newNotification.duration)
     }
 
-    return id
+    return newNotification.id
   }
 
   const removeNotification = (id: string) => {
@@ -49,31 +54,40 @@ export const useNotifications = () => {
     state.notifications = []
   }
 
-  // Méthodes de convenance
-  const success = (title: string, message?: string, options?: Partial<Notification>) => {
-    return addNotification({ ...options, type: 'success', title, message })
+  // ✅ HELPERS SPÉCIFIQUES
+  const notifySuccess = (title: string, message?: string) => {
+    return addNotification({ type: 'success', title, message })
   }
 
-  const error = (title: string, message?: string, options?: Partial<Notification>) => {
-    return addNotification({ ...options, type: 'error', title, message, persistent: true })
+  const notifyError = (title: string, message?: string) => {
+    return addNotification({ type: 'error', title, message })
   }
 
-  const warning = (title: string, message?: string, options?: Partial<Notification>) => {
-    return addNotification({ ...options, type: 'warning', title, message })
+  const notifyWarning = (title: string, message?: string) => {
+    return addNotification({ type: 'warning', title, message })
   }
 
-  const info = (title: string, message?: string, options?: Partial<Notification>) => {
-    return addNotification({ ...options, type: 'info', title, message })
+  const notifyInfo = (title: string, message?: string) => {
+    return addNotification({ type: 'info', title, message })
+  }
+
+  const generateId = (): string => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2)
   }
 
   return {
-    notifications: readonly(toRef(state, 'notifications')),
+    // State
+    notifications: state.notifications,
+    
+    // Methods
     addNotification,
     removeNotification,
     clearAll,
-    success,
-    error,
-    warning,
-    info
+    
+    // Helpers
+    notifySuccess,
+    notifyError,
+    notifyWarning,
+    notifyInfo
   }
 }

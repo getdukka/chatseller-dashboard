@@ -1,4 +1,4 @@
-// plugins/api.client.ts - PLUGIN API CLIENT
+// plugins/api.client.ts - VERSION CORRIGÉE
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
   
@@ -8,21 +8,25 @@ export default defineNuxtPlugin(() => {
       'Content-Type': 'application/json'
     },
     onRequest({ request, options }) {
-      // Ajouter le token JWT si disponible
-      const authStore = useAuthStore()
-      if (authStore.token) {
-        options.headers = {
-          ...options.headers,
-          Authorization: `Bearer ${authStore.token}`
+      // Ajouter le token JWT si disponible depuis localStorage
+      if (process.client) {
+        const token = localStorage.getItem('chatseller_token')
+        if (token) {
+          options.headers = {
+            ...options.headers,
+            Authorization: `Bearer ${token}`
+          }
         }
       }
     },
     onResponseError({ response }) {
       // Gestion globale des erreurs
       if (response.status === 401) {
-        const authStore = useAuthStore()
-        authStore.clearAuth()
-        navigateTo('/login')
+        if (process.client) {
+          localStorage.removeItem('chatseller_token')
+          localStorage.removeItem('chatseller_user')
+          window.location.href = '/login'
+        }
       }
     }
   })

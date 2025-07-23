@@ -1,12 +1,16 @@
-// plugins/auth-init.client.ts - INITIALISATION AUTHENTIFICATION
-
+// plugins/auth-init.client.ts - VERSION CORRIGÉE
 export default defineNuxtPlugin(async () => {
   console.log('🚀 Plugin auth-init: Initialisation de l\'authentification')
   
-  const authStore = useAuthStore()
+  // Attendre que l'app soit hydratée
+  await nextTick()
   
-  // Tentative de restauration automatique de la session
   try {
+    // Import du store après l'hydratation
+    const { useAuthStore } = await import('~/stores/auth')
+    const authStore = useAuthStore()
+    
+    // Tentative de restauration automatique de la session
     if (!authStore.isAuthenticated) {
       console.log('🔄 Plugin auth-init: Restauration de session...')
       await authStore.restoreSession()

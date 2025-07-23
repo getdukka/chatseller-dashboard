@@ -1,301 +1,241 @@
-<!-- components/UploadModal.vue -->
+<!-- components/ui/UploadModal.vue - TYPES CORRIGÉS -->
 <template>
-  <TransitionRoot as="template" :show="isOpen">
-    <Dialog as="div" class="relative z-50" @close="$emit('close')">
-      <TransitionChild
-        as="template"
-        enter="ease-out duration-300"
-        enter-from="opacity-0"
-        enter-to="opacity-100"
-        leave="ease-in duration-200"
-        leave-from="opacity-100"
-        leave-to="opacity-0"
+  <Modal
+    :show="true"
+    title="Importer un fichier"
+    size="lg"
+    @close="$emit('close')"
+  >
+    <div class="space-y-6">
+      <!-- Drop Zone -->
+      <div
+        :class="[
+          'border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer',
+          isDragOver
+            ? 'border-blue-400 bg-blue-50'
+            : 'border-gray-300 hover:border-gray-400'
+        ]"
+        @dragover.prevent="isDragOver = true"
+        @dragleave.prevent="isDragOver = false"
+        @drop.prevent="handleDrop"
+        @click="triggerFileInput"
       >
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-      </TransitionChild>
-
-      <div class="fixed inset-0 z-10 overflow-y-auto">
-        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-          <TransitionChild
-            as="template"
-            enter="ease-out duration-300"
-            enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            enter-to="opacity-100 translate-y-0 sm:scale-100"
-            leave="ease-in duration-200"
-            leave-from="opacity-100 translate-y-0 sm:scale-100"
-            leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          >
-            <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-              <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-                <button
-                  type="button"
-                  class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  @click="$emit('close')"
-                >
-                  <span class="sr-only">Fermer</span>
-                  <XMarkIcon class="h-6 w-6" />
-                </button>
-              </div>
-
-              <div class="sm:flex sm:items-start">
-                <div class="w-full">
-                  <!-- Header -->
-                  <div class="mb-6">
-                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
-                      Ajouter du contenu
-                    </DialogTitle>
-                    <p class="mt-2 text-sm text-gray-500">
-                      Uploadez des documents pour enrichir la base de connaissance de votre agent IA.
-                    </p>
-                  </div>
-
-                  <!-- Upload Form -->
-                  <form @submit.prevent="handleSubmit" class="space-y-6">
-                    <!-- File Upload Area -->
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Fichiers
-                      </label>
-                      <div
-                        @drop="handleDrop"
-                        @dragover.prevent
-                        @dragenter.prevent
-                        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors"
-                        :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                      >
-                        <DocumentPlusIcon class="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p class="text-sm text-gray-600 mb-2">
-                          Glissez-déposez vos fichiers ici, ou
-                          <button
-                            type="button"
-                            @click="fileInput?.click()"
-                            class="text-blue-600 hover:text-blue-500 font-medium"
-                          >
-                            parcourir
-                          </button>
-                        </p>
-                        <p class="text-xs text-gray-500">
-                          PDF, Word, CSV, TXT jusqu'à 10MB
-                        </p>
-                        <input
-                          ref="fileInput"
-                          type="file"
-                          multiple
-                          accept=".pdf,.doc,.docx,.csv,.txt"
-                          class="hidden"
-                          @change="handleFileSelect"
-                        />
-                      </div>
-
-                      <!-- Selected Files -->
-                      <div v-if="selectedFiles.length > 0" class="mt-4 space-y-2">
-                        <h4 class="text-sm font-medium text-gray-900">Fichiers sélectionnés:</h4>
-                        <div class="space-y-2">
-                          <div
-                            v-for="(file, index) in selectedFiles"
-                            :key="index"
-                            class="flex items-center justify-between bg-gray-50 p-3 rounded-md"
-                          >
-                            <div class="flex items-center space-x-3">
-                              <DocumentIcon class="h-5 w-5 text-gray-400" />
-                              <div>
-                                <p class="text-sm font-medium text-gray-900">{{ file.name }}</p>
-                                <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              @click="removeFile(index)"
-                              class="text-red-400 hover:text-red-600"
-                            >
-                              <XMarkIcon class="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Category -->
-                    <div>
-                      <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
-                        Catégorie
-                      </label>
-                      <select
-                        id="category"
-                        v-model="form.category"
-                        class="form-select"
-                        required
-                      >
-                        <option value="">Sélectionner une catégorie</option>
-                        <option value="products">Produits</option>
-                        <option value="policies">Politiques</option>
-                        <option value="shipping">Livraison</option>
-                        <option value="payment">Paiement</option>
-                      </select>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                      <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                        Description (optionnelle)
-                      </label>
-                      <textarea
-                        id="description"
-                        v-model="form.description"
-                        rows="3"
-                        class="form-textarea"
-                        placeholder="Décrivez le contenu de ces documents..."
-                      ></textarea>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        @click="$emit('close')"
-                        class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        type="submit"
-                        :disabled="selectedFiles.length === 0 || uploading"
-                        class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <span v-if="uploading" class="flex items-center">
-                          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Upload en cours...
-                        </span>
-                        <span v-else>
-                          Uploader {{ selectedFiles.length }} fichier{{ selectedFiles.length > 1 ? 's' : '' }}
-                        </span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </DialogPanel>
-          </TransitionChild>
+        <div class="text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="mt-4">
+            <p class="text-sm text-gray-600">
+              <span class="font-medium text-blue-600 hover:text-blue-500">
+                Cliquez pour sélectionner
+              </span>
+              ou glissez-déposez un fichier
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              PDF, Word, CSV jusqu'à 10MB
+            </p>
+          </div>
         </div>
       </div>
-    </Dialog>
-  </TransitionRoot>
+
+      <!-- File Input (Hidden) -->
+      <input
+        ref="fileInputRef"
+        type="file"
+        class="hidden"
+        accept=".pdf,.doc,.docx,.csv"
+        @change="handleFileSelect"
+      >
+
+      <!-- File Preview -->
+      <div v-if="selectedFile" class="bg-gray-50 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-900">
+                {{ selectedFile.name }}
+              </p>
+              <p class="text-xs text-gray-500">
+                {{ formatFileSize(selectedFile.size) }}
+              </p>
+            </div>
+          </div>
+          <button
+            @click="clearFile"
+            class="text-red-400 hover:text-red-600"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Upload Progress -->
+        <div v-if="uploading" class="mt-4">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600">Upload en cours...</span>
+            <span class="text-gray-900">{{ uploadProgress }}%</span>
+          </div>
+          <div class="mt-2 bg-gray-200 rounded-full h-2">
+            <div
+              class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              :style="{ width: `${uploadProgress}%` }"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="error" class="bg-red-50 border border-red-200 rounded-md p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-red-800">{{ error }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end space-x-3">
+        <button
+          @click="$emit('close')"
+          class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+          Annuler
+        </button>
+        <button
+          @click="handleUpload"
+          :disabled="!selectedFile || uploading"
+          class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ uploading ? 'Upload...' : 'Importer' }}
+        </button>
+      </div>
+    </div>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { XMarkIcon, DocumentIcon, DocumentPlusIcon } from '@heroicons/vue/24/outline'
+import { ref } from 'vue'
 
-// Props
-defineProps<{
-  isOpen: boolean
-}>()
+interface Emits {
+  (e: 'close'): void
+  (e: 'upload', file: File): void
+}
 
-// Emits
-const emit = defineEmits<{
-  close: []
-  upload: [files: FileList]
-}>()
+const emit = defineEmits<Emits>()
 
-// Template refs
-const fileInput = ref<HTMLInputElement>()
-
-// State
-const selectedFiles = ref<File[]>([])
-const isDragging = ref(false)
+// ✅ REACTIVE DATA SANS TYPES GÉNÉRIQUES
+const isDragOver = ref(false)
+const selectedFile = ref(null as File | null)
 const uploading = ref(false)
+const uploadProgress = ref(0)
+const error = ref('')
+const fileInputRef = ref(null as HTMLInputElement | null)
 
-// Form data
-const form = reactive({
-  category: '',
-  description: ''
-})
-
-// Methods
-const handleDrop = (event: DragEvent) => {
-  event.preventDefault()
-  isDragging.value = false
-  
-  const files = event.dataTransfer?.files
-  if (files) {
-    addFiles(files)
+// ✅ METHODS
+const triggerFileInput = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click()
   }
 }
 
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
-  if (target.files) {
-    addFiles(target.files)
+  const file = target.files?.[0]
+  if (file) {
+    validateAndSetFile(file)
   }
 }
 
-const addFiles = (fileList: FileList) => {
-  const validTypes = ['.pdf', '.doc', '.docx', '.csv', '.txt']
-  const maxSize = 10 * 1024 * 1024 // 10MB
-
-  Array.from(fileList).forEach(file => {
-    const extension = '.' + file.name.split('.').pop()?.toLowerCase()
-    
-    if (!validTypes.includes(extension)) {
-      alert(`Type de fichier non supporté: ${file.name}`)
-      return
-    }
-    
-    if (file.size > maxSize) {
-      alert(`Fichier trop volumineux: ${file.name} (max 10MB)`)
-      return
-    }
-    
-    // Check if file already exists
-    if (!selectedFiles.value.some(f => f.name === file.name && f.size === file.size)) {
-      selectedFiles.value.push(file)
-    }
-  })
+const handleDrop = (event: DragEvent) => {
+  isDragOver.value = false
+  const file = event.dataTransfer?.files[0]
+  if (file) {
+    validateAndSetFile(file)
+  }
 }
 
-const removeFile = (index: number) => {
-  selectedFiles.value.splice(index, 1)
+const validateAndSetFile = (file: File) => {
+  error.value = ''
+  
+  // Vérifier le type de fichier
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/csv'
+  ]
+  
+  if (!allowedTypes.includes(file.type)) {
+    error.value = 'Type de fichier non supporté. Utilisez PDF, Word ou CSV.'
+    return
+  }
+  
+  // Vérifier la taille (10MB max)
+  if (file.size > 10 * 1024 * 1024) {
+    error.value = 'Le fichier est trop volumineux. Taille maximale : 10MB.'
+    return
+  }
+  
+  selectedFile.value = file
 }
 
-const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+const clearFile = () => {
+  selectedFile.value = null
+  error.value = ''
+  uploadProgress.value = 0
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
 }
 
-const handleSubmit = async () => {
-  if (selectedFiles.value.length === 0) return
+const handleUpload = async () => {
+  if (!selectedFile.value) return
   
   uploading.value = true
+  uploadProgress.value = 0
+  error.value = ''
   
   try {
-    // Create FileList from array
-    const dt = new DataTransfer()
-    selectedFiles.value.forEach(file => dt.items.add(file))
+    // Simuler le progress
+    const progressInterval = setInterval(() => {
+      uploadProgress.value += 10
+      if (uploadProgress.value >= 90) {
+        clearInterval(progressInterval)
+      }
+    }, 200)
     
-    // Emit upload event
-    emit('upload', dt.files)
+    // Émettre l'événement upload
+    emit('upload', selectedFile.value)
     
-    // Reset form
-    selectedFiles.value = []
-    form.category = ''
-    form.description = ''
+    // Finaliser le progress
+    setTimeout(() => {
+      uploadProgress.value = 100
+      clearInterval(progressInterval)
+    }, 2000)
+    
+  } catch (err: any) {
+    error.value = err.message || 'Erreur lors de l\'upload'
   } finally {
     uploading.value = false
   }
 }
 
-// Drag events
-const handleDragEnter = () => {
-  isDragging.value = true
-}
-
-const handleDragLeave = () => {
-  isDragging.value = false
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>

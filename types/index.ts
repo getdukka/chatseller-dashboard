@@ -1,6 +1,6 @@
-// types/index.ts - TYPES COMPATIBLES AVEC USEAPI.TS EXISTANT
+// types/index.ts - TYPES CORRIGÉS POUR CHATSELLER DASHBOARD
 
-// ============= TYPES API RESPONSE (depuis useApi.ts) =============
+// ✅ API RESPONSE TYPE (déjà défini dans useApi.ts existant)
 export interface ApiResponse<T = any> {
   data?: T
   error?: string
@@ -8,7 +8,7 @@ export interface ApiResponse<T = any> {
   success?: boolean
 }
 
-// ============= TYPES AUTHENTIFICATION =============
+// ✅ AUTH TYPES (adaptés au useApi existant)
 export interface LoginCredentials {
   email: string
   password: string
@@ -26,19 +26,21 @@ export interface AuthResponse {
     email: string
     name?: string
     shopId?: string
-    shop_id?: string // Alias pour compatibilité store
+    shop_id?: string
+    role?: 'admin' | 'user'
   }
 }
 
-// Type User étendu pour le store
 export interface User {
   id: string
   email: string
   name?: string
   shopId?: string
-  shop_id?: string // Alias pour compatibilité
-  created_at?: string
-  updated_at?: string
+  shop_id?: string
+  avatar?: string
+  role?: 'admin' | 'user'
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface AuthState {
@@ -48,31 +50,32 @@ export interface AuthState {
   loading: boolean
 }
 
-// ============= TYPES BOUTIQUE (depuis useApi.ts) =============
-export interface Shop {
-  id: string
-  name: string
-  domain?: string
-  settings: ShopSettings
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ShopSettings {
+// ✅ SHOP TYPES (du useApi existant)
+export interface ShopSettingsBase {
   agentName?: string
   agentAvatar?: string
   primaryColor?: string
   welcomeMessage?: string
-  // Ajout des champs manquants potentiels
-  agent_name?: string
-  agent_avatar?: string
-  primary_color?: string
-  welcome_message?: string
-  fallback_message?: string
-  upsell_enabled?: boolean
 }
 
-// ============= TYPES CONVERSATIONS (depuis useApi.ts) =============
+export interface Shop {
+  id: string
+  name: string
+  domain?: string
+  settings: ShopSettingsBase
+  createdAt: string
+  updatedAt: string
+}
+
+// ✅ CONVERSATION TYPES (du useApi existant)
+export interface Message {
+  id: string
+  conversationId: string
+  content: string
+  type: 'visitor' | 'agent' | 'system'
+  timestamp: string
+}
+
 export interface Conversation {
   id: string
   shopId: string
@@ -85,58 +88,51 @@ export interface Conversation {
   }
   createdAt: string
   updatedAt: string
+  // Propriétés additionnelles pour la compatibilité
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
 }
 
-export type ConversationStatus = 'active' | 'completed' | 'abandoned'
-
-export interface Message {
-  id: string
-  conversationId: string
-  content: string
-  type: 'visitor' | 'agent' | 'system'
-  sender?: 'user' | 'agent' // Alias pour compatibilité
-  message_type?: MessageType
-  timestamp: string
-}
-
-export type MessageType = 'text' | 'quick_reply' | 'order_summary' | 'upsell'
-
-// ============= TYPES COMMANDES (depuis useApi.ts) =============
-export interface Order {
-  id: string
-  conversationId: string
-  shopId: string
-  customerInfo: CustomerInfo
-  items: OrderItem[]
-  totalAmount: number
-  status: 'pending' | 'confirmed' | 'cancelled'
-  createdAt: string
-  // Champs additionnels
-  currency?: string
-  payment_method?: string
-  updated_at?: string
-}
-
-export interface CustomerInfo {
-  name: string
-  email?: string
-  phone?: string
-  address?: string
-}
-
+// ✅ ORDER TYPES (du useApi existant)
 export interface OrderItem {
   productId?: string
   productName: string
   quantity: number
   price: number
-  // Champ additionnel
-  name?: string // Alias
-  total?: number
+  total?: number // Propriété calculée
+  id?: string // Pour la compatibilité
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+export interface Order {
+  id: string
+  conversationId: string
+  shopId: string
+  customerInfo: {
+    name: string
+    email?: string
+    phone?: string
+    address?: string
+  }
+  items: OrderItem[]
+  totalAmount: number
+  status: 'pending' | 'confirmed' | 'cancelled'
+  createdAt: string
+  // Propriétés additionnelles pour la compatibilité
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  customerAddress?: string
+  subtotal?: number
+  tax?: number
+  shipping?: number
+  total?: number
+  updatedAt?: string
+  paymentMethod?: string
+  metadata?: Record<string, any>
+}
 
-// ============= TYPES BASE DE CONNAISSANCE (depuis useApi.ts) =============
+// ✅ KNOWLEDGE BASE TYPES (du useApi existant)
 export interface KnowledgeBaseDocument {
   id: string
   shopId: string
@@ -145,33 +141,18 @@ export interface KnowledgeBaseDocument {
   type: 'pdf' | 'word' | 'csv' | 'manual'
   fileName?: string
   uploadedAt: string
-  // Champs additionnels
-  file_type?: string
-  file_url?: string
+}
+
+// Alias pour compatibilité avec l'ancien code
+export interface KnowledgeItem extends KnowledgeBaseDocument {
+  category?: string
   tags?: string[]
-  created_at?: string
-  updated_at?: string
+  isActive?: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
-export interface KnowledgeBase {
-  id: string
-  shop_id: string
-  title: string
-  content: string
-  file_type?: string
-  file_url?: string
-  tags: string[]
-  created_at: string
-  updated_at: string
-}
-
-export interface KnowledgeUpload {
-  file: File
-  title: string
-  tags: string[]
-}
-
-// ============= TYPES ANALYTICS (depuis useApi.ts) =============
+// ✅ ANALYTICS TYPES (du useApi existant)
 export interface AnalyticsData {
   totalConversations: number
   activeConversations: number
@@ -192,132 +173,200 @@ export interface AnalyticsData {
     date: string
     revenue: number
   }>
-  // Alias pour compatibilité
-  conversations_total?: number
-  conversion_rate?: number
-  revenue_total?: number
-  avg_order_value?: number
-  active_conversations?: number
-  daily_stats?: DailyStats[]
-  popular_products?: ProductStats[]
+  // Propriétés additionnelles pour la compatibilité
+  totalOrders?: number
+  conversationsToday?: number
+  ordersToday?: number
+  revenueToday?: number
+  chartData?: {
+    conversations: ChartDataPoint[]
+    orders: ChartDataPoint[]
+    revenue: ChartDataPoint[]
+  }
 }
 
-export interface DailyStats {
+export interface ChartDataPoint {
   date: string
-  conversations: number
-  orders: number
-  revenue: number
+  value: number
 }
 
-export interface ProductStats {
-  name: string
-  quantity_sold: number
-  revenue: number
+// ✅ SETTINGS TYPES - CORRECTION DE LA SYNTAXE
+export interface ShopSettings {
+  id?: string
+  shopId?: string
+  botName?: string
+  botAvatar?: string
+  welcomeMessage?: string
+  primaryColor?: string
+  secondaryColor?: string
+  buttonText?: string
+  position?: 'bottom-left' | 'bottom-right'
+  isActive?: boolean
+  customCss?: string
+  integrationCode?: string
+  upsellRules?: UpsellRule[]
+  createdAt?: string
+  updatedAt?: string
+  // Propriétés du Shop settings
+  agentName?: string
+  agentAvatar?: string
 }
 
-// ============= TYPES UPSELLING =============
 export interface UpsellRule {
   id: string
-  shop_id: string
-  name: string
-  trigger_product: string
-  suggested_product: string
-  discount_percentage?: number
+  productId: string
+  upsellProductId: string
   message: string
-  active: boolean
-  created_at: string
+  discount?: number
+  isActive: boolean
 }
 
-// ============= TYPES UI ET COMPOSANTS =============
-export interface Toast {
+// ✅ MODAL & UI TYPES
+export interface ModalProps {
+  show: boolean
+  title?: string
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+  closable?: boolean
+  closeOnOverlay?: boolean
+  scrollable?: boolean
+  onClose?: () => void
+}
+
+export interface TabItem {
+  id: string
+  label: string
+  icon?: string
+  disabled?: boolean
+}
+
+export interface FormField {
+  name: string
+  label: string
+  type: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'file'
+  placeholder?: string
+  required?: boolean
+  options?: { value: string; label: string }[]
+  validation?: {
+    min?: number
+    max?: number
+    pattern?: RegExp
+    message?: string
+  }
+}
+
+// ✅ WIDGET TYPES
+export interface WidgetConfig {
+  shopId: string
+  botName: string
+  botAvatar?: string
+  welcomeMessage: string
+  primaryColor: string
+  position: 'bottom-left' | 'bottom-right'
+  apiUrl: string
+}
+
+// ✅ UPLOAD TYPES
+export interface UploadFile {
+  file: File
+  progress: number
+  status: 'pending' | 'uploading' | 'success' | 'error'
+  error?: string
+}
+
+// ✅ CHART TYPES (pour vue-chartjs)
+export interface ChartOptions {
+  responsive: boolean
+  maintainAspectRatio: boolean
+  scales?: {
+    y?: {
+      beginAtZero: boolean
+      ticks?: {
+        callback?: (value: number) => string
+      }
+    }
+  }
+  plugins?: {
+    legend?: {
+      display: boolean
+    }
+    tooltip?: {
+      callbacks?: {
+        label?: (context: any) => string
+      }
+    }
+  }
+}
+
+// ✅ NOTIFICATION TYPES
+export interface Notification {
   id: string
   type: 'success' | 'error' | 'warning' | 'info'
   title: string
   message?: string
   duration?: number
+  timestamp: string
 }
 
-export interface LoadingState {
-  [key: string]: boolean
-}
-
-// ============= TYPES CHARTS =============
-export interface ChartData {
-  labels: string[]
-  datasets: ChartDataset[]
-}
-
-export interface ChartDataset {
-  label: string
-  data: number[]
-  backgroundColor?: string | string[]
-  borderColor?: string | string[]
-  borderWidth?: number
-}
-
-export interface ChartOptions {
-  responsive: boolean
-  maintainAspectRatio: boolean
-  plugins?: {
-    legend?: {
-      display: boolean
-      position?: 'top' | 'bottom' | 'left' | 'right'
-    }
-    title?: {
-      display: boolean
-      text?: string
-    }
-  }
-  scales?: Record<string, any>
-}
-
-// ============= TYPES API ET PAGINATION =============
-export interface PaginationParams {
-  page?: number
-  limit?: number
-  sort_by?: string
-  sort_order?: 'asc' | 'desc'
-}
-
-export interface PaginatedResponse<T> {
+// ✅ PAGINATION TYPES
+export interface PaginationData<T = any> {
   data: T[]
-  pagination: {
-    current_page: number
-    total_pages: number
-    total_items: number
-    items_per_page: number
-  }
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
 }
 
-// ============= TYPES VALIDATION =============
-export interface ValidationError {
-  field: string
-  message: string
+// ✅ FILTER TYPES
+export interface ConversationFilter {
+  status?: 'active' | 'completed' | 'abandoned'
+  dateFrom?: string
+  dateTo?: string
+  search?: string
 }
 
-export interface FormErrors {
-  [key: string]: string[]
+export interface OrderFilter {
+  status?: 'pending' | 'confirmed' | 'cancelled'
+  dateFrom?: string
+  dateTo?: string
+  search?: string
+  minAmount?: number
+  maxAmount?: number
 }
 
-// ============= TYPES GLOBAUX NUXT =============
-declare global {
-  interface Window {
-    // Pour compatibilité avec d'éventuels scripts externes
-    ChatSellerWidget?: any
-  }
+// ✅ COMPONENT PROPS TYPES
+export interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'dark' | 'light'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  disabled?: boolean
+  loading?: boolean
+  icon?: string
+  iconPosition?: 'left' | 'right'
+  fullWidth?: boolean
+  rounded?: boolean
+  outline?: boolean
 }
 
-// Export des types les plus utilisés pour faciliter les imports
-export type {
-  ApiResponse,
-  LoginCredentials,
-  AuthResponse,
-  User,
-  AuthState,
-  Shop,
-  Conversation,
-  Message,
-  Order,
-  AnalyticsData,
-  KnowledgeBaseDocument
+export interface InputProps {
+  modelValue?: string | number
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search'
+  placeholder?: string
+  disabled?: boolean
+  readonly?: boolean
+  required?: boolean
+  error?: string
+  hint?: string
+  icon?: string
+  iconPosition?: 'left' | 'right'
+  size?: 'sm' | 'md' | 'lg'
+  rounded?: boolean
+}
+
+// ✅ UTILITY TYPES
+export type EventHandler<T = Event> = (event: T) => void
+export type AsyncFunction<T = void> = () => Promise<T>
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
 }

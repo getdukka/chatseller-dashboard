@@ -1,4 +1,4 @@
-// server/api/[...slug].ts.disabled
+// server/api/[...slug].ts
 export default defineEventHandler(async (event) => {
   const url = getRouterParam(event, 'slug') || ''
   const method = getMethod(event)

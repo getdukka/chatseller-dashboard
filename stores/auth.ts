@@ -1,7 +1,36 @@
-// stores/auth.ts - STORE AUTHENTIFICATION COMPATIBLE AVEC USEAPI.TS
+// stores/auth.ts - STORE AUTHENTIFICATION CORRIGÉ
 
 import { defineStore } from 'pinia'
-import type { User, AuthState, LoginCredentials, RegisterData, AuthResponse } from '~/types'
+
+// ✅ TYPES LOCAUX POUR ÉVITER LES IMPORTS CIRCULAIRES
+interface User {
+  id: string
+  email: string
+  name?: string
+  shopId?: string
+  shop_id?: string
+  avatar?: string
+  role?: 'admin' | 'user'
+  createdAt?: string
+  updatedAt?: string
+}
+
+interface AuthState {
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  loading: boolean
+}
+
+interface LoginCredentials {
+  email: string
+  password: string
+}
+
+interface RegisterData extends LoginCredentials {
+  name: string
+  confirmPassword?: string
+}
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
@@ -31,25 +60,38 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    // ✅ ACTION LOGIN - Utilise useApi existant
+    // ✅ ACTION LOGIN - VERSION CORRIGÉE
     async login(credentials: LoginCredentials) {
       this.loading = true
       
       try {
         console.log('🔐 Store: Tentative de login pour:', credentials.email)
         
-        const api = useApi()
-        const response = await api.auth.login(credentials)
+        // ✅ UTILISATION DIRECTE DE $FETCH AU LIEU DE useApi
+        const config = useRuntimeConfig()
+        const baseURL = config.public.apiBaseUrl
         
+        const response = await $fetch(`${baseURL}/api/auth/login`, {
+          method: 'POST',
+          body: credentials,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }) as any
+
         console.log('📡 Store: Réponse login:', response)
 
         if (response.success && response.data) {
+          // Sauvegarder le token
+          if (process.client) {
+            localStorage.setItem('chatseller_token', response.data.token)
+            localStorage.setItem('chatseller_user', JSON.stringify(response.data.user))
+          }
+          
           // Utiliser les données de AuthResponse
           this.setUser(response.data.user as User, response.data.token)
           
-          // Redirection vers le dashboard
-          await navigateTo('/dashboard')
-          return { success: true }
+          return { success: true, data: response.data }
         } else {
           throw new Error(response.error || 'Erreur de connexion')
         }
@@ -57,32 +99,40 @@ export const useAuthStore = defineStore('auth', {
         console.error('❌ Store: Erreur login:', error)
         return { 
           success: false, 
-          error: error instanceof Error ? error.message : 'Erreur de connexion' 
+          error: error.data?.message || error.message || 'Erreur de connexion' 
         }
       } finally {
         this.loading = false
       }
     },
 
-    // ✅ ACTION REGISTER - Utilise useApi existant
+    // ✅ ACTION REGISTER - VERSION CORRIGÉE
     async register(data: RegisterData) {
       this.loading = true
       
       try {
-        const api = useApi()
-        const response = await api.auth.register({
-          email: data.email,
-          password: data.password,
-          name: data.name
-        })
+        const config = useRuntimeConfig()
+        const baseURL = config.public.apiBaseUrl
+        
+        const response = await $fetch(`${baseURL}/api/auth/register`, {
+          method: 'POST',
+          body: {
+            email: data.email,
+            password: data.password,
+            name: data.name
+          },
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }) as any
 
         if (response.success) {
           // Auto-login après inscription
-          await this.login({
+          const loginResult = await this.login({
             email: data.email,
             password: data.password
           })
-          return { success: true }
+          return loginResult
         } else {
           throw new Error(response.error || 'Erreur lors de l\'inscription')
         }
@@ -90,7 +140,7 @@ export const useAuthStore = defineStore('auth', {
         console.error('❌ Store: Erreur register:', error)
         return { 
           success: false, 
-          error: error instanceof Error ? error.message : 'Erreur lors de l\'inscription' 
+          error: error.data?.message || error.message || 'Erreur lors de l\'inscription' 
         }
       } finally {
         this.loading = false
@@ -102,8 +152,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       
       try {
-        // TODO: Ajouter resetPassword à useApi si nécessaire
-        // Pour l'instant, simulation
+        // TODO: Implémenter avec l'API réelle
         await new Promise(resolve => setTimeout(resolve, 1000))
         
         return { 
@@ -121,17 +170,19 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // ✅ ACTION LOGOUT - Utilise useApi existant
+    // ✅ ACTION LOGOUT - VERSION CORRIGÉE
     async logout() {
       try {
-        const api = useApi()
-        api.auth.logout() // Nettoie le token localStorage
+        // Nettoyer le localStorage
+        if (process.client) {
+          localStorage.removeItem('chatseller_token')
+          localStorage.removeItem('chatseller_user')
+        }
       } catch (error) {
         console.warn('❌ Store: Erreur lors du logout:', error)
       } finally {
         // Nettoyage local dans tous les cas
         this.clearAuth()
-        await navigateTo('/login')
       }
     },
 
@@ -160,34 +211,52 @@ export const useAuthStore = defineStore('auth', {
       console.log('🧹 Store: Session nettoyée')
     },
 
-    // ✅ ACTION RESTORE SESSION - Utilise useApi existant
+    // ✅ ACTION RESTORE SESSION - VERSION CORRIGÉE
     async restoreSession() {
       if (!process.client) return
 
       try {
-        const api = useApi()
-        const token = api.getAuthToken()
+        const token = localStorage.getItem('chatseller_token')
+        const userData = localStorage.getItem('chatseller_user')
 
-        if (token) {
+        if (token && userData) {
           console.log('🔄 Store: Tentative de restauration de session')
           
-          // Vérification de la validité du token
-          const response = await api.auth.verify()
+          try {
+            // Vérifier la validité du token avec l'API
+            const config = useRuntimeConfig()
+            const baseURL = config.public.apiBaseUrl
+            
+            const response = await $fetch(`${baseURL}/api/auth/verify`, {
+              method: 'POST',
+              body: { token },
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            }) as any
 
-          if (response.success && response.data) {
-            this.setUser(response.data.user, token)
-            console.log('✅ Store: Session restaurée avec succès')
-          } else {
+            if (response.success && response.data) {
+              const user = JSON.parse(userData)
+              this.setUser(user, token)
+              console.log('✅ Store: Session restaurée avec succès')
+            } else {
+              throw new Error('Token invalide')
+            }
+          } catch (verifyError) {
             console.log('❌ Store: Token invalide, nettoyage...')
             this.clearAuth()
-            api.removeAuthToken()
+            localStorage.removeItem('chatseller_token')
+            localStorage.removeItem('chatseller_user')
           }
         }
       } catch (error) {
         console.error('❌ Store: Erreur restore session:', error)
         this.clearAuth()
-        const api = useApi()
-        api.removeAuthToken()
+        if (process.client) {
+          localStorage.removeItem('chatseller_token')
+          localStorage.removeItem('chatseller_user')
+        }
       }
     },
 
@@ -196,13 +265,10 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       
       try {
-        // TODO: Ajouter updateProfile à useApi si nécessaire
-        // Pour l'instant, mise à jour locale
         if (this.user) {
           this.user = { ...this.user, ...data }
           
-          // Persistence dans localStorage via useApi
-          const api = useApi()
+          // Persistence dans localStorage
           if (process.client) {
             localStorage.setItem('chatseller_user', JSON.stringify(this.user))
           }
@@ -223,15 +289,33 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // ✅ ACTION REFRESH TOKEN - Utilise useApi existant
+    // ✅ ACTION REFRESH TOKEN
     async refreshToken() {
       try {
-        const api = useApi()
-        const response = await api.auth.refresh()
+        const token = process.client ? localStorage.getItem('chatseller_token') : null
+        if (!token) {
+          throw new Error('Pas de token à rafraîchir')
+        }
+
+        const config = useRuntimeConfig()
+        const baseURL = config.public.apiBaseUrl
+        
+        const response = await $fetch(`${baseURL}/api/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }) as any
         
         if (response.success && response.data) {
-          // Le token est automatiquement mis à jour par useApi
           this.token = response.data.token
+          
+          // Sauvegarder le nouveau token
+          if (process.client) {
+            localStorage.setItem('chatseller_token', response.data.token)
+          }
+          
           return { success: true }
         } else {
           throw new Error('Impossible de rafraîchir le token')
@@ -239,7 +323,6 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('❌ Store: Erreur refresh token:', error)
         this.clearAuth()
-        await navigateTo('/login')
         return { success: false }
       }
     }

@@ -1,6 +1,7 @@
-// middleware/auth.ts - AVEC IMPORTS EXPLICITES
 
-import { navigateTo } from '#app'
+// middleware/auth.ts - AVEC IMPORTS EXPLICITES CORRIGÉS
+
+import { useAuthStore } from '~/stores/auth'
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   console.log('🔒 Middleware auth: Vérification pour route:', to.path)
@@ -11,9 +12,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     return
   }
 
-  // Import dynamique du store pour éviter les erreurs SSR
   try {
-    const { useAuthStore } = await import('~/stores/auth')
     const authStore = useAuthStore()
     
     // Tentative de restauration de session si pas encore fait
@@ -37,7 +36,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     console.log('✅ Middleware auth: Authentifié, accès autorisé')
   } catch (error) {
-    console.warn('⚠️ Middleware auth: Erreur store, autorisation par défaut')
-    // En cas d'erreur, on laisse passer pour éviter de bloquer
+    console.error('❌ Middleware auth: Erreur:', error)
+    // En cas d'erreur, rediriger vers login pour sécurité
+    return navigateTo('/login')
   }
 })

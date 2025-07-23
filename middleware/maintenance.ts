@@ -1,32 +1,30 @@
-// middleware/maintenance.ts
-export default defineNuxtRouteMiddleware(async (to) => {
+// middleware/maintenance.ts - AVEC IMPORTS CORRECTS
+export default defineNuxtRouteMiddleware((to, from) => {
+  // Configuration de maintenance
   const config = useRuntimeConfig()
+  const isMaintenanceMode = config.public.environment === 'maintenance'
   
-  // Vérifier si le mode maintenance est activé
-  const maintenanceMode = config.public.maintenanceMode === 'true'
+  // Pages autorisées pendant la maintenance
+  const allowedPaths = ['/maintenance', '/health', '/api']
   
-  if (maintenanceMode) {
-    // Pages autorisées pendant la maintenance
-    const allowedPaths = ['/maintenance', '/admin', '/health']
-    const isAllowedPath = allowedPaths.some(path => to.path.startsWith(path))
+  // Vérifier si la route actuelle est autorisée
+  const isAllowedPath = allowedPaths.some(path => 
+    to.path.startsWith(path)
+  )
+  
+  // Si en mode maintenance et la route n'est pas autorisée
+  if (isMaintenanceMode && !isAllowedPath) {
+    console.log('🚧 Middleware maintenance: Mode maintenance activé')
     
-    if (!isAllowedPath) {
-      console.log('🔧 Mode maintenance activé')
-      throw createError({
-        statusCode: 503,
-        statusMessage: 'Service temporairement indisponible - Maintenance en cours'
-      })
-    }
+    // Rediriger vers la page de maintenance
+    return navigateTo('/maintenance')
   }
+  
+  // Si on essaie d'accéder à /maintenance mais que le mode n'est pas activé
+  if (!isMaintenanceMode && to.path === '/maintenance') {
+    console.log('✅ Middleware maintenance: Mode maintenance désactivé, redirection')
+    return navigateTo('/dashboard')
+  }
+  
+  console.log('✅ Middleware maintenance: Accès autorisé')
 })
-
-// Types pour TypeScript
-declare module '#app' {
-  interface PageMeta {
-    requiresRole?: {
-      roles: string[]
-      redirectTo?: string
-      strict?: boolean
-    }
-  }
-}

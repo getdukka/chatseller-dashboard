@@ -1,0 +1,128 @@
+// composables/useAuth.ts - COMPOSABLE AUTH FINAL CORRIGÉ
+
+import { useAuthStore } from '~/stores/auth'
+
+export const useAuth = () => {
+  const authStore = useAuthStore()
+
+  // ✅ GETTERS REACTIVE
+  const user = computed(() => authStore.user)
+  const isAuthenticated = computed(() => authStore.isAuthenticated)
+  const isLoggedIn = computed(() => authStore.isLoggedIn)
+  const loading = computed(() => authStore.loading)
+  const token = computed(() => authStore.token)
+  const userShopId = computed(() => authStore.userShopId)
+  const userEmail = computed(() => authStore.userEmail)
+  const userName = computed(() => authStore.userName)
+
+  // ✅ ACTIONS - AVEC NAVIGATION INTÉGRÉE
+  const login = async (credentials: { email: string; password: string }) => {
+    const result = await authStore.login(credentials)
+    
+    // Navigation après login réussi
+    if (result.success) {
+      await navigateTo('/dashboard')
+    }
+    
+    return result
+  }
+
+  const register = async (data: { email: string; password: string; name: string }) => {
+    const result = await authStore.register(data)
+    
+    // Navigation après inscription réussie
+    if (result.success) {
+      await navigateTo('/dashboard')
+    }
+    
+    return result
+  }
+
+  const logout = async () => {
+    await authStore.logout()
+    // Navigation après logout
+    await navigateTo('/login')
+  }
+
+  const resetPassword = async (email: string) => {
+    return await authStore.resetPassword(email)
+  }
+
+  const updateProfile = async (data: Partial<any>) => {
+    return await authStore.updateProfile(data)
+  }
+
+  const restoreSession = async () => {
+    return await authStore.restoreSession()
+  }
+
+  const refreshToken = async () => {
+    const result = await authStore.refreshToken()
+    
+    // Navigation vers login si refresh échoue
+    if (!result.success) {
+      await navigateTo('/login')
+    }
+    
+    return result
+  }
+
+  // ✅ UTILITAIRES
+  const requireAuth = async () => {
+    if (!isLoggedIn.value) {
+      await navigateTo('/login')
+      return false
+    }
+    return true
+  }
+
+  const requireGuest = async () => {
+    if (isLoggedIn.value) {
+      await navigateTo('/dashboard')
+      return false
+    }
+    return true
+  }
+
+  const hasPermission = (permission: string): boolean => {
+    // TODO: Implémenter la logique des permissions
+    return true
+  }
+
+  const getInitials = (name?: string): string => {
+    if (!name) return 'U'
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  return {
+    // State
+    user,
+    isAuthenticated,
+    isLoggedIn,
+    loading,
+    token,
+    userShopId,
+    userEmail,
+    userName,
+    
+    // Actions
+    login,
+    register,
+    logout,
+    resetPassword,
+    updateProfile,
+    restoreSession,
+    refreshToken,
+    
+    // Utilities
+    requireAuth,
+    requireGuest,
+    hasPermission,
+    getInitials
+  }
+}

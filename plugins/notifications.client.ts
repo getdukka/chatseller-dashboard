@@ -1,19 +1,16 @@
-// plugins/notifications.client.ts
-export default defineNuxtPlugin(() => {
-  const notifications = ref<Array<{
-    id: string
-    type: 'success' | 'error' | 'warning' | 'info'
-    title?: string
-    message: string
-    duration?: number
-  }>>([])
+// plugins/notifications.client.ts 
+interface Notification {
+  id: string
+  type: 'success' | 'error' | 'warning' | 'info'
+  title?: string
+  message: string
+  duration?: number
+}
 
-  const addNotification = (notification: {
-    type: 'success' | 'error' | 'warning' | 'info'
-    title?: string
-    message: string
-    duration?: number
-  }) => {
+export default defineNuxtPlugin(() => {
+  const notifications = ref<Notification[]>([])
+
+  const addNotification = (notification: Omit<Notification, 'id'>) => {
     const id = Date.now().toString()
     const newNotification = { ...notification, id }
     notifications.value.push(newNotification)
@@ -32,7 +29,11 @@ export default defineNuxtPlugin(() => {
     }
   }
 
-  const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', title?: string) => {
+  const showNotification = (
+    message: string, 
+    type: 'success' | 'error' | 'warning' | 'info' = 'info', 
+    title?: string
+  ) => {
     addNotification({ message, type, title })
   }
 

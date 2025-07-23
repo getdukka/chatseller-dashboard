@@ -1,87 +1,53 @@
-<!-- components/ui/Modal.vue -->
+<!-- components/ui/Modal.vue - COMPOSANT MODAL CORRIGÉ -->
 <template>
-  <div>
-    <!-- Overlay -->
-    <Transition
-      enter-active-class="transition-opacity duration-300"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-300"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+  <Teleport to="body">
+    <div
+      v-if="show"
+      class="fixed inset-0 z-50 overflow-y-auto"
+      @click="handleOverlayClick"
     >
-      <div
-        v-if="show"
-        class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40"
-        @click="closeOnOverlay && $emit('close')"
-      />
-    </Transition>
-
-    <!-- Modal -->
-    <Transition
-      enter-active-class="transition-all duration-300"
-      enter-from-class="opacity-0 scale-95 translate-y-4"
-      enter-to-class="opacity-100 scale-100 translate-y-0"
-      leave-active-class="transition-all duration-300"
-      leave-from-class="opacity-100 scale-100 translate-y-0"
-      leave-to-class="opacity-0 scale-95 translate-y-4"
-    >
-      <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      >
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+      
+      <!-- Modal -->
+      <div class="flex min-h-full items-center justify-center p-4">
         <div
           :class="[
-            'relative bg-white rounded-lg shadow-xl w-full max-h-screen overflow-hidden',
-            sizeClasses
+            'relative bg-white rounded-lg shadow-xl transition-all w-full max-w-lg',
+            sizeClasses[size],
+            {
+              'max-h-96 overflow-y-auto': scrollable
+            }
           ]"
+          @click.stop
         >
           <!-- Header -->
-          <div
-            v-if="title || $slots.header || closable"
-            class="flex items-center justify-between p-6 border-b border-gray-200"
-          >
-            <div class="flex-1">
-              <slot name="header">
-                <h3 v-if="title" class="text-lg font-semibold text-gray-900">
-                  {{ title }}
-                </h3>
-              </slot>
-            </div>
-            
+          <div v-if="title || closable" class="flex items-center justify-between p-6 border-b border-gray-200">
+            <h3 v-if="title" class="text-lg font-medium text-gray-900">
+              {{ title }}
+            </h3>
             <button
               v-if="closable"
-              @click="$emit('close')"
-              class="ml-4 text-gray-400 hover:text-gray-600 transition-colors"
+              @click="handleClose"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
           </div>
-
-          <!-- Body -->
-          <div :class="bodyClasses">
+          
+          <!-- Content -->
+          <div class="p-6">
             <slot />
-          </div>
-
-          <!-- Footer -->
-          <div
-            v-if="$slots.footer"
-            class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50"
-          >
-            <slot name="footer" />
           </div>
         </div>
       </div>
-    </Transition>
-  </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-// ✅ IMPORTS EXPLICITES
-import { computed, onMounted, onUnmounted, watch } from 'vue'
-
 interface Props {
   show: boolean
   title?: string
@@ -92,7 +58,7 @@ interface Props {
 }
 
 interface Emits {
-  close: []
+  (e: 'close'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -104,42 +70,25 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-// Classes dynamiques selon la taille
-const sizeClasses = computed(() => {
-  const sizes = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    full: 'max-w-full mx-4'
+const sizeClasses = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-2xl',
+  full: 'max-w-7xl'
+}
+
+const handleClose = () => {
+  emit('close')
+}
+
+const handleOverlayClick = () => {
+  if (props.closeOnOverlay) {
+    handleClose()
   }
-  return sizes[props.size]
-})
+}
 
-// Classes pour le body
-const bodyClasses = computed(() => {
-  const base = 'p-6'
-  return props.scrollable 
-    ? `${base} overflow-y-auto max-h-96`
-    : base
-})
-
-// Gestion de l'échappement
-onMounted(() => {
-  const handleEscape = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && props.show && props.closable) {
-      emit('close')
-    }
-  }
-  
-  document.addEventListener('keydown', handleEscape)
-  
-  onUnmounted(() => {
-    document.removeEventListener('keydown', handleEscape)
-  })
-})
-
-// Prévention du scroll du body quand modal ouverte
+// Empêcher le scroll du body quand la modal est ouverte
 watch(() => props.show, (isOpen) => {
   if (process.client) {
     if (isOpen) {
@@ -147,6 +96,13 @@ watch(() => props.show, (isOpen) => {
     } else {
       document.body.style.overflow = ''
     }
+  }
+})
+
+// Nettoyage au démontage
+onUnmounted(() => {
+  if (process.client) {
+    document.body.style.overflow = ''
   }
 })
 </script>

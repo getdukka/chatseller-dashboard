@@ -1,20 +1,15 @@
-// plugins/auth.client.ts
+// plugins/auth.client.ts - VERSION SIMPLIFIÉE
 export default defineNuxtPlugin(async () => {
-  const authStore = useAuthStore()
-
-  // Initialiser l'authentification au démarrage de l'application
-  try {
-    await authStore.initializeAuth()
-  } catch (error) {
-    console.error('Erreur lors de l\'initialisation de l\'authentification:', error)
-  }
-
   // Intercepter les erreurs 401 globalement
   if (process.client) {
     window.addEventListener('unhandledrejection', (event) => {
       if (event.reason?.statusCode === 401) {
-        authStore.logout()
+        localStorage.removeItem('chatseller_token')
+        localStorage.removeItem('chatseller_user')
+        window.location.href = '/login'
       }
     })
+    
+    console.log('✅ Plugin auth: Intercepteur d\'erreurs 401 installé')
   }
 })

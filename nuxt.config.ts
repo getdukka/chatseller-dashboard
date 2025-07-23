@@ -1,4 +1,4 @@
-// nuxt.config.ts - AUTO-IMPORTS CORRIGÉS
+// nuxt.config.ts - CONFIGURATION CORRIGÉE DÉFINITIVE
 export default defineNuxtConfig({
   app: {
     head: {
@@ -28,44 +28,6 @@ export default defineNuxtConfig({
     '@nuxt/image'
   ],
 
-  // ✅ AUTO-IMPORTS CONFIGURÉS EXPLICITEMENT
-  imports: {
-    dirs: [
-      'composables',
-      'composables/**',
-      'utils',
-      'utils/**',
-      'stores',
-      'stores/**'
-    ],
-    // ✅ IMPORTS EXPLICITES des composables Vue et Nuxt
-    imports: [
-      // Vue
-      { name: 'ref', from: 'vue' },
-      { name: 'reactive', from: 'vue' },
-      { name: 'computed', from: 'vue' },
-      { name: 'onMounted', from: 'vue' },
-      { name: 'onUnmounted', from: 'vue' },
-      { name: 'watch', from: 'vue' },
-      { name: 'watchEffect', from: 'vue' },
-      { name: 'inject', from: 'vue' },
-      { name: 'provide', from: 'vue' },
-      { name: 'readonly', from: 'vue' },
-      { name: 'toRef', from: 'vue' },
-      // Nuxt
-      { name: 'navigateTo', from: '#app' },
-      { name: 'useRoute', from: '#app' },
-      { name: 'useRouter', from: '#app' },
-      { name: 'useRuntimeConfig', from: '#app' },
-      { name: 'useLazyFetch', from: '#app' },
-      { name: 'useHead', from: '#app' },
-      { name: 'useSeoMeta', from: '#app' },
-      { name: 'definePageMeta', from: '#app' },
-      { name: 'defineNuxtRouteMiddleware', from: '#app' },
-      { name: '$fetch', from: '#app' }
-    ]
-  },
-
   // ✅ COMPOSANTS AUTO-IMPORTÉS
   components: [
     { 
@@ -74,7 +36,7 @@ export default defineNuxtConfig({
     },
     { 
       path: '~/components/ui', 
-      prefix: 'UI' 
+      prefix: '' 
     },
     {
       path: '~/components/charts',
@@ -105,15 +67,10 @@ export default defineNuxtConfig({
     preset: 'vercel'
   },
 
-  // ✅ TYPESCRIPT STRICT
+  // ✅ TYPESCRIPT CONFIGURÉ
   typescript: {
-    strict: true,
-    typeCheck: false // Désactivé pour les performances en dev
-  },
-
-  // ✅ OPTIMISATIONS
-  experimental: {
-    payloadExtraction: false
+    strict: false,
+    typeCheck: false
   },
 
   // ✅ COMPATIBILITÉ

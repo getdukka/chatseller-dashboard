@@ -1,25 +1,31 @@
-// middleware/admin.ts
-export default defineNuxtRouteMiddleware(async (to) => {
-  // Éviter l'exécution côté serveur
+// middleware/admin.ts - AVEC IMPORTS EXPLICITES
+import { useAuthStore } from '~/stores/auth'
+
+export default defineNuxtRouteMiddleware(async (to, from) => {
+  // Ne pas exécuter côté serveur
   if (process.server) return
 
-  const authStore = useAuthStore()
-  
-  // Vérifier d'abord l'authentification
-  if (!authStore.isAuthenticated || !authStore.isSessionValid) {
-    console.log('🔒 Accès admin refusé - Utilisateur non authentifié')
-    await navigateTo('/login')
-    return
-  }
+  try {
+    const authStore = useAuthStore()
 
-  // Vérifier les permissions admin
-  if (!authStore.isAdmin) {
-    console.log('🚫 Accès admin refusé - Permissions insuffisantes')
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'Accès interdit - Permissions administrateur requises'
-    })
-  }
+    // Vérifier si l'utilisateur est connecté
+    if (!authStore.isLoggedIn) {
+      return navigateTo('/login')
+    }
 
-  console.log('👑 Accès admin autorisé pour:', authStore.userFullName)
+    // Vérifier les permissions admin
+    const user = authStore.user
+    if (!user || user.role !== 'admin') {
+      console.log('⛔ Middleware admin: Accès refusé - role insuffisant')
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Accès refusé - Permissions insuffisantes'
+      })
+    }
+
+    console.log('✅ Middleware admin: Accès autorisé')
+  } catch (error) {
+    console.error('❌ Middleware admin: Erreur:', error)
+    return navigateTo('/dashboard')
+  }
 })
