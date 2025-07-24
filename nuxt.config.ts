@@ -1,78 +1,122 @@
-// nuxt.config.ts - CONFIGURATION CORRIGÉE DÉFINITIVE
+// nuxt.config.ts - CONFIGURATION FINALE CORRIGÉE
 export default defineNuxtConfig({
-  app: {
-    head: {
-      title: 'ChatSeller - Dashboard',
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { 
-          name: 'description', 
-          content: 'Dashboard professionnel pour gérer votre Agent IA Commercial ChatSeller' 
-        }
-      ],
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
-        }
-      ]
-    }
-  },
-
+  devtools: { enabled: true },
+  
   // ✅ MODULES ESSENTIELS
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
-    '@nuxt/image'
+    '@nuxtjs/google-fonts',
+    '@vueuse/nuxt'
   ],
 
-  // ✅ COMPOSANTS AUTO-IMPORTÉS
-  components: [
-    { 
-      path: '~/components', 
-      pathPrefix: false 
-    },
-    { 
-      path: '~/components/ui', 
-      prefix: '' 
-    },
-    {
-      path: '~/components/charts',
-      prefix: 'Chart'
-    }
-  ],
-
+  // ✅ CSS
   css: ['~/assets/css/main.css'],
 
-  // ✅ BUILD OPTIMISÉ
-  build: {
-    transpile: ['vue-chartjs', 'chart.js']
-  },
-
-  // ✅ VARIABLES D'ENVIRONNEMENT
-  runtimeConfig: {
-    apiSecret: process.env.API_SECRET,
-    jwtSecret: process.env.JWT_SECRET,
-    public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'https://chatseller-api-production.up.railway.app',
-      appUrl: process.env.APP_URL || 'https://dashboard.chatseller.app',
-      environment: process.env.NODE_ENV || 'development'
+  // ✅ GOOGLE FONTS
+  googleFonts: {
+    families: {
+      Inter: [400, 500, 600, 700]
     }
   },
 
-  // ✅ CONFIGURATION NITRO
-  nitro: {
-    preset: 'vercel'
-  },
-
-  // ✅ TYPESCRIPT CONFIGURÉ
+  // ✅ TYPESCRIPT - CONFIGURATION PERMISSIVE POUR ÉVITER LES ERREURS
   typescript: {
-    strict: false,
-    typeCheck: false
+    strict: false,  // ✅ Désactiver temporairement le mode strict
+    typeCheck: false // ✅ Désactiver la vérification de types au build
   },
 
-  // ✅ COMPATIBILITÉ
-  compatibilityDate: '2025-07-23'
+  // ✅ RUNTIME CONFIG
+  runtimeConfig: {
+    // Privé (serveur seulement)
+    jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-chatseller-dashboard',
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    
+    // Public (client + serveur)
+    public: {
+      apiBaseUrl: process.env.API_BASE_URL || 'https://chatseller-api-production.up.railway.app',
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      appUrl: process.env.APP_URL || 'http://localhost:3000'
+    }
+  },
+
+  // ✅ AUTO-IMPORTS CORRIGÉS - SOLUTION POUR useAuthStore
+  imports: {
+    dirs: [
+      'composables',
+      'composables/**',
+      'stores',
+      'stores/**',
+      'utils',
+      'utils/**'
+    ]
+  },
+
+  // ✅ TRANSPILATION POUR ÉVITER LES ERREURS
+  build: {
+    transpile: ['@heroicons/vue']
+  },
+
+  // ✅ VITE OPTIMIZATIONS
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@heroicons/vue/24/outline',
+        '@heroicons/vue/24/solid',
+        'pinia'
+      ]
+    },
+    define: {
+      // ✅ Définir des variables globales pour éviter les erreurs
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+    }
+  },
+
+  // ✅ PINIA CONFIGURATION SPÉCIFIQUE
+  pinia: {
+    autoImports: [
+      'defineStore',
+      'storeToRefs',
+      'acceptHMRUpdate'
+    ]
+  },
+
+  // ✅ APP CONFIG
+  app: {
+    head: {
+      title: 'ChatSeller Dashboard',
+      meta: [
+        { name: 'description', content: 'Agent IA Commercial - Dashboard' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { charset: 'utf-8' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ]
+    }
+  },
+
+  // ✅ SSR CONFIG
+  ssr: true,
+
+  // ✅ NITRO CONFIG
+  nitro: {
+    experimental: {
+      wasm: true
+    }
+  },
+
+  // ✅ ROUTAGE
+  router: {
+    options: {
+      strict: false
+    }
+  },
+
+  // ✅ EXPERIMENTAL FEATURES
+  experimental: {
+    payloadExtraction: false // ✅ Désactiver pour éviter les erreurs hydratation
+  }
 })

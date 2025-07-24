@@ -1,20 +1,72 @@
-// plugins/global-composables.client.ts 
+import { useAnalyticsStore } from "~~/stores/analytics"
+import { useAuthStore } from "~~/stores/auth"
+import { useConversationsStore } from "~~/stores/conversations"
+import { useKnowledgeBaseStore } from "~~/stores/knowledgeBase"
+import { useOrdersStore } from "~~/stores/orders"
+import { useSettingsStore } from "~~/stores/settings"
 
+// plugins/global-composables.client.ts - CORRIGÉ
 export default defineNuxtPlugin(() => {
-  // Force l'enregistrement global des composables
+  // Force l'enregistrement global des stores et composables
   if (process.client) {
     try {
-      // Importer et rendre disponibles les composables
-      const { useAuth } = useAuth()
-      const { useApi } = useApi()
+      console.log('🔄 Global composables plugin: Initialisation...')
       
-      // Les attacher à window pour debugging et accès global
-      ;(window as any).useAuth = useAuth
-      ;(window as any).useApi = useApi
+      // ✅ CORRECTION: Importer les STORES, pas les composables de façon circulaire
+      const authStore = useAuthStore()
+      const apiComposable = useApi()
       
-      console.log('✅ Global composables plugin: useAuth et useApi sont disponibles')
+      console.log('✅ AuthStore:', authStore ? 'disponible' : 'erreur')
+      console.log('✅ API Composable:', apiComposable ? 'disponible' : 'erreur')
+      
+      // ✅ Tenter d'importer les autres stores si disponibles
+      try {
+        const analyticsStore = useAnalyticsStore()
+        console.log('✅ Analytics Store: disponible')
+      } catch (e) {
+        console.warn('⚠️ Analytics Store: non disponible')
+      }
+      
+      try {
+        const conversationsStore = useConversationsStore()
+        console.log('✅ Conversations Store: disponible')
+      } catch (e) {
+        console.warn('⚠️ Conversations Store: non disponible')
+      }
+      
+      try {
+        const knowledgeBaseStore = useKnowledgeBaseStore()
+        console.log('✅ Knowledge Base Store: disponible')
+      } catch (e) {
+        console.warn('⚠️ Knowledge Base Store: non disponible')
+      }
+      
+      try {
+        const ordersStore = useOrdersStore()
+        console.log('✅ Orders Store: disponible')
+      } catch (e) {
+        console.warn('⚠️ Orders Store: non disponible')
+      }
+      
+      try {
+        const settingsStore = useSettingsStore()
+        console.log('✅ Settings Store: disponible')
+      } catch (e) {
+        console.warn('⚠️ Settings Store: non disponible')
+      }
+
+      // ✅ Les attacher à window pour debugging seulement
+      if (typeof window !== 'undefined') {
+        (window as any).__CHATSELLER_STORES__ = {
+          auth: authStore,
+          api: apiComposable
+        }
+        console.log('🔧 Debug: Stores disponibles via window.__CHATSELLER_STORES__')
+      }
+
+      console.log('✅ Global composables plugin: Initialisation réussie')
     } catch (error) {
-      console.error('❌ Global composables plugin: Erreur lors de l\'import des composables:', error)
+      console.error('❌ Global composables plugin: Erreur lors de l\'import:', error)
     }
   }
 })

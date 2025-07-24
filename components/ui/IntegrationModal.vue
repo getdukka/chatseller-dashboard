@@ -1,4 +1,4 @@
-<!-- components/ui/IntegrationModal.vue - CORRIGÉ -->
+<!-- components/ui/IntegrationModal.vue - CORRIGÉ COMPLET -->
 <template>
   <Modal
     :show="true"
@@ -116,7 +116,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useAuth } from '~/composables/useAuth'
 
 // ✅ INTERFACES LOCALES
 interface Platform {
@@ -147,36 +146,7 @@ const platforms: Platform[] = [
   { id: 'wix', name: 'Wix', icon: '🎨' }
 ]
 
-// ✅ COMPUTED
-const integrationCode = computed(() => {
-  if (!selectedPlatform.value) return ''
-  
-  const shopId = auth.userShopId.value || 'YOUR_SHOP_ID'
-  
-  switch (selectedPlatform.value) {
-    case 'html':
-      return getHtmlCode(shopId)
-    case 'wordpress':
-      return getWordPressCode(shopId)
-    case 'shopify':
-      return getShopifyCode(shopId)
-    case 'woocommerce':
-      return getWooCommerceCode(shopId)
-    case 'squarespace':
-      return getSquarespaceCode(shopId)
-    case 'wix':
-      return getWixCode(shopId)
-    default:
-      return getHtmlCode(shopId)
-  }
-})
-
-// ✅ METHODS
-const getPlatformName = (platformId: string): string => {
-  const platform = platforms.find(p => p.id === platformId)
-  return platform ? platform.name : ''
-}
-
+// ✅ METHODS - TEMPLATE LITERALS CORRIGÉS
 const getHtmlCode = (shopId: string): string => {
   return `<!-- ChatSeller Widget -->
 <script>
@@ -248,6 +218,36 @@ const getWixCode = (shopId: string): string => {
   document.head.appendChild(script);
 })();
 </script>`
+}
+
+// ✅ COMPUTED
+const integrationCode = computed(() => {
+  if (!selectedPlatform.value) return ''
+  
+  const shopId = auth.userShopId.value || 'YOUR_SHOP_ID'
+  
+  switch (selectedPlatform.value) {
+    case 'html':
+      return getHtmlCode(shopId)
+    case 'wordpress':
+      return getWordPressCode(shopId)
+    case 'shopify':
+      return getShopifyCode(shopId)
+    case 'woocommerce':
+      return getWooCommerceCode(shopId)
+    case 'squarespace':
+      return getSquarespaceCode(shopId)
+    case 'wix':
+      return getWixCode(shopId)
+    default:
+      return getHtmlCode(shopId)
+  }
+})
+
+// ✅ METHODS ADDITIONNELS
+const getPlatformName = (platformId: string): string => {
+  const platform = platforms.find(p => p.id === platformId)
+  return platform ? platform.name : ''
 }
 
 const getInstructions = (platformId: string): string => {

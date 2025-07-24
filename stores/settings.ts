@@ -1,6 +1,8 @@
 // stores/settings.ts
 import { defineStore } from 'pinia'
 import type { Shop } from '~/composables/useApi'
+import { useAnalytics } from './analytics'
+import { useAuthStore } from './auth'
 
 interface AgentSettings {
   agentName: string
@@ -89,7 +91,7 @@ export const useSettingsStore = defineStore('settings', {
       if (!state.settings?.businessHours?.enabled) return true
       
       const now = new Date()
-      const dayName = now.toLocaleDateString('en-US', { weekday: 'lowercase' }) as keyof WeeklySchedule
+      const dayName = now.toLocaleDateString('en-US', { weekday: 'short' }) as keyof WeeklySchedule
       const schedule = state.settings.businessHours.schedule[dayName]
       
       if (!schedule.enabled) return false

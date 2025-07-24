@@ -1,4 +1,4 @@
-<!-- components/ui/KnowledgeEditModal.vue - TYPES CORRIGÉS -->
+<!-- components/ui/KnowledgeEditModal.vue - TYPES ENTIÈREMENT CORRIGÉS -->
 <template>
   <Modal
     :show="true"
@@ -163,9 +163,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 
-// ✅ TYPES LOCAUX SANS GÉNÉRIQUES
-interface KnowledgeItemLocal {
-  id?: string
+// ✅ TYPES LOCAUX CORRIGÉS - AVEC PROPRIÉTÉ ID OPTIONNELLE
+interface KnowledgeItemForm {
+  id?: string               // ✅ AJOUT DE LA PROPRIÉTÉ ID OPTIONNELLE
   title: string
   content: string
   category?: string
@@ -176,27 +176,27 @@ interface KnowledgeItemLocal {
 }
 
 interface Props {
-  item?: KnowledgeItemLocal | null
+  item?: KnowledgeItemForm | null
 }
 
 interface Emits {
   (e: 'close'): void
-  (e: 'save', item: any): void
+  (e: 'save', item: KnowledgeItemForm): void  // ✅ TYPE CORRIGÉ
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-// ✅ REACTIVE DATA SANS TYPES GÉNÉRIQUES
+// ✅ REACTIVE DATA AVEC TYPES CORRECTS
 const saving = ref(false)
 const error = ref('')
 const tagsInput = ref('')
 
-const form = ref({
+const form = ref<KnowledgeItemForm>({
   title: '',
   content: '',
   category: '',
-  tags: [] as string[],
+  tags: [],
   isActive: true,
   type: 'manual'
 })
@@ -233,17 +233,17 @@ const handleSave = async () => {
   error.value = ''
   
   try {
-    // Nettoyer les données avant l'envoi
-    const dataToSave = {
-      title: form.value.title?.trim(),
-      content: form.value.content?.trim(),
-      category: form.value.category || undefined,
-      tags: form.value.tags?.length ? form.value.tags : undefined,
-      isActive: form.value.isActive,
-      type: 'manual'
+    // ✅ PRÉPARATION DES DONNÉES AVEC TYPE CORRIGÉ
+    const dataToSave: KnowledgeItemForm = {
+      title: form.value.title?.trim() || '',
+      content: form.value.content?.trim() || '',
+      category: form.value.category || '',
+      tags: form.value.tags || [],
+      isActive: form.value.isActive !== undefined ? form.value.isActive : true,
+      type: form.value.type || 'manual'
     }
 
-    // Si c'est une modification, inclure l'ID
+    // ✅ SI MODIFICATION, INCLURE L'ID (plus d'erreur TypeScript)
     if (props.item?.id) {
       dataToSave.id = props.item.id
     }

@@ -1,6 +1,7 @@
 // stores/analytics.ts
 import { defineStore } from 'pinia'
 import type { AnalyticsData } from '~/composables/useApi'
+import { useAuthStore } from './auth'
 
 interface AnalyticsState {
   data: AnalyticsData | null

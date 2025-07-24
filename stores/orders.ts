@@ -1,6 +1,7 @@
 // stores/orders.ts
 import { defineStore } from 'pinia'
 import type { Order, OrderItem } from '~/composables/useApi'
+import { useAuthStore } from './auth'
 
 interface OrdersState {
   orders: Order[]

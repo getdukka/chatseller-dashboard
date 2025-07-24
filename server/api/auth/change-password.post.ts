@@ -1,8 +1,14 @@
-// server/api/auth/change-password.post.ts 
+// server/api/auth/change-password.post.ts
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { createClient } from '@supabase/supabase-js'
 
-// Fonctions utilitaires mockées (à implémenter selon votre base de données)
+// Configuration Supabase
+const supabaseUrl = process.env.SUPABASE_URL!
+const supabaseKey = process.env.SUPABASE_ANON_KEY!
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Fonctions utilitaires
 async function getCurrentUser(event: any) {
   const authHeader = getHeader(event, 'authorization')
   if (!authHeader) {
@@ -17,12 +23,19 @@ async function getCurrentUser(event: any) {
   
   try {
     const decoded = jwt.verify(token, config.jwtSecret) as any
-    // TODO: Récupérer l'utilisateur depuis votre base de données
-    return {
-      id: decoded.userId,
-      email: decoded.email,
-      hashed_password: 'fake_hashed_password' // À remplacer par la vraie requête DB
+    
+    // Récupérer l'utilisateur depuis Supabase
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', decoded.userId)
+      .single()
+
+    if (error || !user) {
+      throw new Error('Utilisateur introuvable')
     }
+
+    return user
   } catch (error) {
     throw createError({
       statusCode: 401,
@@ -31,21 +44,8 @@ async function getCurrentUser(event: any) {
   }
 }
 
-async function validatePassword(password: string, hashedPassword: string) {
+async function validatePassword(password: string, hashedPassword: string): Promise<boolean> {
   return await bcrypt.compare(password, hashedPassword)
-}
-
-function getSupabaseClient() {
-  // TODO: Retourner votre client Supabase configuré
-  return {
-    from: (table: string) => ({
-      update: (data: any) => ({
-        eq: (field: string, value: any) => ({
-          then: () => Promise.resolve({ error: null })
-        })
-      })
-    })
-  }
 }
 
 export default defineEventHandler(async (event) => {
@@ -79,8 +79,7 @@ export default defineEventHandler(async (event) => {
     // Hasher le nouveau mot de passe
     const newHashedPassword = await bcrypt.hash(newPassword, 10)
 
-    // Mettre à jour en base
-    const supabase = getSupabaseClient()
+    // Mettre à jour en base avec Supabase corrigé
     const { error } = await supabase
       .from('users')
       .update({ 
@@ -90,6 +89,7 @@ export default defineEventHandler(async (event) => {
       .eq('id', user.id)
 
     if (error) {
+      console.error('Supabase error:', error)
       throw createError({
         statusCode: 500,
         statusMessage: 'Erreur lors de la mise à jour du mot de passe'

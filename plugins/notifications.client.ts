@@ -1,5 +1,7 @@
-// plugins/notifications.client.ts 
-interface Notification {
+// plugins/notifications.client.ts
+import { ref, readonly } from 'vue'
+
+interface NotificationItem {
   id: string
   type: 'success' | 'error' | 'warning' | 'info'
   title?: string
@@ -8,9 +10,9 @@ interface Notification {
 }
 
 export default defineNuxtPlugin(() => {
-  const notifications = ref<Notification[]>([])
+  const notifications = ref<NotificationItem[]>([])
 
-  const addNotification = (notification: Omit<Notification, 'id'>) => {
+  const addNotification = (notification: Omit<NotificationItem, 'id'>) => {
     const id = Date.now().toString()
     const newNotification = { ...notification, id }
     notifications.value.push(newNotification)

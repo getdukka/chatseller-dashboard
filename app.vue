@@ -1,4 +1,4 @@
-<!-- app.vue -->
+<!-- app.vue - CORRIGÉ -->
 <template>
   <div id="app">
     <!-- Loading global -->
@@ -48,7 +48,6 @@
             </div>
           </div>
         </div>
-        <!-- Barre de progression pour l'auto-dismiss -->
         <div
           v-if="notification.autoHide"
           class="h-1 bg-gray-200"
@@ -92,9 +91,10 @@ import {
   InformationCircleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
+import { useAuthStore } from './stores/auth'
 
 // Types
-interface Notification {
+interface NotificationApp {
   id: string
   type: 'success' | 'error' | 'warning' | 'info'
   title: string
@@ -106,7 +106,7 @@ interface Notification {
 // État global de l'application
 const pending = ref(true)
 const isMaintenanceMode = ref(false)
-const notifications = ref<Notification[]>([])
+const notifications = ref<NotificationApp[]>([])
 
 // Initialisation de l'application
 onMounted(async () => {
@@ -134,8 +134,8 @@ onMounted(async () => {
 // GESTION DES NOTIFICATIONS
 // ===========================================
 
-const addNotification = (notification: Omit<Notification, 'id' | 'createdAt'>) => {
-  const newNotification: Notification = {
+const addNotification = (notification: Omit<NotificationApp, 'id' | 'createdAt'>) => {
+  const newNotification: NotificationApp = {
     id: Math.random().toString(36).substr(2, 9),
     createdAt: Date.now(),
     autoHide: true,
@@ -189,7 +189,7 @@ const getNotificationBarClass = (type: string) => {
   }
 }
 
-const getProgressWidth = (notification: Notification) => {
+const getProgressWidth = (notification: NotificationApp) => {
   if (!notification.autoHide) return 100
   const elapsed = Date.now() - notification.createdAt
   const total = 5000 // 5 secondes
@@ -213,13 +213,13 @@ const checkServiceStatus = async () => {
 }
 
 const initializeApplication = async () => {
-  // Initialiser les stores
-  const authStore = useAuthStore()
-  
+  // ✅ CORRECTION: Utiliser le store directement pour restoreSession
   try {
-    await authStore.initializeAuth()
+    const authStore = useAuthStore()
+    await authStore.restoreSession() // ✅ Méthode qui existe dans le store
+    console.log('✅ Session restaurée avec succès')
   } catch (error) {
-    console.error('Erreur initialisation auth:', error)
+    console.error('❌ Erreur initialisation auth:', error)
   }
 
   // Autres initialisations...
@@ -267,7 +267,7 @@ const setupErrorHandling = async () => {
 }
 
 // ===========================================
-// EXPOSITION GLOBALE (pour utilisation depuis d'autres composants)
+// EXPOSITION GLOBALE
 // ===========================================
 
 // Exposer la fonction addNotification globalement

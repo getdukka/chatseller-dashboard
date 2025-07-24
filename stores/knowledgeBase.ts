@@ -1,6 +1,8 @@
 // stores/knowledgeBase.ts
 import { defineStore } from 'pinia'
 import type { KnowledgeBaseDocument } from '~/composables/useApi'
+import { useAnalytics } from './analytics'
+import { useAuthStore } from './auth'
 
 interface KnowledgeBaseState {
   documents: KnowledgeBaseDocument[]

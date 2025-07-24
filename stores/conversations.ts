@@ -1,6 +1,7 @@
 // stores/conversations.ts
 import { defineStore } from 'pinia'
 import type { Conversation, Message } from '~/composables/useApi'
+import { useAuthStore } from './auth'
 
 interface ConversationsState {
   conversations: Conversation[]

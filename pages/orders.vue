@@ -1,4 +1,4 @@
-<!-- pages/orders.vue - ERREURS TYPESCRIPT CORRIGÉES -->
+<!-- pages/orders.vue - CORRIGÉ SANS ERREURS TYPESCRIPT -->
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -267,8 +267,39 @@
 </template>
 
 <script setup lang="ts">
-// ✅ IMPORTS EXPLICITES DES TYPES (évite l'erreur TypeScript)
-import type { Order } from '../types/index'
+// ✅ IMPORTS EXPLICITES POUR ÉVITER LES ERREURS
+import { ref, computed, onMounted } from 'vue'
+
+// ✅ TYPES LOCAUX POUR ÉVITER LES ERREURS D'IMPORT
+interface OrderItem {
+  productId?: string
+  productName: string
+  quantity: number
+  price: number
+}
+
+interface OrderLocal {
+  id: string
+  conversationId: string
+  shopId: string
+  customerInfo: {
+    name: string
+    email?: string
+    phone?: string
+    address?: string
+  }
+  items: OrderItem[]
+  totalAmount: number
+  status: 'pending' | 'confirmed' | 'cancelled'
+  createdAt: string
+  // Propriétés de compatibilité
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  customerAddress?: string
+  total?: number
+  updatedAt?: string
+}
 
 // ✅ META PAGE
 definePageMeta({
@@ -276,7 +307,7 @@ definePageMeta({
   layout: 'dashboard'
 })
 
-// ✅ COMPOSABLES
+// ✅ COMPOSABLES - SANS TYPES GÉNÉRIQUES POUR ÉVITER LES ERREURS
 const auth = useAuth()
 const api = useApi()
 
@@ -284,9 +315,9 @@ const api = useApi()
 const loading = ref<boolean>(false)
 const searchQuery = ref<string>('')
 const statusFilter = ref<string>('')
-const orders = ref<Order[]>([])
+const orders = ref<OrderLocal[]>([])
 const showOrderModal = ref<boolean>(false)
-const selectedOrder = ref<Order | null>(null)
+const selectedOrder = ref<OrderLocal | null>(null)
 
 // ✅ COMPUTED
 const filteredOrders = computed(() => {
@@ -322,23 +353,23 @@ const pendingOrders = computed(() => {
 })
 
 // ✅ METHODS - ADAPTÉS AU FORMAT useApi
-const getCustomerName = (order: Order): string => {
+const getCustomerName = (order: OrderLocal): string => {
   return order.customerName || order.customerInfo?.name || 'Client anonyme'
 }
 
-const getCustomerEmail = (order: Order): string => {
+const getCustomerEmail = (order: OrderLocal): string => {
   return order.customerEmail || order.customerInfo?.email || ''
 }
 
-const getCustomerPhone = (order: Order): string => {
+const getCustomerPhone = (order: OrderLocal): string => {
   return order.customerPhone || order.customerInfo?.phone || ''
 }
 
-const getCustomerAddress = (order: Order): string => {
+const getCustomerAddress = (order: OrderLocal): string => {
   return order.customerAddress || order.customerInfo?.address || ''
 }
 
-const getTotalAmount = (order: Order): number => {
+const getTotalAmount = (order: OrderLocal): number => {
   return order.total || order.totalAmount || 0
 }
 
@@ -346,6 +377,7 @@ const loadOrders = async () => {
   loading.value = true
   
   try {
+    // ✅ UTILISATION SANS TYPES GÉNÉRIQUES
     const response = await api.orders.list(auth.userShopId.value || undefined)
     if (response.success && response.data) {
       orders.value = response.data
@@ -379,12 +411,12 @@ const loadOrders = async () => {
   }
 }
 
-const viewOrder = (order: Order) => {
+const viewOrder = (order: OrderLocal) => {
   selectedOrder.value = order
   showOrderModal.value = true
 }
 
-const editOrder = (order: Order) => {
+const editOrder = (order: OrderLocal) => {
   // TODO: Implémenter l'édition de commande
   console.log('Éditer la commande:', order)
 }
