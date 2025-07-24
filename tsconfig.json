@@ -9,11 +9,15 @@
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "preserveWatchOutput": true,
     "types": [
       "node",
       "@types/bcrypt",
       "@types/jsonwebtoken",
-      "@types/uuid"
+      "@types/uuid",
+      "@vueuse/nuxt"
     ],
     "paths": {
       "~/*": ["./src/*"],
@@ -23,17 +27,26 @@
       "~/components/*": ["./components/*"],
       "~/composables/*": ["./composables/*"],
       "~/stores/*": ["./stores/*"],
-      "~/server/*": ["./server/*"]
+      "~/server/*": ["./server/*"],
+      "~/types/*": ["./types/*"],
+      "~/utils/*": ["./utils/*"],
+      "~/assets/*": ["./assets/*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.vue",
-    "**/*.js"
+    "**/*.js",
+    "types/**/*",
+    "composables/**/*",
+    "stores/**/*",
+    "server/**/*",
+    "utils/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    ".nuxt"
+    ".nuxt",
+    ".output"
   ]
 }

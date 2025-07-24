@@ -2,12 +2,15 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
-  // ✅ MODULES ESSENTIELS
+  // ✅ COMPATIBILITY DATE AJOUTÉ POUR ÉVITER LE WARNING
+  compatibilityDate: '2025-07-24',
+
+  // ✅ MODULES ESSENTIELS DANS LE BON ORDRE
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
-    '@nuxtjs/google-fonts',
-    '@vueuse/nuxt'
+    '@vueuse/nuxt',
+    '@nuxtjs/google-fonts'
   ],
 
   // ✅ CSS
@@ -22,8 +25,8 @@ export default defineNuxtConfig({
 
   // ✅ TYPESCRIPT - CONFIGURATION PERMISSIVE POUR ÉVITER LES ERREURS
   typescript: {
-    strict: false,  // ✅ Désactiver temporairement le mode strict
-    typeCheck: false // ✅ Désactiver la vérification de types au build
+    strict: false,
+    typeCheck: false
   },
 
   // ✅ RUNTIME CONFIG
@@ -42,7 +45,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // ✅ AUTO-IMPORTS CORRIGÉS - SOLUTION POUR useAuthStore
+  // ✅ AUTO-IMPORTS OPTIMISÉS
   imports: {
     dirs: [
       'composables',
@@ -50,13 +53,22 @@ export default defineNuxtConfig({
       'stores',
       'stores/**',
       'utils',
-      'utils/**'
+      'utils/**',
+      'types'
     ]
   },
 
-  // ✅ TRANSPILATION POUR ÉVITER LES ERREURS
+  // ✅ COMPONENTS AUTO-IMPORT
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false
+    }
+  ],
+
+  // ✅ BUILD CONFIGURATION
   build: {
-    transpile: ['@heroicons/vue']
+    transpile: ['@heroicons/vue', 'chart.js']
   },
 
   // ✅ VITE OPTIMIZATIONS
@@ -65,22 +77,25 @@ export default defineNuxtConfig({
       include: [
         '@heroicons/vue/24/outline',
         '@heroicons/vue/24/solid',
-        'pinia'
+        '@vueuse/core',
+        'pinia',
+        'chart.js'
       ]
     },
     define: {
-      // ✅ Définir des variables globales pour éviter les erreurs
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+    },
+    vue: {
+      script: {
+        defineModel: true,
+        propsDestructure: true
+      }
     }
   },
 
-  // ✅ PINIA CONFIGURATION SPÉCIFIQUE
+  // ✅ PINIA CONFIGURATION
   pinia: {
-    autoImports: [
-      'defineStore',
-      'storeToRefs',
-      'acceptHMRUpdate'
-    ]
+    storesDirs: ['./stores/**', './custom-folder/stores/**']
   },
 
   // ✅ APP CONFIG
@@ -105,6 +120,11 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       wasm: true
+    },
+    esbuild: {
+      options: {
+        target: 'es2020'
+      }
     }
   },
 
@@ -117,6 +137,14 @@ export default defineNuxtConfig({
 
   // ✅ EXPERIMENTAL FEATURES
   experimental: {
-    payloadExtraction: false // ✅ Désactiver pour éviter les erreurs hydratation
+    payloadExtraction: false,
+    typedPages: true
+  },
+
+  // ✅ HOOKS POUR ÉVITER LES ERREURS DE DÉVELOPPEMENT
+  hooks: {
+    'build:before': () => {
+      console.log('🚀 Building ChatSeller Dashboard...')
+    }
   }
 })

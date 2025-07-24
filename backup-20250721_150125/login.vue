@@ -8,7 +8,7 @@
           Connexion à votre dashboard
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
-          Gérez votre Agent IA Commercial
+          Gérez votre Vendeu
         </p>
       </div>
       

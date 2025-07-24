@@ -23,6 +23,8 @@
     "@nuxtjs/supabase": "^1.1.6",
     "@supabase/supabase-js": "^2.38.5",
     "@tailwindcss/forms": "^0.5.7",
+    "@vueuse/core": "^10.11.1",
+    "@vueuse/nuxt": "^10.11.1",
     "bcrypt": "^5.1.1",
     "chart.js": "^4.4.0",
     "chartjs-adapter-date-fns": "^3.0.0",
@@ -55,62 +57,5 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
-  },
-  "extends": "./.nuxt/tsconfig.json",
-  "compilerOptions": {
-    "strict": false,
-    "noImplicitAny": false,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "types": [
-      "node",
-      "@types/bcrypt",
-      "@types/jsonwebtoken",
-      "@types/uuid"
-    ],
-    "paths": {
-      "~/*": [
-        "./src/*"
-      ],
-      "@/*": [
-        "./src/*"
-      ],
-      "~~/*": [
-        "./*"
-      ],
-      "@@/*": [
-        "./*"
-      ],
-      "~/components/*": [
-        "./components/*"
-      ],
-      "~/composables/*": [
-        "./composables/*"
-      ],
-      "~/stores/*": [
-        "./stores/*"
-      ],
-      "~/server/*": [
-        "./server/*"
-      ],
-      "~/types/*": [
-        "./types/*"
-      ]
-    }
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.vue",
-    "**/*.js",
-    "types/global.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".nuxt"
-  ]
+  }
 }

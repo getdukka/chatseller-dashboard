@@ -324,7 +324,6 @@
 
 <script setup lang="ts">
 // ✅ IMPORTS EXPLICITES DES TYPES (évite l'erreur TypeScript)
-import type { Conversation, AnalyticsData } from '../types/index'
 
 // ✅ META PAGE
 definePageMeta({
