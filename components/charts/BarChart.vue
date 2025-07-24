@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<Props>(), {
   height: 200
 })
 
-const chartRef = ref<HTMLCanvasElement>()
+const chartRef = ref()
 let chartInstance: ChartJS<'bar'> | null = null
 
 const defaultOptions: ChartOptions<'bar'> = {

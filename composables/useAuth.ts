@@ -1,16 +1,18 @@
-// composables/useAuth.ts - COMPOSABLE AUTH FINAL CORRIGÉ
+// composables/useAuth.ts - COMPOSABLE AUTH COMPATIBLE FINAL
 
 import { useAuthStore } from '~/stores/auth'
 
 export const useAuth = () => {
   const authStore = useAuthStore()
 
-  // ✅ GETTERS REACTIVE
+  // ✅ GETTERS PINIA SONT DÉJÀ REACTIFS - PAS BESOIN DE COMPUTED()
   const user = computed(() => authStore.user)
   const isAuthenticated = computed(() => authStore.isAuthenticated)
   const isLoggedIn = computed(() => authStore.isLoggedIn)
   const loading = computed(() => authStore.loading)
   const token = computed(() => authStore.token)
+  
+  // ✅ CORRECTION CRITIQUE : Accès direct aux getters Pinia
   const userShopId = computed(() => authStore.userShopId)
   const userEmail = computed(() => authStore.userEmail)
   const userName = computed(() => authStore.userName)
@@ -27,8 +29,23 @@ export const useAuth = () => {
     return result
   }
 
-  const register = async (data: { email: string; password: string; name: string }) => {
-    const result = await authStore.register(data)
+  const register = async (data: { 
+    email: string
+    password: string
+    firstName: string
+    lastName: string
+    company: string
+    platform?: string
+    newsletter?: boolean
+  }) => {
+    // ✅ ADAPTER LES DONNÉES POUR LE STORE
+    const storeData = {
+      email: data.email,
+      password: data.password,
+      name: `${data.firstName} ${data.lastName}` // Combiner prénom et nom
+    }
+    
+    const result = await authStore.register(storeData)
     
     // Navigation après inscription réussie
     if (result.success) {
@@ -69,7 +86,7 @@ export const useAuth = () => {
 
   // ✅ UTILITAIRES
   const requireAuth = async () => {
-    if (!isLoggedIn.value) {
+    if (!authStore.isLoggedIn) {
       await navigateTo('/login')
       return false
     }
@@ -77,7 +94,7 @@ export const useAuth = () => {
   }
 
   const requireGuest = async () => {
-    if (isLoggedIn.value) {
+    if (authStore.isLoggedIn) {
       await navigateTo('/dashboard')
       return false
     }
@@ -90,7 +107,7 @@ export const useAuth = () => {
   }
 
   const getInitials = (name?: string): string => {
-    if (!name) return 'U'
+    if (!name) return authStore.userInitials || 'U'
     return name
       .split(' ')
       .map(n => n[0])
@@ -100,7 +117,7 @@ export const useAuth = () => {
   }
 
   return {
-    // State
+    // State - Access Pinia getters directly through computed
     user,
     isAuthenticated,
     isLoggedIn,

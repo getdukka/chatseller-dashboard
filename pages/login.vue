@@ -1,4 +1,4 @@
-<!-- pages/login.vue -->
+<!-- pages/login.vue - VERSION COMPATIBLE CORRIGÉE -->
 <template>
   <div>
     <!-- Logo et titre -->
@@ -162,15 +162,14 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { useAuthStore } from '~/stores/auth'
 
 // Layout
 definePageMeta({
   layout: 'auth'
 })
 
-// État du composant
-const authStore = useAuthStore()
+// ✅ UTILISER LE COMPOSABLE AUTH CORRIGÉ
+const auth = useAuth()
 const loading = ref(false)
 const showPassword = ref(false)
 const loginError = ref('')
@@ -216,7 +215,7 @@ const validateForm = () => {
   return true
 }
 
-// Gestion de la connexion
+// ✅ GESTION DE LA CONNEXION - UTILISE LE COMPOSABLE AUTH
 const handleLogin = async () => {
   if (!validateForm()) return
   
@@ -224,23 +223,30 @@ const handleLogin = async () => {
   loginError.value = ''
   
   try {
-    await authStore.login({
-      email: form.email,
+    console.log('🔐 Tentative de connexion...')
+    
+    const result = await auth.login({
+      email: form.email.trim().toLowerCase(),
       password: form.password
     })
     
-    // Redirection vers le dashboard
-    await navigateTo('/')
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur de connexion')
+    }
+    
+    console.log('✅ Connexion réussie!')
+    // La navigation se fait automatiquement dans le composable auth
+    
   } catch (error: any) {
-    console.error('Erreur de connexion:', error)
+    console.error('❌ Erreur de connexion:', error)
     
     // Messages d'erreur personnalisés
-    if (error.message?.includes('401')) {
+    if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
       loginError.value = 'Email ou mot de passe incorrect'
-    } else if (error.message?.includes('network')) {
+    } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
       loginError.value = 'Problème de connexion. Veuillez réessayer.'
     } else {
-      loginError.value = 'Une erreur s\'est produite. Veuillez réessayer.'
+      loginError.value = error.message || 'Une erreur s\'est produite. Veuillez réessayer.'
     }
   } finally {
     loading.value = false
@@ -248,9 +254,10 @@ const handleLogin = async () => {
 }
 
 // Redirection si déjà connecté
-onMounted(() => {
-  if (authStore.isAuthenticated) {
-    navigateTo('/')
+onMounted(async () => {
+  await auth.restoreSession()
+  if (auth.isAuthenticated.value) {
+    await navigateTo('/dashboard')
   }
 })
 </script>

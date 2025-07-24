@@ -1,4 +1,4 @@
-<!-- pages/register.vue -->
+<!-- pages/register.vue - VERSION FINALE CORRIGÉE -->
 <template>
   <div>
     <!-- Logo et titre -->
@@ -296,15 +296,16 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { useAuthStore } from '~/stores/auth'
 
 // Layout
 definePageMeta({
   layout: 'auth'
 })
 
+// ✅ UTILISER LE COMPOSABLE AUTH CORRIGÉ
+const auth = useAuth()
+
 // État du composant
-const authStore = useAuthStore()
 const loading = ref(false)
 const showPassword = ref(false)
 const registerError = ref('')
@@ -392,7 +393,7 @@ const validateForm = () => {
   return isValid
 }
 
-// Gestion de l'inscription
+// ✅ GESTION DE L'INSCRIPTION - UTILISE LE COMPOSABLE AUTH
 const handleRegister = async () => {
   if (!validateForm()) return
   
@@ -400,38 +401,36 @@ const handleRegister = async () => {
   registerError.value = ''
   
   try {
-    // Appel API d'inscription
-    const { data } = await $fetch('/api/auth/register', {
-      method: 'POST',
-      body: {
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email: form.email.trim().toLowerCase(),
-        company: form.company.trim(),
-        platform: form.platform,
-        password: form.password,
-        newsletter: form.newsletter
-      }
-    })
+    console.log('📝 Tentative d\'inscription...')
     
-    // Connexion automatique après inscription
-    await authStore.login({
+    // ✅ UTILISER LE COMPOSABLE AUTH
+    const result = await auth.register({
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
       email: form.email.trim().toLowerCase(),
-      password: form.password
+      company: form.company.trim(),
+      platform: form.platform,
+      password: form.password,
+      newsletter: form.newsletter
     })
     
-    // Redirection vers le dashboard avec message de bienvenue
-    await navigateTo('/?welcome=true')
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur d\'inscription')
+    }
+    
+    console.log('✅ Inscription réussie!')
+    // La navigation se fait automatiquement dans le composable auth
+    
   } catch (error: any) {
-    console.error('Erreur d\'inscription:', error)
+    console.error('❌ Erreur d\'inscription:', error)
     
     // Messages d'erreur personnalisés
-    if (error.data?.message?.includes('email')) {
+    if (error.message?.includes('email')) {
       registerError.value = 'Cette adresse email est déjà utilisée'
-    } else if (error.data?.message?.includes('validation')) {
+    } else if (error.message?.includes('validation')) {
       registerError.value = 'Veuillez vérifier les informations saisies'
     } else {
-      registerError.value = 'Une erreur s\'est produite lors de la création du compte'
+      registerError.value = error.message || 'Une erreur s\'est produite lors de la création du compte'
     }
   } finally {
     loading.value = false
@@ -439,9 +438,10 @@ const handleRegister = async () => {
 }
 
 // Redirection si déjà connecté
-onMounted(() => {
-  if (authStore.isAuthenticated) {
-    navigateTo('/')
+onMounted(async () => {
+  await auth.restoreSession()
+  if (auth.isAuthenticated.value) {
+    await navigateTo('/dashboard')
   }
 })
 </script>

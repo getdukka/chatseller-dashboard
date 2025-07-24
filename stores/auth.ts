@@ -1,4 +1,4 @@
-// stores/auth.ts - STORE AUTHENTIFICATION CORRIGÉ
+// stores/auth.ts - STORE AUTHENTIFICATION CORRIGÉ ET COHÉRENT
 
 import { defineStore } from 'pinia'
 
@@ -56,6 +56,22 @@ export const useAuthStore = defineStore('auth', {
 
     userName: (state): string | null => {
       return state.user?.name || null
+    },
+
+    // ✅ GETTER SUPPLÉMENTAIRE POUR LES INITIALES
+    userInitials: (state): string => {
+      if (state.user?.name) {
+        return state.user.name
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2)
+      }
+      if (state.user?.email) {
+        return state.user.email[0].toUpperCase()
+      }
+      return 'U'
     }
   },
 
@@ -213,7 +229,7 @@ export const useAuthStore = defineStore('auth', {
 
     // ✅ ACTION RESTORE SESSION - VERSION CORRIGÉE
     async restoreSession() {
-      if (!process.client) return
+      if (!process.client) return { success: false }
 
       try {
         const token = localStorage.getItem('chatseller_token')
@@ -240,6 +256,7 @@ export const useAuthStore = defineStore('auth', {
               const user = JSON.parse(userData)
               this.setUser(user, token)
               console.log('✅ Store: Session restaurée avec succès')
+              return { success: true }
             } else {
               throw new Error('Token invalide')
             }
@@ -248,8 +265,11 @@ export const useAuthStore = defineStore('auth', {
             this.clearAuth()
             localStorage.removeItem('chatseller_token')
             localStorage.removeItem('chatseller_user')
+            return { success: false }
           }
         }
+        
+        return { success: false }
       } catch (error) {
         console.error('❌ Store: Erreur restore session:', error)
         this.clearAuth()
@@ -257,6 +277,7 @@ export const useAuthStore = defineStore('auth', {
           localStorage.removeItem('chatseller_token')
           localStorage.removeItem('chatseller_user')
         }
+        return { success: false }
       }
     },
 

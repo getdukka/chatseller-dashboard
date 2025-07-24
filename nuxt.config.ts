@@ -29,19 +29,21 @@ export default defineNuxtConfig({
     typeCheck: false
   },
 
-  // ✅ RUNTIME CONFIG
+  // ✅ RUNTIME CONFIG - URLS CORRIGÉES
   runtimeConfig: {
     // Privé (serveur seulement)
     jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-chatseller-dashboard',
     supabaseUrl: process.env.SUPABASE_URL,
-    supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,
     
     // Public (client + serveur)
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'https://chatseller-api-production.up.railway.app',
+      // ✅ URL API CORRIGÉE - UTILISER L'API RAILWAY
+      apiBaseUrl: process.env.API_URL || 'https://chatseller-api-production.up.railway.app',
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
-      appUrl: process.env.APP_URL || 'http://localhost:3000'
+      appUrl: process.env.APP_URL || 'http://localhost:3000',
+      widgetUrl: process.env.WIDGET_URL || 'https://widget.chatseller.app'
     }
   },
 
@@ -116,7 +118,7 @@ export default defineNuxtConfig({
   // ✅ SSR CONFIG
   ssr: true,
 
-  // ✅ NITRO CONFIG
+  // ✅ NITRO CONFIG - ÉVITER LES ERREURS DE CERTIFICAT EN DEV
   nitro: {
     experimental: {
       wasm: true
@@ -124,6 +126,14 @@ export default defineNuxtConfig({
     esbuild: {
       options: {
         target: 'es2020'
+      }
+    },
+    // ✅ AJOUT POUR ÉVITER LES ERREURS SSL EN DÉVELOPPEMENT
+    devProxy: {
+      '/api': {
+        target: process.env.API_URL || 'https://chatseller-api-production.up.railway.app',
+        changeOrigin: true,
+        secure: false // ✅ POUR ÉVITER LES ERREURS DE CERTIFICAT
       }
     }
   },
