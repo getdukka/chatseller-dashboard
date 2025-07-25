@@ -1,4 +1,4 @@
-<!-- pages/orders.vue - PAGE COMMANDES MODERNE ET RESPONSIVE -->
+<!-- pages/orders.vue - PAGE COMMANDES CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header Modern -->
@@ -15,13 +15,14 @@
           <!-- Actions Header -->
           <div class="flex items-center space-x-4">
             <button
-              @click="exportOrders"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              @click="handleExportOrders"
+              :disabled="exporting"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 mr-2" :class="{ 'animate-spin': exporting }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
-              Exporter CSV
+              {{ exporting ? 'Export en cours...' : 'Exporter CSV' }}
             </button>
             
             <button
@@ -280,7 +281,7 @@
           </svg>
           <h3 class="mt-4 text-lg font-medium text-gray-900">Aucune commande trouvée</h3>
           <p class="mt-2 text-gray-500">
-            {{ searchQuery || hasActiveFilters ? 'Aucune commande ne correspond à vos critères' : 'Les commandes générées par votre Vendeur IAapparaîtront ici' }}
+            {{ searchQuery || hasActiveFilters ? 'Aucune commande ne correspond à vos critères' : 'Les commandes générées par votre Vendeur IA apparaîtront ici' }}
           </p>
           <div v-if="searchQuery || hasActiveFilters" class="mt-4">
             <button
@@ -398,6 +399,19 @@
         </div>
       </div>
     </div>
+
+    <!-- Success Notification -->
+    <div
+      v-if="showSuccessMessage"
+      class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300"
+    >
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        {{ successMessage }}
+      </div>
+    </div>
   </div>
 </template>
 
@@ -405,10 +419,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-// ✅ CORRECTION META PAGE - UTILISER LAYOUT DEFAULT
+// ✅ PAGE META
 definePageMeta({
   middleware: 'auth',
-  layout: 'default'  // CHANGÉ DE 'dashboard' à 'default'
+  layout: 'default'
 })
 
 // ✅ TYPES LOCAUX
@@ -439,9 +453,12 @@ const authStore = useAuthStore()
 
 // ✅ REACTIVE STATE
 const loading = ref(false)
+const exporting = ref(false) // ✅ AJOUTÉ
 const searchQuery = ref('')
 const showOrderModal = ref(false)
 const selectedOrder = ref<Order | null>(null)
+const showSuccessMessage = ref(false)
+const successMessage = ref('')
 
 const filters = ref({
   status: '',
@@ -576,6 +593,73 @@ const getStatusBadgeClass = (status: string): string => {
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
 
+const showNotification = (message: string) => {
+  successMessage.value = message
+  showSuccessMessage.value = true
+  setTimeout(() => {
+    showSuccessMessage.value = false
+  }, 3000)
+}
+
+// ✅ EXPORT CSV FUNCTION - CORRECTION MAJEURE
+const handleExportOrders = async () => {
+  exporting.value = true
+  
+  try {
+    // Créer les headers CSV
+    const headers = [
+      'ID Commande',
+      'Nom Client',
+      'Email Client',
+      'Téléphone',
+      'Produits',
+      'Quantité Totale',
+      'Montant Total',
+      'Statut',
+      'Date Création'
+    ]
+    
+    // Préparer les données
+    const csvData = filteredOrders.value.map(order => [
+      `#${order.id.slice(-8).toUpperCase()}`,
+      getCustomerName(order),
+      getCustomerEmail(order),
+      getCustomerPhone(order),
+      getProductSummary(order),
+      order.items.reduce((sum, item) => sum + item.quantity, 0),
+      getTotalAmount(order),
+      getStatusLabel(order.status),
+      formatDate(order.createdAt)
+    ])
+    
+    // Créer le contenu CSV
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+    
+    // Créer et télécharger le fichier
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    
+    link.setAttribute('href', url)
+    link.setAttribute('download', `commandes-chatseller-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    showNotification(`${filteredOrders.value.length} commande(s) exportée(s) avec succès!`)
+    
+  } catch (error) {
+    console.error('Erreur lors de l\'export CSV:', error)
+    showNotification('Erreur lors de l\'export CSV')
+  } finally {
+    exporting.value = false
+  }
+}
+
 // ✅ ACTION METHODS
 const loadOrders = async () => {
   loading.value = true
@@ -627,6 +711,7 @@ const loadOrders = async () => {
 
 const refreshOrders = async () => {
   await loadOrders()
+  showNotification('Commandes actualisées avec succès!')
 }
 
 const viewOrder = (order: Order) => {
@@ -642,11 +727,7 @@ const closeOrderModal = () => {
 const updateOrderStatus = (order: Order) => {
   // TODO: Implémenter la mise à jour du statut
   console.log('Mise à jour du statut pour:', order.id)
-}
-
-const exportOrders = () => {
-  // TODO: Implémenter l'export CSV
-  console.log('Export des commandes en CSV')
+  showNotification('Fonctionnalité de mise à jour du statut à venir')
 }
 
 const clearFilters = () => {

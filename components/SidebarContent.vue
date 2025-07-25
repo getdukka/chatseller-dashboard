@@ -1,4 +1,4 @@
-<!-- components/SidebarContent.vue - CONTENU SIDEBAR RÉUTILISABLE -->
+<!-- components/SidebarContent.vue - SIDEBAR AMÉLIORÉ AVEC VENDEURS IA, BILLING ET UPGRADE -->
 <template>
   <div class="flex flex-col h-full">
     
@@ -30,6 +30,14 @@
         :isActive="$route.path === '/'"
         icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2V7a2 2 0 012-2h2a2 2 0 002 2v2a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 00-2 2h-2a2 2 0 00-2 2v6a2 2 0 01-2 2H9z"
         label="Dashboard"
+        @click="handleNavClick"
+      />
+
+      <SidebarLink
+        to="/vendeurs-ia"
+        :isActive="$route.path.startsWith('/vendeurs-ia')"
+        icon="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+        label="Vendeurs IA"
         @click="handleNavClick"
       />
 
@@ -74,6 +82,15 @@
         @click="handleNavClick"
       />
 
+      <!-- ✅ NOUVEAU : Billing -->
+      <SidebarLink
+        to="/billing"
+        :isActive="$route.path.startsWith('/billing')"
+        icon="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+        label="Facturation"
+        @click="handleNavClick"
+      />
+
       <SidebarLink
         to="/settings"
         :isActive="$route.path.startsWith('/settings')"
@@ -82,6 +99,24 @@
         @click="handleNavClick"
       />
     </nav>
+
+    <!-- ✅ NOUVEAU : BOUTON UPGRADE "PASSER AU PRO" -->
+    <div class="px-4 pb-4">
+      <button
+        @click="handleUpgradeClick"
+        :disabled="upgradingToPro"
+        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+      >
+        <svg v-if="upgradingToPro" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+        </svg>
+        <span>{{ upgradingToPro ? 'Redirection...' : 'Passer au Pro' }}</span>
+      </button>
+    </div>
 
     <!-- ✅ PROFIL UTILISATEUR DYNAMIQUE EN BAS -->
     <div class="border-t border-gray-100 p-4">
@@ -164,6 +199,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 // ✅ INTERFACE PROPS
 interface Props {
   unreadCount: number
@@ -174,7 +211,7 @@ interface Props {
   isMobile?: boolean
 }
 
-// ✅ PROPS ET EMITS - UN SEUL APPEL À defineProps
+// ✅ PROPS ET EMITS
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
@@ -182,13 +219,34 @@ const emit = defineEmits<{
   'close-profile': []
   'logout': []
   'close-mobile': []
+  'upgrade-to-pro': [] // ✅ NOUVEAU EVENT POUR UPGRADE
 }>()
+
+// ✅ STATE POUR LE BOUTON UPGRADE
+const upgradingToPro = ref(false)
 
 // ✅ HANDLE NAVIGATION CLICKS
 const handleNavClick = () => {
   // Fermer le menu mobile lors de la navigation (si mobile)
   if (props.isMobile) {
     emit('close-mobile')
+  }
+}
+
+// ✅ HANDLE UPGRADE CLICK - DÉCLENCHE DIRECTEMENT LE PAIEMENT STRIPE
+const handleUpgradeClick = async () => {
+  upgradingToPro.value = true
+  
+  try {
+    // Émettre l'événement vers le parent pour déclencher Stripe
+    emit('upgrade-to-pro')
+  } catch (error) {
+    console.error('Erreur upgrade:', error)
+  } finally {
+    // Remettre à false après 2 secondes (le temps de la redirection)
+    setTimeout(() => {
+      upgradingToPro.value = false
+    }, 2000)
   }
 }
 </script>
@@ -204,6 +262,10 @@ const handleNavClick = () => {
   color: rgb(75 85 99);
 }
 
+.group:hover .group-hover\:scale-110 {
+  transform: scale(1.1);
+}
+
 /* ✅ SMOOTH SCROLLING POUR LA NAVIGATION */
 nav {
   scrollbar-width: none;
@@ -212,5 +274,15 @@ nav {
 
 nav::-webkit-scrollbar {
   display: none;
+}
+
+/* ✅ ANIMATION SPINNER */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 </style>

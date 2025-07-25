@@ -1,4 +1,4 @@
-<!-- pages/knowledge-base.vue - PAGE BASE DE CONNAISSANCE MODERNE -->
+<!-- pages/knowledge-base.vue - PAGE BASE DE CONNAISSANCE CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -8,7 +8,7 @@
           <div>
             <h1 class="text-3xl font-bold text-gray-900">Base de connaissances</h1>
             <p class="mt-2 text-gray-600">
-              Entraînez votre Vendeur IAavec vos données pour des réponses plus précises
+              Entraînez votre Vendeur IA avec vos données pour des réponses plus précises
             </p>
           </div>
           
@@ -46,7 +46,7 @@
           <div class="flex-1">
             <h3 class="text-sm font-medium text-blue-800">Entraînement en cours...</h3>
             <p class="text-sm text-blue-700">
-              Votre Vendeur IAapprend de nouvelles données. Cela peut prendre quelques minutes.
+              Votre Vendeur IA apprend de nouvelles données. Cela peut prendre quelques minutes.
             </p>
             <div class="mt-2 bg-blue-200 rounded-full h-2">
               <div 
@@ -61,7 +61,7 @@
       <!-- Quick Add Section -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Upload Files -->
-        <div class="add-source-card" @click="openFileUpload">
+        <div class="add-source-card" @click="handleOpenFileUpload">
           <div class="add-source-icon bg-blue-100">
             <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -70,7 +70,7 @@
           <h3 class="text-lg font-semibold text-gray-900">Fichiers</h3>
           <p class="text-sm text-gray-600">PDF, Word, Excel, CSV</p>
           <div class="mt-3 flex items-center text-blue-600 text-sm font-medium">
-            Télécharger
+            Importer
             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
@@ -78,7 +78,7 @@
         </div>
 
         <!-- Add Website -->
-        <div class="add-source-card" @click="showWebsiteModal = true">
+        <div class="add-source-card" @click="handleShowWebsiteModal">
           <div class="add-source-icon bg-green-100">
             <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
@@ -95,7 +95,7 @@
         </div>
 
         <!-- Add Text -->
-        <div class="add-source-card" @click="showTextModal = true">
+        <div class="add-source-card" @click="handleShowTextModal">
           <div class="add-source-icon bg-purple-100">
             <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -175,7 +175,7 @@
               {{ filteredKnowledge.length }} source(s)
             </span>
             <button
-              @click="retrainAll"
+              @click="handleRetrainAll"
               :disabled="trainingStatus.isTraining"
               class="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
             >
@@ -286,7 +286,7 @@
           <p class="mt-2 text-gray-500">
             {{ searchQuery || selectedType || selectedStatus 
               ? 'Aucune connaissance ne correspond à vos critères de recherche'
-              : 'Ajoutez vos premières connaissances pour que votre Vendeur IApuisse répondre aux questions de vos clients'
+              : 'Ajoutez vos premières connaissances pour que votre Vendeur IA puisse répondre aux questions de vos clients'
             }}
           </p>
           <div class="mt-6">
@@ -327,7 +327,7 @@
         
         <div class="modal-body">
           <div class="file-upload-zone" @click="triggerFileInput" @drop="handleFileDrop" @dragover.prevent @dragenter.prevent>
-            <input ref="fileInput" type="file" multiple accept=".pdf,.doc,.docx,.csv,.txt" class="hidden" @change="handleFileSelect">
+            <input ref="fileInput" type="file" multiple accept=".pdf,.doc,.docx,.csv,.txt,.xlsx" class="hidden" @change="handleFileSelect">
             <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
             </svg>
@@ -339,15 +339,15 @@
           <div v-if="uploadQueue.length > 0" class="mt-6">
             <h4 class="text-sm font-medium text-gray-900 mb-3">Fichiers en attente</h4>
             <div class="space-y-2">
-              <div v-for="file in uploadQueue" :key="file.name" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div v-for="(file, index) in uploadQueue" :key="`${file.name}-${index}`" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div class="flex items-center space-x-3">
-                  <div class="file-type-icon">📄</div>
+                  <div class="file-type-icon">{{ getFileTypeIcon(file.name) }}</div>
                   <div>
                     <p class="text-sm font-medium text-gray-900">{{ file.name }}</p>
                     <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
                   </div>
                 </div>
-                <button @click="removeFromQueue(file)" class="text-red-600 hover:text-red-700">
+                <button @click="removeFromQueue(index)" class="text-red-600 hover:text-red-700">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
@@ -359,8 +359,12 @@
         
         <div class="modal-footer">
           <button @click="showFileUpload = false" class="btn-secondary">Annuler</button>
-          <button @click="uploadFiles" :disabled="uploadQueue.length === 0" class="btn-primary">
-            Télécharger {{ uploadQueue.length }} fichier(s)
+          <button 
+            @click="handleUploadFiles" 
+            :disabled="uploadQueue.length === 0 || uploading"
+            class="btn-primary"
+          >
+            {{ uploading ? 'Téléchargement...' : `Télécharger ${uploadQueue.length} fichier(s)` }}
           </button>
         </div>
       </div>
@@ -418,8 +422,12 @@
         
         <div class="modal-footer">
           <button @click="showWebsiteModal = false" class="btn-secondary">Annuler</button>
-          <button @click="indexWebsite" :disabled="!websiteForm.url" class="btn-primary">
-            Indexer le site
+          <button 
+            @click="handleIndexWebsite" 
+            :disabled="!websiteForm.url || indexingWebsite" 
+            class="btn-primary"
+          >
+            {{ indexingWebsite ? 'Indexation...' : 'Indexer le site' }}
           </button>
         </div>
       </div>
@@ -481,15 +489,32 @@ R: Oui, vous pouvez retourner vos articles dans les 30 jours suivant la récepti
         
         <div class="modal-footer">
           <button @click="showTextModal = false" class="btn-secondary">Annuler</button>
-          <button @click="saveTextContent" :disabled="!textForm.title || !textForm.content" class="btn-primary">
-            Sauvegarder
+          <button 
+            @click="handleSaveTextContent" 
+            :disabled="!textForm.title || !textForm.content || savingText"
+            class="btn-primary"
+          >
+            {{ savingText ? 'Sauvegarde...' : 'Sauvegarder' }}
           </button>
         </div>
       </div>
     </div>
 
+    <!-- Success Notification -->
+    <div
+      v-if="showSuccessMessage"
+      class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300"
+    >
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        {{ successMessage }}
+      </div>
+    </div>
+
     <!-- Hidden file input -->
-    <input ref="fileInput" type="file" multiple accept=".pdf,.doc,.docx,.csv,.txt" class="hidden" @change="handleFileSelect">
+    <input ref="fileInput" type="file" multiple accept=".pdf,.doc,.docx,.csv,.txt,.xlsx" class="hidden" @change="handleFileSelect">
   </div>
 </template>
 
@@ -523,9 +548,14 @@ const authStore = useAuthStore()
 
 // ✅ REACTIVE STATE
 const loading = ref(false)
+const uploading = ref(false) // ✅ AJOUTÉ
+const indexingWebsite = ref(false) // ✅ AJOUTÉ
+const savingText = ref(false) // ✅ AJOUTÉ
 const searchQuery = ref('')
 const selectedType = ref('')
 const selectedStatus = ref('')
+const showSuccessMessage = ref(false)
+const successMessage = ref('')
 
 // Modals
 const showAddModal = ref(false)
@@ -634,6 +664,19 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+const getFileTypeIcon = (fileName: string): string => {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  const icons: Record<string, string> = {
+    pdf: '📄',
+    doc: '📄',
+    docx: '📄',
+    csv: '📊',
+    xlsx: '📊',
+    txt: '📝'
+  }
+  return icons[ext || ''] || '📄'
+}
+
 const getTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     file: 'Fichier',
@@ -692,9 +735,25 @@ const getTypeBadgeClass = (type: string): string => {
   return classes[type] || 'bg-gray-100 text-gray-800'
 }
 
-// ✅ ACTION METHODS
-const openFileUpload = () => {
+const showNotification = (message: string) => {
+  successMessage.value = message
+  showSuccessMessage.value = true
+  setTimeout(() => {
+    showSuccessMessage.value = false
+  }, 3000)
+}
+
+// ✅ ACTION METHODS - CORRECTIONS MAJEURES
+const handleOpenFileUpload = () => {
   showFileUpload.value = true
+}
+
+const handleShowWebsiteModal = () => {
+  showWebsiteModal.value = true
+}
+
+const handleShowTextModal = () => {
+  showTextModal.value = true
 }
 
 const triggerFileInput = () => {
@@ -704,7 +763,15 @@ const triggerFileInput = () => {
 const handleFileSelect = (event: Event) => {
   const files = (event.target as HTMLInputElement).files
   if (files) {
-    uploadQueue.value = [...uploadQueue.value, ...Array.from(files)]
+    const validFiles = Array.from(files).filter(file => {
+      // Vérifier la taille (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showNotification(`Le fichier ${file.name} est trop volumineux (max 10MB)`)
+        return false
+      }
+      return true
+    })
+    uploadQueue.value = [...uploadQueue.value, ...validFiles]
   }
 }
 
@@ -712,18 +779,29 @@ const handleFileDrop = (event: DragEvent) => {
   event.preventDefault()
   const files = event.dataTransfer?.files
   if (files) {
-    uploadQueue.value = [...uploadQueue.value, ...Array.from(files)]
+    const validFiles = Array.from(files).filter(file => {
+      if (file.size > 10 * 1024 * 1024) {
+        showNotification(`Le fichier ${file.name} est trop volumineux (max 10MB)`)
+        return false
+      }
+      return true
+    })
+    uploadQueue.value = [...uploadQueue.value, ...validFiles]
   }
 }
 
-const removeFromQueue = (file: File) => {
-  uploadQueue.value = uploadQueue.value.filter(f => f !== file)
+const removeFromQueue = (index: number) => {
+  uploadQueue.value.splice(index, 1)
 }
 
-const uploadFiles = async () => {
+const handleUploadFiles = async () => {
+  uploading.value = true
+  
   try {
-    // Simuler l'upload
     for (const file of uploadQueue.value) {
+      // ✅ TODO: Remplacer par un vrai appel API
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
       const newItem: KnowledgeItem = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         title: file.name,
@@ -747,18 +825,28 @@ const uploadFiles = async () => {
       }, 3000)
     }
     
+    showNotification(`${uploadQueue.value.length} fichier(s) téléchargé(s) avec succès!`)
     uploadQueue.value = []
     showFileUpload.value = false
+    
   } catch (error) {
     console.error('Erreur lors de l\'upload:', error)
+    showNotification('Erreur lors du téléchargement des fichiers')
+  } finally {
+    uploading.value = false
   }
 }
 
-const indexWebsite = async () => {
+const handleIndexWebsite = async () => {
+  indexingWebsite.value = true
+  
   try {
+    // ✅ TODO: Remplacer par un vrai appel API
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
     const newItem: KnowledgeItem = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      title: websiteForm.value.name || websiteForm.value.url,
+      title: websiteForm.value.name || new URL(websiteForm.value.url).hostname,
       type: 'website',
       status: 'training',
       url: websiteForm.value.url,
@@ -777,15 +865,25 @@ const indexWebsite = async () => {
       }
     }, 5000)
     
+    showNotification('Site web indexé avec succès!')
     websiteForm.value = { url: '', name: '', includeSubpages: true, autoUpdate: false }
     showWebsiteModal.value = false
+    
   } catch (error) {
     console.error('Erreur lors de l\'indexation:', error)
+    showNotification('Erreur lors de l\'indexation du site web')
+  } finally {
+    indexingWebsite.value = false
   }
 }
 
-const saveTextContent = async () => {
+const handleSaveTextContent = async () => {
+  savingText.value = true
+  
   try {
+    // ✅ TODO: Remplacer par un vrai appel API
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
     const newItem: KnowledgeItem = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       title: textForm.value.title,
@@ -807,16 +905,21 @@ const saveTextContent = async () => {
       }
     }, 2000)
     
+    showNotification('Contenu ajouté avec succès!')
     textForm.value = { title: '', type: 'faq', content: '' }
     showTextModal.value = false
+    
   } catch (error) {
     console.error('Erreur lors de la sauvegarde:', error)
+    showNotification('Erreur lors de la sauvegarde du contenu')
+  } finally {
+    savingText.value = false
   }
 }
 
 const editItem = (item: KnowledgeItem) => {
   // TODO: Implémenter l'édition
-  console.log('Éditer:', item)
+  showNotification('Fonctionnalité d\'édition à venir')
 }
 
 const retrainItem = async (item: KnowledgeItem) => {
@@ -826,15 +929,18 @@ const retrainItem = async (item: KnowledgeItem) => {
     item.status = 'trained'
     item.lastTrained = new Date().toISOString()
   }, 3000)
+  
+  showNotification(`${item.title} en cours de ré-entraînement`)
 }
 
 const deleteItem = async (item: KnowledgeItem) => {
   if (confirm('Êtes-vous sûr de vouloir supprimer cette connaissance ?')) {
     knowledgeItems.value = knowledgeItems.value.filter(i => i.id !== item.id)
+    showNotification('Connaissance supprimée avec succès!')
   }
 }
 
-const retrainAll = async () => {
+const handleRetrainAll = async () => {
   trainingStatus.value.isTraining = true
   trainingStatus.value.progress = 0
   
@@ -850,6 +956,8 @@ const retrainAll = async () => {
         item.status = 'trained'
         item.lastTrained = new Date().toISOString()
       })
+      
+      showNotification('Toutes les connaissances ont été ré-entraînées!')
     }
   }, 500)
 }

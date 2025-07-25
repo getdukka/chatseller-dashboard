@@ -1,4 +1,4 @@
-<!-- pages/products.vue - GESTION PRODUITS HYBRIDE MODERNE -->
+<!-- pages/products.vue - GESTION PRODUITS CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -96,9 +96,10 @@
             </div>
             <button
               @click="connections.shopify.connected ? syncShopify() : connectShopify()"
-              class="text-green-600 hover:text-green-700 text-sm font-medium"
+              :disabled="connections.shopify.syncing"
+              class="text-green-600 hover:text-green-700 text-sm font-medium disabled:opacity-50"
             >
-              {{ connections.shopify.connected ? 'Synchroniser' : 'Connecter' }} →
+              {{ connections.shopify.syncing ? 'Sync...' : (connections.shopify.connected ? 'Synchroniser' : 'Connecter') }} →
             </button>
           </div>
         </div>
@@ -129,9 +130,10 @@
             </div>
             <button
               @click="connections.woocommerce.connected ? syncWooCommerce() : connectWooCommerce()"
-              class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              :disabled="connections.woocommerce.syncing"
+              class="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
             >
-              {{ connections.woocommerce.connected ? 'Synchroniser' : 'Connecter' }} →
+              {{ connections.woocommerce.syncing ? 'Sync...' : (connections.woocommerce.connected ? 'Synchroniser' : 'Connecter') }} →
             </button>
           </div>
         </div>
@@ -481,7 +483,7 @@
       </div>
     </div>
 
-    <!-- Connect Store Modal -->
+    <!-- ✅ MODAL CONNECT STORE CORRIGÉ -->
     <div v-if="showConnectModal" class="modal-overlay" @click.self="showConnectModal = false">
       <div class="modal-content">
         <div class="modal-header">
@@ -496,19 +498,28 @@
         <div class="modal-body">
           <div class="space-y-4">
             <!-- Shopify -->
-            <div class="connection-option" @click="connectShopify">
+            <div class="connection-option" @click="handleConnectShopify" :class="{ 'connecting': connections.shopify.connecting }">
               <div class="flex items-center space-x-4">
                 <div class="p-3 bg-green-100 rounded-lg">
-                  <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="!connections.shopify.connecting" class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                  </svg>
+                  <svg v-else class="w-8 h-8 text-green-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                   </svg>
                 </div>
                 <div class="flex-1">
                   <h4 class="text-lg font-medium text-gray-900">Shopify</h4>
-                  <p class="text-sm text-gray-500">Synchronisez automatiquement votre catalogue Shopify</p>
+                  <p class="text-sm text-gray-500">
+                    {{ connections.shopify.connected ? 'Boutique connectée' : 'Synchronisez automatiquement votre catalogue Shopify' }}
+                  </p>
+                  <p v-if="connections.shopify.connecting" class="text-sm text-green-600 mt-1">Connexion en cours...</p>
                 </div>
                 <div class="text-green-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="connections.shopify.connected" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <svg v-else-if="!connections.shopify.connecting" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
                 </div>
@@ -516,19 +527,28 @@
             </div>
 
             <!-- WooCommerce -->
-            <div class="connection-option" @click="connectWooCommerce">
+            <div class="connection-option" @click="handleConnectWooCommerce" :class="{ 'connecting': connections.woocommerce.connecting }">
               <div class="flex items-center space-x-4">
                 <div class="p-3 bg-blue-100 rounded-lg">
-                  <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="!connections.woocommerce.connecting" class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
+                  </svg>
+                  <svg v-else class="w-8 h-8 text-blue-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                   </svg>
                 </div>
                 <div class="flex-1">
                   <h4 class="text-lg font-medium text-gray-900">WooCommerce</h4>
-                  <p class="text-sm text-gray-500">Connectez votre boutique WordPress WooCommerce</p>
+                  <p class="text-sm text-gray-500">
+                    {{ connections.woocommerce.connected ? 'Boutique connectée' : 'Connectez votre boutique WordPress WooCommerce' }}
+                  </p>
+                  <p v-if="connections.woocommerce.connecting" class="text-sm text-blue-600 mt-1">Connexion en cours...</p>
                 </div>
                 <div class="text-blue-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="connections.woocommerce.connected" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <svg v-else-if="!connections.woocommerce.connecting" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
                 </div>
@@ -552,6 +572,165 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ✅ SHOPIFY CONNECTION MODAL -->
+    <div v-if="showShopifyModal" class="modal-overlay" @click.self="showShopifyModal = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Connecter Shopify</h3>
+          <button @click="showShopifyModal = false" class="modal-close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">URL de votre boutique Shopify</label>
+              <input
+                v-model="shopifyForm.shopUrl"
+                type="url"
+                placeholder="https://votre-boutique.myshopify.com"
+                class="input-modern w-full"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Clé API Shopify</label>
+              <input
+                v-model="shopifyForm.apiKey"
+                type="text"
+                placeholder="Votre clé API Shopify"
+                class="input-modern w-full"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Mot de passe API</label>
+              <input
+                v-model="shopifyForm.apiPassword"
+                type="password"
+                placeholder="Votre mot de passe API"
+                class="input-modern w-full"
+              >
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div class="flex">
+                <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                  <p class="text-sm text-blue-800 font-medium">Comment obtenir vos clés API ?</p>
+                  <p class="text-sm text-blue-700 mt-1">
+                    Rendez-vous dans votre admin Shopify → Apps → Développer des apps → Créer une app privée
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button @click="showShopifyModal = false" class="btn-secondary">Annuler</button>
+          <button 
+            @click="submitShopifyConnection" 
+            :disabled="!shopifyForm.shopUrl || !shopifyForm.apiKey || shopifyForm.connecting"
+            class="btn-primary"
+          >
+            {{ shopifyForm.connecting ? 'Connexion...' : 'Connecter' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ WOOCOMMERCE CONNECTION MODAL -->
+    <div v-if="showWooCommerceModal" class="modal-overlay" @click.self="showWooCommerceModal = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Connecter WooCommerce</h3>
+          <button @click="showWooCommerceModal = false" class="modal-close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">URL de votre site WordPress</label>
+              <input
+                v-model="wooCommerceForm.siteUrl"
+                type="url"
+                placeholder="https://votre-site.com"
+                class="input-modern w-full"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Consumer Key</label>
+              <input
+                v-model="wooCommerceForm.consumerKey"
+                type="text"
+                placeholder="ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                class="input-modern w-full"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Consumer Secret</label>
+              <input
+                v-model="wooCommerceForm.consumerSecret"
+                type="password"
+                placeholder="cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                class="input-modern w-full"
+              >
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div class="flex">
+                <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                  <p class="text-sm text-blue-800 font-medium">Comment obtenir vos clés API ?</p>
+                  <p class="text-sm text-blue-700 mt-1">
+                    WooCommerce → Réglages → Avancé → REST API → Ajouter une clé
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button @click="showWooCommerceModal = false" class="btn-secondary">Annuler</button>
+          <button 
+            @click="submitWooCommerceConnection" 
+            :disabled="!wooCommerceForm.siteUrl || !wooCommerceForm.consumerKey || wooCommerceForm.connecting"
+            class="btn-primary"
+          >
+            {{ wooCommerceForm.connecting ? 'Connexion...' : 'Connecter' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div
+      v-if="showSuccessMessage"
+      class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300"
+    >
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        {{ successMessage }}
       </div>
     </div>
   </div>
@@ -585,6 +764,8 @@ interface Product {
 
 interface Connection {
   connected: boolean
+  connecting?: boolean
+  syncing?: boolean
   lastSync?: string
   url?: string
   status?: 'active' | 'error' | 'syncing'
@@ -598,10 +779,14 @@ const loading = ref(false)
 const searchQuery = ref('')
 const selectedSource = ref('')
 const selectedCategory = ref('')
+const showSuccessMessage = ref(false)
+const successMessage = ref('')
 
 // Modals
 const showAddProductModal = ref(false)
 const showConnectModal = ref(false)
+const showShopifyModal = ref(false) // ✅ AJOUTÉ
+const showWooCommerceModal = ref(false) // ✅ AJOUTÉ
 
 // Forms
 const editingProduct = ref<Product | null>(null)
@@ -615,16 +800,35 @@ const productForm = ref({
   features: ['']
 })
 
+// ✅ AJOUT: Formulaires de connexion
+const shopifyForm = ref({
+  shopUrl: '',
+  apiKey: '',
+  apiPassword: '',
+  connecting: false
+})
+
+const wooCommerceForm = ref({
+  siteUrl: '',
+  consumerKey: '',
+  consumerSecret: '',
+  connecting: false
+})
+
 // Connections
 const connections = ref({
   shopify: {
     connected: false,
+    connecting: false,
+    syncing: false,
     lastSync: null,
     url: '',
     status: 'active'
   } as Connection,
   woocommerce: {
     connected: false,
+    connecting: false,
+    syncing: false,
     lastSync: null,
     url: '',
     status: 'active'
@@ -641,7 +845,7 @@ const syncStatus = ref({
 
 // Stats
 const stats = ref({
-  manualProducts: 0,
+  manualProducts: 2,
   shopifyProducts: 0,
   woocommerceProducts: 0
 })
@@ -681,8 +885,7 @@ const products = ref<Product[]>([
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
     category: 'Vêtements',
     sku: 'TSHIRT-001',
-    source: 'shopify',
-    externalId: 'shopify_123',
+    source: 'manual',
     features: ['Coton bio', 'Certifié GOTS', 'Unisexe'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -742,6 +945,216 @@ const getSourceBadgeClass = (source: string): string => {
   return classes[source] || 'bg-gray-100 text-gray-800'
 }
 
+const showNotification = (message: string) => {
+  successMessage.value = message
+  showSuccessMessage.value = true
+  setTimeout(() => {
+    showSuccessMessage.value = false
+  }, 3000)
+}
+
+// ✅ CONNECTION ACTIONS - CORRECTIONS MAJEURES
+const handleConnectShopify = () => {
+  if (connections.value.shopify.connected) {
+    showNotification('Boutique Shopify déjà connectée')
+    return
+  }
+  
+  if (connections.value.shopify.connecting) return
+  
+  showConnectModal.value = false
+  showShopifyModal.value = true
+}
+
+const handleConnectWooCommerce = () => {
+  if (connections.value.woocommerce.connected) {
+    showNotification('Boutique WooCommerce déjà connectée')
+    return
+  }
+  
+  if (connections.value.woocommerce.connecting) return
+  
+  showConnectModal.value = false
+  showWooCommerceModal.value = true
+}
+
+const submitShopifyConnection = async () => {
+  shopifyForm.value.connecting = true
+  connections.value.shopify.connecting = true
+  
+  try {
+    // ✅ TODO: Remplacer par un vrai appel API
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Simuler une connexion réussie
+    connections.value.shopify = {
+      connected: true,
+      connecting: false,
+      syncing: false,
+      lastSync: new Date().toISOString(),
+      url: shopifyForm.value.shopUrl,
+      status: 'active'
+    }
+    
+    showShopifyModal.value = false
+    showNotification('Boutique Shopify connectée avec succès!')
+    
+    // Démarrer automatiquement la synchronisation
+    setTimeout(() => {
+      syncShopify()
+    }, 1000)
+    
+    // Reset form
+    shopifyForm.value = {
+      shopUrl: '',
+      apiKey: '',
+      apiPassword: '',
+      connecting: false
+    }
+    
+  } catch (error: any) {
+    console.error('Erreur connexion Shopify:', error)
+    showNotification('Erreur lors de la connexion à Shopify')
+  } finally {
+    shopifyForm.value.connecting = false
+    connections.value.shopify.connecting = false
+  }
+}
+
+const submitWooCommerceConnection = async () => {
+  wooCommerceForm.value.connecting = true
+  connections.value.woocommerce.connecting = true
+  
+  try {
+    // ✅ TODO: Remplacer par un vrai appel API
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Simuler une connexion réussie
+    connections.value.woocommerce = {
+      connected: true,
+      connecting: false,
+      syncing: false,
+      lastSync: new Date().toISOString(),
+      url: wooCommerceForm.value.siteUrl,
+      status: 'active'
+    }
+    
+    showWooCommerceModal.value = false
+    showNotification('Boutique WooCommerce connectée avec succès!')
+    
+    // Démarrer automatiquement la synchronisation
+    setTimeout(() => {
+      syncWooCommerce()
+    }, 1000)
+    
+    // Reset form
+    wooCommerceForm.value = {
+      siteUrl: '',
+      consumerKey: '',
+      consumerSecret: '',
+      connecting: false
+    }
+    
+  } catch (error: any) {
+    console.error('Erreur connexion WooCommerce:', error)
+    showNotification('Erreur lors de la connexion à WooCommerce')
+  } finally {
+    wooCommerceForm.value.connecting = false
+    connections.value.woocommerce.connecting = false
+  }
+}
+
+const connectShopify = () => {
+  handleConnectShopify()
+}
+
+const connectWooCommerce = () => {
+  handleConnectWooCommerce()
+}
+
+const syncShopify = async () => {
+  connections.value.shopify.syncing = true
+  syncStatus.value = {
+    isSync: true,
+    source: 'Shopify',
+    processed: 0,
+    total: 5
+  }
+
+  // Simuler la synchronisation
+  const interval = setInterval(() => {
+    syncStatus.value.processed++
+    
+    if (syncStatus.value.processed >= syncStatus.value.total) {
+      clearInterval(interval)
+      syncStatus.value.isSync = false
+      connections.value.shopify.syncing = false
+      connections.value.shopify.lastSync = new Date().toISOString()
+      
+      // Ajouter des produits Shopify simulés
+      const shopifyProducts = [
+        {
+          id: 'shopify_' + Date.now(),
+          name: 'Casque Audio Premium',
+          description: 'Casque sans fil avec réduction de bruit active',
+          price: 199.99,
+          category: 'Électronique',
+          source: 'shopify' as const,
+          externalId: 'shopify_456',
+          features: ['Bluetooth 5.0', 'Réduction de bruit', '30h d\'autonomie'],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ]
+      
+      products.value.unshift(...shopifyProducts)
+      updateStats()
+      showNotification('Synchronisation Shopify terminée!')
+    }
+  }, 800)
+}
+
+const syncWooCommerce = async () => {
+  connections.value.woocommerce.syncing = true
+  syncStatus.value = {
+    isSync: true,
+    source: 'WooCommerce',
+    processed: 0,
+    total: 3
+  }
+
+  const interval = setInterval(() => {
+    syncStatus.value.processed++
+    
+    if (syncStatus.value.processed >= syncStatus.value.total) {
+      clearInterval(interval)
+      syncStatus.value.isSync = false
+      connections.value.woocommerce.syncing = false
+      connections.value.woocommerce.lastSync = new Date().toISOString()
+      
+      // Ajouter des produits WooCommerce simulés
+      const wooProducts = [
+        {
+          id: 'woo_' + Date.now(),
+          name: 'Montre Connectée Sport',
+          description: 'Montre intelligente avec GPS et suivi santé',
+          price: 299.99,
+          category: 'Électronique',
+          source: 'woocommerce' as const,
+          externalId: 'woo_789',
+          features: ['GPS intégré', 'Étanche', 'Batterie 7 jours'],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ]
+      
+      products.value.unshift(...wooProducts)
+      updateStats()
+      showNotification('Synchronisation WooCommerce terminée!')
+    }
+  }, 1000)
+}
+
 // ✅ PRODUCT ACTIONS
 const editProduct = (product: Product) => {
   editingProduct.value = product
@@ -771,17 +1184,19 @@ const duplicateProduct = (product: Product) => {
   
   products.value.unshift(duplicated)
   updateStats()
+  showNotification('Produit dupliqué avec succès!')
 }
 
 const deleteProduct = async (product: Product) => {
   if (product.source !== 'manual') {
-    alert('Seuls les produits manuels peuvent être supprimés. Les produits synchronisés doivent être supprimés depuis leur plateforme d\'origine.')
+    showNotification('Seuls les produits manuels peuvent être supprimés. Les produits synchronisés doivent être supprimés depuis leur plateforme d\'origine.')
     return
   }
 
   if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
     products.value = products.value.filter(p => p.id !== product.id)
     updateStats()
+    showNotification('Produit supprimé avec succès!')
   }
 }
 
@@ -803,6 +1218,7 @@ const saveProduct = () => {
         features: productForm.value.features.filter(f => f.trim() !== ''),
         updatedAt: new Date().toISOString()
       }
+      showNotification('Produit modifié avec succès!')
     }
   } else {
     // Add new product
@@ -821,6 +1237,7 @@ const saveProduct = () => {
     }
     
     products.value.unshift(newProduct)
+    showNotification('Produit ajouté avec succès!')
   }
 
   closeProductModal()
@@ -866,91 +1283,6 @@ const handleImageUpload = (event: Event) => {
   }
 }
 
-// ✅ CONNECTION ACTIONS
-const connectShopify = () => {
-  showConnectModal.value = false
-  // Simuler la connexion Shopify
-  connections.value.shopify.connected = true
-  connections.value.shopify.lastSync = new Date().toISOString()
-  connections.value.shopify.url = 'ma-boutique.myshopify.com'
-  
-  // Simuler l'import de produits
-  setTimeout(() => {
-    syncShopify()
-  }, 1000)
-}
-
-const connectWooCommerce = () => {
-  showConnectModal.value = false
-  // Simuler la connexion WooCommerce
-  connections.value.woocommerce.connected = true
-  connections.value.woocommerce.lastSync = new Date().toISOString()
-  connections.value.woocommerce.url = 'ma-boutique.com'
-  
-  setTimeout(() => {
-    syncWooCommerce()
-  }, 1000)
-}
-
-const syncShopify = async () => {
-  syncStatus.value = {
-    isSync: true,
-    source: 'Shopify',
-    processed: 0,
-    total: 5
-  }
-
-  // Simuler la synchronisation
-  const interval = setInterval(() => {
-    syncStatus.value.processed++
-    
-    if (syncStatus.value.processed >= syncStatus.value.total) {
-      clearInterval(interval)
-      syncStatus.value.isSync = false
-      connections.value.shopify.lastSync = new Date().toISOString()
-      
-      // Ajouter des produits Shopify simulés
-      const shopifyProducts = [
-        {
-          id: 'shopify_' + Date.now(),
-          name: 'Casque Audio Premium',
-          description: 'Casque sans fil avec réduction de bruit active',
-          price: 199.99,
-          category: 'Électronique',
-          source: 'shopify' as const,
-          externalId: 'shopify_456',
-          features: ['Bluetooth 5.0', 'Réduction de bruit', '30h d\'autonomie'],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ]
-      
-      products.value.unshift(...shopifyProducts)
-      updateStats()
-    }
-  }, 800)
-}
-
-const syncWooCommerce = async () => {
-  syncStatus.value = {
-    isSync: true,
-    source: 'WooCommerce',
-    processed: 0,
-    total: 3
-  }
-
-  const interval = setInterval(() => {
-    syncStatus.value.processed++
-    
-    if (syncStatus.value.processed >= syncStatus.value.total) {
-      clearInterval(interval)
-      syncStatus.value.isSync = false
-      connections.value.woocommerce.lastSync = new Date().toISOString()
-      updateStats()
-    }
-  }, 1000)
-}
-
 // ✅ UTILITY ACTIONS
 const refreshProducts = async () => {
   loading.value = true
@@ -958,6 +1290,7 @@ const refreshProducts = async () => {
   try {
     await new Promise(resolve => setTimeout(resolve, 1000))
     updateStats()
+    showNotification('Produits actualisés avec succès!')
   } catch (error) {
     console.error('Erreur lors du rafraîchissement:', error)
   } finally {
@@ -966,21 +1299,32 @@ const refreshProducts = async () => {
 }
 
 const exportProducts = () => {
-  // Simuler l'export CSV
-  const csv = 'Nom,Prix,Catégorie,Source\n' + 
-    filteredProducts.value.map(p => 
-      `"${p.name}",${p.price},"${p.category || ''}","${p.source}"`
-    ).join('\n')
+  // Créer le contenu CSV
+  const headers = ['Nom', 'Prix', 'Catégorie', 'Source', 'SKU']
+  const csvData = filteredProducts.value.map(p => [
+    p.name,
+    p.price,
+    p.category || '',
+    p.source,
+    p.sku || ''
+  ])
   
-  const blob = new Blob([csv], { type: 'text/csv' })
+  const csvContent = [
+    headers.join(','),
+    ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n')
+  
+  const blob = new Blob([csvContent], { type: 'text/csv' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'produits-chatseller.csv'
+  a.download = `produits-chatseller-${new Date().toISOString().split('T')[0]}.csv`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   window.URL.revokeObjectURL(url)
+  
+  showNotification(`${filteredProducts.value.length} produit(s) exporté(s) avec succès!`)
 }
 
 const clearFilters = () => {
@@ -1036,6 +1380,10 @@ useHead({
 
 .connection-option {
   @apply p-4 border border-gray-200 rounded-lg cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50;
+}
+
+.connection-option.connecting {
+  @apply border-blue-300 bg-blue-50;
 }
 
 .connection-option.disabled {

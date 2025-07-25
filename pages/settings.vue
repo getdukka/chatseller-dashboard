@@ -1,4 +1,4 @@
-<!-- pages/settings.vue - PAGE PARAMÈTRES CORRIGÉE SANS ERREURS -->
+<!-- pages/settings.vue - PAGE PARAMÈTRES CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -51,7 +51,7 @@
           <button
             v-for="tab in tabs"
             :key="tab.id"
-            @click="activeTab = tab.id"
+            @click="setActiveTab(tab.id)"
             :class="[
               'py-3 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === tab.id
@@ -69,7 +69,7 @@
 
       <!-- Tab Content -->
       <div class="max-w-6xl">
-        <!-- Vendeur IATab -->
+        <!-- Vendeur IA Tab -->
         <div v-show="activeTab === 'agent'" class="space-y-8">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Agent Configuration -->
@@ -175,31 +175,43 @@
                 <!-- Position -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-3">
-                    Position du widget
+                    Position du bouton
                   </label>
-                  <div class="grid grid-cols-2 gap-3">
-                    <label class="position-option" :class="{ 'selected': settings.position === 'bottom-left' }">
+                  <div class="grid grid-cols-1 gap-3">
+                    <label class="position-option" :class="{ 'selected': settings.position === 'above-cta' }">
                       <input
                         v-model="settings.position"
                         type="radio"
-                        value="bottom-left"
+                        value="above-cta"
                         class="sr-only"
                       >
                       <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 border-2 rounded-full" :class="settings.position === 'bottom-left' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
-                        <span class="text-sm">En bas à gauche</span>
+                        <div class="w-4 h-4 border-2 rounded-full" :class="settings.position === 'above-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
+                        <span class="text-sm">Au-dessus du bouton CTA</span>
                       </div>
                     </label>
-                    <label class="position-option" :class="{ 'selected': settings.position === 'bottom-right' }">
+                    <label class="position-option" :class="{ 'selected': settings.position === 'below-cta' }">
                       <input
                         v-model="settings.position"
                         type="radio"
-                        value="bottom-right"
+                        value="below-cta"
                         class="sr-only"
                       >
                       <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 border-2 rounded-full" :class="settings.position === 'bottom-right' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
-                        <span class="text-sm">En bas à droite</span>
+                        <div class="w-4 h-4 border-2 rounded-full" :class="settings.position === 'below-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
+                        <span class="text-sm">En dessous du bouton CTA</span>
+                      </div>
+                    </label>
+                    <label class="position-option" :class="{ 'selected': settings.position === 'beside-cta' }">
+                      <input
+                        v-model="settings.position"
+                        type="radio"
+                        value="beside-cta"
+                        class="sr-only"
+                      >
+                      <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 border-2 rounded-full" :class="settings.position === 'beside-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
+                        <span class="text-sm">À côté du bouton CTA</span>
                       </div>
                     </label>
                   </div>
@@ -217,19 +229,20 @@
                   </select>
                 </div>
 
-                <!-- Widget Status -->
+                <!-- ✅ WIDGET STATUS CORRIGÉ -->
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
                     <h4 class="text-sm font-medium text-gray-900">Widget actif</h4>
                     <p class="text-xs text-gray-500">Activez ou désactivez le widget sur votre site</p>
                   </div>
                   <button
-                    @click="settings.isActive = !settings.isActive"
+                    @click="toggleWidgetStatus"
                     :class="[
                       'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                       settings.isActive ? 'bg-blue-600' : 'bg-gray-200'
                     ]"
                   >
+                    <span class="sr-only">{{ settings.isActive ? 'Désactiver' : 'Activer' }} le widget</span>
                     <span
                       :class="[
                         'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
@@ -242,7 +255,7 @@
             </div>
           </div>
 
-          <!-- Widget Preview -->
+          <!-- ✅ WIDGET PREVIEW CORRIGÉ -->
           <div class="card-modern">
             <div class="flex items-center mb-6">
               <div class="p-2 bg-green-100 rounded-lg mr-3">
@@ -254,33 +267,161 @@
               <h3 class="text-lg font-semibold text-gray-900">Aperçu du widget</h3>
             </div>
             
-            <div class="bg-gray-100 rounded-lg p-6 relative overflow-hidden" style="height: 400px;">
-              <!-- Simulated Website -->
-              <div class="bg-white rounded-lg h-full shadow-sm border border-gray-200 relative">
-                <div class="h-12 bg-gray-50 border-b border-gray-200 flex items-center px-4">
+            <div class="bg-gray-100 rounded-lg p-6 relative overflow-hidden" style="height: 500px;">
+              <!-- Simulated E-commerce Page -->
+              <div class="bg-white rounded-lg h-full shadow-sm border border-gray-200 relative overflow-y-auto">
+                <!-- Browser Header -->
+                <div class="h-10 bg-gray-50 border-b border-gray-200 flex items-center px-4">
                   <div class="flex space-x-2">
                     <div class="w-3 h-3 bg-red-400 rounded-full"></div>
                     <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
                     <div class="w-3 h-3 bg-green-400 rounded-full"></div>
                   </div>
-                  <div class="flex-1 text-center text-sm text-gray-500">votre-site.com</div>
+                  <div class="flex-1 text-center text-sm text-gray-500">boutique-exemple.com/produit</div>
                 </div>
                 
-                <!-- Widget Preview -->
-                <div 
-                  v-if="settings.isActive"
-                  class="absolute bottom-6 transition-all duration-300"
-                  :class="settings.position === 'bottom-left' ? 'left-6' : 'right-6'"
-                >
+                <!-- Product Page Content -->
+                <div class="p-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Product Image -->
+                    <div class="aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
+                      <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                    </div>
+                    
+                    <!-- Product Info -->
+                    <div>
+                      <h1 class="text-2xl font-bold text-gray-900 mb-2">Produit Exemple</h1>
+                      <p class="text-xl text-blue-600 font-semibold mb-4">199€</p>
+                      <p class="text-gray-600 text-sm mb-6">Description du produit ici...</p>
+                      
+                      <!-- CTA Section avec Widget -->
+                      <div class="space-y-3">
+                        <!-- Widget Button Position: Above CTA -->
+                        <div v-if="settings.isActive && settings.position === 'above-cta'" class="widget-button-container">
+                          <button 
+                            @click="showChatPreview = !showChatPreview"
+                            class="widget-trigger-button"
+                            :style="{ backgroundColor: settings.primaryColor }"
+                          >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            {{ settings.buttonText }}
+                          </button>
+                        </div>
+                        
+                        <!-- Main CTA Button -->
+                        <div class="flex space-x-3">
+                          <button class="flex-1 bg-black text-white py-3 px-6 rounded-lg font-medium">
+                            Ajouter au panier
+                          </button>
+                          
+                          <!-- Widget Button Position: Beside CTA -->
+                          <div v-if="settings.isActive && settings.position === 'beside-cta'">
+                            <button 
+                              @click="showChatPreview = !showChatPreview"
+                              class="widget-trigger-button-small"
+                              :style="{ backgroundColor: settings.primaryColor }"
+                            >
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <!-- Widget Button Position: Below CTA -->
+                        <div v-if="settings.isActive && settings.position === 'below-cta'" class="widget-button-container">
+                          <button 
+                            @click="showChatPreview = !showChatPreview"
+                            class="widget-trigger-button"
+                            :style="{ backgroundColor: settings.primaryColor }"
+                          >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            {{ settings.buttonText }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- ✅ CHAT INTERFACE PREVIEW -->
+              <div 
+                v-if="showChatPreview && settings.isActive"
+                class="absolute inset-4 bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-10"
+              >
+                <!-- Chat Header -->
+                <div class="flex items-center justify-between p-4 border-b border-gray-200" :style="{ backgroundColor: settings.primaryColor }">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <span class="text-white text-sm font-medium">{{ settings.botName.charAt(0).toUpperCase() }}</span>
+                    </div>
+                    <div>
+                      <h3 class="text-white font-medium text-sm">{{ settings.botName }}</h3>
+                      <p class="text-white text-opacity-80 text-xs">En ligne</p>
+                    </div>
+                  </div>
                   <button 
-                    class="widget-button"
-                    :style="{ backgroundColor: settings.primaryColor }"
+                    @click="showChatPreview = false"
+                    class="text-white text-opacity-80 hover:text-opacity-100"
                   >
-                    <svg class="w-5 h-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                    <span class="text-white text-sm font-medium">{{ settings.buttonText }}</span>
                   </button>
+                </div>
+                
+                <!-- Chat Messages -->
+                <div class="flex-1 p-4 space-y-4 overflow-y-auto">
+                  <!-- Bot Welcome Message -->
+                  <div class="flex items-start space-x-2">
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white" :style="{ backgroundColor: settings.primaryColor }">
+                      {{ settings.botName.charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-xs">
+                      <p class="text-sm text-gray-800">{{ settings.welcomeMessage }}</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Quick Action Buttons -->
+                  <div class="space-y-2">
+                    <button class="quick-action-button">
+                      🛍️ Je veux l'acheter maintenant
+                    </button>
+                    <button class="quick-action-button">
+                      ❓ J'ai des questions à poser
+                    </button>
+                    <button class="quick-action-button">
+                      📋 Je veux en savoir plus
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Chat Input -->
+                <div class="p-4 border-t border-gray-200">
+                  <div class="flex items-center space-x-2">
+                    <input 
+                      type="text" 
+                      placeholder="Tapez votre message..."
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled
+                    >
+                    <button 
+                      class="p-2 rounded-lg text-white"
+                      :style="{ backgroundColor: settings.primaryColor }"
+                      disabled
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -380,94 +521,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Account Tab -->
-        <div v-show="activeTab === 'account'" class="space-y-8">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Profile Information -->
-            <div class="card-modern">
-              <div class="flex items-center mb-6">
-                <div class="p-2 bg-gray-100 rounded-lg mr-3">
-                  <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900">Informations du compte</h3>
-              </div>
-              
-              <div class="space-y-6">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
-                  <input
-                    v-model="profileData.name"
-                    type="text"
-                    class="input-modern w-full"
-                    placeholder="Votre nom"
-                  >
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    v-model="profileData.email"
-                    type="email"
-                    disabled
-                    class="input-modern w-full bg-gray-50 text-gray-500 cursor-not-allowed"
-                  >
-                  <p class="text-xs text-gray-500 mt-1">L'email ne peut pas être modifié</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Entreprise</label>
-                  <input
-                    v-model="profileData.company"
-                    type="text"
-                    class="input-modern w-full"
-                    placeholder="Nom de votre entreprise"
-                  >
-                </div>
-              </div>
-            </div>
-
-            <!-- Subscription -->
-            <div class="card-modern">
-              <div class="flex items-center mb-6">
-                <div class="p-2 bg-yellow-100 rounded-lg mr-3">
-                  <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                  </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900">Abonnement</h3>
-              </div>
-              
-              <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-900">Plan actuel</h4>
-                    <p class="text-xs text-gray-500">{{ subscriptionData.plan }}</p>
-                  </div>
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Actif
-                  </span>
-                </div>
-
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-900">Prochaine facturation</h4>
-                    <p class="text-xs text-gray-500">{{ subscriptionData.nextBilling }}</p>
-                  </div>
-                  <div class="text-right">
-                    <p class="text-sm font-medium text-gray-900">{{ subscriptionData.amount }}</p>
-                  </div>
-                </div>
-
-                <NuxtLink to="/billing" class="w-full btn-secondary block text-center">
-                  Gérer l'abonnement
-                </NuxtLink>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -487,7 +540,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 // ✅ PAGE META
@@ -498,13 +551,15 @@ definePageMeta({
 
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
+const route = useRoute()
 
 // ✅ REACTIVE STATE
 const saving = ref(false)
 const copied = ref(false)
-const activeTab = ref('agent')
 const showSuccessToast = ref(false)
+const showChatPreview = ref(false)
 
+// ✅ TABS - SUPPRESSION DE L'ONGLET COMPTE
 const tabs = [
   { 
     id: 'agent', 
@@ -515,35 +570,20 @@ const tabs = [
     id: 'integration', 
     label: 'Intégration',
     icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4'
-  },
-  { 
-    id: 'account', 
-    label: 'Compte',
-    icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
   }
 ]
+
+const activeTab = ref('agent')
 
 const settings = ref({
   botName: 'Assistant ChatSeller',
   welcomeMessage: 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?',
   buttonText: 'Parler à un conseiller',
   primaryColor: '#3B82F6',
-  position: 'bottom-right',
+  position: 'above-cta', // ✅ CORRECTION: Position par défaut mise à jour
   language: 'fr',
   widgetSize: 'medium',
   isActive: true
-})
-
-const profileData = ref({
-  name: '',
-  email: '',
-  company: ''
-})
-
-const subscriptionData = ref({
-  plan: 'Plan Gratuit',
-  nextBilling: '31 janvier 2025',
-  amount: '0€'
 })
 
 // ✅ COMPUTED - CORRECTIONS APPLIQUÉES
@@ -565,24 +605,60 @@ const widgetCodeDisplay = computed(() => {
     '  script.setAttribute(\'data-button-text\', \'' + settings.value.buttonText + '\');',
     '  script.setAttribute(\'data-widget-size\', \'' + settings.value.widgetSize + '\');',
     '  script.setAttribute(\'data-language\', \'' + settings.value.language + '\');',
+    '  script.setAttribute(\'data-active\', \'' + settings.value.isActive + '\');',
     '  document.head.appendChild(script);',
     '})();'
   ]
   
   const jsContent = jsLines.join('\n')
-  // ✅ CORRECTION : Échapper les balises script pour éviter le conflit de parsing Vue
   const openTag = '<' + 'script' + '>'
   const closeTag = '<' + '/' + 'script' + '>'
   return `${openTag}\n${jsContent}\n${closeTag}`
 })
 
+// ✅ WATCH ROUTE POUR GÉRER L'ONGLET VIA URL
+watch(() => route.query.tab, (newTab) => {
+  if (newTab && typeof newTab === 'string' && tabs.some(tab => tab.id === newTab)) {
+    activeTab.value = newTab
+  }
+}, { immediate: true })
+
 // ✅ METHODS - TOUTES LES FONCTIONS DÉFINIES
+const setActiveTab = (tabId: string) => {
+  activeTab.value = tabId
+  // Mettre à jour l'URL sans recharger la page
+  navigateTo({ query: { ...route.query, tab: tabId } }, { replace: true })
+}
+
+// ✅ TOGGLE WIDGET STATUS CORRIGÉ
+const toggleWidgetStatus = async () => {
+  const previousState = settings.value.isActive
+  settings.value.isActive = !settings.value.isActive
+  
+  try {
+    // ✅ TODO: Sauvegarder immédiatement dans l'API
+    await handleSaveSettings()
+    
+    console.log('Widget status updated:', settings.value.isActive)
+    
+  } catch (error) {
+    // Restaurer l'état précédent en cas d'erreur
+    settings.value.isActive = previousState
+    console.error('Erreur lors de la mise à jour du statut du widget:', error)
+  }
+}
+
 const loadSettings = async () => {
   try {
-    if (user.value) {
-      profileData.value.name = user.value.name || ''
-      profileData.value.email = user.value.email || ''
-    }
+    // ✅ TODO: Charger depuis l'API
+    // const response = await $fetch('/api/v1/settings', {
+    //   headers: { Authorization: `Bearer ${authStore.token}` }
+    // })
+    // if (response.success) {
+    //   Object.assign(settings.value, response.settings)
+    // }
+    
+    console.log('Settings loaded')
   } catch (error) {
     console.error('Erreur lors du chargement des paramètres:', error)
   }
@@ -593,6 +669,13 @@ const handleSaveSettings = async () => {
   try {
     // Simuler une sauvegarde
     await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // ✅ TODO: Sauvegarder vers l'API
+    // const response = await $fetch('/api/v1/settings', {
+    //   method: 'PUT',
+    //   headers: { Authorization: `Bearer ${authStore.token}` },
+    //   body: settings.value
+    // })
     
     console.log('Paramètres sauvegardés:', settings.value)
     
@@ -615,11 +698,12 @@ const handleResetToDefaults = () => {
       welcomeMessage: 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?',
       buttonText: 'Parler à un conseiller',
       primaryColor: '#3B82F6',
-      position: 'bottom-right',
+      position: 'above-cta',
       language: 'fr',
       widgetSize: 'medium',
       isActive: true
     }
+    showChatPreview.value = false
   }
 }
 
@@ -656,20 +740,12 @@ useHead({
   @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm;
 }
 
-.btn-secondary {
-  @apply px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors;
-}
-
 .position-option {
   @apply p-3 border border-gray-300 rounded-lg cursor-pointer transition-all hover:border-blue-300;
 }
 
 .position-option.selected {
   @apply border-blue-500 bg-blue-50;
-}
-
-.widget-button {
-  @apply flex items-center px-4 py-2 rounded-lg shadow-lg transition-all hover:shadow-xl;
 }
 
 .platform-card {
@@ -682,6 +758,23 @@ useHead({
 
 .success-message {
   @apply p-4 bg-green-50 border border-green-200 rounded-lg;
+}
+
+/* ✅ WIDGET PREVIEW STYLES */
+.widget-button-container {
+  @apply w-full;
+}
+
+.widget-trigger-button {
+  @apply w-full flex items-center justify-center px-4 py-2 text-white font-medium rounded-lg transition-all hover:opacity-90;
+}
+
+.widget-trigger-button-small {
+  @apply flex items-center justify-center p-3 text-white rounded-lg transition-all hover:opacity-90;
+}
+
+.quick-action-button {
+  @apply w-full text-left px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors;
 }
 
 /* ✅ RESPONSIVE */
