@@ -1,12 +1,12 @@
+// middleware/auth.ts - MIDDLEWARE AVEC COMPOSABLE MANUEL
 
-// middleware/auth.ts - AVEC IMPORTS EXPLICITES CORRIGÉS
-
-import { useAuthStore } from '~/stores/auth'
+import { useSupabase } from "~~/composables/useSupabase"
+import { useAuthStore } from "~~/stores/auth"
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   console.log('🔒 Middleware auth: Vérification pour route:', to.path)
   
-  // Ne pas exécuter côté serveur pour éviter les problèmes avec localStorage
+  // Ne pas exécuter côté serveur pour éviter les problèmes
   if (process.server) {
     console.log('⏭️ Middleware auth: Côté serveur, passage...')
     return
@@ -14,19 +14,21 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   try {
     const authStore = useAuthStore()
+    const supabase = useSupabase()
     
-    // Tentative de restauration de session si pas encore fait
-    if (!authStore.isAuthenticated && !authStore.loading) {
-      console.log('🔄 Middleware auth: Tentative de restauration de session')
-      await authStore.restoreSession()
-    }
-
-    // Si toujours pas authentifié après restauration
-    if (!authStore.isLoggedIn) {
-      console.log('❌ Middleware auth: Non authentifié, redirection vers /login')
+    // ✅ VÉRIFIER LA SESSION SUPABASE DIRECTEMENT
+    const { data: { user }, error } = await supabase.auth.getUser()
+    
+    if (error || !user) {
+      console.log('❌ Middleware auth: Pas de session Supabase valide')
+      
+      // Nettoyer le store si nécessaire
+      if (authStore.isAuthenticated) {
+        authStore.clearAuth()
+      }
       
       // Sauvegarder la route de destination pour redirection après login
-      const redirect = to.path !== '/login' ? to.fullPath : '/dashboard'
+      const redirect = to.path !== '/login' ? to.fullPath : '/index'
       
       return navigateTo({
         path: '/login',
@@ -34,7 +36,16 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       })
     }
 
-    console.log('✅ Middleware auth: Authentifié, accès autorisé')
+    // ✅ SESSION SUPABASE VALIDE
+    console.log('✅ Middleware auth: Session Supabase valide pour:', user.email)
+    
+    // Mettre à jour le store si nécessaire
+    if (!authStore.isAuthenticated) {
+      console.log('🔄 Middleware auth: Mise à jour du store depuis Supabase')
+      await authStore.restoreSession()
+    }
+
+    console.log('✅ Middleware auth: Accès autorisé')
   } catch (error) {
     console.error('❌ Middleware auth: Erreur:', error)
     // En cas d'erreur, rediriger vers login pour sécurité

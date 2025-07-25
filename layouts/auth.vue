@@ -10,7 +10,7 @@
             <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
               <span class="text-sm font-bold text-white">CS</span>
             </div>
-            <span class="text-xl font-bold text-gray-900">ChatSeller</span>
+            <span class="text-xl font-bold text-gray-900">ChatSeller</span>.
           </NuxtLink>
 
           <!-- Navigation links -->

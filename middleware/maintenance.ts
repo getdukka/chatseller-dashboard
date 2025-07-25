@@ -23,7 +23,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
   // Si on essaie d'accéder à /maintenance mais que le mode n'est pas activé
   if (!isMaintenanceMode && to.path === '/maintenance') {
     console.log('✅ Middleware maintenance: Mode maintenance désactivé, redirection')
-    return navigateTo('/dashboard')
+    return navigateTo('/index')
   }
   
   console.log('✅ Middleware maintenance: Accès autorisé')

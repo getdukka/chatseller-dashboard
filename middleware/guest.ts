@@ -16,7 +16,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     // Si l'utilisateur est connecté, rediriger vers le dashboard
     if (authStore.isLoggedIn) {
       console.log('🔄 Middleware guest: Utilisateur connecté, redirection vers dashboard')
-      return navigateTo('/dashboard')
+      return navigateTo('/index')
     }
 
     console.log('✅ Middleware guest: Accès autorisé pour utilisateur non connecté')

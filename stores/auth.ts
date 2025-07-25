@@ -1,8 +1,9 @@
-// stores/auth.ts - STORE AUTHENTIFICATION CORRIGÉ ET COHÉRENT
+// stores/auth.ts - STORE AUTH AVEC COMPOSABLE MANUEL
 
 import { defineStore } from 'pinia'
+import { useSupabase } from '~~/composables/useSupabase'
 
-// ✅ TYPES LOCAUX POUR ÉVITER LES IMPORTS CIRCULAIRES
+// ✅ TYPES LOCAUX (identiques à l'original)
 interface User {
   id: string
   email: string
@@ -13,6 +14,7 @@ interface User {
   role?: 'admin' | 'user'
   createdAt?: string
   updatedAt?: string
+  shop?: any // Données du shop Supabase
 }
 
 interface AuthState {
@@ -29,7 +31,11 @@ interface LoginCredentials {
 
 interface RegisterData extends LoginCredentials {
   name: string
-  confirmPassword?: string
+  firstName?: string
+  lastName?: string
+  company?: string
+  platform?: string
+  newsletter?: boolean
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -41,13 +47,13 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    // ✅ GETTER : userShopId (compatible avec useApi.ts)
+    // ✅ GETTERS IDENTIQUES (compatibilité)
     userShopId: (state): string | null => {
-      return state.user?.shopId || state.user?.shop_id || null
+      return state.user?.shopId || state.user?.shop_id || state.user?.id || null
     },
 
     isLoggedIn: (state): boolean => {
-      return state.isAuthenticated && !!state.user && !!state.token
+      return state.isAuthenticated && !!state.user
     },
 
     userEmail: (state): string | null => {
@@ -58,7 +64,6 @@ export const useAuthStore = defineStore('auth', {
       return state.user?.name || null
     },
 
-    // ✅ GETTER SUPPLÉMENTAIRE POUR LES INITIALES
     userInitials: (state): string => {
       if (state.user?.name) {
         return state.user.name
@@ -76,87 +81,174 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    // ✅ ACTION LOGIN - VERSION CORRIGÉE
+    // ✅ ACTION LOGIN - VERSION AVEC COMPOSABLE MANUEL
     async login(credentials: LoginCredentials) {
       this.loading = true
       
       try {
-        console.log('🔐 Store: Tentative de login pour:', credentials.email)
+        console.log('🔐 Store Supabase: Tentative de login pour:', credentials.email)
         
-        // ✅ UTILISATION DIRECTE DE $FETCH AU LIEU DE useApi
-        const config = useRuntimeConfig()
-        const baseURL = config.public.apiBaseUrl
+        // ✅ UTILISER LE COMPOSABLE MANUEL
+        const supabase = useSupabase()
         
-        const response = await $fetch(`${baseURL}/api/auth/login`, {
-          method: 'POST',
-          body: credentials,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }) as any
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password
+        })
 
-        console.log('📡 Store: Réponse login:', response)
+        if (authError) {
+          console.error('❌ Supabase auth error:', authError)
+          throw new Error(authError.message)
+        }
 
-        if (response.success && response.data) {
-          // Sauvegarder le token
-          if (process.client) {
-            localStorage.setItem('chatseller_token', response.data.token)
-            localStorage.setItem('chatseller_user', JSON.stringify(response.data.user))
+        if (authData.user) {
+          console.log('✅ Supabase auth success:', authData.user.id)
+          
+          // Récupérer les données du shop
+          const { data: shopData, error: shopError } = await supabase
+            .from('shops')
+            .select('*')
+            .eq('id', authData.user.id)
+            .single()
+
+          if (shopError && shopError.code !== 'PGRST116') {
+            console.warn('⚠️ Shop fetch error:', shopError)
           }
+
+          // Construire l'objet user compatible
+          const user: User = {
+            id: authData.user.id,
+            email: authData.user.email!,
+            name: authData.user.user_metadata?.name || authData.user.email,
+            shopId: authData.user.id,
+            shop_id: authData.user.id,
+            avatar: authData.user.user_metadata?.avatar_url,
+            role: 'user',
+            createdAt: authData.user.created_at,
+            shop: shopData
+          }
+
+          // Sauvegarder la session
+          this.setUser(user, authData.session?.access_token || '')
           
-          // Utiliser les données de AuthResponse
-          this.setUser(response.data.user as User, response.data.token)
-          
-          return { success: true, data: response.data }
+          return { 
+            success: true, 
+            data: { 
+              user, 
+              token: authData.session?.access_token 
+            } 
+          }
         } else {
-          throw new Error(response.error || 'Erreur de connexion')
+          throw new Error('Aucune donnée utilisateur reçue')
         }
       } catch (error: any) {
         console.error('❌ Store: Erreur login:', error)
         return { 
           success: false, 
-          error: error.data?.message || error.message || 'Erreur de connexion' 
+          error: error.message || 'Erreur de connexion' 
         }
       } finally {
         this.loading = false
       }
     },
 
-    // ✅ ACTION REGISTER - VERSION CORRIGÉE
+    // ✅ ACTION REGISTER - VERSION AVEC COMPOSABLE MANUEL
     async register(data: RegisterData) {
       this.loading = true
       
       try {
-        const config = useRuntimeConfig()
-        const baseURL = config.public.apiBaseUrl
+        console.log('📝 Store Supabase: Tentative d\'inscription pour:', data.email)
         
-        const response = await $fetch(`${baseURL}/api/auth/register`, {
-          method: 'POST',
-          body: {
-            email: data.email,
-            password: data.password,
-            name: data.name
-          },
-          headers: {
-            'Content-Type': 'application/json'
+        const supabase = useSupabase()
+        
+        // 1. Créer l'utilisateur dans Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              name: data.name,
+              company: data.company || '',
+              platform: data.platform || ''
+            }
           }
-        }) as any
+        })
 
-        if (response.success) {
-          // Auto-login après inscription
-          const loginResult = await this.login({
-            email: data.email,
-            password: data.password
-          })
-          return loginResult
+        if (authError) {
+          console.error('❌ Supabase signup error:', authError)
+          throw new Error(authError.message)
+        }
+
+        if (authData.user) {
+          console.log('✅ Supabase signup success:', authData.user.id)
+          
+          // 2. Créer le shop dans la base de données
+          const { data: shopData, error: shopError } = await supabase
+            .from('shops')
+            .insert({
+              id: authData.user.id,
+              name: data.company || `Shop de ${data.name}`,
+              email: data.email,
+              domain: null,
+              widget_config: {
+                theme: 'modern',
+                primaryColor: '#E91E63',
+                position: 'bottom-right',
+                buttonText: 'Parler au vendeur',
+                language: 'fr'
+              },
+              agent_config: {
+                name: 'Rose',
+                avatar: 'https://ui-avatars.com/api/?name=Rose&background=E91E63&color=fff',
+                welcomeMessage: 'Bonjour ! Je suis votre assistante d\'achat. Comment puis-je vous aider ?',
+                fallbackMessage: 'Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt.',
+                collectPaymentMethod: true,
+                upsellEnabled: false
+              },
+              subscription_plan: 'free',
+              is_active: true
+            })
+            .select()
+            .single()
+
+          if (shopError) {
+            console.error('❌ Shop creation error:', shopError)
+            // Ne pas faire échouer l'inscription pour ça
+          }
+
+          // 3. Construire l'objet user
+          const user: User = {
+            id: authData.user.id,
+            email: authData.user.email!,
+            name: data.name,
+            shopId: authData.user.id,
+            shop_id: authData.user.id,
+            avatar: authData.user.user_metadata?.avatar_url,
+            role: 'user',
+            createdAt: authData.user.created_at,
+            shop: shopData
+          }
+
+          // 4. Connecter automatiquement après inscription
+          if (authData.session) {
+            this.setUser(user, authData.session.access_token)
+          }
+
+          return { 
+            success: true, 
+            data: { 
+              user, 
+              token: authData.session?.access_token 
+            } 
+          }
         } else {
-          throw new Error(response.error || 'Erreur lors de l\'inscription')
+          throw new Error('Erreur lors de la création du compte')
         }
       } catch (error: any) {
         console.error('❌ Store: Erreur register:', error)
         return { 
           success: false, 
-          error: error.data?.message || error.message || 'Erreur lors de l\'inscription' 
+          error: error.message || 'Erreur lors de l\'inscription' 
         }
       } finally {
         this.loading = false
@@ -168,8 +260,15 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       
       try {
-        // TODO: Implémenter avec l'API réelle
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const supabase = useSupabase()
+        
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/reset-password`
+        })
+        
+        if (error) {
+          throw new Error(error.message)
+        }
         
         return { 
           success: true, 
@@ -179,20 +278,23 @@ export const useAuthStore = defineStore('auth', {
         console.error('❌ Store: Erreur reset password:', error)
         return { 
           success: false, 
-          error: error instanceof Error ? error.message : 'Erreur lors de l\'envoi' 
+          error: error.message || 'Erreur lors de l\'envoi' 
         }
       } finally {
         this.loading = false
       }
     },
 
-    // ✅ ACTION LOGOUT - VERSION CORRIGÉE
+    // ✅ ACTION LOGOUT
     async logout() {
       try {
-        // Nettoyer le localStorage
-        if (process.client) {
-          localStorage.removeItem('chatseller_token')
-          localStorage.removeItem('chatseller_user')
+        console.log('🚪 Store: Déconnexion en cours...')
+        
+        const supabase = useSupabase()
+        const { error } = await supabase.auth.signOut()
+        
+        if (error) {
+          console.warn('⚠️ Erreur logout Supabase:', error)
         }
       } catch (error) {
         console.warn('❌ Store: Erreur lors du logout:', error)
@@ -202,13 +304,12 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // ✅ ACTION SET USER
+    // ✅ ACTION SET USER (identique)
     setUser(user: User, token: string) {
-      // Normaliser l'utilisateur avec les deux formats
       const normalizedUser: User = {
         ...user,
-        shopId: user.shopId || user.shop_id,
-        shop_id: user.shop_id || user.shopId
+        shopId: user.shopId || user.shop_id || user.id,
+        shop_id: user.shop_id || user.shopId || user.id
       }
       
       this.user = normalizedUser
@@ -218,7 +319,7 @@ export const useAuthStore = defineStore('auth', {
       console.log('✅ Store: Utilisateur connecté:', normalizedUser)
     },
 
-    // ✅ ACTION CLEAR AUTH
+    // ✅ ACTION CLEAR AUTH (identique)
     clearAuth() {
       this.user = null
       this.token = null
@@ -227,56 +328,57 @@ export const useAuthStore = defineStore('auth', {
       console.log('🧹 Store: Session nettoyée')
     },
 
-    // ✅ ACTION RESTORE SESSION - VERSION CORRIGÉE
+    // ✅ ACTION RESTORE SESSION
     async restoreSession() {
       if (!process.client) return { success: false }
 
       try {
-        const token = localStorage.getItem('chatseller_token')
-        const userData = localStorage.getItem('chatseller_user')
-
-        if (token && userData) {
-          console.log('🔄 Store: Tentative de restauration de session')
-          
-          try {
-            // Vérifier la validité du token avec l'API
-            const config = useRuntimeConfig()
-            const baseURL = config.public.apiBaseUrl
-            
-            const response = await $fetch(`${baseURL}/api/auth/verify`, {
-              method: 'POST',
-              body: { token },
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            }) as any
-
-            if (response.success && response.data) {
-              const user = JSON.parse(userData)
-              this.setUser(user, token)
-              console.log('✅ Store: Session restaurée avec succès')
-              return { success: true }
-            } else {
-              throw new Error('Token invalide')
-            }
-          } catch (verifyError) {
-            console.log('❌ Store: Token invalide, nettoyage...')
-            this.clearAuth()
-            localStorage.removeItem('chatseller_token')
-            localStorage.removeItem('chatseller_user')
-            return { success: false }
-          }
-        }
+        console.log('🔄 Store: Tentative de restauration de session Supabase')
         
-        return { success: false }
+        const supabase = useSupabase()
+        const { data: { user }, error } = await supabase.auth.getUser()
+        
+        if (error || !user) {
+          console.log('❌ Store: Pas de session Supabase valide')
+          this.clearAuth()
+          return { success: false }
+        }
+
+        // Récupérer les données du shop
+        const { data: shopData, error: shopError } = await supabase
+          .from('shops')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (shopError && shopError.code !== 'PGRST116') {
+          console.warn('⚠️ Shop fetch error:', shopError)
+        }
+
+        // Construire l'objet user
+        const userData: User = {
+          id: user.id,
+          email: user.email!,
+          name: user.user_metadata?.name || user.email,
+          shopId: user.id,
+          shop_id: user.id,
+          avatar: user.user_metadata?.avatar_url,
+          role: 'user',
+          createdAt: user.created_at,
+          shop: shopData
+        }
+
+        // Récupérer le token de session
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token || ''
+
+        this.setUser(userData, token)
+        console.log('✅ Store: Session Supabase restaurée avec succès')
+        return { success: true }
+        
       } catch (error) {
         console.error('❌ Store: Erreur restore session:', error)
         this.clearAuth()
-        if (process.client) {
-          localStorage.removeItem('chatseller_token')
-          localStorage.removeItem('chatseller_user')
-        }
         return { success: false }
       }
     },
@@ -286,24 +388,32 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       
       try {
+        const supabase = useSupabase()
+        
+        // Mettre à jour dans Supabase Auth
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: {
+            name: data.name,
+            avatar_url: data.avatar
+          }
+        })
+        
+        if (updateError) {
+          throw new Error(updateError.message)
+        }
+
+        // Mettre à jour localement
         if (this.user) {
           this.user = { ...this.user, ...data }
-          
-          // Persistence dans localStorage
-          if (process.client) {
-            localStorage.setItem('chatseller_user', JSON.stringify(this.user))
-          }
-          
           console.log('✅ Store: Profil mis à jour:', this.user)
-          return { success: true }
-        } else {
-          throw new Error('Utilisateur non connecté')
         }
+        
+        return { success: true }
       } catch (error: any) {
         console.error('❌ Store: Erreur update profile:', error)
         return { 
           success: false, 
-          error: error instanceof Error ? error.message : 'Erreur mise à jour profil' 
+          error: error.message || 'Erreur mise à jour profil' 
         }
       } finally {
         this.loading = false
@@ -313,34 +423,15 @@ export const useAuthStore = defineStore('auth', {
     // ✅ ACTION REFRESH TOKEN
     async refreshToken() {
       try {
-        const token = process.client ? localStorage.getItem('chatseller_token') : null
-        if (!token) {
-          throw new Error('Pas de token à rafraîchir')
-        }
-
-        const config = useRuntimeConfig()
-        const baseURL = config.public.apiBaseUrl
+        const supabase = useSupabase()
+        const { data, error } = await supabase.auth.refreshSession()
         
-        const response = await $fetch(`${baseURL}/api/auth/refresh`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }) as any
-        
-        if (response.success && response.data) {
-          this.token = response.data.token
-          
-          // Sauvegarder le nouveau token
-          if (process.client) {
-            localStorage.setItem('chatseller_token', response.data.token)
-          }
-          
-          return { success: true }
-        } else {
+        if (error || !data.session) {
           throw new Error('Impossible de rafraîchir le token')
         }
+        
+        this.token = data.session.access_token
+        return { success: true }
       } catch (error) {
         console.error('❌ Store: Erreur refresh token:', error)
         this.clearAuth()

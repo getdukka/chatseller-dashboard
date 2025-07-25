@@ -1,4 +1,4 @@
-<!-- pages/knowledge-base.vue - ERREURS TYPESCRIPT CORRIGÉES -->
+<!-- pages/knowledge-base.vue - ADAPTÉ AU useApi EXISTANT -->
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -160,6 +160,8 @@
 </template>
 
 <script setup lang="ts">
+import type { KnowledgeBaseDocument } from '../types/index'
+
 // ✅ META PAGE
 definePageMeta({
   middleware: 'auth',
@@ -168,7 +170,7 @@ definePageMeta({
 
 // ✅ COMPOSABLES
 const auth = useAuth()
-const api = useApi()
+const api = useApi() // ✅ Utilise le useApi existant
 
 // ✅ REACTIVE DATA - SANS TYPES EXPLICITES POUR ÉVITER LES ERREURS
 const loading = ref(false)
@@ -185,27 +187,28 @@ const filteredKnowledge = computed(() => {
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter((item: any) => 
+    filtered = filtered.filter(item => 
       item.title.toLowerCase().includes(query) ||
       item.content.toLowerCase().includes(query)
     )
   }
 
   if (selectedType.value) {
-    filtered = filtered.filter((item: any) => item.type === selectedType.value)
+    filtered = filtered.filter(item => item.type === selectedType.value)
   }
 
   return filtered
 })
 
 // ✅ METHODS
-const editItem = (item: any) => {
+const editItem = (item: KnowledgeBaseDocument) => {
   editingItem.value = { ...item }
 }
 
-const deleteItem = async (item: any) => {
+const deleteItem = async (item: KnowledgeBaseDocument) => {
   if (confirm('Êtes-vous sûr de vouloir supprimer cette connaissance ?')) {
     try {
+      // ✅ Utilise la méthode correcte du useApi existant
       const response = await api.knowledgeBase.delete(item.id)
       if (response.success) {
         await loadKnowledgeItems()
@@ -220,6 +223,7 @@ const loadKnowledgeItems = async () => {
   loading.value = true
   
   try {
+    // ✅ Utilise la méthode correcte du useApi existant
     const response = await api.knowledgeBase.list(auth.userShopId.value || undefined)
     if (response.success && response.data) {
       knowledgeItems.value = response.data
@@ -254,6 +258,7 @@ const loadKnowledgeItems = async () => {
 
 const handleFileUpload = async (file: File) => {
   try {
+    // ✅ Utilise la méthode correcte du useApi existant
     const response = await api.knowledgeBase.upload(auth.userShopId.value || '', file)
     if (response.success) {
       showUploadModal.value = false
@@ -264,12 +269,13 @@ const handleFileUpload = async (file: File) => {
   }
 }
 
-const handleSaveItem = async (item: any) => {
+const handleSaveItem = async (item: Partial<KnowledgeBaseDocument>) => {
   try {
     if (editingItem.value?.id) {
       // TODO: Ajouter méthode update au useApi si nécessaire
       console.log('Update item:', item)
     } else {
+      // ✅ Utilise la méthode correcte du useApi existant
       const response = await api.knowledgeBase.addManual(
         auth.userShopId.value || '', 
         {

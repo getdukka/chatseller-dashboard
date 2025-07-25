@@ -23,7 +23,7 @@ export const useAuth = () => {
     
     // Navigation après login réussi
     if (result.success) {
-      await navigateTo('/dashboard')
+      await navigateTo('/index')
     }
     
     return result
@@ -49,7 +49,7 @@ export const useAuth = () => {
     
     // Navigation après inscription réussie
     if (result.success) {
-      await navigateTo('/dashboard')
+      await navigateTo('/index')
     }
     
     return result
@@ -95,7 +95,7 @@ export const useAuth = () => {
 
   const requireGuest = async () => {
     if (authStore.isLoggedIn) {
-      await navigateTo('/dashboard')
+      await navigateTo('/index')
       return false
     }
     return true

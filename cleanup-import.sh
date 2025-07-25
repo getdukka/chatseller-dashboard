@@ -166,9 +166,9 @@ EOF
 fi
 
 # 6. Créer une page dashboard simple si elle n'existe pas
-if [ ! -f "pages/dashboard.vue" ]; then
+if [ ! -f "pages/index.vue" ]; then
     echo "📄 Création d'une page dashboard simple..."
-    cat << 'EOF' > pages/dashboard.vue
+    cat << 'EOF' > pages/index.vue
 <template>
   <div class="min-h-screen bg-gray-50">
     <header class="bg-white shadow">

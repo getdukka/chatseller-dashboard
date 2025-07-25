@@ -257,7 +257,7 @@ const handleLogin = async () => {
 onMounted(async () => {
   await auth.restoreSession()
   if (auth.isAuthenticated.value) {
-    await navigateTo('/dashboard')
+    await navigateTo('/')
   }
 })
 </script>

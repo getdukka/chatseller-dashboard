@@ -1,11 +1,11 @@
-// nuxt.config.ts - CONFIGURATION FINALE CORRIGÉE
+// nuxt.config.ts - CONFIGURATION SIMPLIFIÉE SUPABASE
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
-  // ✅ COMPATIBILITY DATE AJOUTÉ POUR ÉVITER LE WARNING
+  // ✅ COMPATIBILITY DATE
   compatibilityDate: '2025-07-24',
 
-  // ✅ MODULES ESSENTIELS DANS LE BON ORDRE
+  // ✅ MODULES SIMPLIFIÉS - RETIRER @nuxtjs/supabase POUR L'INSTANT
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
@@ -23,31 +23,33 @@ export default defineNuxtConfig({
     }
   },
 
-  // ✅ TYPESCRIPT - CONFIGURATION PERMISSIVE POUR ÉVITER LES ERREURS
+  // ✅ TYPESCRIPT
   typescript: {
     strict: false,
     typeCheck: false
   },
 
-  // ✅ RUNTIME CONFIG - URLS CORRIGÉES
+  // ✅ RUNTIME CONFIG - CONFIGURATION SUPABASE MANUELLE
   runtimeConfig: {
     // Privé (serveur seulement)
     jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-chatseller-dashboard',
-    supabaseUrl: process.env.SUPABASE_URL,
-    supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,
     
     // Public (client + serveur)
     public: {
-      // ✅ URL API CORRIGÉE - UTILISER L'API RAILWAY
+      // API EXISTANTE (on garde pour les données business)
       apiBaseUrl: process.env.API_URL || 'https://chatseller-api-production.up.railway.app',
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      
+      // ✅ SUPABASE CONFIGURATION MANUELLE
+      supabaseUrl: process.env.SUPABASE_URL || 'https://hdprfqmufuydpgwvhxvd.supabase.co',
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkcHJmcW11ZnV5ZHBnd3ZoeHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyNzcxNjYsImV4cCI6MjA2Nzg1MzE2Nn0.VQMtvKJVflpRb7tjjQHPR6iSX0eThsGRjr6KIgIDGkc',
+      
+      // AUTRES CONFIG
       appUrl: process.env.APP_URL || 'http://localhost:3000',
       widgetUrl: process.env.WIDGET_URL || 'https://widget.chatseller.app'
     }
   },
 
-  // ✅ AUTO-IMPORTS OPTIMISÉS
+  // ✅ AUTO-IMPORTS
   imports: {
     dirs: [
       'composables',
@@ -81,7 +83,8 @@ export default defineNuxtConfig({
         '@heroicons/vue/24/solid',
         '@vueuse/core',
         'pinia',
-        'chart.js'
+        'chart.js',
+        '@supabase/supabase-js'
       ]
     },
     define: {
@@ -118,7 +121,7 @@ export default defineNuxtConfig({
   // ✅ SSR CONFIG
   ssr: true,
 
-  // ✅ NITRO CONFIG - ÉVITER LES ERREURS DE CERTIFICAT EN DEV
+  // ✅ NITRO CONFIG
   nitro: {
     experimental: {
       wasm: true
@@ -126,14 +129,6 @@ export default defineNuxtConfig({
     esbuild: {
       options: {
         target: 'es2020'
-      }
-    },
-    // ✅ AJOUT POUR ÉVITER LES ERREURS SSL EN DÉVELOPPEMENT
-    devProxy: {
-      '/api': {
-        target: process.env.API_URL || 'https://chatseller-api-production.up.railway.app',
-        changeOrigin: true,
-        secure: false // ✅ POUR ÉVITER LES ERREURS DE CERTIFICAT
       }
     }
   },
@@ -151,10 +146,10 @@ export default defineNuxtConfig({
     typedPages: true
   },
 
-  // ✅ HOOKS POUR ÉVITER LES ERREURS DE DÉVELOPPEMENT
+  // ✅ HOOKS
   hooks: {
     'build:before': () => {
-      console.log('🚀 Building ChatSeller Dashboard...')
+      console.log('🚀 Building ChatSeller Dashboard with manual Supabase setup...')
     }
   }
 })
