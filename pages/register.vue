@@ -441,7 +441,7 @@ const handleRegister = async () => {
 onMounted(async () => {
   await auth.restoreSession()
   if (auth.isAuthenticated.value) {
-    await navigateTo('/index')
+    await navigateTo('/')
   }
 })
 </script>

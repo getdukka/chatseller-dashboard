@@ -26,6 +26,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     console.log('✅ Middleware admin: Accès autorisé')
   } catch (error) {
     console.error('❌ Middleware admin: Erreur:', error)
-    return navigateTo('/index')
+    return navigateTo('/')
   }
 })

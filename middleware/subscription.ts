@@ -34,6 +34,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   } catch (error) {
     console.error('❌ Middleware subscription: Erreur:', error)
     // En cas d'erreur, rediriger vers le dashboard pour éviter de bloquer
-    return navigateTo('/index')
+    return navigateTo('/i')
   }
 })

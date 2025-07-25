@@ -29,12 +29,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     if (hasCompletedOnboarding && to.path === '/onboarding') {
       console.log('✅ Middleware onboarding: Onboarding déjà terminé, redirection')
-      return navigateTo('/index')
+      return navigateTo('/')
     }
 
     console.log('✅ Middleware onboarding: Accès autorisé')
   } catch (error) {
     console.error('❌ Middleware onboarding: Erreur:', error)
-    return navigateTo('/index')
+    return navigateTo('/')
   }
 })

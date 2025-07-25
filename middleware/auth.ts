@@ -28,7 +28,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       }
       
       // Sauvegarder la route de destination pour redirection après login
-      const redirect = to.path !== '/login' ? to.fullPath : '/index'
+      const redirect = to.path !== '/login' ? to.fullPath : '/'
       
       return navigateTo({
         path: '/login',
