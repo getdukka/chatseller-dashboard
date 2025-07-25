@@ -164,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-// ✅ PROPS ET EMITS
+// ✅ INTERFACE PROPS
 interface Props {
   unreadCount: number
   userName: string
@@ -174,17 +174,9 @@ interface Props {
   isMobile?: boolean
 }
 
-defineProps<Props>()
-
-defineEmits<{
-  'toggle-profile': []
-  'close-profile': []
-  'logout': []
-  'close-mobile': []
-}>()
-
-// ✅ PROPS
+// ✅ PROPS ET EMITS - UN SEUL APPEL À defineProps
 const props = defineProps<Props>()
+
 const emit = defineEmits<{
   'toggle-profile': []
   'close-profile': []
