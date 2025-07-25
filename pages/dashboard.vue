@@ -1,203 +1,231 @@
-<!-- pages/index.vue -->
+<!-- pages/index.vue - DASHBOARD HOMEPAGE MODERNE ET RESPONSIVE -->
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Message de bienvenue pour nouveaux utilisateurs -->
-    <div v-if="showWelcome" class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-      <div class="flex items-center">
-        <svg class="h-6 w-6 text-blue-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="flex-1">
-          <h3 class="text-sm font-medium text-blue-800">
-            Bienvenue sur ChatSeller !
-          </h3>
-          <p class="mt-1 text-sm text-blue-700">
-            Votre compte a été créé avec succès. Configurez votre agent IA pour commencer à vendre.
-          </p>
-        </div>
-        <button
-          @click="showWelcome = false"
-          class="ml-4 text-blue-600 hover:text-blue-800"
-        >
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Header de la page -->
-    <div class="bg-white shadow-sm border-b border-gray-200">
-      <div class="px-6 py-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p class="mt-1 text-sm text-gray-600">
-              Pilotez votre agent IA commercial
-            </p>
-          </div>
-          <div class="flex items-center space-x-4">
-            <button
-              @click="refreshData"
-              :disabled="refreshing"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
-            >
-              <svg 
-                class="mr-2 h-4 w-4" 
-                :class="{ 'animate-spin': refreshing }"
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {{ refreshing ? 'Actualisation...' : 'Actualiser' }}
-            </button>
-            
-            <NuxtLink
-              to="/settings"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-            >
-              <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Configurer
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Contenu principal -->
-    <div class="p-6">
-      <!-- Métriques principales -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Conversations -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <!-- Welcome Banner -->
+    <div v-if="showWelcome" class="m-8 mb-6">
+      <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg overflow-hidden">
+        <div class="px-8 py-6 text-white relative">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Conversations</p>
-              <p class="text-3xl font-bold text-gray-900">{{ stats.conversations.total }}</p>
-              <p class="text-sm text-gray-500 mt-1">
-                <span class="text-green-600 font-medium">{{ stats.conversations.active }}</span> actives
+              <h2 class="text-2xl font-bold mb-2">🎉 Bienvenue sur ChatSeller !</h2>
+              <p class="text-blue-100 text-lg">
+                Votre Vendeur IA est prêt à transformer vos visiteurs en clients.
+              </p>
+              <div class="mt-4 flex flex-wrap gap-3">
+                <NuxtLink 
+                  to="/knowledge-base" 
+                  class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                  </svg>
+                  Nourrir votre IA
+                </NuxtLink>
+                <NuxtLink 
+                  to="/settings" 
+                  class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  Configurer
+                </NuxtLink>
+              </div>
+            </div>
+            <button
+              @click="showWelcome = false"
+              class="text-white text-opacity-80 hover:text-opacity-100 transition-colors"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="px-8 py-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p class="mt-2 text-gray-600">
+            Pilotez votre Vendeur IA et suivez vos performances
+          </p>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="flex items-center space-x-4">
+          <button
+            @click="refreshData"
+            :disabled="refreshing"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            <svg 
+              class="w-4 h-4 mr-2" 
+              :class="{ 'animate-spin': refreshing }"
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            {{ refreshing ? 'Actualisation...' : 'Actualiser' }}
+          </button>
+          
+          <NuxtLink
+            to="/settings"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Configurer
+          </NuxtLink>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="px-8 pb-8">
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Conversations Card -->
+        <div class="card-modern-gradient from-blue-500 to-blue-600">
+          <div class="flex items-center justify-between">
+            <div class="text-white">
+              <p class="text-blue-100 text-sm font-medium">Conversations</p>
+              <p class="text-3xl font-bold">{{ stats.conversations.total.toLocaleString() }}</p>
+              <p class="text-blue-100 text-sm mt-1">
+                <span class="text-white font-medium">{{ stats.conversations.active }}</span> actives
               </p>
             </div>
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
-              <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
             </div>
           </div>
           <div class="mt-4">
             <NuxtLink 
               to="/conversations"
-              class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              class="text-white text-sm font-medium hover:text-blue-100 transition-colors inline-flex items-center"
             >
-              Voir tout →
+              Voir tout 
+              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
             </NuxtLink>
           </div>
         </div>
 
-        <!-- Commandes -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <!-- Orders Card -->
+        <div class="card-modern-gradient from-green-500 to-green-600">
           <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Commandes</p>
-              <p class="text-3xl font-bold text-gray-900">{{ stats.orders.total }}</p>
-              <p class="text-sm text-gray-500 mt-1">
-                <span class="text-blue-600 font-medium">{{ stats.orders.conversionRate }}%</span> conversion
+            <div class="text-white">
+              <p class="text-green-100 text-sm font-medium">Commandes</p>
+              <p class="text-3xl font-bold">{{ stats.orders.total.toLocaleString() }}</p>
+              <p class="text-green-100 text-sm mt-1">
+                <span class="text-white font-medium">{{ stats.orders.conversionRate }}%</span> conversion
               </p>
             </div>
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50">
-              <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
             </div>
           </div>
           <div class="mt-4">
             <NuxtLink 
               to="/orders"
-              class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              class="text-white text-sm font-medium hover:text-green-100 transition-colors inline-flex items-center"
             >
-              Voir tout →
+              Voir tout 
+              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
             </NuxtLink>
           </div>
         </div>
 
-        <!-- Chiffre d'affaires -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <!-- Revenue Card -->
+        <div class="card-modern-gradient from-yellow-500 to-orange-500">
           <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Chiffre d'affaires</p>
-              <p class="text-3xl font-bold text-gray-900">{{ formatCurrency(stats.revenue.total) }}</p>
-              <p class="text-sm text-gray-500 mt-1">
-                <span class="text-green-600 font-medium">{{ formatCurrency(stats.revenue.average) }}</span> panier moyen
+            <div class="text-white">
+              <p class="text-orange-100 text-sm font-medium">Chiffre d'affaires</p>
+              <p class="text-3xl font-bold">{{ formatCurrency(stats.revenue.total) }}</p>
+              <p class="text-orange-100 text-sm mt-1">
+                <span class="text-white font-medium">{{ formatCurrency(stats.revenue.average) }}</span> panier moyen
               </p>
             </div>
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-50">
-              <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
               </svg>
             </div>
           </div>
           <div class="mt-4">
             <NuxtLink 
               to="/analytics"
-              class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              class="text-white text-sm font-medium hover:text-orange-100 transition-colors inline-flex items-center"
             >
-              Voir analytics →
+              Voir analytics 
+              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
             </NuxtLink>
           </div>
         </div>
 
-        <!-- Performance -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <!-- Performance Card -->
+        <div class="card-modern-gradient from-purple-500 to-purple-600">
           <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Performance</p>
-              <p class="text-3xl font-bold text-gray-900">{{ stats.performance.responseTime }}</p>
-              <p class="text-sm text-gray-500 mt-1">
-                <span class="text-green-600 font-medium">{{ stats.performance.uptime }}%</span> uptime
+            <div class="text-white">
+              <p class="text-purple-100 text-sm font-medium">Performance</p>
+              <p class="text-3xl font-bold">{{ stats.performance.responseTime }}</p>
+              <p class="text-purple-100 text-sm mt-1">
+                <span class="text-white font-medium">{{ stats.performance.uptime }}%</span> uptime
               </p>
             </div>
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-50">
-              <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </div>
           </div>
           <div class="mt-4">
-            <span class="text-sm font-medium text-gray-500">Système optimal</span>
+            <span class="text-purple-100 text-sm font-medium">Système optimal</span>
           </div>
         </div>
       </div>
 
-      <!-- Sections principales -->
+      <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Conversations récentes -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-medium text-gray-900">Conversations récentes</h3>
-              <NuxtLink 
-                to="/conversations"
-                class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                Gérer les discussions
-              </NuxtLink>
-            </div>
+        <!-- Recent Conversations -->
+        <div class="card-modern">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Conversations récentes</h3>
+            <NuxtLink 
+              to="/conversations"
+              class="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+            >
+              Gérer les discussions
+            </NuxtLink>
           </div>
-          <div class="p-6">
-            <div v-if="recentConversations.length > 0" class="space-y-4">
-              <div 
-                v-for="conversation in recentConversations" 
-                :key="conversation.id"
-                class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                @click="goToConversation(conversation.id)"
-              >
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <span class="text-sm font-medium text-blue-700">
+          
+          <div v-if="recentConversations.length > 0" class="space-y-4">
+            <div 
+              v-for="conversation in recentConversations" 
+              :key="conversation.id"
+              class="conversation-item"
+              @click="goToConversation(conversation.id)"
+            >
+              <div class="flex items-center space-x-3">
+                <div class="avatar-circle">
+                  <span class="text-sm font-medium text-white">
                     {{ conversation.visitor.charAt(0).toUpperCase() }}
                   </span>
                 </div>
@@ -209,46 +237,52 @@
                     {{ conversation.lastMessage }}
                   </p>
                 </div>
-                <div class="text-xs text-gray-400">
-                  {{ formatTime(conversation.time) }}
+                <div class="flex flex-col items-end">
+                  <div class="text-xs text-gray-400">
+                    {{ formatTime(conversation.time) }}
+                  </div>
+                  <div 
+                    v-if="conversation.unread" 
+                    class="w-2 h-2 bg-blue-500 rounded-full mt-1"
+                  ></div>
                 </div>
               </div>
             </div>
-            <div v-else class="text-center py-8">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <p class="mt-2 text-sm text-gray-500">Aucune conversation récente</p>
-              <p class="text-xs text-gray-400 mt-1">Les nouvelles conversations apparaîtront ici</p>
-            </div>
+          </div>
+          
+          <div v-else class="empty-state">
+            <svg class="w-12 h-12 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <p class="text-gray-500 text-sm mt-2">Aucune conversation récente</p>
+            <p class="text-gray-400 text-xs mt-1">Les nouvelles conversations apparaîtront ici</p>
           </div>
         </div>
 
-        <!-- Commandes récentes -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-medium text-gray-900">Commandes récentes</h3>
-              <NuxtLink 
-                to="/orders"
-                class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                Suivi des ventes
-              </NuxtLink>
-            </div>
+        <!-- Recent Orders -->
+        <div class="card-modern">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Commandes récentes</h3>
+            <NuxtLink 
+              to="/orders"
+              class="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+            >
+              Suivi des ventes
+            </NuxtLink>
           </div>
-          <div class="p-6">
-            <div v-if="recentOrders.length > 0" class="space-y-4">
-              <div 
-                v-for="order in recentOrders" 
-                :key="order.id"
-                class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                @click="goToOrder(order.id)"
-              >
+          
+          <div v-if="recentOrders.length > 0" class="space-y-4">
+            <div 
+              v-for="order in recentOrders" 
+              :key="order.id"
+              class="order-item"
+              @click="goToOrder(order.id)"
+            >
+              <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                    <svg class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                     </svg>
                   </div>
                   <div>
@@ -256,7 +290,7 @@
                       {{ order.customer }}
                     </p>
                     <p class="text-xs text-gray-500">
-                      Commande #{{ order.id }}
+                      Commande #{{ order.id.slice(-6).toUpperCase() }}
                     </p>
                   </div>
                 </div>
@@ -270,84 +304,86 @@
                 </div>
               </div>
             </div>
-            <div v-else class="text-center py-8">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              <p class="mt-2 text-sm text-gray-500">Aucune commande récente</p>
-              <p class="text-xs text-gray-400 mt-1">Les nouvelles ventes apparaîtront ici</p>
-            </div>
+          </div>
+          
+          <div v-else class="empty-state">
+            <svg class="w-12 h-12 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+            <p class="text-gray-500 text-sm mt-2">Aucune commande récente</p>
+            <p class="text-gray-400 text-xs mt-1">Les nouvelles ventes apparaîtront ici</p>
           </div>
         </div>
 
-        <!-- Configuration rapide -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-medium text-gray-900">Configuration</h3>
-              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                {{ configurationProgress }}% complété
-              </span>
+        <!-- Quick Setup -->
+        <div class="card-modern">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Configuration rapide</h3>
+            <div class="progress-circle">
+              <span class="text-xs text-gray-600">{{ configurationProgress }}%</span>
             </div>
           </div>
-          <div class="p-6">
-            <div class="space-y-4">
-              <NuxtLink 
-                to="/knowledge-base"
-                class="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <svg class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          
+          <div class="space-y-4">
+            <div class="setup-item" :class="{ 'completed': knowledgeBaseStatus !== 'Vide' }">
+              <NuxtLink to="/knowledge-base" class="flex items-center justify-between w-full">
+                <div class="flex items-center space-x-3">
+                  <div class="setup-icon" :class="knowledgeBaseStatus !== 'Vide' ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
-                    <div>
-                      <p class="text-sm font-medium text-gray-900">Base de connaissance</p>
-                      <p class="text-xs text-gray-500">Alimenter votre agent IA</p>
-                    </div>
                   </div>
-                  <div class="text-xs text-gray-400">
-                    {{ knowledgeBaseStatus }}
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">Base de connaissance</p>
+                    <p class="text-xs text-gray-500">Alimenter votre agent IA</p>
                   </div>
+                </div>
+                <div class="flex items-center">
+                  <span class="text-xs text-gray-400">{{ knowledgeBaseStatus }}</span>
+                  <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
                 </div>
               </NuxtLink>
+            </div>
 
-              <NuxtLink 
-                to="/settings"
-                class="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <div class="setup-item" :class="{ 'completed': agentConfigStatus !== 'À configurer' }">
+              <NuxtLink to="/settings" class="flex items-center justify-between w-full">
+                <div class="flex items-center space-x-3">
+                  <div class="setup-icon" :class="agentConfigStatus !== 'À configurer' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    <div>
-                      <p class="text-sm font-medium text-gray-900">Paramètres agent</p>
-                      <p class="text-xs text-gray-500">Personnaliser le comportement</p>
-                    </div>
                   </div>
-                  <div class="text-xs text-gray-400">
-                    {{ agentConfigStatus }}
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">Paramètres agent</p>
+                    <p class="text-xs text-gray-500">Personnaliser le comportement</p>
                   </div>
+                </div>
+                <div class="flex items-center">
+                  <span class="text-xs text-gray-400">{{ agentConfigStatus }}</span>
+                  <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
                 </div>
               </NuxtLink>
+            </div>
 
-              <div class="p-3 rounded-lg border border-gray-200 bg-gray-50">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            <div class="setup-item disabled">
+              <div class="flex items-center justify-between w-full">
+                <div class="flex items-center space-x-3">
+                  <div class="setup-icon bg-gray-100 text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
                     </svg>
-                    <div>
-                      <p class="text-sm font-medium text-gray-900">Widget intégration</p>
-                      <p class="text-xs text-gray-500">Code à intégrer sur votre site</p>
-                    </div>
                   </div>
-                  <div class="text-xs text-gray-400">
-                    Bientôt
+                  <div>
+                    <p class="text-sm font-medium text-gray-500">Widget intégration</p>
+                    <p class="text-xs text-gray-400">Code à intégrer sur votre site</p>
                   </div>
                 </div>
+                <span class="text-xs text-gray-400">Bientôt</span>
               </div>
             </div>
           </div>
@@ -358,24 +394,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-// Middleware d'authentification
+// ✅ PAGE META
 definePageMeta({
-  middleware: 'auth'
+  middleware: 'auth',
+  layout: 'default'
 })
 
-// État du composant
+// ✅ COMPOSABLES
 const authStore = useAuthStore()
-const refreshing = ref(false)
-const showWelcome = ref(false)
 
-// Données des statistiques
-const stats = reactive({
+// ✅ REACTIVE STATE
+const refreshing = ref(false)
+const showWelcome = ref(true)
+
+// Mock data - à remplacer par des appels API réels
+const stats = ref({
   conversations: {
-    total: 147,
-    active: 12
+    total: 1247,
+    active: 23
   },
   orders: {
     total: 89,
@@ -391,39 +430,55 @@ const stats = reactive({
   }
 })
 
-// Conversations récentes
 const recentConversations = ref([
   {
     id: 1,
     visitor: 'Marie Dubois',
-    lastMessage: 'Merci pour ces informations',
-    time: new Date(Date.now() - 5 * 60 * 1000) // 5 minutes ago
+    lastMessage: 'Merci pour ces informations sur les délais',
+    time: new Date(Date.now() - 5 * 60 * 1000),
+    unread: true
   },
   {
     id: 2,
     visitor: 'Pierre Martin',
-    lastMessage: 'Je voudrais passer commande',
-    time: new Date(Date.now() - 12 * 60 * 1000) // 12 minutes ago
+    lastMessage: 'Je voudrais passer commande pour 2 unités',
+    time: new Date(Date.now() - 12 * 60 * 1000),
+    unread: false
+  },
+  {
+    id: 3,
+    visitor: 'Sophie Laurent',
+    lastMessage: 'Parfait, merci beaucoup !',
+    time: new Date(Date.now() - 45 * 60 * 1000),
+    unread: false
   }
 ])
 
-// Commandes récentes
 const recentOrders = ref([
   {
-    id: '1299',
+    id: 'ord_1234567890abcdef',
     customer: 'Pierre Martin',
     amount: 129.99,
     time: new Date(Date.now() - 12 * 60 * 1000)
   },
   {
-    id: '1298',
+    id: 'ord_0987654321fedcba',
     customer: 'Sophie Laurent',
     amount: 89.50,
     time: new Date(Date.now() - 45 * 60 * 1000)
+  },
+  {
+    id: 'ord_abcdef1234567890',
+    customer: 'Marie Dubois',
+    amount: 199.99,
+    time: new Date(Date.now() - 2 * 60 * 60 * 1000)
   }
 ])
 
-// Configuration
+// Configuration status
+const knowledgeBaseStatus = ref('Vide')
+const agentConfigStatus = ref('À configurer')
+
 const configurationProgress = computed(() => {
   let progress = 0
   if (knowledgeBaseStatus.value !== 'Vide') progress += 50
@@ -431,18 +486,15 @@ const configurationProgress = computed(() => {
   return progress
 })
 
-const knowledgeBaseStatus = ref('Vide')
-const agentConfigStatus = ref('À configurer')
-
-// Méthodes utilitaires
-const formatCurrency = (amount: number) => {
+// ✅ UTILITY METHODS
+const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: 'EUR'
   }).format(amount)
 }
 
-const formatTime = (date: Date) => {
+const formatTime = (date: Date): string => {
   const now = new Date()
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
   
@@ -452,17 +504,16 @@ const formatTime = (date: Date) => {
   return date.toLocaleDateString('fr-FR')
 }
 
-// Actions
+// ✅ ACTION METHODS
 const refreshData = async () => {
   refreshing.value = true
   
   try {
-    // Simulation de rechargement des données
+    // Simuler un rechargement des données
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // Ici, vous feriez des appels API réels
-    // const newStats = await $fetch('/api/dashboard/stats')
-    // Object.assign(stats, newStats)
+    console.log('Données rafraîchies')
     
   } catch (error) {
     console.error('Erreur lors du rafraîchissement:', error)
@@ -472,14 +523,23 @@ const refreshData = async () => {
 }
 
 const goToConversation = (id: number) => {
-  navigateTo(`/conversations?id=${id}`)
+  navigateTo(`/conversations/${id}`)
 }
 
 const goToOrder = (id: string) => {
-  navigateTo(`/orders?id=${id}`)
+  navigateTo(`/orders/${id}`)
 }
 
-// Lifecycle
+const loadDashboardData = async () => {
+  try {
+    // Charger les données depuis l'API
+    console.log('Chargement des données dashboard')
+  } catch (error) {
+    console.error('Erreur lors du chargement des données dashboard:', error)
+  }
+}
+
+// ✅ LIFECYCLE
 onMounted(() => {
   // Vérifier si c'est un nouveau utilisateur
   const urlParams = new URLSearchParams(window.location.search)
@@ -489,42 +549,76 @@ onMounted(() => {
     window.history.replaceState({}, '', window.location.pathname)
   }
   
-  // Charger les données initiales
   loadDashboardData()
 })
 
-const loadDashboardData = async () => {
-  try {
-    // Charger les données depuis l'API
-    // const dashboardData = await $fetch('/api/dashboard')
-    // Object.assign(stats, dashboardData.stats)
-    // recentConversations.value = dashboardData.recentConversations
-    // recentOrders.value = dashboardData.recentOrders
-    
-    // Pour l'instant, on utilise des données statiques
-    console.log('Dashboard data loaded')
-  } catch (error) {
-    console.error('Erreur lors du chargement des données dashboard:', error)
-  }
-}
+// ✅ SEO
+useHead({
+  title: 'Dashboard - ChatSeller'
+})
 </script>
 
 <style scoped>
-.transition-colors {
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+/* ✅ MODERN COMPONENTS */
+.card-modern {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
 }
 
-.transition-all {
-  transition: all 0.15s ease-in-out;
+.card-modern-gradient {
+  @apply bg-gradient-to-br rounded-xl shadow-lg p-6 text-white;
 }
 
+.conversation-item {
+  @apply p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer;
+}
+
+.order-item {
+  @apply p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer;
+}
+
+.avatar-circle {
+  @apply flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600;
+}
+
+.empty-state {
+  @apply text-center py-8;
+}
+
+.setup-item {
+  @apply p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all;
+}
+
+.setup-item.completed {
+  @apply border-green-200 bg-green-50;
+}
+
+.setup-item.disabled {
+  @apply bg-gray-50 cursor-not-allowed;
+}
+
+.setup-icon {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center;
+}
+
+.progress-circle {
+  @apply w-12 h-12 rounded-full border-4 border-gray-200 flex items-center justify-center;
+}
+
+/* ✅ RESPONSIVE */
+@media (max-width: 768px) {
+  .card-modern {
+    @apply p-4;
+  }
+  
+  .card-modern-gradient {
+    @apply p-4;
+  }
+}
+
+/* ✅ ANIMATIONS */
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .animate-spin {

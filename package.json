@@ -2,7 +2,7 @@
   "name": "chatseller-dashboard",
   "private": true,
   "version": "1.0.0",
-  "description": "ChatSeller Dashboard - Agent IA Commercial pour e-commerce",
+  "description": "ChatSeller Dashboard - Vendeur IA pour e-commerce",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",

@@ -1,6 +1,6 @@
 # ChatSeller Dashboard
 
-Dashboard marchand pour ChatSeller - Configuration et analytics de votre Agent IA Commercial.
+Dashboard marchand pour ChatSeller - Configuration et analytics de votre Vendeur IA.
 
 ## 🚀 Fonctionnalités
 

@@ -108,7 +108,7 @@ export default defineNuxtConfig({
     head: {
       title: 'ChatSeller Dashboard',
       meta: [
-        { name: 'description', content: 'Agent IA Commercial - Dashboard' },
+        { name: 'description', content: 'Vendeur IA - Dashboard' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { charset: 'utf-8' }
       ],

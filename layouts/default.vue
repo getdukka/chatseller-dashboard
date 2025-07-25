@@ -19,13 +19,13 @@
         <!-- Navigation principale - Flex grow pour prendre l'espace -->
         <nav class="flex-1 px-4 py-6 space-y-2">
           <NuxtLink
-            to="/dashboard"
+            to="/"
             class="group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200"
-            :class="$route.path === '/dashboard' || $route.path === '/'
+            :class="$route.path === '/' || $route.path === '/'
               ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' 
               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
           >
-            <svg class="mr-3 h-5 w-5 transition-colors duration-200" :class="$route.path === '/dashboard' || $route.path === '/' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="mr-3 h-5 w-5 transition-colors duration-200" :class="$route.path === '/' || $route.path === '/' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2V7a2 2 0 012-2h2a2 2 0 002 2v2a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 00-2 2h-2a2 2 0 00-2 2v6a2 2 0 01-2 2H9z" />
             </svg>
             Dashboard
@@ -58,6 +58,19 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
             Commandes
+          </NuxtLink>
+
+          <NuxtLink
+            to="/products"
+            class="group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200"
+            :class="$route.path === '/products' 
+              ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' 
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          >
+            <svg class="mr-3 h-5 w-5 transition-colors duration-200" :class="$route.path === '/products' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            Produits
           </NuxtLink>
 
           <NuxtLink

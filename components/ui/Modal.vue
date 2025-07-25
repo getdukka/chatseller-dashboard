@@ -1,108 +1,186 @@
-<!-- components/ui/Modal.vue - COMPOSANT MODAL CORRIGÉ -->
+<!-- components/Modal.vue - COMPOSANT MODAL RÉUTILISABLE -->
 <template>
-  <Teleport to="body">
-    <div
-      v-if="show"
-      class="fixed inset-0 z-50 overflow-y-auto"
-      @click="handleOverlayClick"
-    >
-      <!-- Overlay -->
-      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+  <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
+    <div class="modal-content" :class="sizeClasses">
+      <!-- Header -->
+      <div class="modal-header">
+        <h3 class="modal-title">{{ title }}</h3>
+        <button @click="$emit('close')" class="modal-close-button">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
       
-      <!-- Modal -->
-      <div class="flex min-h-full items-center justify-center p-4">
-        <div
-          :class="[
-            'relative bg-white rounded-lg shadow-xl transition-all w-full max-w-lg',
-            sizeClasses[size],
-            {
-              'max-h-96 overflow-y-auto': scrollable
-            }
-          ]"
-          @click.stop
-        >
-          <!-- Header -->
-          <div v-if="title || closable" class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 v-if="title" class="text-lg font-medium text-gray-900">
-              {{ title }}
-            </h3>
-            <button
-              v-if="closable"
-              @click="handleClose"
-              class="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-          
-          <!-- Content -->
-          <div class="p-6">
-            <slot />
-          </div>
-        </div>
+      <!-- Body -->
+      <div class="modal-body">
+        <slot />
+      </div>
+      
+      <!-- Footer (si des slots sont fournis) -->
+      <div v-if="$slots.footer" class="modal-footer">
+        <slot name="footer" />
       </div>
     </div>
-  </Teleport>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted } from 'vue'
+
+// ✅ PROPS
 interface Props {
   show: boolean
-  title?: string
+  title: string
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
   closable?: boolean
-  closeOnOverlay?: boolean
-  scrollable?: boolean
-}
-
-interface Emits {
-  (e: 'close'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
   size: 'md',
-  closable: true,
-  closeOnOverlay: true,
-  scrollable: false
+  closable: true
 })
 
-const emit = defineEmits<Emits>()
+// ✅ EMITS
+const emit = defineEmits<{
+  close: []
+}>()
 
-const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-2xl',
-  full: 'max-w-7xl'
-}
+// ✅ COMPUTED
+const sizeClasses = computed(() => {
+  const sizes = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+    full: 'max-w-7xl'
+  }
+  return sizes[props.size] || sizes.md
+})
 
-const handleClose = () => {
-  emit('close')
-}
-
-const handleOverlayClick = () => {
-  if (props.closeOnOverlay) {
-    handleClose()
+// ✅ METHODS
+const handleEscapeKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && props.closable) {
+    emit('close')
   }
 }
 
-// Empêcher le scroll du body quand la modal est ouverte
-watch(() => props.show, (isOpen) => {
-  if (process.client) {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-  }
+// ✅ LIFECYCLE
+onMounted(() => {
+  document.addEventListener('keydown', handleEscapeKey)
+  // Empêcher le scroll du body quand la modal est ouverte
+  document.body.style.overflow = 'hidden'
 })
 
-// Nettoyage au démontage
 onUnmounted(() => {
-  if (process.client) {
-    document.body.style.overflow = ''
-  }
+  document.removeEventListener('keydown', handleEscapeKey)
+  // Restaurer le scroll du body
+  document.body.style.overflow = 'unset'
 })
 </script>
+
+<style scoped>
+/* ✅ OVERLAY */
+.modal-overlay {
+  @apply fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ✅ CONTENU MODAL */
+.modal-content {
+  @apply bg-white rounded-xl shadow-xl w-full max-h-[90vh] overflow-y-auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ✅ HEADER */
+.modal-header {
+  @apply flex items-center justify-between p-6 border-b border-gray-200;
+}
+
+.modal-title {
+  @apply text-xl font-semibold text-gray-900;
+}
+
+.modal-close-button {
+  @apply text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100;
+}
+
+/* ✅ BODY */
+.modal-body {
+  @apply p-6;
+}
+
+/* ✅ FOOTER */
+.modal-footer {
+  @apply flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50;
+}
+
+/* ✅ ANIMATIONS */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ✅ RESPONSIVE */
+@media (max-width: 640px) {
+  .modal-content {
+    @apply mx-2 max-h-[95vh];
+  }
+  
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    @apply px-4;
+  }
+  
+  .modal-header {
+    @apply py-4;
+  }
+  
+  .modal-body {
+    @apply py-4;
+  }
+  
+  .modal-footer {
+    @apply py-4;
+  }
+}
+
+/* ✅ SCROLL STYLING */
+.modal-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.8);
+}
+</style>

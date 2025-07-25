@@ -12,7 +12,7 @@
         Créer votre compte ChatSeller
       </h2>
       <p class="mt-2 text-sm text-gray-600">
-        Déployez votre Agent IA Commercial en quelques minutes
+        Déployez votre Vendeur IA en quelques minutes
       </p>
     </div>
 

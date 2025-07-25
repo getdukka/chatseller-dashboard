@@ -34,7 +34,7 @@
           placeholder="Entrez le contenu de votre connaissance..."
         ></textarea>
         <p class="text-xs text-gray-500 mt-1">
-          Ce contenu sera utilisé par votre agent IA pour répondre aux questions des clients.
+          Ce contenu sera utilisé par votre Vendeur IApour répondre aux questions des clients.
         </p>
       </div>
 
@@ -70,7 +70,7 @@
           @input="updateTags"
         >
         <p class="text-xs text-gray-500 mt-1">
-          Les mots-clés aident l'agent IA à mieux identifier quand utiliser cette connaissance.
+          Les mots-clés aident l'Vendeur IAà mieux identifier quand utiliser cette connaissance.
         </p>
         
         <!-- Tags Display -->
