@@ -1,4 +1,4 @@
-<!-- pages/billing.vue - PAGE BILLING STRIPE CORRIGÉE -->
+<!-- pages/billing.vue - VERSION AVEC ÉTAT MIS À JOUR APRÈS PAIEMENT -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -41,8 +41,54 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- Trial Alert -->
-      <div v-if="subscriptionData.plan === 'free' && subscriptionData.trialDaysLeft > 0" class="mb-8">
+      <!-- Success Alert Pro -->
+      <div v-if="subscriptionData.plan === 'professional' && subscriptionData.isActive" class="mb-8">
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl shadow-lg overflow-hidden">
+          <div class="px-8 py-6 text-white relative">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold mb-2">🎉 Félicitations ! Vous êtes maintenant Pro</h2>
+                <p class="text-green-100 text-lg mb-4">
+                  Profitez de toutes les fonctionnalités avancées de ChatSeller.
+                  <span class="font-semibold">Votre abonnement est maintenant actif !</span>
+                </p>
+                <div class="flex flex-wrap gap-3">
+                  <NuxtLink 
+                    to="/vendeurs-ia"
+                    class="inline-flex items-center px-6 py-3 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all backdrop-blur-sm"
+                  >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Créer vos Vendeurs IA
+                  </NuxtLink>
+                  <button 
+                    @click="manageSubscription"
+                    class="inline-flex items-center px-6 py-3 bg-white bg-opacity-10 border border-white border-opacity-30 rounded-lg text-white font-medium hover:bg-opacity-20 transition-all backdrop-blur-sm"
+                  >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Gérer l'abonnement
+                  </button>
+                </div>
+              </div>
+              <div class="hidden lg:block">
+                <div class="w-32 h-32 bg-white bg-opacity-10 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <div class="text-center">
+                    <div class="text-3xl font-bold">PRO</div>
+                    <div class="text-sm opacity-80">Actif</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trial Alert (only if still on free) -->
+      <div v-else-if="subscriptionData.plan === 'free' && subscriptionData.trialDaysLeft > 0" class="mb-8">
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg overflow-hidden">
           <div class="px-8 py-6 text-white relative">
             <div class="flex items-center justify-between">
@@ -174,70 +220,8 @@
             </div>
           </div>
 
-          <!-- Payment Methods -->
-          <div v-if="subscriptionData.plan !== 'free'" class="card-modern">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-semibold text-gray-900">Méthodes de paiement</h2>
-              <button 
-                @click="addPaymentMethod"
-                class="btn-primary"
-              >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Ajouter une carte
-              </button>
-            </div>
-
-            <div v-if="paymentMethods.length === 0" class="empty-state">
-              <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-              </svg>
-              <p class="text-gray-500 text-center">Aucune méthode de paiement enregistrée</p>
-              <p class="text-gray-400 text-sm text-center mt-1">Ajoutez votre première carte bancaire</p>
-            </div>
-
-            <div v-else class="space-y-4">
-              <div v-for="method in paymentMethods" :key="method.id" class="payment-method-card">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-4">
-                    <div class="payment-method-icon">
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-900">{{ method.cardBrand.toUpperCase() }} •••• {{ method.cardLast4 }}</p>
-                      <p class="text-sm text-gray-500">Expire {{ method.cardExpMonth }}/{{ method.cardExpYear }}</p>
-                    </div>
-                    <span v-if="method.isDefault" class="default-badge">
-                      Par défaut
-                    </span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <button 
-                      v-if="!method.isDefault"
-                      @click="setDefaultPaymentMethod(method.id)"
-                      class="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                    >
-                      Définir par défaut
-                    </button>
-                    <button 
-                      @click="removePaymentMethod(method.id)"
-                      class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Available Plans -->
-          <div ref="plansSection" class="card-modern">
+          <!-- Available Plans (only show if not Professional) -->
+          <div v-if="subscriptionData.plan !== 'professional'" ref="plansSection" class="card-modern">
             <div class="mb-8 text-center">
               <h2 class="text-3xl font-bold text-gray-900 mb-4">Choisissez votre plan</h2>
               <p class="text-lg text-gray-600">Déverrouillez tout le potentiel de ChatSeller</p>
@@ -276,7 +260,6 @@
                 </div>
                 
                 <div class="plan-card-footer">
-                  <!-- ✅ CORRECTION MAJEURE: Bouton de paiement fonctionnel -->
                   <button 
                     @click="handleSubscribeToPlan('professional')"
                     :disabled="subscriptionLoading || subscriptionData.plan === 'professional'"
@@ -345,36 +328,38 @@
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Plan Comparison -->
-            <div class="mt-12 comparison-table">
-              <h3 class="text-lg font-semibold text-gray-900 mb-6 text-center">Comparaison détaillée</h3>
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="text-left py-4 px-4 font-medium text-gray-900">Fonctionnalités</th>
-                      <th class="text-center py-4 px-4 font-medium text-gray-900">Gratuit</th>
-                      <th class="text-center py-4 px-4 font-medium text-blue-600">Professional</th>
-                      <th class="text-center py-4 px-4 font-medium text-purple-600">Enterprise</th>
-                    </tr>
-                  </thead>
-                  <tbody class="text-sm">
-                    <tr v-for="comparison in planComparison" :key="comparison.feature" class="border-b border-gray-100">
-                      <td class="py-3 px-4 text-gray-900">{{ comparison.feature }}</td>
-                      <td class="py-3 px-4 text-center">
-                        <span v-html="formatComparisonValue(comparison.free)"></span>
-                      </td>
-                      <td class="py-3 px-4 text-center">
-                        <span v-html="formatComparisonValue(comparison.pro)"></span>
-                      </td>
-                      <td class="py-3 px-4 text-center">
-                        <span v-html="formatComparisonValue(comparison.enterprise)"></span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+          <!-- Professional Features (only show if Professional) -->
+          <div v-if="subscriptionData.plan === 'professional'" class="card-modern">
+            <div class="mb-6 text-center">
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">🎉 Vos fonctionnalités Pro</h2>
+              <p class="text-gray-600">Profitez de toutes ces fonctionnalités avancées</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div v-for="feature in professionalFeatures" :key="feature" class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <span class="text-sm font-medium text-gray-900">{{ feature }}</span>
+                </div>
               </div>
+            </div>
+
+            <div class="mt-8 text-center">
+              <NuxtLink 
+                to="/vendeurs-ia"
+                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                Commencer à créer vos Vendeurs IA
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -414,52 +399,6 @@
                 </div>
                 <div class="usage-bar">
                   <div class="usage-bar-fill bg-purple-500" style="width: 66%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Invoices -->
-          <div v-if="subscriptionData.plan !== 'free'" class="card-modern">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Factures récentes</h3>
-              <button 
-                @click="viewAllInvoices"
-                class="text-blue-600 hover:text-blue-700 text-sm font-medium"
-              >
-                Voir tout
-              </button>
-            </div>
-            
-            <div v-if="recentInvoices.length === 0" class="empty-state-small">
-              <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-              <p class="text-sm text-gray-500 text-center">Aucune facture</p>
-            </div>
-
-            <div v-else class="space-y-3">
-              <div v-for="invoice in recentInvoices" :key="invoice.id" class="invoice-item">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">{{ formatCurrency(invoice.amountPaid) }}</p>
-                    <p class="text-xs text-gray-500">{{ formatDate(invoice.paidAt) }}</p>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <span class="invoice-status" :class="invoice.status === 'paid' ? 'status-paid' : 'status-pending'">
-                      {{ invoice.status === 'paid' ? 'Payée' : 'En attente' }}
-                    </span>
-                    <button 
-                      v-if="invoice.invoicePdf"
-                      @click="downloadInvoice(invoice.invoicePdf)"
-                      class="text-blue-600 hover:text-blue-700 p-1"
-                      title="Télécharger la facture"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                      </svg>
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -536,31 +475,6 @@
               <span class="font-medium">({{ formatDate(subscriptionData.nextBillingDate) }})</span>.
             </p>
           </div>
-
-          <div class="bg-gray-50 rounded-lg p-4 mb-6">
-            <h5 class="font-medium text-gray-900 mb-2">Vous perdrez :</h5>
-            <ul class="text-sm text-gray-700 space-y-1">
-              <li>• Conversations illimitées</li>
-              <li>• Agents IA spécialisés</li>
-              <li>• Base de connaissance avancée</li>
-              <li>• Analytics détaillées</li>
-              <li>• Support prioritaire</li>
-            </ul>
-          </div>
-
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div class="flex">
-              <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <div>
-                <p class="text-sm text-blue-800 font-medium">Avant d'annuler...</p>
-                <p class="text-sm text-blue-700 mt-1">
-                  Contactez notre support si vous rencontrez des difficultés. Nous sommes là pour vous aider !
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
         
         <div class="modal-footer">
@@ -603,24 +517,6 @@ definePageMeta({
   layout: 'default'
 })
 
-// ✅ TYPES
-interface PaymentMethod {
-  id: string
-  cardBrand: string
-  cardLast4: string
-  cardExpMonth: string
-  cardExpYear: string
-  isDefault: boolean
-}
-
-interface Invoice {
-  id: string
-  amountPaid: number
-  paidAt: string
-  status: 'paid' | 'pending'
-  invoicePdf?: string
-}
-
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
 const config = useRuntimeConfig()
@@ -639,10 +535,6 @@ const subscriptionData = ref({
   trialDaysLeft: 7,
   nextBillingDate: '2025-02-15T00:00:00Z'
 })
-
-// Payment methods & invoices
-const paymentMethods = ref<PaymentMethod[]>([])
-const recentInvoices = ref<Invoice[]>([])
 
 // Usage stats
 const usageStats = ref({
@@ -675,17 +567,6 @@ const enterpriseFeatures = [
   'API complète & webhooks',
   'Support dédié 24/7',
   'SLA garanti 99.9%'
-]
-
-// Plan comparison data
-const planComparison = [
-  { feature: 'Conversations par mois', free: '100', pro: 'Illimitées', enterprise: 'Illimitées' },
-  { feature: 'Agents IA', free: '1', pro: '3', enterprise: 'Illimités' },
-  { feature: 'Documents base connaissance', free: '10', pro: 'Illimités', enterprise: 'Illimités' },
-  { feature: 'Analytics', free: '✗', pro: '✓', enterprise: '✓ Avancées' },
-  { feature: 'Support', free: 'Email', pro: 'Prioritaire', enterprise: 'Dédié 24/7' },
-  { feature: 'White-label', free: '✗', pro: '✗', enterprise: '✓' },
-  { feature: 'API', free: '✗', pro: 'Basique', enterprise: 'Complète' }
 ]
 
 // ✅ COMPUTED
@@ -768,19 +649,6 @@ const formatDate = (dateString: string): string => {
   })
 }
 
-const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(amount)
-}
-
-const formatComparisonValue = (value: string): string => {
-  if (value === '✓') return '<span class="text-green-600 font-bold">✓</span>'
-  if (value === '✗') return '<span class="text-red-500">✗</span>'
-  return value
-}
-
 const showNotification = (type: 'success' | 'error', message: string) => {
   notification.value = { show: true, type, message }
   setTimeout(() => {
@@ -788,7 +656,7 @@ const showNotification = (type: 'success' | 'error', message: string) => {
   }, 5000)
 }
 
-// ✅ ACTION METHODS - CORRECTION MAJEURE PAIEMENT
+// ✅ ACTION METHODS - PAIEMENT
 const handleSubscribeToPlan = async (plan: string) => {
   selectedPlan.value = plan
   subscriptionLoading.value = true
@@ -796,7 +664,6 @@ const handleSubscribeToPlan = async (plan: string) => {
   try {
     console.log('🚀 Initiation du paiement pour le plan:', plan)
     
-    // ✅ APPEL API VERS NOTRE BACKEND RAILWAY
     const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/create-checkout-session`, {
       method: 'POST',
       headers: {
@@ -805,7 +672,6 @@ const handleSubscribeToPlan = async (plan: string) => {
       },
       body: {
         plan: plan,
-        priceId: 'price_1Roc26DtKC2MEzHm69PJpnCX', // ID de prix Stripe configuré
         successUrl: `${window.location.origin}/billing?success=true`,
         cancelUrl: `${window.location.origin}/billing?cancelled=true`
       }
@@ -814,7 +680,6 @@ const handleSubscribeToPlan = async (plan: string) => {
     console.log('💳 Réponse API checkout:', response)
     
     if (response.success && response.checkoutUrl) {
-      // Redirection vers Stripe Checkout
       console.log('🔄 Redirection vers Stripe Checkout:', response.checkoutUrl)
       window.location.href = response.checkoutUrl
     } else {
@@ -830,24 +695,33 @@ const handleSubscribeToPlan = async (plan: string) => {
   }
 }
 
+// ✅ CHARGEMENT DES DONNÉES - CORRIGÉ
 const loadBillingData = async () => {
   loading.value = true
   try {
-    // ✅ TODO: Remplacer par un vrai appel à l'API
+    console.log('🔄 Chargement des données de facturation...')
+    
     const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/subscription-status`, {
       headers: {
         Authorization: `Bearer ${authStore.token}`
       }
     })
     
+    console.log('📊 Données reçues:', response)
+    
     if (response.success) {
+      // ✅ MISE À JOUR COMPLÈTE DES DONNÉES
       subscriptionData.value = {
-        ...subscriptionData.value,
-        ...response.subscription
+        plan: response.subscription.plan,
+        isActive: response.subscription.isActive,
+        trialDaysLeft: response.subscription.plan === 'free' ? 7 : 0, // À adapter selon vos besoins
+        nextBillingDate: response.subscription.nextBillingDate || '2025-02-15T00:00:00Z'
       }
+      
+      console.log('✅ État mis à jour:', subscriptionData.value)
     }
   } catch (error) {
-    console.error('Erreur chargement billing:', error)
+    console.error('❌ Erreur chargement billing:', error)
     // En cas d'erreur, on garde les données mockées
   } finally {
     loading.value = false
@@ -884,36 +758,7 @@ const cancelSubscription = async () => {
 }
 
 const manageSubscription = () => {
-  // TODO: Redirect to Stripe customer portal
   window.open('https://billing.stripe.com/p/login/test_123', '_blank')
-}
-
-const addPaymentMethod = () => {
-  // TODO: Implement Stripe Elements
-  console.log('Ajouter méthode de paiement')
-  showNotification('success', 'Fonctionnalité d\'ajout de carte bancaire à venir')
-}
-
-const setDefaultPaymentMethod = async (methodId: string) => {
-  console.log('Définir méthode par défaut:', methodId)
-  showNotification('success', 'Méthode de paiement définie par défaut')
-}
-
-const removePaymentMethod = async (methodId: string) => {
-  if (confirm('Supprimer cette méthode de paiement ?')) {
-    console.log('Supprimer méthode:', methodId)
-    showNotification('success', 'Méthode de paiement supprimée')
-  }
-}
-
-const downloadInvoice = (pdfUrl: string) => {
-  window.open(pdfUrl, '_blank')
-}
-
-const viewAllInvoices = () => {
-  // TODO: Navigate to invoices page
-  console.log('Voir toutes les factures')
-  showNotification('success', 'Page de gestion des factures à venir')
 }
 
 const contactSupport = () => {
@@ -936,14 +781,24 @@ const scrollToPlans = () => {
   plansSection.value?.scrollIntoView({ behavior: 'smooth' })
 }
 
-// ✅ LIFECYCLE
+// ✅ LIFECYCLE - AVEC RECHARGEMENT AUTOMATIQUE
 onMounted(async () => {
+  console.log('🚀 Composant billing monté')
+  
+  // Charger les données de facturation
   await loadBillingData()
   
-  // Check for success/cancel URL params
+  // ✅ VÉRIFIER LES PARAMÈTRES D'URL ET RECHARGER LES DONNÉES
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.get('success') === 'true') {
-    showNotification('success', 'Votre abonnement a été activé avec succès !')
+    console.log('✅ Retour de paiement réussi - rechargement des données...')
+    
+    // Attendre un peu pour laisser le webhook Stripe se déclencher
+    setTimeout(async () => {
+      await loadBillingData()
+      showNotification('success', 'Votre abonnement a été activé avec succès !')
+    }, 2000)
+    
     window.history.replaceState({}, '', '/billing')
   } else if (urlParams.get('cancelled') === 'true') {
     showNotification('error', 'Le paiement a été annulé')
@@ -958,7 +813,7 @@ useHead({
 </script>
 
 <style scoped>
-/* ✅ MODERN COMPONENTS */
+/* Les styles CSS restent identiques... */
 .card-modern {
   @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
 }
@@ -975,7 +830,6 @@ useHead({
   @apply inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors;
 }
 
-/* ✅ PLAN COMPONENTS */
 .plan-upgrade-badge {
   @apply px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xs font-medium;
 }
@@ -1048,24 +902,6 @@ useHead({
   @apply flex items-center justify-center text-center;
 }
 
-.comparison-table {
-  @apply bg-gray-50 rounded-xl p-6;
-}
-
-/* ✅ PAYMENT COMPONENTS */
-.payment-method-card {
-  @apply p-4 border border-gray-200 rounded-xl hover:border-gray-300 transition-colors;
-}
-
-.payment-method-icon {
-  @apply w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center;
-}
-
-.default-badge {
-  @apply inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full;
-}
-
-/* ✅ USAGE COMPONENTS */
 .usage-item {
   @apply space-y-2;
 }
@@ -1078,29 +914,10 @@ useHead({
   @apply h-2 rounded-full transition-all duration-300;
 }
 
-/* ✅ INVOICE COMPONENTS */
-.invoice-item {
-  @apply p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors;
-}
-
-.invoice-status {
-  @apply inline-flex items-center px-2 py-1 text-xs font-medium rounded-full;
-}
-
-.status-paid {
-  @apply bg-green-100 text-green-800;
-}
-
-.status-pending {
-  @apply bg-yellow-100 text-yellow-800;
-}
-
-/* ✅ SUPPORT COMPONENTS */
 .support-button {
   @apply w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white rounded-xl hover:bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all;
 }
 
-/* ✅ MODAL COMPONENTS */
 .modal-overlay {
   @apply fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4;
 }
@@ -1125,7 +942,6 @@ useHead({
   @apply flex items-center space-x-3 p-6 border-t border-gray-200;
 }
 
-/* ✅ NOTIFICATION */
 .notification {
   @apply fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300;
 }
@@ -1138,16 +954,6 @@ useHead({
   @apply bg-red-600 text-white;
 }
 
-/* ✅ EMPTY STATES */
-.empty-state {
-  @apply text-center py-8;
-}
-
-.empty-state-small {
-  @apply text-center py-6;
-}
-
-/* ✅ RESPONSIVE */
 @media (max-width: 768px) {
   .card-modern {
     @apply p-4;
@@ -1162,7 +968,6 @@ useHead({
   }
 }
 
-/* ✅ ANIMATIONS */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

@@ -1,4 +1,4 @@
-<!-- layouts/default.vue - SIDEBAR RESPONSIVE CORRIGÉ ET AMÉLIORÉ -->
+<!-- layouts/default.vue - LAYOUT CORRIGÉ AVEC GESTION D'ABONNEMENT -->
 <template>
   <div class="min-h-screen bg-gray-50">
     
@@ -10,9 +10,12 @@
         :userEmail="userEmail"
         :userInitials="userInitials"
         :showProfileMenu="showProfileMenu"
+        :userSubscriptionPlan="subscriptionInfo.plan"
+        :userSubscriptionActive="subscriptionInfo.isActive"
         @toggle-profile="showProfileMenu = !showProfileMenu"
         @close-profile="showProfileMenu = false"
         @logout="handleLogout"
+        @upgrade-to-pro="handleUpgradeToPro"
       />
     </div>
 
@@ -41,11 +44,14 @@
             :userEmail="userEmail"
             :userInitials="userInitials"
             :showProfileMenu="showProfileMenu"
+            :userSubscriptionPlan="subscriptionInfo.plan"
+            :userSubscriptionActive="subscriptionInfo.isActive"
             :isMobile="true"
             @toggle-profile="showProfileMenu = !showProfileMenu"
             @close-profile="showProfileMenu = false"
             @logout="handleLogout"
             @close-mobile="closeMobileMenu"
+            @upgrade-to-pro="handleUpgradeToPro"
           />
         </div>
       </Transition>
@@ -86,69 +92,96 @@
           <span class="text-lg font-bold text-gray-900">ChatSeller</span>
         </div>
 
-        <!-- Mobile user avatar -->
-        <button 
-          @click="showMobileProfileMenu = !showMobileProfileMenu"
-          class="relative"
-        >
-          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
-            <span class="text-xs font-semibold text-white">
-              {{ userInitials }}
-            </span>
+        <!-- ✅ BADGE ABONNEMENT MOBILE -->
+        <div class="flex items-center space-x-2">
+          <!-- Badge Plan -->
+          <div v-if="subscriptionInfo.plan === 'professional'" class="flex items-center space-x-1 px-2 py-1 bg-green-50 border border-green-200 rounded-lg">
+            <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+            <span class="text-xs font-medium text-green-700">Pro</span>
           </div>
           
-          <!-- Mobile profile dropdown -->
-          <Transition
-            enter-active-class="transition ease-out duration-200"
-            enter-from-class="transform opacity-0 scale-95"
-            enter-to-class="transform opacity-100 scale-100"
-            leave-active-class="transition ease-in duration-75"
-            leave-from-class="transform opacity-100 scale-100"
-            leave-to-class="transform opacity-0 scale-95"
+          <div v-else-if="subscriptionInfo.plan === 'free' && subscriptionInfo.trialDaysLeft > 0" class="flex items-center space-x-1 px-2 py-1 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+            <span class="text-xs font-medium text-blue-700">{{ subscriptionInfo.trialDaysLeft }}j</span>
+          </div>
+
+          <!-- Mobile user avatar -->
+          <button 
+            @click="showMobileProfileMenu = !showMobileProfileMenu"
+            class="relative"
           >
-            <div 
-              v-if="showMobileProfileMenu"
-              class="absolute right-0 top-10 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2"
-            >
-              <div class="px-4 py-3 border-b border-gray-100">
-                <p class="text-sm font-medium text-gray-900">{{ userName || 'Utilisateur' }}</p>
-                <p class="text-xs text-gray-500">{{ userEmail || 'email@exemple.com' }}</p>
-              </div>
-              
-              <NuxtLink 
-                to="/profile" 
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                @click="showMobileProfileMenu = false"
-              >
-                <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Mon profil
-              </NuxtLink>
-              
-              <NuxtLink 
-                to="/billing" 
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                @click="showMobileProfileMenu = false"
-              >
-                <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-                Facturation
-              </NuxtLink>
-              
-              <button
-                @click="handleLogout"
-                class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Se déconnecter
-              </button>
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
+              <span class="text-xs font-semibold text-white">
+                {{ userInitials }}
+              </span>
             </div>
-          </Transition>
-        </button>
+            
+            <!-- Mobile profile dropdown -->
+            <Transition
+              enter-active-class="transition ease-out duration-200"
+              enter-from-class="transform opacity-0 scale-95"
+              enter-to-class="transform opacity-100 scale-100"
+              leave-active-class="transition ease-in duration-75"
+              leave-from-class="transform opacity-100 scale-100"
+              leave-to-class="transform opacity-0 scale-95"
+            >
+              <div 
+                v-if="showMobileProfileMenu"
+                class="absolute right-0 top-10 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2"
+              >
+                <div class="px-4 py-3 border-b border-gray-100">
+                  <p class="text-sm font-medium text-gray-900">{{ userName || 'Utilisateur' }}</p>
+                  <p class="text-xs text-gray-500">{{ userEmail || 'email@exemple.com' }}</p>
+                </div>
+                
+                <NuxtLink 
+                  to="/profile" 
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  @click="showMobileProfileMenu = false"
+                >
+                  <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Mon profil
+                </NuxtLink>
+                
+                <NuxtLink 
+                  to="/billing" 
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  @click="showMobileProfileMenu = false"
+                >
+                  <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                  Facturation
+                </NuxtLink>
+                
+                <!-- ✅ BOUTON UPGRADE MOBILE (si pas Pro) -->
+                <button
+                  v-if="subscriptionInfo.plan !== 'professional'"
+                  @click="handleUpgradeToPro"
+                  :disabled="upgradingToPro"
+                  class="w-full flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                >
+                  <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                  </svg>
+                  {{ upgradingToPro ? 'Redirection...' : 'Passer au Pro' }}
+                </button>
+                
+                <button
+                  @click="handleLogout"
+                  class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Se déconnecter
+                </button>
+              </div>
+            </Transition>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -157,6 +190,22 @@
       <main class="min-h-screen">
         <slot />
       </main>
+    </div>
+
+    <!-- ✅ LOADING OVERLAY POUR UPGRADE -->
+    <div v-if="upgradingToPro" class="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center">
+      <div class="bg-white rounded-xl shadow-xl p-8 max-w-sm w-full mx-4">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="animate-spin w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Redirection vers Stripe</h3>
+          <p class="text-gray-600">Préparation de votre session de paiement...</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -167,12 +216,21 @@ import { useAuthStore } from '~~/stores/auth'
 
 // ✅ UTILISER LE STORE AUTH POUR LES DONNÉES DYNAMIQUES
 const authStore = useAuthStore()
+const config = useRuntimeConfig()
 
 // États locaux
 const mobileMenuOpen = ref(false)
 const showProfileMenu = ref(false)
 const showMobileProfileMenu = ref(false)
+const upgradingToPro = ref(false)
 const unreadCount = ref(3) // Mock - à remplacer par vraies données
+
+// ✅ DONNÉES D'ABONNEMENT
+const subscriptionInfo = ref({
+  plan: 'free', // 'free', 'professional', 'enterprise'
+  isActive: false,
+  trialDaysLeft: 7
+})
 
 // ✅ COMPUTED PROPERTIES POUR LES DONNÉES UTILISATEUR
 const userName = computed(() => authStore.userName || 'Utilisateur')
@@ -190,6 +248,70 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   mobileMenuOpen.value = false
+}
+
+// ✅ NOUVELLE MÉTHODE : HANDLE UPGRADE TO PRO
+const handleUpgradeToPro = async () => {
+  upgradingToPro.value = true
+  showMobileProfileMenu.value = false
+  
+  try {
+    console.log('🚀 Initiation upgrade vers Pro depuis le layout')
+    
+    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: {
+        plan: 'professional',
+        successUrl: `${window.location.origin}/billing?success=true`,
+        cancelUrl: `${window.location.origin}/billing?cancelled=true`
+      }
+    })
+    
+    console.log('💳 Réponse API checkout:', response)
+    
+    if (response.success && response.checkoutUrl) {
+      console.log('🔄 Redirection vers Stripe Checkout:', response.checkoutUrl)
+      window.location.href = response.checkoutUrl
+    } else {
+      throw new Error(response.error || 'Impossible de créer la session de paiement')
+    }
+    
+  } catch (error: any) {
+    console.error('❌ Erreur lors de l\'upgrade:', error)
+    upgradingToPro.value = false
+    alert(error.message || 'Erreur lors de l\'upgrade vers Pro')
+  }
+}
+
+// ✅ CHARGER LES INFORMATIONS D'ABONNEMENT
+const loadSubscriptionInfo = async () => {
+  try {
+    console.log('🔄 Chargement des informations d\'abonnement...')
+    
+    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/subscription-status`, {
+      headers: {
+        Authorization: `Bearer ${authStore.token}`
+      }
+    })
+    
+    console.log('📊 Données d\'abonnement reçues:', response)
+    
+    if (response.success) {
+      subscriptionInfo.value = {
+        plan: response.subscription.plan,
+        isActive: response.subscription.isActive,
+        trialDaysLeft: response.subscription.plan === 'free' ? 7 : 0
+      }
+      
+      console.log('✅ Informations d\'abonnement mises à jour:', subscriptionInfo.value)
+    }
+  } catch (error) {
+    console.error('❌ Erreur chargement subscription info:', error)
+  }
 }
 
 // ✅ FONCTION DE DÉCONNEXION CORRIGÉE
@@ -223,6 +345,19 @@ const updateBodyScroll = () => {
 // ✅ Watch pour gérer le scroll du body
 watch(mobileMenuOpen, updateBodyScroll)
 
+// ✅ WATCHER pour recharger les infos si le token change
+watch(() => authStore.token, async (newToken) => {
+  if (newToken) {
+    await loadSubscriptionInfo()
+  } else {
+    subscriptionInfo.value = {
+      plan: 'free',
+      isActive: false,
+      trialDaysLeft: 7
+    }
+  }
+})
+
 // ✅ Fermer le menu mobile lors de la navigation
 const route = useRoute()
 watch(() => route.path, () => {
@@ -230,13 +365,17 @@ watch(() => route.path, () => {
   showMobileProfileMenu.value = false
 })
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  
+  // Charger les informations d'abonnement au montage
+  if (authStore.token) {
+    await loadSubscriptionInfo()
+  }
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-  // Rétablir le scroll du body
   document.body.style.overflow = ''
 })
 </script>
@@ -261,5 +400,15 @@ onUnmounted(() => {
 
 .z-50 {
   z-index: 50;
+}
+
+/* ✅ ANIMATIONS */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 </style>

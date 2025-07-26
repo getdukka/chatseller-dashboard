@@ -1,4 +1,4 @@
-<!-- components/SidebarContent.vue - SIDEBAR AMÉLIORÉ AVEC VENDEURS IA, BILLING ET UPGRADE -->
+<!-- components/SidebarContent.vue - SIDEBAR AVEC BOUTON PRO CONDITIONNEL -->
 <template>
   <div class="flex flex-col h-full">
     
@@ -82,7 +82,6 @@
         @click="handleNavClick"
       />
 
-      <!-- ✅ NOUVEAU : Billing -->
       <SidebarLink
         to="/billing"
         :isActive="$route.path.startsWith('/billing')"
@@ -100,8 +99,8 @@
       />
     </nav>
 
-    <!-- ✅ NOUVEAU : BOUTON UPGRADE "PASSER AU PRO" -->
-    <div class="px-4 pb-4">
+    <!-- ✅ BOUTON UPGRADE "PASSER AU PRO" - CONDITIONNEL -->
+    <div v-if="shouldShowUpgradeButton" class="px-4 pb-4">
       <button
         @click="handleUpgradeClick"
         :disabled="upgradingToPro"
@@ -116,6 +115,16 @@
         </svg>
         <span>{{ upgradingToPro ? 'Redirection...' : 'Passer au Pro' }}</span>
       </button>
+    </div>
+
+    <!-- ✅ BADGE PRO STATIQUE (quand l'utilisateur EST Pro) -->
+    <div v-else-if="userSubscriptionPlan === 'professional'" class="px-4 pb-4">
+      <div class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span>Plan Pro Actif</span>
+      </div>
     </div>
 
     <!-- ✅ PROFIL UTILISATEUR DYNAMIQUE EN BAS -->
@@ -199,9 +208,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-// ✅ INTERFACE PROPS
+// ✅ INTERFACE PROPS MISE À JOUR
 interface Props {
   unreadCount: number
   userName: string
@@ -209,21 +218,32 @@ interface Props {
   userInitials: string
   showProfileMenu: boolean
   isMobile?: boolean
+  userSubscriptionPlan?: string // ✅ NOUVEAU : Plan de l'utilisateur
+  userSubscriptionActive?: boolean // ✅ NOUVEAU : Statut de l'abonnement
 }
 
 // ✅ PROPS ET EMITS
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isMobile: false,
+  userSubscriptionPlan: 'free',
+  userSubscriptionActive: false
+})
 
 const emit = defineEmits<{
   'toggle-profile': []
   'close-profile': []
   'logout': []
   'close-mobile': []
-  'upgrade-to-pro': [] // ✅ NOUVEAU EVENT POUR UPGRADE
+  'upgrade-to-pro': []
 }>()
 
 // ✅ STATE POUR LE BOUTON UPGRADE
 const upgradingToPro = ref(false)
+
+// ✅ COMPUTED : AFFICHER LE BOUTON UPGRADE SEULEMENT SI PAS PRO
+const shouldShowUpgradeButton = computed(() => {
+  return props.userSubscriptionPlan !== 'professional' && props.userSubscriptionPlan !== 'enterprise'
+})
 
 // ✅ HANDLE NAVIGATION CLICKS
 const handleNavClick = () => {

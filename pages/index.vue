@@ -50,9 +50,9 @@
     <div class="px-8 py-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 class="text-3xl font-bold text-gray-900">Bonjour/Bonsoir, Utilisateur 👋🏼</h1>
           <p class="mt-2 text-gray-600">
-            Pilotez votre Vendeur IA et suivez vos performances
+            Voici les détails de vos performances
           </p>
         </div>
         
