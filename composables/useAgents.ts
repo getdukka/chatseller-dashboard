@@ -122,7 +122,7 @@ export const useAgents = () => {
     try {
       console.log('🔍 Récupération des agents...')
       
-      const response = await $fetch('/api/agents', {
+      const response = await $fetch('/api/v1/agents', {
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders()
       }) as AgentsResponse
@@ -151,7 +151,7 @@ export const useAgents = () => {
     try {
       console.log('🏗️ Création d\'un agent:', data.name)
       
-      const response = await $fetch('/api/agents', {
+      const response = await $fetch('/api/v1/agents', {
         method: 'POST',
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders(),
@@ -181,7 +181,7 @@ export const useAgents = () => {
     try {
       console.log('📝 Modification de l\'agent:', id)
       
-      const response = await $fetch(`/api/agents/${id}`, {
+      const response = await $fetch(`/api/v1/agents/${id}`, {
         method: 'PUT',
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders(),
@@ -214,7 +214,7 @@ export const useAgents = () => {
     try {
       console.log('🗑️ Suppression de l\'agent:', id)
       
-      const response = await $fetch(`/api/agents/${id}`, {
+      const response = await $fetch(`/api/v1/agents/${id}`, {
         method: 'DELETE',
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders()
@@ -243,7 +243,7 @@ export const useAgents = () => {
     try {
       console.log(`🔄 ${isActive ? 'Activation' : 'Désactivation'} de l'agent:`, id)
       
-      const response = await $fetch(`/api/agents/${id}/toggle`, {
+      const response = await $fetch(`/api/v1/agents/${id}/toggle`, {
         method: 'PATCH',
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders(),
@@ -277,7 +277,7 @@ export const useAgents = () => {
     try {
       console.log('📋 Duplication de l\'agent:', id)
       
-      const response = await $fetch(`/api/agents/${id}/duplicate`, {
+      const response = await $fetch(`/api/v1/agents/${id}/duplicate`, {
         method: 'POST',
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders()

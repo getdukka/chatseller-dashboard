@@ -455,7 +455,8 @@ const duplicateAgentAction = async (agent: Agent) => {
   const result = await duplicateAgent(agent.id)
   
   if (!result.success) {
-    alert(result.error || 'Erreur lors de la duplication')
+    // L'erreur est automatiquement gérée par le composable et affichée via la ref error
+    console.error('Erreur duplication:', error.value)
   }
 }
 
@@ -464,7 +465,8 @@ const toggleAgentStatusAction = async (agent: Agent) => {
   const result = await toggleAgentStatus(agent.id, !agent.isActive)
   
   if (!result.success) {
-    alert(result.error || 'Erreur lors de la modification du statut')
+    // L'erreur est automatiquement gérée par le composable et affichée via la ref error
+    console.error('Erreur modification statut:', error.value)
   }
 }
 
@@ -474,7 +476,8 @@ const deleteAgentAction = async (agent: Agent) => {
     const result = await deleteAgent(agent.id)
     
     if (!result.success) {
-      alert(result.error || 'Erreur lors de la suppression')
+      // L'erreur est automatiquement gérée par le composable et affichée via la ref error
+      console.error('Erreur suppression:', error.value)
     }
   }
 }
@@ -506,7 +509,8 @@ const saveAgent = async () => {
   if (result.success) {
     closeModal()
   } else {
-    alert(result.error || 'Erreur lors de la sauvegarde')
+    // L'erreur est automatiquement gérée par le composable et affichée via la ref error
+    console.error('Erreur sauvegarde:', error.value)
   }
 }
 
