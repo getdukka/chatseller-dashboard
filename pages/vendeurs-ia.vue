@@ -1,4 +1,4 @@
-<!-- pages/vendeurs-ia.vue - GESTION DES VENDEURS IA -->
+<!-- pages/vendeurs-ia.vue - GESTION DES VENDEURS IA FONCTIONNELLE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -31,8 +31,9 @@
             </button>
             
             <button
-              @click="showCreateModal = true"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              @click="openCreateModal"
+              :disabled="!canCreateAgent"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -41,6 +42,23 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    <div v-if="error" class="p-4 bg-red-50 border-l-4 border-red-400 mx-8 mt-4 rounded-r-lg">
+      <div class="flex items-center justify-between">
+        <div class="flex">
+          <svg class="w-5 h-5 text-red-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-red-700 text-sm">{{ error }}</p>
+        </div>
+        <button @click="clearError" class="text-red-400 hover:text-red-600 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -80,10 +98,20 @@
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div v-if="loading && agents.length === 0" class="text-center py-16">
+        <div class="inline-flex items-center space-x-3">
+          <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span class="text-lg text-gray-600">Chargement des agents IA...</span>
+        </div>
+      </div>
+
       <!-- Agents Grid -->
-      <div v-if="filteredAgents.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-else-if="agents.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
-          v-for="agent in filteredAgents"
+          v-for="agent in agents"
           :key="agent.id"
           class="agent-card"
           :class="{ 'agent-card-active': agent.isActive }"
@@ -121,19 +149,19 @@
                     </svg>
                     Modifier
                   </button>
-                  <button @click="duplicateAgent(agent)" class="dropdown-item">
+                  <button @click="duplicateAgentAction(agent)" class="dropdown-item" :disabled="!canCreateAgent">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                     </svg>
                     Dupliquer
                   </button>
-                  <button @click="toggleAgentStatus(agent)" class="dropdown-item">
+                  <button @click="toggleAgentStatusAction(agent)" class="dropdown-item">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
                     </svg>
                     {{ agent.isActive ? 'Désactiver' : 'Activer' }}
                   </button>
-                  <button @click="deleteAgent(agent)" class="dropdown-item text-red-600 hover:bg-red-50">
+                  <button @click="deleteAgentAction(agent)" class="dropdown-item text-red-600 hover:bg-red-50">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
@@ -146,7 +174,7 @@
 
           <!-- Agent Description -->
           <p class="text-sm text-gray-600 mb-4 line-clamp-2">
-            {{ agent.description }}
+            {{ agent.description || 'Aucune description fournie.' }}
           </p>
 
           <!-- Agent Stats -->
@@ -187,7 +215,7 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="text-center py-16">
+      <div v-else-if="!loading" class="text-center py-16">
         <div class="empty-state-illustration">
           <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
@@ -199,8 +227,9 @@
         </p>
         <div class="mt-8">
           <button
-            @click="showCreateModal = true"
-            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
+            @click="openCreateModal"
+            :disabled="!canCreateAgent"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -242,7 +271,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Type de vendeur</label>
               <select v-model="agentForm.type" class="input-modern w-full">
                 <option value="general">Vendeur généraliste</option>
-                <option value="product-specialist">Spécialiste produit</option>
+                <option value="product_specialist">Spécialiste produit</option>
                 <option value="support">Support & SAV</option>
                 <option value="upsell">Upsell & Cross-sell</option>
               </select>
@@ -267,6 +296,27 @@
                 <option value="expert">Expert technique</option>
                 <option value="casual">Décontracté</option>
               </select>
+            </div>
+
+            <!-- Messages -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Message d'accueil</label>
+              <textarea
+                v-model="agentForm.welcomeMessage"
+                rows="2"
+                class="input-modern w-full"
+                placeholder="Bonjour ! Comment puis-je vous aider aujourd'hui ?"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Message de fallback</label>
+              <textarea
+                v-model="agentForm.fallbackMessage"
+                rows="2"
+                class="input-modern w-full"
+                placeholder="Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt."
+              ></textarea>
             </div>
 
             <!-- Activation -->
@@ -311,6 +361,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useAgents, type Agent, type CreateAgentData, type UpdateAgentData } from '~/composables/useAgents'
 
 // ✅ PAGE META
 definePageMeta({
@@ -318,111 +369,62 @@ definePageMeta({
   layout: 'default'
 })
 
-// ✅ TYPES
-interface Agent {
-  id: string
-  name: string
-  type: 'general' | 'product-specialist' | 'support' | 'upsell'
-  description: string
-  personality: string
-  isActive: boolean
-  stats: {
-    conversations: number
-    conversions: number
-  }
-  createdAt: string
-  updatedAt: string
-}
-
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
+const {
+  agents,
+  loading,
+  saving,
+  error,
+  planLimit,
+  canCreateAgent,
+  planLimitReached,
+  fetchAgents,
+  createAgent,
+  updateAgent,
+  deleteAgent,
+  toggleAgentStatus,
+  duplicateAgent,
+  getTypeLabel,
+  getPersonalityLabel,
+  getAgentIcon,
+  getAvatarClass,
+  getStatusBadgeClass,
+  clearError
+} = useAgents()
 
 // ✅ REACTIVE STATE
-const loading = ref(false)
-const saving = ref(false)
 const showCreateModal = ref(false)
 const editingAgent = ref<Agent | null>(null)
 const activeAgentMenu = ref<string | null>(null)
 
-const subscriptionPlan = ref('free') // TODO: Get from store
-
-const agentForm = ref({
+// ✅ FORM STATE
+const agentForm = ref<CreateAgentData>({
   name: '',
   type: 'general',
-  description: '',
   personality: 'professional',
+  description: '',
+  welcomeMessage: '',
+  fallbackMessage: '',
   isActive: true
 })
 
-// Mock agents data
-const agents = ref<Agent[]>([
-  {
-    id: '1',
-    name: 'Assistant Commercial Principal',
-    type: 'general',
-    description: 'Vendeur IA polyvalent pour gérer toutes les demandes clients et augmenter les conversions.',
-    personality: 'professional',
-    isActive: true,
-    stats: {
-      conversations: 1247,
-      conversions: 89
-    },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-])
-
 // ✅ COMPUTED
-const filteredAgents = computed(() => {
-  return agents.value.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+const subscriptionPlan = computed(() => {
+  return authStore.user?.shop?.subscription_plan || 'free'
 })
-
-// ✅ UTILITY METHODS
-const getTypeLabel = (type: string): string => {
-  const labels = {
-    general: 'Vendeur généraliste',
-    'product-specialist': 'Spécialiste produit',
-    support: 'Support & SAV',
-    upsell: 'Upsell & Cross-sell'
-  }
-  return labels[type as keyof typeof labels] || type
-}
-
-const getAgentIcon = (type: string): string => {
-  const icons = {
-    general: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-    'product-specialist': 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
-    support: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
-    upsell: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
-  }
-  return icons[type as keyof typeof icons] || icons.general
-}
-
-const getAvatarClass = (type: string): string => {
-  const classes = {
-    general: 'bg-blue-500',
-    'product-specialist': 'bg-green-500',
-    support: 'bg-orange-500',
-    upsell: 'bg-purple-500'
-  }
-  return classes[type as keyof typeof classes] || 'bg-blue-500'
-}
-
-const getStatusBadgeClass = (isActive: boolean): string => {
-  return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-}
 
 // ✅ ACTION METHODS
 const refreshAgents = async () => {
-  loading.value = true
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('Agents refreshed')
-  } catch (error) {
-    console.error('Error refreshing agents:', error)
-  } finally {
-    loading.value = false
+  await fetchAgents()
+}
+
+const openCreateModal = () => {
+  if (!canCreateAgent.value) {
+    alert(`Plan ${subscriptionPlan.value} limité à ${planLimit.value} agent(s). Passez au plan supérieur pour en créer plus.`)
+    return
   }
+  showCreateModal.value = true
 }
 
 const toggleAgentMenu = (agentId: string) => {
@@ -434,46 +436,46 @@ const editAgent = (agent: Agent) => {
   agentForm.value = {
     name: agent.name,
     type: agent.type,
-    description: agent.description,
     personality: agent.personality,
+    description: agent.description || '',
+    welcomeMessage: agent.welcomeMessage || '',
+    fallbackMessage: agent.fallbackMessage || '',
     isActive: agent.isActive
   }
   activeAgentMenu.value = null
 }
 
-const duplicateAgent = (agent: Agent) => {
-  if (subscriptionPlan.value === 'free' && agents.value.length >= 1) {
-    alert('Plan gratuit limité à 1 vendeur IA. Passez au plan Pro pour en créer plus.')
+const duplicateAgentAction = async (agent: Agent) => {
+  if (!canCreateAgent.value) {
+    alert(`Plan ${subscriptionPlan.value} limité à ${planLimit.value} agent(s). Passez au plan supérieur pour en créer plus.`)
     return
   }
 
-  const duplicated: Agent = {
-    ...agent,
-    id: Date.now().toString(),
-    name: agent.name + ' (Copie)',
-    isActive: false,
-    stats: { conversations: 0, conversions: 0 },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
+  activeAgentMenu.value = null
+  const result = await duplicateAgent(agent.id)
   
-  agents.value.unshift(duplicated)
-  activeAgentMenu.value = null
-}
-
-const toggleAgentStatus = (agent: Agent) => {
-  const agentIndex = agents.value.findIndex(a => a.id === agent.id)
-  if (agentIndex !== -1) {
-    agents.value[agentIndex].isActive = !agents.value[agentIndex].isActive
-    agents.value[agentIndex].updatedAt = new Date().toISOString()
+  if (!result.success) {
+    alert(result.error || 'Erreur lors de la duplication')
   }
-  activeAgentMenu.value = null
 }
 
-const deleteAgent = async (agent: Agent) => {
+const toggleAgentStatusAction = async (agent: Agent) => {
+  activeAgentMenu.value = null
+  const result = await toggleAgentStatus(agent.id, !agent.isActive)
+  
+  if (!result.success) {
+    alert(result.error || 'Erreur lors de la modification du statut')
+  }
+}
+
+const deleteAgentAction = async (agent: Agent) => {
   if (confirm('Êtes-vous sûr de vouloir supprimer ce vendeur IA ?')) {
-    agents.value = agents.value.filter(a => a.id !== agent.id)
     activeAgentMenu.value = null
+    const result = await deleteAgent(agent.id)
+    
+    if (!result.success) {
+      alert(result.error || 'Erreur lors de la suppression')
+    }
   }
 }
 
@@ -485,57 +487,26 @@ const configureAgent = (agent: Agent) => {
 const testAgent = (agent: Agent) => {
   // Open test modal or redirect to test page
   console.log('Testing agent:', agent.name)
+  // TODO: Implémenter le test d'agent
 }
 
 const saveAgent = async () => {
   if (!agentForm.value.name) return
 
-  if (subscriptionPlan.value === 'free' && !editingAgent.value && agents.value.length >= 1) {
-    alert('Plan gratuit limité à 1 vendeur IA. Passez au plan Pro pour en créer plus.')
-    return
+  let result
+  
+  if (editingAgent.value) {
+    // Update existing agent
+    result = await updateAgent(editingAgent.value.id, agentForm.value as UpdateAgentData)
+  } else {
+    // Create new agent
+    result = await createAgent(agentForm.value)
   }
 
-  saving.value = true
-  
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    if (editingAgent.value) {
-      // Update existing agent
-      const index = agents.value.findIndex(a => a.id === editingAgent.value!.id)
-      if (index !== -1) {
-        agents.value[index] = {
-          ...agents.value[index],
-          name: agentForm.value.name,
-          type: agentForm.value.type as Agent['type'],
-          description: agentForm.value.description,
-          personality: agentForm.value.personality,
-          isActive: agentForm.value.isActive,
-          updatedAt: new Date().toISOString()
-        }
-      }
-    } else {
-      // Create new agent
-      const newAgent: Agent = {
-        id: Date.now().toString(),
-        name: agentForm.value.name,
-        type: agentForm.value.type as Agent['type'],
-        description: agentForm.value.description,
-        personality: agentForm.value.personality,
-        isActive: agentForm.value.isActive,
-        stats: { conversations: 0, conversions: 0 },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-      
-      agents.value.unshift(newAgent)
-    }
-
+  if (result.success) {
     closeModal()
-  } catch (error) {
-    console.error('Error saving agent:', error)
-  } finally {
-    saving.value = false
+  } else {
+    alert(result.error || 'Erreur lors de la sauvegarde')
   }
 }
 
@@ -545,8 +516,10 @@ const closeModal = () => {
   agentForm.value = {
     name: '',
     type: 'general',
-    description: '',
     personality: 'professional',
+    description: '',
+    welcomeMessage: '',
+    fallbackMessage: '',
     isActive: true
   }
 }
@@ -560,8 +533,9 @@ const handleClickOutside = (event: Event) => {
 }
 
 // ✅ LIFECYCLE
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  await fetchAgents()
 })
 
 onUnmounted(() => {
@@ -601,7 +575,7 @@ useHead({
 }
 
 .dropdown-item {
-  @apply w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors;
+  @apply w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .stat-item {
