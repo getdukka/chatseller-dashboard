@@ -355,6 +355,49 @@
         </div>
       </div>
     </div>
+
+    <!-- Test Chat Modal -->
+    <div v-if="showTestModal && selectedAgent" class="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full h-96 flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900">Test - {{ selectedAgent.name }}</h3>
+          <button @click="showTestModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="flex-1 p-4 bg-gray-50 overflow-y-auto">
+          <div class="space-y-3">
+            <div class="flex items-start space-x-2">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <span class="text-white text-sm font-medium">IA</span>
+              </div>
+              <div class="bg-white p-3 rounded-lg shadow-sm max-w-xs">
+                <p class="text-sm text-gray-800">{{ selectedAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-4 border-t border-gray-200">
+          <div class="flex space-x-2">
+            <input
+              type="text"
+              placeholder="Tapez votre message de test..."
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Mode test - Les réponses ne sont pas encore générées par l'IA</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -397,6 +440,8 @@ const {
 const showCreateModal = ref(false)
 const editingAgent = ref<Agent | null>(null)
 const activeAgentMenu = ref<string | null>(null)
+const showTestModal = ref(false)
+const selectedAgent = ref<Agent | null>(null)
 
 // ✅ FORM STATE
 const agentForm = ref<CreateAgentData>({
@@ -483,14 +528,14 @@ const deleteAgentAction = async (agent: Agent) => {
 }
 
 const configureAgent = (agent: Agent) => {
-  // Redirect to agent configuration
-  navigateTo(`/settings?agent=${agent.id}`)
+  // Redirect to agent configuration page with agent ID
+  navigateTo(`/vendeurs-ia/${agent.id}/configure`)
 }
 
 const testAgent = (agent: Agent) => {
-  // Open test modal or redirect to test page
-  console.log('Testing agent:', agent.name)
-  // TODO: Implémenter le test d'agent
+  // Ouvrir modal de test avec l'agent
+  showTestModal.value = true
+  selectedAgent.value = agent
 }
 
 const saveAgent = async () => {
@@ -517,6 +562,8 @@ const saveAgent = async () => {
 const closeModal = () => {
   showCreateModal.value = false
   editingAgent.value = null
+  showTestModal.value = false
+  selectedAgent.value = null
   agentForm.value = {
     name: '',
     type: 'general',
