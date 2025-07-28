@@ -1,4 +1,4 @@
-<!-- pages/billing.vue - VERSION AVEC ÉTAT MIS À JOUR APRÈS PAIEMENT -->
+<!-- pages/billing.vue - VERSION CORRIGÉE ESSAI GRATUIT -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -13,9 +13,20 @@
           </div>
           
           <div class="flex items-center space-x-4">
-            <div v-if="subscriptionData.isActive" class="flex items-center space-x-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+            <!-- Status Badge Corrigé -->
+            <div v-if="subscriptionData.isActive && subscriptionData.plan !== 'free'" class="flex items-center space-x-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
               <div class="w-2 h-2 bg-green-500 rounded-full"></div>
               <span class="text-sm font-medium text-green-700">Abonnement actif</span>
+            </div>
+            
+            <div v-else-if="subscriptionData.plan === 'free' && subscriptionData.trialDaysLeft > 0" class="flex items-center space-x-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span class="text-sm font-medium text-blue-700">Essai gratuit - {{ subscriptionData.trialDaysLeft }} jour(s)</span>
+            </div>
+            
+            <div v-else class="flex items-center space-x-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+              <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+              <span class="text-sm font-medium text-red-700">Accès suspendu</span>
             </div>
             
             <button
@@ -41,45 +52,53 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- Success Alert Pro -->
-      <div v-if="subscriptionData.plan === 'professional' && subscriptionData.isActive" class="mb-8">
-        <div class="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl shadow-lg overflow-hidden">
-          <div class="px-8 py-6 text-white relative">
+      <!-- 🚨 ALERTE ESSAI GRATUIT - PLAN FREE AVEC TRIAL -->
+      <div v-if="subscriptionData.plan === 'free' && subscriptionData.trialDaysLeft > 0" class="mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-xl overflow-hidden relative">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-400 animate-pulse"></div>
+          <div class="px-8 py-8 text-white relative">
             <div class="flex items-center justify-between">
-              <div>
-                <h2 class="text-2xl font-bold mb-2">🎉 Félicitations ! Vous êtes maintenant Pro</h2>
-                <p class="text-green-100 text-lg mb-4">
-                  Profitez de toutes les fonctionnalités avancées de ChatSeller.
-                  <span class="font-semibold">Votre abonnement est maintenant actif !</span>
-                </p>
-                <div class="flex flex-wrap gap-3">
-                  <NuxtLink 
-                    to="/vendeurs-ia"
-                    class="inline-flex items-center px-6 py-3 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all backdrop-blur-sm"
-                  >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                    </svg>
-                    Créer vos Vendeurs IA
-                  </NuxtLink>
-                  <button 
-                    @click="manageSubscription"
-                    class="inline-flex items-center px-6 py-3 bg-white bg-opacity-10 border border-white border-opacity-30 rounded-lg text-white font-medium hover:bg-opacity-20 transition-all backdrop-blur-sm"
-                  >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    Gérer l'abonnement
-                  </button>
-                </div>
-              </div>
-              <div class="hidden lg:block">
-                <div class="w-32 h-32 bg-white bg-opacity-10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <div class="text-center">
-                    <div class="text-3xl font-bold">PRO</div>
-                    <div class="text-sm opacity-80">Actif</div>
+              <div class="flex-1">
+                <div class="flex items-center mb-4">
+                  <div class="mr-4">
+                    <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <span class="text-2xl font-bold">{{ subscriptionData.trialDaysLeft }}</span>
+                    </div>
                   </div>
+                  <div>
+                    <h2 class="text-3xl font-bold mb-2">
+                      🚀 Essai gratuit : {{ subscriptionData.trialDaysLeft }} jour(s) restant(s)
+                    </h2>
+                    <p class="text-blue-100 text-lg">
+                      Votre Vendeur IA est actif ! Profitez de toutes les fonctionnalités gratuitement.
+                      <br>
+                      <span class="font-semibold text-yellow-200">
+                        Après {{ subscriptionData.trialDaysLeft }} jour(s), choisissez un plan pour continuer.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-4">
+                  <button 
+                    @click="scrollToPlans"
+                    class="inline-flex items-center px-8 py-4 bg-white bg-opacity-20 rounded-xl text-white font-bold text-lg hover:bg-opacity-30 transition-all backdrop-blur-sm shadow-lg"
+                  >
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    Choisir Starter (14€/mois)
+                  </button>
+                  
+                  <button 
+                    @click="scrollToPlans"
+                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl text-gray-900 font-bold text-lg hover:from-yellow-300 hover:to-orange-300 transition-all shadow-lg"
+                  >
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                    Passer au Pro (29€/mois)
+                  </button>
                 </div>
               </div>
             </div>
@@ -87,44 +106,62 @@
         </div>
       </div>
 
-      <!-- Trial Alert (only if still on free) -->
-      <div v-else-if="subscriptionData.plan === 'free' && subscriptionData.trialDaysLeft > 0" class="mb-8">
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg overflow-hidden">
-          <div class="px-8 py-6 text-white relative">
+      <!-- 🚨 ALERTE ESSAI EXPIRÉ -->
+      <div v-if="subscriptionData.plan === 'free' && subscriptionData.trialDaysLeft === 0" class="mb-8">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-xl shadow-xl overflow-hidden">
+          <div class="px-8 py-8 text-white relative">
             <div class="flex items-center justify-between">
-              <div>
-                <h2 class="text-2xl font-bold mb-2">🎉 Période d'essai gratuite</h2>
-                <p class="text-blue-100 text-lg mb-4">
-                  Profitez de toutes les fonctionnalités Starter gratuitement.
-                  <span class="font-semibold">{{ subscriptionData.trialDaysLeft }} jour(s) restant(s)</span>
-                </p>
-                <div class="flex flex-wrap gap-3">
+              <div class="flex-1">
+                <div class="flex items-center mb-4">
+                  <div class="mr-4">
+                    <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div>
+                    <h2 class="text-3xl font-bold mb-2">⏰ Essai gratuit terminé</h2>
+                    <p class="text-red-100 text-lg">
+                      Votre Vendeur IA et votre widget sont maintenant <span class="font-bold">désactivés</span>.
+                      <br>
+                      <span class="font-semibold text-yellow-200">
+                        Choisissez un plan pour réactiver votre Vendeur IA !
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="bg-red-800 bg-opacity-50 rounded-lg p-4 mb-6">
+                  <h3 class="font-semibold mb-2">🚫 Fonctionnalités désactivées :</h3>
+                  <ul class="text-sm text-red-100 space-y-1">
+                    <li>• Votre Vendeur IA ne répond plus aux visiteurs</li>
+                    <li>• Le widget ChatSeller est invisible sur votre site</li>
+                    <li>• Aucune nouvelle conversation ne peut être créée</li>
+                    <li>• L'accès à la configuration est restreint</li>
+                  </ul>
+                </div>
+                
+                <div class="flex flex-wrap gap-4">
                   <button 
                     @click="scrollToPlans"
-                    class="inline-flex items-center px-6 py-3 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all backdrop-blur-sm"
+                    class="inline-flex items-center px-8 py-4 bg-white bg-opacity-20 rounded-xl text-white font-bold text-lg hover:bg-opacity-30 transition-all backdrop-blur-sm shadow-lg"
                   >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    Choisir Starter (14€/mois)
+                  </button>
+                  
+                  <button 
+                    @click="scrollToPlans"
+                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl text-gray-900 font-bold text-lg hover:from-yellow-300 hover:to-orange-300 transition-all shadow-lg"
+                  >
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
-                    Choisir un plan maintenant
+                    Passer au Pro (29€/mois)
                   </button>
-                  <button 
-                    @click="contactSupport"
-                    class="inline-flex items-center px-6 py-3 bg-white bg-opacity-10 border border-white border-opacity-30 rounded-lg text-white font-medium hover:bg-opacity-20 transition-all backdrop-blur-sm"
-                  >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Besoin d'aide ?
-                  </button>
-                </div>
-              </div>
-              <div class="hidden lg:block">
-                <div class="w-32 h-32 bg-white bg-opacity-10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <div class="text-center">
-                    <div class="text-3xl font-bold">{{ subscriptionData.trialDaysLeft }}</div>
-                    <div class="text-sm opacity-80">jour(s)</div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -140,8 +177,8 @@
           <div class="card-modern">
             <div class="flex items-center justify-between mb-6">
               <h2 class="text-xl font-semibold text-gray-900">Plan actuel</h2>
-              <div class="plan-upgrade-badge" v-if="subscriptionData.plan === 'free'">
-                <span class="text-xs font-medium">Passez au Pro pour débloquer tout le potentiel</span>
+              <div v-if="subscriptionData.plan === 'free'" class="plan-upgrade-badge">
+                <span class="text-xs font-medium">Choisissez un plan pour continuer</span>
               </div>
             </div>
             
@@ -165,8 +202,11 @@
                   <span class="plan-status-badge" :class="getStatusBadgeClass(subscriptionData.plan)">
                     {{ getStatusLabel(subscriptionData.plan) }}
                   </span>
-                  <p v-if="subscriptionData.nextBillingDate && subscriptionData.plan !== 'free'" class="text-sm text-gray-500 mt-2">
+                  <p v-if="subscriptionData.nextBillingDate && subscriptionData.isActive && subscriptionData.plan !== 'free'" class="text-sm text-gray-500 mt-2">
                     Prochain paiement : {{ formatDate(subscriptionData.nextBillingDate) }}
+                  </p>
+                  <p v-else-if="subscriptionData.trialDaysLeft > 0" class="text-sm text-blue-600 mt-2 font-medium">
+                    Fin d'essai : {{ formatDate(subscriptionData.trialEndDate) }}
                   </p>
                 </div>
               </div>
@@ -191,6 +231,17 @@
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                   </svg>
+                  {{ subscriptionData.trialDaysLeft > 0 ? 'Choisir un plan' : 'Réactiver votre Vendeur IA' }}
+                </button>
+
+                <button 
+                  v-if="subscriptionData.plan === 'starter' && subscriptionData.isActive"
+                  @click="scrollToPlans"
+                  class="btn-primary"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
                   Passer au Pro
                 </button>
                 
@@ -207,7 +258,7 @@
                 </button>
                 
                 <button 
-                  v-if="subscriptionData.plan !== 'free'"
+                  v-if="subscriptionData.isActive && subscriptionData.plan !== 'free'"
                   @click="showCancelModal = true"
                   class="btn-danger"
                 >
@@ -220,30 +271,83 @@
             </div>
           </div>
 
-          <!-- Available Plans (only show if not Professional) -->
-          <div v-if="subscriptionData.plan !== 'professional'" ref="plansSection" class="card-modern">
+          <!-- Available Plans -->
+          <div v-if="subscriptionData.plan === 'free' || subscriptionData.plan === 'starter'" ref="plansSection" class="card-modern">
             <div class="mb-8 text-center">
               <h2 class="text-3xl font-bold text-gray-900 mb-4">Choisissez votre plan</h2>
               <p class="text-lg text-gray-600">Déverrouillez tout le potentiel de ChatSeller</p>
             </div>
 
             <div class="grid md:grid-cols-2 gap-8">
-              <!-- Professional Plan -->
+              <!-- Starter Plan -->
+              <div class="plan-card">
+                <div class="plan-card-header">
+                  <div class="text-center mb-6">
+                    <div class="plan-icon-large bg-blue-600">
+                      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                      </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Starter</h3>
+                    <div class="pricing">
+                      <span class="price">14€</span>
+                      <span class="period">/mois</span>
+                    </div>
+                    <p class="text-gray-600">Pour débuter avec l'IA commerciale</p>
+                  </div>
+                </div>
+                
+                <div class="plan-features">
+                  <div v-for="feature in starterFeatures" :key="feature" class="feature-item">
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>{{ feature }}</span>
+                  </div>
+                </div>
+                
+                <div class="plan-card-footer">
+                  <button 
+                    @click="handleSubscribeToPlan('starter')"
+                    :disabled="subscriptionLoading || subscriptionData.plan === 'starter'"
+                    class="btn-plan-secondary"
+                  >
+                    <span v-if="subscriptionLoading && selectedPlan === 'starter'">
+                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Traitement...
+                    </span>
+                    <span v-else-if="subscriptionData.plan === 'starter'">Plan actuel</span>
+                    <span v-else>Choisir Starter (14€/mois)</span>
+                  </button>
+                  
+                  <div class="plan-guarantee">
+                    <svg class="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.065.01l.032.006M12 21a9 9 0 110-18 9 9 0 010 18z"/>
+                    </svg>
+                    <span class="text-xs text-gray-600">Annulation possible à tout moment</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pro Plan -->
               <div class="plan-card plan-card-featured">
                 <div class="plan-card-header">
                   <div class="popular-badge">
-                    <span class="text-sm font-bold">Le plus populaire</span>
+                    <span class="text-sm font-bold">⭐ Recommandé</span>
                   </div>
                   
                   <div class="text-center mb-6">
-                    <div class="plan-icon-large bg-blue-600">
+                    <div class="plan-icon-large bg-purple-600">
                       <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                       </svg>
                     </div>
-                    <h3 class="text-2xl font-bold mb-2">Professional</h3>
+                    <h3 class="text-2xl font-bold mb-2">Pro</h3>
                     <div class="pricing">
-                      <span class="price">14€</span>
+                      <span class="price">29€</span>
                       <span class="period">/mois</span>
                     </div>
                     <p class="text-gray-600">Pour les e-commerçants ambitieux</p>
@@ -251,7 +355,7 @@
                 </div>
                 
                 <div class="plan-features">
-                  <div v-for="feature in professionalFeatures" :key="feature" class="feature-item">
+                  <div v-for="feature in proFeatures" :key="feature" class="feature-item">
                     <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -273,7 +377,7 @@
                       Traitement...
                     </span>
                     <span v-else-if="subscriptionData.plan === 'professional'">Plan actuel</span>
-                    <span v-else>{{ subscriptionData.plan === 'free' ? 'Passer au Plan Pro' : 'Passer au Pro' }}</span>
+                    <span v-else>Passer au Pro</span>
                   </button>
                   
                   <div class="plan-guarantee">
@@ -284,63 +388,20 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Enterprise Plan -->
-              <div class="plan-card">
-                <div class="plan-card-header">
-                  <div class="text-center mb-6">
-                    <div class="plan-icon-large bg-purple-600">
-                      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                      </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
-                    <div class="pricing">
-                      <span class="price">Sur mesure</span>
-                    </div>
-                    <p class="text-gray-600">Pour les grandes entreprises</p>
-                  </div>
-                </div>
-                
-                <div class="plan-features">
-                  <div v-for="feature in enterpriseFeatures" :key="feature" class="feature-item">
-                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    <span>{{ feature }}</span>
-                  </div>
-                </div>
-                
-                <div class="plan-card-footer">
-                  <button 
-                    @click="contactEnterprise"
-                    class="btn-plan-secondary"
-                  >
-                    Demander un devis
-                  </button>
-                  
-                  <div class="plan-guarantee">
-                    <svg class="w-4 h-4 text-blue-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span class="text-xs text-gray-600">Support dédié inclus</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
-          <!-- Professional Features (only show if Professional) -->
-          <div v-if="subscriptionData.plan === 'professional'" class="card-modern">
+          <!-- Pro Features (only show if Pro) -->
+          <div v-if="subscriptionData.plan === 'professional' && subscriptionData.isActive" class="card-modern">
             <div class="mb-6 text-center">
               <h2 class="text-2xl font-bold text-gray-900 mb-4">🎉 Vos fonctionnalités Pro</h2>
               <p class="text-gray-600">Profitez de toutes ces fonctionnalités avancées</p>
             </div>
 
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div v-for="feature in professionalFeatures" :key="feature" class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+              <div v-for="feature in proFeatures" :key="feature" class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
                 <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -353,7 +414,7 @@
             <div class="mt-8 text-center">
               <NuxtLink 
                 to="/vendeurs-ia"
-                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                class="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
@@ -367,8 +428,49 @@
         <!-- Sidebar -->
         <div class="lg:col-span-1 space-y-6">
           
+          <!-- Trial Progress (si essai en cours) -->
+          <div v-if="subscriptionData.plan === 'free' && subscriptionData.trialDaysLeft > 0" class="card-modern bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">🎯 Votre essai gratuit</h3>
+            
+            <div class="text-center mb-6">
+              <div class="relative inline-flex items-center justify-center w-24 h-24 mb-4">
+                <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="16" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                  <circle cx="18" cy="18" r="16" fill="none" stroke="#3b82f6" stroke-width="2" 
+                    :stroke-dasharray="`${(7 - subscriptionData.trialDaysLeft) * 14.28} 100`"/>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-2xl font-bold text-blue-600">{{ subscriptionData.trialDaysLeft }}</span>
+                </div>
+              </div>
+              <p class="text-sm text-gray-600">jour(s) restant(s)</p>
+            </div>
+            
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">Vendeur IA actif</span>
+                <span class="text-green-600 font-medium">✓ Oui</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">Widget fonctionnel</span>
+                <span class="text-green-600 font-medium">✓ Oui</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">Conversations illimitées</span>
+                <span class="text-green-600 font-medium">✓ Oui</span>
+              </div>
+            </div>
+            
+            <button 
+              @click="scrollToPlans"
+              class="w-full mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Souscrire maintenant
+            </button>
+          </div>
+
           <!-- Usage Stats -->
-          <div v-if="subscriptionData.plan !== 'free'" class="card-modern">
+          <div v-if="subscriptionData.isActive" class="card-modern">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Utilisation ce mois</h3>
             
             <div class="space-y-4">
@@ -385,7 +487,7 @@
               <div class="usage-item">
                 <div class="flex justify-between items-center mb-2">
                   <span class="text-sm font-medium text-gray-700">Documents IA</span>
-                  <span class="text-sm text-gray-900">{{ usageStats.documents }} / ∞</span>
+                  <span class="text-sm text-gray-900">{{ usageStats.documents }} / {{ subscriptionData.plan === 'professional' ? '∞' : '50' }}</span>
                 </div>
                 <div class="usage-bar">
                   <div class="usage-bar-fill bg-green-500" style="width: 32%"></div>
@@ -395,7 +497,7 @@
               <div class="usage-item">
                 <div class="flex justify-between items-center mb-2">
                   <span class="text-sm font-medium text-gray-700">Agents IA</span>
-                  <span class="text-sm text-gray-900">{{ usageStats.agents }} / 3</span>
+                  <span class="text-sm text-gray-900">{{ usageStats.agents }} / {{ subscriptionData.plan === 'professional' ? '3' : '1' }}</span>
                 </div>
                 <div class="usage-bar">
                   <div class="usage-bar-fill bg-purple-500" style="width: 66%"></div>
@@ -450,6 +552,75 @@
       </div>
     </div>
 
+    <!-- MODALS -->
+
+    <!-- Congratulations Modal -->
+    <div v-if="showCongratulationsModal" class="modal-overlay">
+      <div class="modal-content modal-large">
+        <div class="modal-header bg-gradient-to-r from-green-600 to-emerald-600 text-white -m-6 mb-6 p-6 rounded-t-xl">
+          <div class="text-center w-full">
+            <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h3 class="text-3xl font-bold mb-2">🎉 Félicitations !</h3>
+            <p class="text-green-100 text-lg">
+              Votre abonnement {{ getPlanName(congratulationsData.plan) }} est maintenant actif !
+            </p>
+          </div>
+        </div>
+        
+        <div class="modal-body text-center">
+          <div class="mb-6">
+            <h4 class="text-xl font-semibold text-gray-900 mb-4">
+              Profitez de toutes vos nouvelles fonctionnalités
+            </h4>
+            
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+              <div v-for="feature in getCongratsFeatures()" :key="feature" class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span class="text-sm font-medium text-gray-900">{{ feature }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center justify-center space-x-2">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="text-sm text-blue-800">
+                <strong>Prochaine facturation :</strong> {{ formatDate(congratulationsData.nextBillingDate) }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <NuxtLink 
+              to="/vendeurs-ia"
+              @click="showCongratulationsModal = false"
+              class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              Créer mes Vendeurs IA
+            </NuxtLink>
+            
+            <button 
+              @click="showCongratulationsModal = false"
+              class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            >
+              Continuer plus tard
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Cancel Subscription Modal -->
     <div v-if="showCancelModal" class="modal-overlay">
       <div class="modal-content">
@@ -470,10 +641,26 @@
               </svg>
             </div>
             <h4 class="text-lg font-medium text-gray-900 mb-2">Êtes-vous sûr ?</h4>
-            <p class="text-gray-600">
-              En annulant votre abonnement, vous perdrez l'accès aux fonctionnalités Pro à la fin de votre période de facturation actuelle 
-              <span class="font-medium">({{ formatDate(subscriptionData.nextBillingDate) }})</span>.
+            <p class="text-gray-600 mb-4">
+              En annulant votre abonnement, vous conserverez l'accès aux fonctionnalités {{ getPlanName(subscriptionData.plan) }} jusqu'à la fin de votre période de facturation actuelle.
             </p>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <div class="flex items-start">
+                <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="text-left">
+                  <h5 class="text-sm font-medium text-yellow-800 mb-1">Ce qui va se passer :</h5>
+                  <ul class="text-sm text-yellow-700 space-y-1">
+                    <li>• Accès maintenu jusqu'au {{ formatDate(subscriptionData.nextBillingDate) }}</li>
+                    <li>• Aucun prélèvement automatique après cette date</li>
+                    <li>• Votre Vendeur IA sera désactivé à l'expiration</li>
+                    <li>• Vos données restent sauvegardées (réactivation possible)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -494,14 +681,21 @@
 
     <!-- Success/Error Notifications -->
     <div v-if="notification.show" class="notification" :class="notification.type === 'success' ? 'notification-success' : 'notification-error'">
-      <div class="flex items-center">
-        <svg v-if="notification.type === 'success'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
-        <svg v-else class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-        {{ notification.message }}
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <svg v-if="notification.type === 'success'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <svg v-else class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          {{ notification.message }}
+        </div>
+        <button @click="notification.show = false" class="ml-4 text-white hover:text-gray-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -526,21 +720,28 @@ const loading = ref(false)
 const subscriptionLoading = ref(false)
 const selectedPlan = ref('')
 const showCancelModal = ref(false)
+const showCongratulationsModal = ref(false)
 const plansSection = ref<HTMLElement>()
 
-// Subscription data
+// ✅ DONNÉES CORRIGÉES POUR GÉRER L'ESSAI GRATUIT
 const subscriptionData = ref({
-  plan: 'free', // 'free', 'professional', 'enterprise'
-  isActive: false,
-  trialDaysLeft: 7,
-  nextBillingDate: '2025-02-15T00:00:00Z'
+  plan: 'free', // 'free', 'starter', 'professional'
+  isActive: true, // true pendant l'essai ou l'abonnement actif
+  trialDaysLeft: 7, // Jours d'essai restants
+  trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  nextBillingDate: '2025-08-15T00:00:00Z'
+})
+
+const congratulationsData = ref({
+  plan: '',
+  nextBillingDate: ''
 })
 
 // Usage stats
 const usageStats = ref({
   conversations: 234,
   documents: 12,
-  agents: 2
+  agents: 1
 })
 
 // Notification system
@@ -550,93 +751,115 @@ const notification = ref({
   message: ''
 })
 
-// Plan features
-const professionalFeatures = [
+// ✅ FONCTIONNALITÉS CORRIGÉES
+const starterFeatures = [
+  '1 Vendeur IA spécialisé',
+  '1000 conversations/mois',
+  '50 documents max',
+  'Analytics de base',
+  'Support email',
+  'Intégration widget'
+]
+
+const proFeatures = [
+  'Tout du plan Starter',
+  '3 Vendeurs IA spécialisés',
   'Conversations illimitées',
-  '3 Agents IA spécialisés',
   'Base de connaissance illimitée',
   'Upsell automatique intelligent',
   'Analytics avancées & ROI',
-  'Support prioritaire'
-]
-
-const enterpriseFeatures = [
-  'Tout du plan Professional',
-  'Agents IA illimités',
-  'White-label complet',
-  'API complète & webhooks',
-  'Support dédié 24/7',
-  'SLA garanti 99.9%'
+  'Support prioritaire',
+  'API & webhooks',
+  'White-label partiel'
 ]
 
 // ✅ COMPUTED
 const getCurrentPlanFeatures = (): string[] => {
   switch (subscriptionData.value.plan) {
     case 'professional':
-      return professionalFeatures.slice(0, 3)
-    case 'enterprise':
-      return enterpriseFeatures.slice(0, 3)
+      return proFeatures.slice(0, 4)
+    case 'starter':
+      return starterFeatures.slice(0, 3)
+    case 'free':
     default:
-      return ['7 jours d\'essai gratuit', '1 Agent IA', '10 documents max']
+      return ['Essai gratuit 7 jours', 'Toutes les fonctionnalités Starter', 'Support par email']
   }
 }
 
-// ✅ UTILITY METHODS
+const getCongratsFeatures = (): string[] => {
+  switch (congratulationsData.value.plan) {
+    case 'professional':
+      return proFeatures.slice(0, 6)
+    case 'starter':
+      return starterFeatures.slice(0, 4)
+    default:
+      return starterFeatures.slice(0, 4)
+  }
+}
+
+// ✅ UTILITY METHODS CORRIGÉS
 const getPlanName = (plan: string): string => {
   const names = {
-    free: 'Gratuit',
-    professional: 'Professional',
-    enterprise: 'Enterprise'
+    free: 'Essai Gratuit',
+    starter: 'Starter',
+    professional: 'Pro'
   }
   return names[plan as keyof typeof names] || plan
 }
 
 const getPlanPrice = (plan: string): string => {
+  if (plan === 'free') {
+    return subscriptionData.value.trialDaysLeft > 0 
+      ? `${subscriptionData.value.trialDaysLeft} jours gratuits`
+      : 'Essai expiré'
+  }
+  
   const prices = {
-    free: subscriptionData.value.trialDaysLeft > 0 ? `${subscriptionData.value.trialDaysLeft} jours d'essai restants` : 'Plan gratuit',
-    professional: '14€/mois',
-    enterprise: 'Sur mesure'
+    starter: '14€/mois',
+    professional: '29€/mois'
   }
   return prices[plan as keyof typeof prices] || ''
 }
 
 const getPlanCardClass = (plan: string): string => {
   const classes = {
-    free: 'bg-gray-50 border-gray-200',
-    professional: 'bg-blue-50 border-blue-200',
-    enterprise: 'bg-purple-50 border-purple-200'
+    free: subscriptionData.value.trialDaysLeft > 0 ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200',
+    starter: 'bg-blue-50 border-blue-200',
+    professional: 'bg-purple-50 border-purple-200'
   }
   return classes[plan as keyof typeof classes] || 'bg-gray-50 border-gray-200'
 }
 
 const getPlanIconClass = (plan: string): string => {
   const classes = {
-    free: 'bg-gray-100 text-gray-600',
-    professional: 'bg-blue-100 text-blue-600',
-    enterprise: 'bg-purple-100 text-purple-600'
+    free: subscriptionData.value.trialDaysLeft > 0 ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600',
+    starter: 'bg-blue-100 text-blue-600',
+    professional: 'bg-purple-100 text-purple-600'
   }
   return classes[plan as keyof typeof classes] || 'bg-gray-100 text-gray-600'
 }
 
 const getPlanIcon = (plan: string): string => {
   const icons = {
-    free: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1',
-    professional: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-    enterprise: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
+    free: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+    starter: 'M13 10V3L4 14h7v7l9-11h-7z',
+    professional: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z'
   }
   return icons[plan as keyof typeof icons] || icons.free
 }
 
 const getStatusLabel = (plan: string): string => {
   if (plan === 'free') {
-    return subscriptionData.value.trialDaysLeft > 0 ? 'Essai gratuit' : 'Plan gratuit'
+    return subscriptionData.value.trialDaysLeft > 0 ? 'Essai gratuit' : 'Expiré'
   }
   return subscriptionData.value.isActive ? 'Actif' : 'Inactif'
 }
 
 const getStatusBadgeClass = (plan: string): string => {
   if (plan === 'free') {
-    return subscriptionData.value.trialDaysLeft > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+    return subscriptionData.value.trialDaysLeft > 0 
+      ? 'bg-blue-100 text-blue-800' 
+      : 'bg-red-100 text-red-800'
   }
   return subscriptionData.value.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
 }
@@ -656,13 +879,20 @@ const showNotification = (type: 'success' | 'error', message: string) => {
   }, 5000)
 }
 
-// ✅ ACTION METHODS - PAIEMENT
+// ✅ ACTION METHODS - CORRIGÉS POUR GÉRER STARTER ET PROFESSIONAL
 const handleSubscribeToPlan = async (plan: string) => {
   selectedPlan.value = plan
   subscriptionLoading.value = true
   
   try {
     console.log('🚀 Initiation du paiement pour le plan:', plan)
+    
+    // ✅ MAPPING CORRECT DES PLANS
+    let planToSend = plan
+    if (plan === 'starter') {
+      // Le plan starter côté frontend correspond au professional côté API
+      planToSend = 'professional'
+    }
     
     const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/create-checkout-session`, {
       method: 'POST',
@@ -671,8 +901,8 @@ const handleSubscribeToPlan = async (plan: string) => {
         'Content-Type': 'application/json'
       },
       body: {
-        plan: plan,
-        successUrl: `${window.location.origin}/billing?success=true`,
+        plan: planToSend,
+        successUrl: `${window.location.origin}/billing?success=true&plan=${plan}`,
         cancelUrl: `${window.location.origin}/billing?cancelled=true`
       }
     })
@@ -695,11 +925,31 @@ const handleSubscribeToPlan = async (plan: string) => {
   }
 }
 
-// ✅ CHARGEMENT DES DONNÉES - CORRIGÉ
+// ✅ CHARGEMENT DES DONNÉES - CORRIGÉ POUR L'ESSAI GRATUIT
 const loadBillingData = async () => {
   loading.value = true
   try {
     console.log('🔄 Chargement des données de facturation...')
+    
+    if (!authStore.token) {
+      console.log('⚠️ Mode développement - calcul de l\'essai gratuit')
+      
+      // Calcul basé sur la date de création du compte
+      const accountCreationDate = new Date(authStore.user?.createdAt || Date.now())
+      const daysSinceCreation = Math.floor((Date.now() - accountCreationDate.getTime()) / (1000 * 60 * 60 * 24))
+      const trialDaysLeft = Math.max(0, 7 - daysSinceCreation)
+      
+      subscriptionData.value = {
+        plan: 'free',
+        isActive: trialDaysLeft > 0, // Actif seulement si essai en cours
+        trialDaysLeft: trialDaysLeft,
+        trialEndDate: new Date(accountCreationDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      }
+      
+      console.log('✅ État d\'essai gratuit:', subscriptionData.value)
+      return
+    }
     
     const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/subscription-status`, {
       headers: {
@@ -710,19 +960,47 @@ const loadBillingData = async () => {
     console.log('📊 Données reçues:', response)
     
     if (response.success) {
-      // ✅ MISE À JOUR COMPLÈTE DES DONNÉES
+      const subscription = response.subscription
+      
+      // ✅ MAPPING CORRECT DES PLANS DE L'API
+      let frontendPlan = 'free'
+      if (subscription.plan === 'professional') {
+        frontendPlan = 'starter' // API professional = Frontend starter
+      } else if (subscription.plan === 'enterprise') {
+        frontendPlan = 'professional' // API enterprise = Frontend professional
+      }
+      
+      // Calcul des jours d'essai si plan gratuit
+      let trialDaysLeft = 0
+      let isActive = subscription.isActive
+      
+      if (subscription.plan === 'free') {
+        const creationDate = new Date(authStore.user?.createdAt || Date.now())
+        const daysSinceCreation = Math.floor((Date.now() - creationDate.getTime()) / (1000 * 60 * 60 * 24))
+        trialDaysLeft = Math.max(0, 7 - daysSinceCreation)
+        isActive = trialDaysLeft > 0
+      }
+      
       subscriptionData.value = {
-        plan: response.subscription.plan,
-        isActive: response.subscription.isActive,
-        trialDaysLeft: response.subscription.plan === 'free' ? 7 : 0, // À adapter selon vos besoins
-        nextBillingDate: response.subscription.nextBillingDate || '2025-02-15T00:00:00Z'
+        plan: subscription.plan === 'free' ? 'free' : frontendPlan,
+        isActive: isActive,
+        trialDaysLeft: trialDaysLeft,
+        trialEndDate: subscription.trialEndDate || new Date(Date.now() + trialDaysLeft * 24 * 60 * 60 * 1000).toISOString(),
+        nextBillingDate: subscription.nextBillingDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       }
       
       console.log('✅ État mis à jour:', subscriptionData.value)
     }
   } catch (error) {
     console.error('❌ Erreur chargement billing:', error)
-    // En cas d'erreur, on garde les données mockées
+    // En cas d'erreur, on garde l'essai gratuit par défaut
+    subscriptionData.value = {
+      plan: 'free',
+      isActive: true,
+      trialDaysLeft: 5, // 5 jours par défaut
+      trialEndDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+      nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    }
   } finally {
     loading.value = false
   }
@@ -733,6 +1011,7 @@ const refreshBillingData = async () => {
   showNotification('success', 'Données de facturation actualisées')
 }
 
+// ✅ ANNULATION D'ABONNEMENT - CORRIGÉE
 const cancelSubscription = async () => {
   subscriptionLoading.value = true
   
@@ -746,8 +1025,9 @@ const cancelSubscription = async () => {
     
     if (response.success) {
       showCancelModal.value = false
-      subscriptionData.value.isActive = false
-      showNotification('success', 'Votre abonnement sera annulé à la fin de la période de facturation')
+      showNotification('success', `Votre abonnement sera annulé le ${formatDate(subscriptionData.value.nextBillingDate)}`)
+    } else {
+      throw new Error(response.error || 'Erreur lors de l\'annulation')
     }
   } catch (error: any) {
     console.error('Erreur annulation:', error)
@@ -765,10 +1045,6 @@ const contactSupport = () => {
   window.location.href = 'mailto:support@chatseller.app?subject=Aide avec la facturation'
 }
 
-const contactEnterprise = () => {
-  window.location.href = 'mailto:enterprise@chatseller.app?subject=Demande de devis Enterprise'
-}
-
 const openDocumentation = () => {
   window.open('https://docs.chatseller.app/billing', '_blank')
 }
@@ -781,22 +1057,27 @@ const scrollToPlans = () => {
   plansSection.value?.scrollIntoView({ behavior: 'smooth' })
 }
 
-// ✅ LIFECYCLE - AVEC RECHARGEMENT AUTOMATIQUE
+// ✅ LIFECYCLE - CORRIGÉ
 onMounted(async () => {
   console.log('🚀 Composant billing monté')
   
-  // Charger les données de facturation
   await loadBillingData()
   
-  // ✅ VÉRIFIER LES PARAMÈTRES D'URL ET RECHARGER LES DONNÉES
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.get('success') === 'true') {
-    console.log('✅ Retour de paiement réussi - rechargement des données...')
+    console.log('✅ Retour de paiement réussi')
     
-    // Attendre un peu pour laisser le webhook Stripe se déclencher
+    const planParam = urlParams.get('plan') || 'starter'
+    
     setTimeout(async () => {
       await loadBillingData()
-      showNotification('success', 'Votre abonnement a été activé avec succès !')
+      
+      congratulationsData.value = {
+        plan: subscriptionData.value.plan,
+        nextBillingDate: subscriptionData.value.nextBillingDate
+      }
+      showCongratulationsModal.value = true
+      
     }, 2000)
     
     window.history.replaceState({}, '', '/billing')
@@ -813,7 +1094,7 @@ useHead({
 </script>
 
 <style scoped>
-/* Les styles CSS restent identiques... */
+/* ✅ STYLES IDENTIQUES À LA VERSION PRÉCÉDENTE */
 .card-modern {
   @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
 }
@@ -831,7 +1112,7 @@ useHead({
 }
 
 .plan-upgrade-badge {
-  @apply px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xs font-medium;
+  @apply px-3 py-1 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-full text-xs font-medium animate-pulse;
 }
 
 .current-plan-card {
@@ -851,7 +1132,7 @@ useHead({
 }
 
 .plan-card-featured {
-  @apply border-blue-300 bg-blue-50/30 transform scale-105 shadow-lg;
+  @apply border-purple-300 bg-purple-50/30 transform scale-105 shadow-lg;
 }
 
 .plan-card-header {
@@ -859,7 +1140,7 @@ useHead({
 }
 
 .popular-badge {
-  @apply absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold;
+  @apply absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-1 rounded-full text-sm font-bold;
 }
 
 .plan-icon-large {
@@ -891,11 +1172,11 @@ useHead({
 }
 
 .btn-plan-primary {
-  @apply w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 focus:ring-4 focus:ring-blue-200 disabled:opacity-50 transition-all;
+  @apply w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-lg font-semibold rounded-xl hover:from-purple-700 hover:to-purple-800 focus:ring-4 focus:ring-purple-200 disabled:opacity-50 transition-all;
 }
 
 .btn-plan-secondary {
-  @apply w-full py-4 px-6 border-2 border-gray-300 text-gray-700 text-lg font-semibold rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all;
+  @apply w-full py-4 px-6 border-2 border-blue-300 text-blue-700 text-lg font-semibold rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all;
 }
 
 .plan-guarantee {
@@ -926,6 +1207,10 @@ useHead({
   @apply bg-white rounded-xl shadow-xl max-w-md w-full;
 }
 
+.modal-large {
+  @apply max-w-2xl;
+}
+
 .modal-header {
   @apply flex items-center justify-between p-6 border-b border-gray-200;
 }
@@ -943,7 +1228,7 @@ useHead({
 }
 
 .notification {
-  @apply fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300;
+  @apply fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 max-w-md;
 }
 
 .notification-success {
@@ -975,5 +1260,14 @@ useHead({
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

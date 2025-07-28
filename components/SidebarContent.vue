@@ -179,7 +179,7 @@
             class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-100 py-2"
           >
             <NuxtLink 
-              to="/profile" 
+              to="/settings?tab=compte" 
               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               @click="emit('close-profile')"
             >

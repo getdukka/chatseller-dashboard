@@ -1,4 +1,4 @@
-<!-- pages/settings.vue - PAGE PARAMÈTRES CORRIGÉE -->
+<!-- pages/settings.vue - PAGE PARAMÈTRES RÉORGANISÉE SELON SPÉCIFICATIONS -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -8,7 +8,7 @@
           <div>
             <h1 class="text-3xl font-bold text-gray-900">Paramètres ChatSeller</h1>
             <p class="mt-2 text-gray-600">
-              Configurez votre Vendeur IA et personnalisez votre widget
+              Configurez votre widget et gérez votre compte
             </p>
           </div>
           
@@ -69,77 +69,11 @@
 
       <!-- Tab Content -->
       <div class="max-w-6xl">
-        <!-- Vendeur IA Tab -->
-        <div v-show="activeTab === 'agent'" class="space-y-8">
+        
+        <!-- ✅ ONGLET WIDGET - CONFIGURATION SEULEMENT (PAS DE VENDEUR IA) -->
+        <div v-show="activeTab === 'widget'" class="space-y-8">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Agent Configuration -->
-            <div class="card-modern">
-              <div class="flex items-center mb-6">
-                <div class="p-2 bg-blue-100 rounded-lg mr-3">
-                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                  </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900">Configuration du Vendeur IA</h3>
-              </div>
-              
-              <div class="space-y-6">
-                <!-- Agent Name -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Nom du Vendeur IA
-                  </label>
-                  <input
-                    v-model="settings.botName"
-                    type="text"
-                    class="input-modern w-full"
-                    placeholder="Mia - Assistante d'achat"
-                  >
-                  <p class="text-xs text-gray-500 mt-1">Ce nom apparaîtra dans les conversations avec vos clients</p>
-                </div>
-
-                <!-- Welcome Message -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Message de bienvenue
-                  </label>
-                  <textarea
-                    v-model="settings.welcomeMessage"
-                    rows="4"
-                    class="input-modern w-full"
-                    placeholder="Bonjour, je suis Mia ! Comment puis-je vous aider aujourd'hui ?"
-                  ></textarea>
-                  <p class="text-xs text-gray-500 mt-1">Premier message que vos visiteurs verront</p>
-                </div>
-
-                <!-- Button Text -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Texte du bouton d'ouverture
-                  </label>
-                  <input
-                    v-model="settings.buttonText"
-                    type="text"
-                    class="input-modern w-full"
-                    placeholder="Parler à la vendeuse"
-                  >
-                  <p class="text-xs text-gray-500 mt-1">Texte affiché sur le bouton pour ouvrir le chat</p>
-                </div>
-
-                <!-- Language -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Langue de l'agent
-                  </label>
-                  <select v-model="settings.language" class="input-modern w-full">
-                    <option value="fr">Français</option>
-                    <option value="en">English</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Appearance -->
+            <!-- Widget Configuration -->
             <div class="card-modern">
               <div class="flex items-center mb-6">
                 <div class="p-2 bg-purple-100 rounded-lg mr-3">
@@ -147,10 +81,24 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
                   </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">Apparence du widget</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Configuration du widget</h3>
               </div>
               
               <div class="space-y-6">
+                <!-- Button Text -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Texte du bouton d'ouverture
+                  </label>
+                  <input
+                    v-model="widgetSettings.buttonText"
+                    type="text"
+                    class="input-modern w-full"
+                    placeholder="Parler à un conseiller"
+                  >
+                  <p class="text-xs text-gray-500 mt-1">Texte affiché sur le bouton pour ouvrir le chat</p>
+                </div>
+
                 <!-- Primary Color -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -158,12 +106,12 @@
                   </label>
                   <div class="flex items-center space-x-3">
                     <input
-                      v-model="settings.primaryColor"
+                      v-model="widgetSettings.primaryColor"
                       type="color"
                       class="h-12 w-16 border border-gray-300 rounded-lg cursor-pointer"
                     >
                     <input
-                      v-model="settings.primaryColor"
+                      v-model="widgetSettings.primaryColor"
                       type="text"
                       class="input-modern flex-1"
                       placeholder="#3B82F6"
@@ -178,39 +126,39 @@
                     Position du bouton
                   </label>
                   <div class="grid grid-cols-1 gap-3">
-                    <label class="position-option" :class="{ 'selected': settings.position === 'above-cta' }">
+                    <label class="position-option" :class="{ 'selected': widgetSettings.position === 'above-cta' }">
                       <input
-                        v-model="settings.position"
+                        v-model="widgetSettings.position"
                         type="radio"
                         value="above-cta"
                         class="sr-only"
                       >
                       <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 border-2 rounded-full" :class="settings.position === 'above-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
+                        <div class="w-4 h-4 border-2 rounded-full" :class="widgetSettings.position === 'above-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
                         <span class="text-sm">Au-dessus du bouton CTA</span>
                       </div>
                     </label>
-                    <label class="position-option" :class="{ 'selected': settings.position === 'below-cta' }">
+                    <label class="position-option" :class="{ 'selected': widgetSettings.position === 'below-cta' }">
                       <input
-                        v-model="settings.position"
+                        v-model="widgetSettings.position"
                         type="radio"
                         value="below-cta"
                         class="sr-only"
                       >
                       <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 border-2 rounded-full" :class="settings.position === 'below-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
+                        <div class="w-4 h-4 border-2 rounded-full" :class="widgetSettings.position === 'below-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
                         <span class="text-sm">En dessous du bouton CTA</span>
                       </div>
                     </label>
-                    <label class="position-option" :class="{ 'selected': settings.position === 'beside-cta' }">
+                    <label class="position-option" :class="{ 'selected': widgetSettings.position === 'beside-cta' }">
                       <input
-                        v-model="settings.position"
+                        v-model="widgetSettings.position"
                         type="radio"
                         value="beside-cta"
                         class="sr-only"
                       >
                       <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 border-2 rounded-full" :class="settings.position === 'beside-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
+                        <div class="w-4 h-4 border-2 rounded-full" :class="widgetSettings.position === 'beside-cta' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'"></div>
                         <span class="text-sm">À côté du bouton CTA</span>
                       </div>
                     </label>
@@ -222,14 +170,14 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Taille du widget
                   </label>
-                  <select v-model="settings.widgetSize" class="input-modern w-full">
+                  <select v-model="widgetSettings.widgetSize" class="input-modern w-full">
                     <option value="small">Petit</option>
                     <option value="medium">Moyen</option>
                     <option value="large">Grand</option>
                   </select>
                 </div>
 
-                <!-- ✅ WIDGET STATUS CORRIGÉ -->
+                <!-- Widget Status -->
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
                     <h4 class="text-sm font-medium text-gray-900">Widget actif</h4>
@@ -239,14 +187,110 @@
                     @click="toggleWidgetStatus"
                     :class="[
                       'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                      settings.isActive ? 'bg-blue-600' : 'bg-gray-200'
+                      widgetSettings.isActive ? 'bg-blue-600' : 'bg-gray-200'
                     ]"
                   >
-                    <span class="sr-only">{{ settings.isActive ? 'Désactiver' : 'Activer' }} le widget</span>
+                    <span class="sr-only">{{ widgetSettings.isActive ? 'Désactiver' : 'Activer' }} le widget</span>
                     <span
                       :class="[
                         'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                        settings.isActive ? 'translate-x-5' : 'translate-x-0'
+                        widgetSettings.isActive ? 'translate-x-5' : 'translate-x-0'
+                      ]"
+                    ></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Widget Theme Options -->
+            <div class="card-modern">
+              <div class="flex items-center mb-6">
+                <div class="p-2 bg-indigo-100 rounded-lg mr-3">
+                  <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Style et thème</h3>
+              </div>
+              
+              <div class="space-y-6">
+                <!-- Theme Selection -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-3">
+                    Style du widget
+                  </label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <label class="theme-option" :class="{ 'selected': widgetSettings.theme === 'modern' }">
+                      <input
+                        v-model="widgetSettings.theme"
+                        type="radio"
+                        value="modern"
+                        class="sr-only"
+                      >
+                      <div class="p-3 border rounded-lg cursor-pointer transition-all">
+                        <div class="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded mb-2"></div>
+                        <span class="text-xs font-medium">Moderne</span>
+                      </div>
+                    </label>
+                    <label class="theme-option" :class="{ 'selected': widgetSettings.theme === 'classic' }">
+                      <input
+                        v-model="widgetSettings.theme"
+                        type="radio"
+                        value="classic"
+                        class="sr-only"
+                      >
+                      <div class="p-3 border rounded-lg cursor-pointer transition-all">
+                        <div class="w-full h-12 bg-gray-600 rounded mb-2"></div>
+                        <span class="text-xs font-medium">Classique</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Corner Radius -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Arrondis des coins
+                  </label>
+                  <select v-model="widgetSettings.borderRadius" class="input-modern w-full">
+                    <option value="none">Aucun (carré)</option>
+                    <option value="sm">Petit</option>
+                    <option value="md">Moyen</option>
+                    <option value="lg">Grand</option>
+                    <option value="full">Arrondi complet</option>
+                  </select>
+                </div>
+
+                <!-- Animation -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Animation d'entrée
+                  </label>
+                  <select v-model="widgetSettings.animation" class="input-modern w-full">
+                    <option value="fade">Fondu</option>
+                    <option value="slide">Glissement</option>
+                    <option value="bounce">Rebond</option>
+                    <option value="none">Aucune</option>
+                  </select>
+                </div>
+
+                <!-- Sound -->
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 class="text-sm font-medium text-gray-900">Son de notification</h4>
+                    <p class="text-xs text-gray-500">Son lors de nouveaux messages</p>
+                  </div>
+                  <button
+                    @click="widgetSettings.soundEnabled = !widgetSettings.soundEnabled"
+                    :class="[
+                      'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                      widgetSettings.soundEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                    ]"
+                  >
+                    <span
+                      :class="[
+                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                        widgetSettings.soundEnabled ? 'translate-x-5' : 'translate-x-0'
                       ]"
                     ></span>
                   </button>
@@ -255,7 +299,7 @@
             </div>
           </div>
 
-          <!-- ✅ WIDGET PREVIEW CORRIGÉ -->
+          <!-- Widget Preview -->
           <div class="card-modern">
             <div class="flex items-center mb-6">
               <div class="p-2 bg-green-100 rounded-lg mr-3">
@@ -299,16 +343,17 @@
                       <!-- CTA Section avec Widget -->
                       <div class="space-y-3">
                         <!-- Widget Button Position: Above CTA -->
-                        <div v-if="settings.isActive && settings.position === 'above-cta'" class="widget-button-container">
+                        <div v-if="widgetSettings.isActive && widgetSettings.position === 'above-cta'" class="widget-button-container">
                           <button 
                             @click="showChatPreview = !showChatPreview"
                             class="widget-trigger-button"
-                            :style="{ backgroundColor: settings.primaryColor }"
+                            :class="getWidgetButtonClasses()"
+                            :style="{ backgroundColor: widgetSettings.primaryColor }"
                           >
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                             </svg>
-                            {{ settings.buttonText }}
+                            {{ widgetSettings.buttonText }}
                           </button>
                         </div>
                         
@@ -319,11 +364,12 @@
                           </button>
                           
                           <!-- Widget Button Position: Beside CTA -->
-                          <div v-if="settings.isActive && settings.position === 'beside-cta'">
+                          <div v-if="widgetSettings.isActive && widgetSettings.position === 'beside-cta'">
                             <button 
                               @click="showChatPreview = !showChatPreview"
                               class="widget-trigger-button-small"
-                              :style="{ backgroundColor: settings.primaryColor }"
+                              :class="getWidgetButtonClasses()"
+                              :style="{ backgroundColor: widgetSettings.primaryColor }"
                             >
                               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -333,16 +379,17 @@
                         </div>
                         
                         <!-- Widget Button Position: Below CTA -->
-                        <div v-if="settings.isActive && settings.position === 'below-cta'" class="widget-button-container">
+                        <div v-if="widgetSettings.isActive && widgetSettings.position === 'below-cta'" class="widget-button-container">
                           <button 
                             @click="showChatPreview = !showChatPreview"
                             class="widget-trigger-button"
-                            :style="{ backgroundColor: settings.primaryColor }"
+                            :class="getWidgetButtonClasses()"
+                            :style="{ backgroundColor: widgetSettings.primaryColor }"
                           >
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                             </svg>
-                            {{ settings.buttonText }}
+                            {{ widgetSettings.buttonText }}
                           </button>
                         </div>
                       </div>
@@ -351,19 +398,20 @@
                 </div>
               </div>
               
-              <!-- ✅ CHAT INTERFACE PREVIEW -->
+              <!-- Chat Interface Preview -->
               <div 
-                v-if="showChatPreview && settings.isActive"
+                v-if="showChatPreview && widgetSettings.isActive"
                 class="absolute inset-4 bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-10"
+                :class="getChatPreviewClasses()"
               >
                 <!-- Chat Header -->
-                <div class="flex items-center justify-between p-4 border-b border-gray-200" :style="{ backgroundColor: settings.primaryColor }">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200" :style="{ backgroundColor: widgetSettings.primaryColor }">
                   <div class="flex items-center space-x-3">
                     <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                      <span class="text-white text-sm font-medium">{{ settings.botName.charAt(0).toUpperCase() }}</span>
+                      <span class="text-white text-sm font-medium">V</span>
                     </div>
                     <div>
-                      <h3 class="text-white font-medium text-sm">{{ settings.botName }}</h3>
+                      <h3 class="text-white font-medium text-sm">Vendeur IA</h3>
                       <p class="text-white text-opacity-80 text-xs">En ligne</p>
                     </div>
                   </div>
@@ -381,11 +429,11 @@
                 <div class="flex-1 p-4 space-y-4 overflow-y-auto">
                   <!-- Bot Welcome Message -->
                   <div class="flex items-start space-x-2">
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white" :style="{ backgroundColor: settings.primaryColor }">
-                      {{ settings.botName.charAt(0).toUpperCase() }}
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white" :style="{ backgroundColor: widgetSettings.primaryColor }">
+                      V
                     </div>
                     <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-xs">
-                      <p class="text-sm text-gray-800">{{ settings.welcomeMessage }}</p>
+                      <p class="text-sm text-gray-800">Bonjour ! Comment puis-je vous aider avec ce produit ?</p>
                     </div>
                   </div>
                   
@@ -414,7 +462,7 @@
                     >
                     <button 
                       class="p-2 rounded-lg text-white"
-                      :style="{ backgroundColor: settings.primaryColor }"
+                      :style="{ backgroundColor: widgetSettings.primaryColor }"
                       disabled
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -428,7 +476,7 @@
           </div>
         </div>
 
-        <!-- Integration Tab -->
+        <!-- ✅ ONGLET INTÉGRATION - INCHANGÉ -->
         <div v-show="activeTab === 'integration'" class="space-y-8">
           <div class="card-modern">
             <div class="flex items-center mb-6">
@@ -521,6 +569,294 @@
             </div>
           </div>
         </div>
+
+        <!-- ✅ NOUVEL ONGLET COMPTE - CONTENU DE PROFILE.VUE INTÉGRÉ -->
+        <div v-show="activeTab === 'compte'" class="space-y-8">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Colonne principale -->
+            <div class="lg:col-span-2 space-y-8">
+              
+              <!-- Informations personnelles -->
+              <div class="card-modern">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-xl font-semibold text-gray-900">Informations personnelles</h2>
+                  <button 
+                    @click="editingProfile = !editingProfile"
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200"
+                    :class="editingProfile 
+                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                      : 'bg-blue-50 text-blue-700 hover:bg-blue-100'"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    {{ editingProfile ? 'Annuler' : 'Modifier' }}
+                  </button>
+                </div>
+
+                <form @submit.prevent="updateProfile" class="space-y-6">
+                  <!-- Nom -->
+                  <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                      Nom complet
+                    </label>
+                    <input
+                      id="name"
+                      v-model="profileForm.name"
+                      type="text"
+                      :disabled="!editingProfile"
+                      class="input-modern w-full disabled:bg-gray-50 disabled:text-gray-500"
+                      placeholder="Votre nom complet"
+                    />
+                  </div>
+
+                  <!-- Email -->
+                  <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                      Adresse email
+                    </label>
+                    <input
+                      id="email"
+                      v-model="profileForm.email"
+                      type="email"
+                      :disabled="!editingProfile"
+                      class="input-modern w-full disabled:bg-gray-50 disabled:text-gray-500"
+                      placeholder="votre@email.com"
+                    />
+                  </div>
+
+                  <!-- Boutons d'action -->
+                  <div v-if="editingProfile" class="flex items-center space-x-4 pt-4">
+                    <button
+                      type="submit"
+                      :disabled="updating"
+                      class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <svg v-if="updating" class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {{ updating ? 'Mise à jour...' : 'Sauvegarder les modifications' }}
+                    </button>
+                    <button
+                      type="button"
+                      @click="cancelEdit"
+                      class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Informations du shop -->
+              <div class="card-modern">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Informations de la boutique</h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ID de la boutique</label>
+                    <div class="flex items-center space-x-2">
+                      <input
+                        :value="authStore.userShopId"
+                        readonly
+                        class="flex-1 input-modern bg-gray-50 text-gray-500 text-sm font-mono"
+                      />
+                      <button
+                        @click="copyShopId"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all duration-200"
+                        title="Copier l'ID"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Plan d'abonnement</label>
+                    <div class="flex items-center space-x-2">
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        🚀 Plan Starter
+                      </span>
+                      <NuxtLink 
+                        to="/billing" 
+                        class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Upgrade
+                      </NuxtLink>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sécurité -->
+              <div class="card-modern">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Sécurité</h2>
+                
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between py-3">
+                    <div>
+                      <h3 class="text-sm font-medium text-gray-900">Mot de passe</h3>
+                      <p class="text-sm text-gray-500">Dernière modification il y a 30 jours</p>
+                    </div>
+                    <button
+                      @click="changePassword"
+                      class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-200"
+                    >
+                      Modifier
+                    </button>
+                  </div>
+
+                  <hr class="border-gray-100">
+
+                  <div class="flex items-center justify-between py-3">
+                    <div>
+                      <h3 class="text-sm font-medium text-gray-900">Authentification à deux facteurs</h3>
+                      <p class="text-sm text-gray-500">Sécurisez votre compte avec 2FA</p>
+                    </div>
+                    <button
+                      class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200"
+                      disabled
+                    >
+                      Bientôt disponible
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sidebar droite -->
+            <div class="space-y-6">
+              
+              <!-- Logo de la boutique -->
+              <div class="card-modern">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Logo de la boutique</h3>
+                
+                <div class="flex flex-col items-center space-y-4">
+                  <!-- Logo actuel -->
+                  <div class="relative">
+                    <div v-if="logoUrl" class="flex h-24 w-24 items-center justify-center rounded-xl overflow-hidden bg-white border-2 border-gray-200 shadow-lg">
+                      <img :src="logoUrl" alt="Logo de la boutique" class="w-full h-full object-contain">
+                    </div>
+                    <div v-else class="flex h-24 w-24 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                      <span class="text-2xl font-bold text-white">
+                        {{ authStore.userInitials }}
+                      </span>
+                    </div>
+                    <button
+                      @click="triggerLogoUpload"
+                      :disabled="uploadingLogo"
+                      class="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md border-2 border-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50"
+                    >
+                      <svg v-if="!uploadingLogo" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-3">
+                      Formats supportés : JPG, PNG, SVG (max 2MB)
+                    </p>
+                    <button
+                      @click="triggerLogoUpload"
+                      :disabled="uploadingLogo"
+                      class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 disabled:opacity-50 transition-all duration-200"
+                    >
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      {{ uploadingLogo ? 'Upload en cours...' : logoUrl ? 'Changer le logo' : 'Télécharger le logo' }}
+                    </button>
+                    
+                    <div v-if="logoUrl" class="mt-2">
+                      <button
+                        @click="removeLogo"
+                        class="text-xs text-red-600 hover:text-red-700 font-medium"
+                      >
+                        Supprimer le logo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Hidden file input -->
+                <input
+                  ref="logoInput"
+                  type="file"
+                  accept="image/jpeg,image/png,image/svg+xml"
+                  class="hidden"
+                  @change="handleLogoUpload"
+                >
+              </div>
+
+              <!-- Statistiques rapides -->
+              <div class="card-modern">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Activité du compte</h3>
+                
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Membre depuis</span>
+                    <span class="text-sm font-medium text-gray-900">{{ memberSince }}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Dernière connexion</span>
+                    <span class="text-sm font-medium text-gray-900">Maintenant</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Conversations</span>
+                    <span class="text-sm font-medium text-gray-900">{{ totalConversations }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions rapides -->
+              <div class="card-modern">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
+                
+                <div class="space-y-3">
+                  <NuxtLink
+                    to="/vendeurs-ia"
+                    class="flex items-center w-full px-4 py-3 text-sm font-medium text-left text-gray-700 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200"
+                  >
+                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Mes Vendeurs IA
+                  </NuxtLink>
+
+                  <NuxtLink
+                    to="/knowledge-base"
+                    class="flex items-center w-full px-4 py-3 text-sm font-medium text-left text-gray-700 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200"
+                  >
+                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    Base de connaissance
+                  </NuxtLink>
+
+                  <button
+                    @click="exportData"
+                    class="flex items-center w-full px-4 py-3 text-sm font-medium text-left text-gray-700 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200"
+                  >
+                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    Exporter mes données
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -533,14 +869,14 @@
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
-        Paramètres sauvegardés avec succès !
+        {{ successMessage }}
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 // ✅ PAGE META
@@ -552,43 +888,75 @@ definePageMeta({
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
 const route = useRoute()
+const { $supabase } = useNuxtApp()
+
+// ✅ REFS
+const logoInput = ref<HTMLInputElement>()
 
 // ✅ REACTIVE STATE
 const saving = ref(false)
 const copied = ref(false)
 const showSuccessToast = ref(false)
 const showChatPreview = ref(false)
+const updating = ref(false)
+const editingProfile = ref(false)
+const uploadingLogo = ref(false)
+const logoFile = ref<File | null>(null)
+const logoUrl = ref<string | null>(null)
+const successMessage = ref('')
 
-// ✅ TABS - SUPPRESSION DE L'ONGLET COMPTE
+// ✅ TABS - NOUVEAUX 3 ONGLETS
 const tabs = [
   { 
-    id: 'agent', 
-    label: 'Agent IA',
-    icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z'
+    id: 'widget', 
+    label: 'Widget',
+    icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z'
   },
   { 
     id: 'integration', 
     label: 'Intégration',
     icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4'
+  },
+  { 
+    id: 'compte', 
+    label: 'Compte',
+    icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
   }
 ]
 
-const activeTab = ref('agent')
+const activeTab = ref('widget')
 
-const settings = ref({
-  botName: 'Assistant ChatSeller',
-  welcomeMessage: 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?',
+// ✅ WIDGET SETTINGS - SEULEMENT WIDGET (PAS VENDEUR IA)
+const widgetSettings = ref({
   buttonText: 'Parler à un conseiller',
   primaryColor: '#3B82F6',
-  position: 'above-cta', // ✅ CORRECTION: Position par défaut mise à jour
-  language: 'fr',
+  position: 'above-cta',
   widgetSize: 'medium',
-  isActive: true
+  isActive: true,
+  theme: 'modern',
+  borderRadius: 'md',
+  animation: 'fade',
+  soundEnabled: true
 })
 
-// ✅ COMPUTED - CORRECTIONS APPLIQUÉES
+// ✅ PROFILE FORM - POUR L'ONGLET COMPTE
+const profileForm = reactive({
+  name: '',
+  email: ''
+})
+
+// ✅ COMPUTED
 const user = computed(() => authStore.user)
 const userShopId = computed(() => authStore.userShopId)
+
+const memberSince = computed(() => {
+  if (authStore.user?.createdAt) {
+    return new Date(authStore.user.createdAt).toLocaleDateString('fr-FR')
+  }
+  return 'N/A'
+})
+
+const totalConversations = ref(0) // Mock data
 
 const widgetCodeDisplay = computed(() => {
   const shopId = userShopId.value || 'YOUR_SHOP_ID'
@@ -598,14 +966,15 @@ const widgetCodeDisplay = computed(() => {
     '  var script = document.createElement(\'script\');',
     '  script.src = \'https://widget.chatseller.app/widget.js\';',
     '  script.setAttribute(\'data-shop-id\', \'' + shopId + '\');',
-    '  script.setAttribute(\'data-bot-name\', \'' + settings.value.botName + '\');',
-    '  script.setAttribute(\'data-welcome-message\', \'' + settings.value.welcomeMessage + '\');',
-    '  script.setAttribute(\'data-primary-color\', \'' + settings.value.primaryColor + '\');',
-    '  script.setAttribute(\'data-position\', \'' + settings.value.position + '\');',
-    '  script.setAttribute(\'data-button-text\', \'' + settings.value.buttonText + '\');',
-    '  script.setAttribute(\'data-widget-size\', \'' + settings.value.widgetSize + '\');',
-    '  script.setAttribute(\'data-language\', \'' + settings.value.language + '\');',
-    '  script.setAttribute(\'data-active\', \'' + settings.value.isActive + '\');',
+    '  script.setAttribute(\'data-button-text\', \'' + widgetSettings.value.buttonText + '\');',
+    '  script.setAttribute(\'data-primary-color\', \'' + widgetSettings.value.primaryColor + '\');',
+    '  script.setAttribute(\'data-position\', \'' + widgetSettings.value.position + '\');',
+    '  script.setAttribute(\'data-widget-size\', \'' + widgetSettings.value.widgetSize + '\');',
+    '  script.setAttribute(\'data-theme\', \'' + widgetSettings.value.theme + '\');',
+    '  script.setAttribute(\'data-border-radius\', \'' + widgetSettings.value.borderRadius + '\');',
+    '  script.setAttribute(\'data-animation\', \'' + widgetSettings.value.animation + '\');',
+    '  script.setAttribute(\'data-sound\', \'' + widgetSettings.value.soundEnabled + '\');',
+    '  script.setAttribute(\'data-active\', \'' + widgetSettings.value.isActive + '\');',
     '  document.head.appendChild(script);',
     '})();'
   ]
@@ -623,41 +992,76 @@ watch(() => route.query.tab, (newTab) => {
   }
 }, { immediate: true })
 
-// ✅ METHODS - TOUTES LES FONCTIONS DÉFINIES
+// ✅ METHODS
 const setActiveTab = (tabId: string) => {
   activeTab.value = tabId
-  // Mettre à jour l'URL sans recharger la page
   navigateTo({ query: { ...route.query, tab: tabId } }, { replace: true })
 }
 
-// ✅ TOGGLE WIDGET STATUS CORRIGÉ
+const showNotification = (message: string) => {
+  successMessage.value = message
+  showSuccessToast.value = true
+  setTimeout(() => {
+    showSuccessToast.value = false
+  }, 3000)
+}
+
+const getWidgetButtonClasses = () => {
+  let classes = ''
+  
+  // Border radius
+  switch (widgetSettings.value.borderRadius) {
+    case 'none': classes += ' rounded-none'; break;
+    case 'sm': classes += ' rounded-sm'; break;
+    case 'md': classes += ' rounded-lg'; break;
+    case 'lg': classes += ' rounded-xl'; break;
+    case 'full': classes += ' rounded-full'; break;
+    default: classes += ' rounded-lg';
+  }
+  
+  // Size
+  switch (widgetSettings.value.widgetSize) {
+    case 'small': classes += ' text-sm py-1 px-3'; break;
+    case 'medium': classes += ' py-2 px-4'; break;
+    case 'large': classes += ' text-lg py-3 px-6'; break;
+    default: classes += ' py-2 px-4';
+  }
+  
+  return classes
+}
+
+const getChatPreviewClasses = () => {
+  let classes = ''
+  
+  // Border radius for chat window
+  switch (widgetSettings.value.borderRadius) {
+    case 'none': classes += ' rounded-none'; break;
+    case 'sm': classes += ' rounded-sm'; break;
+    case 'md': classes += ' rounded-lg'; break;
+    case 'lg': classes += ' rounded-xl'; break;
+    case 'full': classes += ' rounded-2xl'; break;
+    default: classes += ' rounded-lg';
+  }
+  
+  return classes
+}
+
 const toggleWidgetStatus = async () => {
-  const previousState = settings.value.isActive
-  settings.value.isActive = !settings.value.isActive
+  const previousState = widgetSettings.value.isActive
+  widgetSettings.value.isActive = !widgetSettings.value.isActive
   
   try {
-    // ✅ TODO: Sauvegarder immédiatement dans l'API
     await handleSaveSettings()
-    
-    console.log('Widget status updated:', settings.value.isActive)
-    
+    console.log('Widget status updated:', widgetSettings.value.isActive)
   } catch (error) {
-    // Restaurer l'état précédent en cas d'erreur
-    settings.value.isActive = previousState
+    widgetSettings.value.isActive = previousState
     console.error('Erreur lors de la mise à jour du statut du widget:', error)
   }
 }
 
 const loadSettings = async () => {
   try {
-    // ✅ TODO: Charger depuis l'API
-    // const response = await $fetch('/api/v1/settings', {
-    //   headers: { Authorization: `Bearer ${authStore.token}` }
-    // })
-    // if (response.success) {
-    //   Object.assign(settings.value, response.settings)
-    // }
-    
+    // TODO: Charger depuis l'API
     console.log('Settings loaded')
   } catch (error) {
     console.error('Erreur lors du chargement des paramètres:', error)
@@ -667,22 +1071,12 @@ const loadSettings = async () => {
 const handleSaveSettings = async () => {
   saving.value = true
   try {
-    // Simuler une sauvegarde
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // ✅ TODO: Sauvegarder vers l'API
-    // const response = await $fetch('/api/v1/settings', {
-    //   method: 'PUT',
-    //   headers: { Authorization: `Bearer ${authStore.token}` },
-    //   body: settings.value
-    // })
+    // TODO: Sauvegarder vers l'API
+    console.log('Paramètres sauvegardés:', widgetSettings.value)
     
-    console.log('Paramètres sauvegardés:', settings.value)
-    
-    showSuccessToast.value = true
-    setTimeout(() => {
-      showSuccessToast.value = false
-    }, 3000)
+    showNotification('Paramètres sauvegardés avec succès !')
     
   } catch (error) {
     console.error('Erreur lors de la sauvegarde:', error)
@@ -692,16 +1086,17 @@ const handleSaveSettings = async () => {
 }
 
 const handleResetToDefaults = () => {
-  if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les paramètres ?')) {
-    settings.value = {
-      botName: 'Assistant ChatSeller',
-      welcomeMessage: 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?',
+  if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les paramètres du widget ?')) {
+    widgetSettings.value = {
       buttonText: 'Parler à un conseiller',
       primaryColor: '#3B82F6',
       position: 'above-cta',
-      language: 'fr',
       widgetSize: 'medium',
-      isActive: true
+      isActive: true,
+      theme: 'modern',
+      borderRadius: 'md',
+      animation: 'fade',
+      soundEnabled: true
     }
     showChatPreview.value = false
   }
@@ -719,9 +1114,199 @@ const handleCopyWidgetCode = async () => {
   }
 }
 
+// ✅ MÉTHODES POUR L'ONGLET COMPTE
+const updateProfile = async () => {
+  updating.value = true
+  
+  try {
+    const result = await authStore.updateProfile({
+      name: profileForm.name,
+      email: profileForm.email
+    })
+    
+    if (result.success) {
+      editingProfile.value = false
+      showNotification('Profil mis à jour avec succès !')
+      console.log('✅ Profil mis à jour avec succès')
+    } else {
+      console.error('❌ Erreur mise à jour profil:', result.error)
+    }
+  } catch (error) {
+    console.error('❌ Erreur:', error)
+  } finally {
+    updating.value = false
+  }
+}
+
+const cancelEdit = () => {
+  editingProfile.value = false
+  profileForm.name = authStore.userName || ''
+  profileForm.email = authStore.userEmail || ''
+}
+
+const copyShopId = async () => {
+  try {
+    await navigator.clipboard.writeText(authStore.userShopId || '')
+    console.log('✅ ID copié dans le presse-papiers')
+  } catch (error) {
+    console.error('❌ Erreur copie:', error)
+  }
+}
+
+const changePassword = () => {
+  // Redirection vers la page de réinitialisation de mot de passe
+  navigateTo('/reset-password')
+}
+
+const exportData = async () => {
+  try {
+    // Collecter toutes les données utilisateur
+    const userData = {
+      profile: {
+        name: authStore.userName,
+        email: authStore.userEmail,
+        shopId: authStore.userShopId,
+        memberSince: memberSince.value
+      },
+      settings: {
+        widget: widgetSettings.value
+      },
+      // TODO: Ajouter conversations, commandes, etc. depuis l'API
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        version: '1.0'
+      }
+    }
+
+    // Créer le fichier JSON
+    const dataStr = JSON.stringify(userData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    
+    // Créer le lien de téléchargement
+    const url = window.URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `chatseller-data-${new Date().toISOString().split('T')[0]}.json`
+    
+    // Déclencher le téléchargement
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    // Nettoyer l'URL
+    window.URL.revokeObjectURL(url)
+    
+    showNotification('Données exportées avec succès !')
+    
+  } catch (error) {
+    console.error('❌ Erreur export des données:', error)
+  }
+}
+
+// ✅ MÉTHODES POUR L'UPLOAD DE LOGO
+const triggerLogoUpload = () => {
+  logoInput.value?.click()
+}
+
+const handleLogoUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file) return
+  
+  // Vérifications
+  if (file.size > 2 * 1024 * 1024) {
+    console.error('❌ Fichier trop volumineux (max 2MB)')
+    return
+  }
+  
+  if (!['image/jpeg', 'image/png', 'image/svg+xml'].includes(file.type)) {
+    console.error('❌ Format non supporté')
+    return
+  }
+  
+  uploadingLogo.value = true
+  
+  try {
+    const shopId = authStore.userShopId
+    if (!shopId) {
+      throw new Error('Shop ID non trouvé')
+    }
+    
+    // Générer un nom de fichier unique
+    const timestamp = Date.now()
+    const fileExtension = file.name.split('.').pop()
+    const fileName = `logo-${shopId}-${timestamp}.${fileExtension}`
+    const filePath = `shops/${shopId}/logo/${fileName}`
+    
+    // Upload vers Supabase Storage
+    const { data, error } = await $supabase.storage
+      .from('chatseller-files')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+    
+    if (error) {
+      throw error
+    }
+    
+    // Obtenir l'URL publique
+    const { data: { publicUrl } } = $supabase.storage
+      .from('chatseller-files')
+      .getPublicUrl(filePath)
+    
+    // Mettre à jour l'état local
+    logoUrl.value = publicUrl
+    
+    // TODO: Sauvegarder l'URL du logo dans la base de données
+    // await updateShopLogo(shopId, publicUrl)
+    
+    showNotification('Logo téléchargé avec succès !')
+    
+  } catch (error: any) {
+    console.error('❌ Erreur upload logo:', error)
+  } finally {
+    uploadingLogo.value = false
+    // Réinitialiser l'input
+    target.value = ''
+  }
+}
+
+const removeLogo = async () => {
+  if (!logoUrl.value || !confirm('Êtes-vous sûr de vouloir supprimer le logo ?')) {
+    return
+  }
+  
+  try {
+    // TODO: Supprimer le fichier de Supabase Storage et mettre à jour la DB
+    logoUrl.value = null
+    showNotification('Logo supprimé avec succès !')
+  } catch (error) {
+    console.error('❌ Erreur suppression logo:', error)
+  }
+}
+
+const loadShopLogo = async () => {
+  try {
+    const shopId = authStore.userShopId
+    if (!shopId) return
+    
+    // TODO: Charger l'URL du logo depuis la base de données
+    // const logoUrlFromDB = await getShopLogo(shopId)
+    // logoUrl.value = logoUrlFromDB
+    
+  } catch (error) {
+    console.error('❌ Erreur chargement logo:', error)
+  }
+}
+
 // ✅ LIFECYCLE
 onMounted(() => {
   loadSettings()
+  loadShopLogo()
+  profileForm.name = authStore.userName || ''
+  profileForm.email = authStore.userEmail || ''
 })
 
 // ✅ SEO
@@ -748,6 +1333,14 @@ useHead({
   @apply border-blue-500 bg-blue-50;
 }
 
+.theme-option {
+  @apply cursor-pointer;
+}
+
+.theme-option.selected .p-3 {
+  @apply border-blue-500 bg-blue-50;
+}
+
 .platform-card {
   @apply p-4 border border-gray-200 rounded-lg text-center;
 }
@@ -766,11 +1359,11 @@ useHead({
 }
 
 .widget-trigger-button {
-  @apply w-full flex items-center justify-center px-4 py-2 text-white font-medium rounded-lg transition-all hover:opacity-90;
+  @apply w-full flex items-center justify-center text-white font-medium transition-all hover:opacity-90;
 }
 
 .widget-trigger-button-small {
-  @apply flex items-center justify-center p-3 text-white rounded-lg transition-all hover:opacity-90;
+  @apply flex items-center justify-center p-3 text-white transition-all hover:opacity-90;
 }
 
 .quick-action-button {
@@ -792,5 +1385,9 @@ useHead({
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+.transition-all {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>
