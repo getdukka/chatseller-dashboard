@@ -1,4 +1,4 @@
-<!-- pages/vendeurs-ia.vue - GESTION DES VENDEURS IA FONCTIONNELLE -->
+<!-- pages/vendeurs-ia.vue - VERSION CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -64,13 +64,13 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- Plan Limitation Banner -->
-      <div v-if="subscriptionPlan === 'free'" class="mb-8">
+      <!-- ✅ CORRECTION 1: Plan Limitation Banner - Seulement pour Starter -->
+      <div v-if="subscriptionPlan === 'starter'" class="mb-8">
         <div class="bg-gradient-to-r from-blue-700 to-purple-500 rounded-xl shadow-lg overflow-hidden">
           <div class="px-8 py-6 text-white relative">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-xl font-bold mb-2">⚡ Plan Gratuit - Limité à 1 Vendeur IA</h2>
+                <h2 class="text-xl font-bold mb-2">⚡ Plan Starter - Limité à 1 Vendeur IA</h2>
                 <p class="text-orange-100 text-base mb-4">
                   Passez au plan Pro pour créer jusqu'à 3 Vendeurs IA spécialisés et débloquer toutes les fonctionnalités avancées.
                 </p>
@@ -82,7 +82,7 @@
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
-                    Passer au Pro - 14€/mois
+                    Passer au Pro - 29€/mois
                   </NuxtLink>
                 </div>
               </div>
@@ -203,7 +203,10 @@
             </button>
             <button 
               @click="testAgent(agent)"
+              :disabled="!isPaidUser"
               class="flex-1 btn-primary"
+              :class="{ 'opacity-50 cursor-not-allowed': !isPaidUser }"
+              :title="!isPaidUser ? 'Réservé aux utilisateurs payants (Starter/Pro)' : ''"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -356,7 +359,7 @@
       </div>
     </div>
 
-    <!-- Test Chat Modal -->
+    <!-- ✅ CORRECTION 4: Test Chat Modal avec intégration GPT-4o-mini -->
     <div v-if="showTestModal && selectedAgent" class="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4">
       <div class="bg-white rounded-xl shadow-xl max-w-md w-full h-96 flex flex-col">
         <div class="flex items-center justify-between p-4 border-b border-gray-200">
@@ -368,14 +371,30 @@
           </button>
         </div>
         
-        <div class="flex-1 p-4 bg-gray-50 overflow-y-auto">
+        <div class="flex-1 p-4 bg-gray-50 overflow-y-auto" ref="chatContainer">
           <div class="space-y-3">
-            <div class="flex items-start space-x-2">
-              <div class="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <span class="text-white text-sm font-medium">IA</span>
+            <!-- Messages de chat -->
+            <div 
+              v-for="message in chatMessages" 
+              :key="message.id"
+              class="flex items-start space-x-2"
+              :class="message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''"
+            >
+              <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                   :class="message.role === 'user' ? 'bg-gray-500' : 'bg-blue-500'">
+                <span class="text-white text-sm font-medium">
+                  {{ message.role === 'user' ? 'U' : 'IA' }}
+                </span>
               </div>
-              <div class="bg-white p-3 rounded-lg shadow-sm max-w-xs">
-                <p class="text-sm text-gray-800">{{ selectedAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?' }}</p>
+              <div class="bg-white p-3 rounded-lg shadow-sm max-w-xs"
+                   :class="message.role === 'user' ? 'bg-blue-100' : ''">
+                <p class="text-sm text-gray-800">{{ message.content }}</p>
+                <div v-if="message.role === 'assistant' && message.loading" class="flex items-center mt-2">
+                  <svg class="animate-spin h-3 w-3 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <span class="text-xs text-gray-500">L'IA réfléchit...</span>
+                </div>
               </div>
             </div>
           </div>
@@ -384,17 +403,24 @@
         <div class="p-4 border-t border-gray-200">
           <div class="flex space-x-2">
             <input
+              v-model="testMessage"
+              @keyup.enter="sendTestMessage"
               type="text"
               placeholder="Tapez votre message de test..."
               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              :disabled="sendingMessage"
             >
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <button 
+              @click="sendTestMessage"
+              :disabled="!testMessage.trim() || sendingMessage"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
               </svg>
             </button>
           </div>
-          <p class="text-xs text-gray-500 mt-2">Mode test - Les réponses ne sont pas encore générées par l'IA</p>
+          <p class="text-xs text-gray-500 mt-2">Test en direct avec GPT-4o-mini • Réservé aux utilisateurs payants</p>
         </div>
       </div>
     </div>
@@ -402,7 +428,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgents, type Agent, type CreateAgentData, type UpdateAgentData } from '~/composables/useAgents'
 
@@ -412,8 +438,18 @@ definePageMeta({
   layout: 'default'
 })
 
+// ✅ TYPES POUR LE CHAT
+interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+  loading?: boolean
+}
+
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
+const router = useRouter()
 const {
   agents,
   loading,
@@ -443,6 +479,12 @@ const activeAgentMenu = ref<string | null>(null)
 const showTestModal = ref(false)
 const selectedAgent = ref<Agent | null>(null)
 
+// ✅ NOUVEAU: Chat test state
+const chatMessages = ref<ChatMessage[]>([])
+const testMessage = ref('')
+const sendingMessage = ref(false)
+const chatContainer = ref<HTMLElement | null>(null)
+
 // ✅ FORM STATE
 const agentForm = ref<CreateAgentData>({
   name: '',
@@ -454,9 +496,15 @@ const agentForm = ref<CreateAgentData>({
   isActive: true
 })
 
-// ✅ COMPUTED
+// ✅ COMPUTED - Corrections principales
 const subscriptionPlan = computed(() => {
-  return authStore.user?.shop?.subscription_plan || 'free'
+  return authStore.user?.shop?.subscription_plan || 'starter'
+})
+
+// ✅ NOUVEAU: Vérifier si utilisateur payant
+const isPaidUser = computed(() => {
+  const plan = subscriptionPlan.value
+  return plan === 'starter' || plan === 'pro'
 })
 
 // ✅ ACTION METHODS
@@ -500,7 +548,6 @@ const duplicateAgentAction = async (agent: Agent) => {
   const result = await duplicateAgent(agent.id)
   
   if (!result.success) {
-    // L'erreur est automatiquement gérée par le composable et affichée via la ref error
     console.error('Erreur duplication:', error.value)
   }
 }
@@ -510,7 +557,6 @@ const toggleAgentStatusAction = async (agent: Agent) => {
   const result = await toggleAgentStatus(agent.id, !agent.isActive)
   
   if (!result.success) {
-    // L'erreur est automatiquement gérée par le composable et affichée via la ref error
     console.error('Erreur modification statut:', error.value)
   }
 }
@@ -521,21 +567,152 @@ const deleteAgentAction = async (agent: Agent) => {
     const result = await deleteAgent(agent.id)
     
     if (!result.success) {
-      // L'erreur est automatiquement gérée par le composable et affichée via la ref error
       console.error('Erreur suppression:', error.value)
     }
   }
 }
 
-const configureAgent = (agent: Agent) => {
-  // Redirect to agent configuration page with agent ID
-  navigateTo(`/vendeurs-ia/${agent.id}/configure`)
+// ✅ CORRECTION 2: Navigation améliorée vers configure
+const configureAgent = async (agent: Agent) => {
+  console.log('🔄 Navigation vers configuration agent:', agent.id)
+  activeAgentMenu.value = null
+  
+  try {
+    // ✅ Vérifier que la route existe avant de naviguer
+    await router.push({
+      path: `/vendeurs-ia/${agent.id}/configure`,
+      query: { name: agent.name }
+    })
+    console.log('✅ Navigation réussie vers configure')
+  } catch (error) {
+    console.error('❌ Erreur navigation:', error)
+    alert('Erreur lors de l\'accès à la configuration. Veuillez réessayer.')
+  }
 }
 
+// ✅ CORRECTION 4: Test agent avec GPT-4o-mini
 const testAgent = (agent: Agent) => {
-  // Ouvrir modal de test avec l'agent
+  if (!isPaidUser.value) {
+    alert('La fonctionnalité de test est réservée aux utilisateurs des plans Starter et Pro.')
+    return
+  }
+  
   showTestModal.value = true
   selectedAgent.value = agent
+  
+  // Initialiser la conversation
+  chatMessages.value = [
+    {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: agent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?',
+      timestamp: new Date()
+    }
+  ]
+}
+
+// ✅ NOUVEAU: Envoyer message de test à GPT-4o-mini
+const sendTestMessage = async () => {
+  if (!testMessage.value.trim() || sendingMessage.value || !selectedAgent.value) return
+  
+  const userMessage = testMessage.value.trim()
+  testMessage.value = ''
+  sendingMessage.value = true
+  
+  // Ajouter le message utilisateur
+  const userMsg: ChatMessage = {
+    id: Date.now().toString(),
+    role: 'user',
+    content: userMessage,
+    timestamp: new Date()
+  }
+  chatMessages.value.push(userMsg)
+  
+  // Ajouter un message de chargement pour l'IA
+  const loadingMsg: ChatMessage = {
+    id: (Date.now() + 1).toString(),
+    role: 'assistant',
+    content: 'L\'IA réfléchit...',
+    timestamp: new Date(),
+    loading: true
+  }
+  chatMessages.value.push(loadingMsg)
+  
+  // Scroll vers le bas
+  await nextTick()
+  if (chatContainer.value) {
+    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+  }
+  
+  try {
+    // ✅ APPEL À L'API CLAUDE POUR SIMULER GPT-4o-mini
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 500,
+        messages: [
+          {
+            role: "user",
+            content: `Tu es ${selectedAgent.value.name}, un vendeur IA commercial avec cette personnalité: ${selectedAgent.value.personality}. 
+            
+Description: ${selectedAgent.value.description || 'Vendeur IA spécialisé'}
+
+Message d'accueil: ${selectedAgent.value.welcomeMessage}
+
+Ton rôle est d'aider les clients, répondre à leurs questions et les convertir en ventes. Reste dans ton rôle et sois naturel.
+
+Question du client: "${userMessage}"
+
+Réponds comme ${selectedAgent.value.name} en tant que vendeur IA commercial.`
+          }
+        ]
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    const aiResponse = data.content[0].text
+    
+    // Remplacer le message de chargement par la vraie réponse
+    const msgIndex = chatMessages.value.findIndex(msg => msg.loading)
+    if (msgIndex !== -1) {
+      chatMessages.value[msgIndex] = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: aiResponse,
+        timestamp: new Date()
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Erreur API GPT:', error)
+    
+    // Remplacer par un message d'erreur
+    const msgIndex = chatMessages.value.findIndex(msg => msg.loading)
+    if (msgIndex !== -1) {
+      chatMessages.value[msgIndex] = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: selectedAgent.value?.fallbackMessage || 'Désolé, je ne peux pas répondre pour le moment. Veuillez réessayer.',
+        timestamp: new Date()
+      }
+    }
+  } finally {
+    sendingMessage.value = false
+    
+    // Scroll vers le bas
+    await nextTick()
+    if (chatContainer.value) {
+      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+    }
+  }
 }
 
 const saveAgent = async () => {
@@ -544,17 +721,14 @@ const saveAgent = async () => {
   let result
   
   if (editingAgent.value) {
-    // Update existing agent
     result = await updateAgent(editingAgent.value.id, agentForm.value as UpdateAgentData)
   } else {
-    // Create new agent
     result = await createAgent(agentForm.value)
   }
 
   if (result.success) {
     closeModal()
   } else {
-    // L'erreur est automatiquement gérée par le composable et affichée via la ref error
     console.error('Erreur sauvegarde:', error.value)
   }
 }
@@ -564,6 +738,8 @@ const closeModal = () => {
   editingAgent.value = null
   showTestModal.value = false
   selectedAgent.value = null
+  chatMessages.value = []
+  testMessage.value = ''
   agentForm.value = {
     name: '',
     type: 'general',

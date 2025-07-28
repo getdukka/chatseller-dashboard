@@ -95,7 +95,7 @@
               <div>
                 <h2 class="text-2xl font-bold mb-2">🎉 Période d'essai gratuite</h2>
                 <p class="text-blue-100 text-lg mb-4">
-                  Profitez de toutes les fonctionnalités Pro gratuitement.
+                  Profitez de toutes les fonctionnalités Starter gratuitement.
                   <span class="font-semibold">{{ subscriptionData.trialDaysLeft }} jour(s) restant(s)</span>
                 </p>
                 <div class="flex flex-wrap gap-3">
@@ -273,7 +273,7 @@
                       Traitement...
                     </span>
                     <span v-else-if="subscriptionData.plan === 'professional'">Plan actuel</span>
-                    <span v-else>{{ subscriptionData.plan === 'free' ? 'Commencer l\'essai Pro' : 'Passer au Pro' }}</span>
+                    <span v-else>{{ subscriptionData.plan === 'free' ? 'Passer au Plan Pro' : 'Passer au Pro' }}</span>
                   </button>
                   
                   <div class="plan-guarantee">

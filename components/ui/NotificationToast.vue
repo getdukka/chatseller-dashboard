@@ -1,144 +1,267 @@
-<!-- components/ui/NotificationToast.vue - CORRIGÉ -->
+<!-- components/NotificationToast.vue - NOTIFICATION TOAST -->
 <template>
   <Teleport to="body">
-    <div
-      v-if="notifications.length > 0"
-      class="fixed top-4 right-4 z-50 space-y-2"
+    <Transition
+      enter-active-class="transform transition ease-out duration-300"
+      enter-from-class="translate-x-full opacity-0"
+      enter-to-class="translate-x-0 opacity-100"
+      leave-active-class="transform transition ease-in duration-200"
+      leave-from-class="translate-x-0 opacity-100"
+      leave-to-class="translate-x-full opacity-0"
     >
-      <TransitionGroup
-        name="notification"
-        tag="div"
-        class="space-y-2"
+      <div
+        v-if="show"
+        class="fixed bottom-4 right-4 max-w-sm w-full bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+        role="alert"
       >
-        <div
-          v-for="notification in notifications"
-          :key="notification.id"
-          :class="[
-            'max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden',
-            getNotificationClasses(notification.type)
-          ]"
-        >
-          <div class="p-4">
-            <div class="flex items-start">
-              <div class="flex-shrink-0">
-                <component :is="getIcon(notification.type)" class="h-6 w-6" />
-              </div>
-              <div class="ml-3 w-0 flex-1 pt-0.5">
-                <p class="text-sm font-medium text-gray-900">
-                  {{ notification.title }}
-                </p>
-                <p v-if="notification.message" class="mt-1 text-sm text-gray-500">
-                  {{ notification.message }}
-                </p>
-              </div>
-              <div class="ml-4 flex-shrink-0 flex">
-                <button
-                  @click="removeNotification(notification.id)"
-                  class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <span class="sr-only">Fermer</span>
-                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
+        <div class="p-4">
+          <div class="flex items-start">
+            <!-- Icon -->
+            <div class="flex-shrink-0">
+              <!-- Success Icon -->
+              <svg
+                v-if="type === 'success'"
+                class="w-6 h-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              
+              <!-- Error Icon -->
+              <svg
+                v-else-if="type === 'error'"
+                class="w-6 h-6 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              
+              <!-- Warning Icon -->
+              <svg
+                v-else-if="type === 'warning'"
+                class="w-6 h-6 text-yellow-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+              
+              <!-- Info Icon -->
+              <svg
+                v-else
+                class="w-6 h-6 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            
+            <!-- Message -->
+            <div class="ml-3 w-0 flex-1">
+              <p
+                :class="getMessageClass()"
+                class="text-sm font-medium"
+              >
+                {{ title || getDefaultTitle() }}
+              </p>
+              <p
+                v-if="message"
+                class="mt-1 text-sm text-gray-500"
+              >
+                {{ message }}
+              </p>
+            </div>
+            
+            <!-- Close Button -->
+            <div class="ml-4 flex-shrink-0 flex">
+              <button
+                @click="handleClose"
+                class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                type="button"
+              >
+                <span class="sr-only">Fermer</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
+          
+          <!-- Progress Bar -->
+          <div
+            v-if="duration && duration > 0"
+            class="mt-3 w-full bg-gray-200 rounded-full h-1"
+          >
+            <div
+              :class="getProgressBarClass()"
+              class="h-1 rounded-full transition-all duration-100 ease-linear"
+              :style="{ width: `${progress}%` }"
+            ></div>
+          </div>
         </div>
-      </TransitionGroup>
-    </div>
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useNotifications } from '~/composables/useNotifications'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
-// ✅ TYPES LOCAUX
-interface NotificationLocal {
-  id: string
-  type: 'success' | 'error' | 'warning' | 'info'
-  title: string
-  message?: string
-  duration?: number
-  timestamp: string
+// ✅ PROPS
+interface Props {
+  show: boolean
+  type?: 'success' | 'error' | 'warning' | 'info'
+  title?: string
+  message: string
+  duration?: number // in milliseconds, 0 = no auto-close
+  persistent?: boolean // if true, won't auto-close
 }
 
-// ✅ COMPOSABLES
-const { notifications, removeNotification } = useNotifications()
+const props = withDefaults(defineProps<Props>(), {
+  type: 'info',
+  duration: 5000,
+  persistent: false
+})
+
+// ✅ EMITS
+const emit = defineEmits<{
+  close: []
+}>()
+
+// ✅ REACTIVE STATE
+const progress = ref(100)
+let progressInterval: NodeJS.Timeout | null = null
+let autoCloseTimeout: NodeJS.Timeout | null = null
+
+// ✅ COMPUTED
+const getMessageClass = () => {
+  const classes: Record<string, string> = {
+    success: 'text-green-900',
+    error: 'text-red-900',
+    warning: 'text-yellow-900',
+    info: 'text-blue-900'
+  }
+  return classes[props.type] || classes.info
+}
+
+const getProgressBarClass = () => {
+  const classes: Record<string, string> = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    warning: 'bg-yellow-500',
+    info: 'bg-blue-500'
+  }
+  return classes[props.type] || classes.info
+}
+
+const getDefaultTitle = () => {
+  const titles: Record<string, string> = {
+    success: 'Succès',
+    error: 'Erreur',
+    warning: 'Attention',
+    info: 'Information'
+  }
+  return titles[props.type] || titles.info
+}
 
 // ✅ METHODS
-const getNotificationClasses = (type: string) => {
-  const classes = {
-    success: 'border-l-4 border-green-400',
-    error: 'border-l-4 border-red-400',
-    warning: 'border-l-4 border-yellow-400',
-    info: 'border-l-4 border-blue-400'
+const handleClose = () => {
+  clearTimers()
+  emit('close')
+}
+
+const clearTimers = () => {
+  if (progressInterval) {
+    clearInterval(progressInterval)
+    progressInterval = null
   }
-  return classes[type as keyof typeof classes] || classes.info
-}
-
-const getIcon = (type: string) => {
-  const icons = {
-    success: 'CheckCircleIcon',
-    error: 'XCircleIcon', 
-    warning: 'ExclamationTriangleIcon',
-    info: 'InformationCircleIcon'
+  if (autoCloseTimeout) {
+    clearTimeout(autoCloseTimeout)
+    autoCloseTimeout = null
   }
-  return icons[type as keyof typeof icons] || icons.info
 }
 
-// ✅ COMPONENTS ICONS (SVG en inline pour éviter les imports)
-const CheckCircleIcon = {
-  template: `
-    <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-  `
+const startAutoClose = () => {
+  if (props.persistent || !props.duration || props.duration <= 0) {
+    return
+  }
+
+  // Reset progress
+  progress.value = 100
+
+  // Start progress bar animation
+  const intervalDuration = 100 // Update every 100ms
+  const decrementAmount = (intervalDuration / props.duration) * 100
+
+  progressInterval = setInterval(() => {
+    progress.value -= decrementAmount
+    if (progress.value <= 0) {
+      progress.value = 0
+      clearTimers()
+      emit('close')
+    }
+  }, intervalDuration)
+
+  // Fallback timeout
+  autoCloseTimeout = setTimeout(() => {
+    clearTimers()
+    emit('close')
+  }, props.duration)
 }
 
-const XCircleIcon = {
-  template: `
-    <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-  `
-}
+// ✅ WATCHERS
+watch(() => props.show, (newShow) => {
+  if (newShow) {
+    startAutoClose()
+  } else {
+    clearTimers()
+  }
+})
 
-const ExclamationTriangleIcon = {
-  template: `
-    <svg class="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-    </svg>
-  `
-}
+// ✅ LIFECYCLE
+onMounted(() => {
+  if (props.show) {
+    startAutoClose()
+  }
+})
 
-const InformationCircleIcon = {
-  template: `
-    <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-  `
-}
+onUnmounted(() => {
+  clearTimers()
+})
 </script>
 
 <style scoped>
-.notification-enter-active,
-.notification-leave-active {
-  transition: all 0.3s ease;
-}
-
-.notification-enter-from {
-  opacity: 0;
-  transform: translateX(100%);
-}
-
-.notification-leave-to {
-  opacity: 0;
-  transform: translateX(100%);
-}
-
-.notification-move {
-  transition: transform 0.3s ease;
-}
+/* Custom styles if needed */
 </style>

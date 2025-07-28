@@ -8,7 +8,7 @@
           <div>
             <h1 class="text-3xl font-bold text-gray-900">Base de connaissances</h1>
             <p class="mt-2 text-gray-600">
-              Entraînez votre Vendeur IA avec vos données pour des réponses plus précises
+              Entraînez vos Vendeurs IA avec vos données pour des réponses plus précises
             </p>
           </div>
           

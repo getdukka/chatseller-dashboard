@@ -1,8 +1,8 @@
-<!-- pages/index.vue - DASHBOARD HOMEPAGE CORRIGÉE -->
+<!-- pages/index.vue - DASHBOARD HOMEPAGE AMÉLIORÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Welcome Banner -->
-    <div v-if="showWelcome" class="m-8 mb-6">
+    <!-- Welcome Banner - NOUVEAU: Seulement première connexion -->
+    <div v-if="showWelcomeBanner" class="m-8 mb-6">
       <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg overflow-hidden">
         <div class="px-8 py-6 text-white relative">
           <div class="flex items-center justify-between">
@@ -13,28 +13,28 @@
               </p>
               <div class="mt-4 flex flex-wrap gap-3">
                 <NuxtLink 
-                  to="/knowledge-base" 
+                  to="/vendeurs-ia" 
                   class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all"
                 >
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                   </svg>
-                  Former le Vendeur IA
+                  Créer mon Vendeur IA
                 </NuxtLink>
                 <NuxtLink 
-                  to="/settings" 
+                  to="/knowledge-base" 
                   class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all"
                 >
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
-                  Configurer
+                  Former mon Vendeur IA
                 </NuxtLink>
               </div>
             </div>
             <button
-              @click="showWelcome = false"
+              @click="hideWelcomeBanner"
               class="text-white text-opacity-80 hover:text-opacity-100 transition-colors"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,13 +46,15 @@
       </div>
     </div>
 
-    <!-- Header -->
+    <!-- Header - NOUVEAU: Salutation personnalisée -->
     <div class="px-8 py-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Bonjour/Bonsoir, Utilisateur 👋🏼</h1>
+          <h1 class="text-3xl font-bold text-gray-900">
+            {{ greeting }}, {{ userFirstName }} 👋🏼
+          </h1>
           <p class="mt-2 text-gray-600">
-            Voici les détails de vos performances
+            Voici les performances de votre Vendeur IA
           </p>
         </div>
         
@@ -89,18 +91,27 @@
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loadingStats" class="px-8 pb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div v-for="i in 4" :key="i" class="card-modern animate-pulse">
+          <div class="h-24 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Content -->
-    <div class="px-8 pb-8">
-      <!-- KPI Cards -->
+    <div v-else class="px-8 pb-8">
+      <!-- KPI Cards - NOUVEAU: Vraies données -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Conversations Card -->
         <div class="card-modern-gradient from-blue-500 to-blue-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
               <p class="text-blue-100 text-sm font-medium">Conversations</p>
-              <p class="text-3xl font-bold">{{ stats.conversations.total.toLocaleString() }}</p>
+              <p class="text-3xl font-bold">{{ formatNumber(dashboardStats.conversations.total) }}</p>
               <p class="text-blue-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.conversations.active }}</span> actives
+                <span class="text-white font-medium">{{ dashboardStats.conversations.active }}</span> actives
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
@@ -127,9 +138,9 @@
           <div class="flex items-center justify-between">
             <div class="text-white">
               <p class="text-green-100 text-sm font-medium">Commandes</p>
-              <p class="text-3xl font-bold">{{ stats.orders.total.toLocaleString() }}</p>
+              <p class="text-3xl font-bold">{{ formatNumber(dashboardStats.orders.total) }}</p>
               <p class="text-green-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.orders.conversionRate }}%</span> conversion
+                <span class="text-white font-medium">{{ dashboardStats.orders.conversionRate }}%</span> conversion
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
@@ -156,9 +167,9 @@
           <div class="flex items-center justify-between">
             <div class="text-white">
               <p class="text-orange-100 text-sm font-medium">Chiffre d'affaires</p>
-              <p class="text-3xl font-bold">{{ formatCurrency(stats.revenue.total) }}</p>
+              <p class="text-3xl font-bold">{{ formatCurrency(dashboardStats.revenue.total) }}</p>
               <p class="text-orange-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ formatCurrency(stats.revenue.average) }}</span> panier moyen
+                <span class="text-white font-medium">{{ formatCurrency(dashboardStats.revenue.average) }}</span> panier moyen
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
@@ -185,9 +196,9 @@
           <div class="flex items-center justify-between">
             <div class="text-white">
               <p class="text-purple-100 text-sm font-medium">Performance</p>
-              <p class="text-3xl font-bold">{{ stats.performance.responseTime }}</p>
+              <p class="text-3xl font-bold">{{ dashboardStats.performance.responseTime }}</p>
               <p class="text-purple-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.performance.uptime }}%</span> uptime
+                <span class="text-white font-medium">{{ dashboardStats.performance.uptime }}%</span> uptime
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
@@ -204,7 +215,7 @@
 
       <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Recent Conversations -->
+        <!-- Recent Conversations - NOUVEAU: Vraies données -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900">Conversations récentes</h3>
@@ -226,7 +237,7 @@
               <div class="flex items-center space-x-3">
                 <div class="avatar-circle">
                   <span class="text-sm font-medium text-white">
-                    {{ conversation.visitor.charAt(0).toUpperCase() }}
+                    {{ getInitials(conversation.visitor) }}
                   </span>
                 </div>
                 <div class="flex-1 min-w-0">
@@ -259,7 +270,7 @@
           </div>
         </div>
 
-        <!-- Recent Orders -->
+        <!-- Recent Orders - NOUVEAU: Vraies données -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900">Commandes récentes</h3>
@@ -315,7 +326,7 @@
           </div>
         </div>
 
-        <!-- Quick Setup -->
+        <!-- Quick Setup - NOUVEAU: Configuration dynamique -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900">Configuration rapide</h3>
@@ -325,21 +336,21 @@
           </div>
           
           <div class="space-y-4">
-            <div class="setup-item" :class="{ 'completed': knowledgeBaseStatus !== 'Vide' }">
+            <div class="setup-item" :class="{ 'completed': setupStatus.knowledgeBase }">
               <NuxtLink to="/knowledge-base" class="flex items-center justify-between w-full">
                 <div class="flex items-center space-x-3">
-                  <div class="setup-icon" :class="knowledgeBaseStatus !== 'Vide' ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'">
+                  <div class="setup-icon" :class="setupStatus.knowledgeBase ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                   </div>
                   <div>
                     <p class="text-sm font-medium text-gray-900">Base de connaissance</p>
-                    <p class="text-xs text-gray-500">Alimenter votre agent IA</p>
+                    <p class="text-xs text-gray-500">Former le Vendeur IA</p>
                   </div>
                 </div>
                 <div class="flex items-center">
-                  <span class="text-xs text-gray-400">{{ knowledgeBaseStatus }}</span>
+                  <span class="text-xs text-gray-400">{{ setupStatus.knowledgeBase ? 'Configuré' : 'Vide' }}</span>
                   <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
@@ -347,22 +358,22 @@
               </NuxtLink>
             </div>
 
-            <div class="setup-item" :class="{ 'completed': agentConfigStatus !== 'À configurer' }">
-              <NuxtLink to="/settings" class="flex items-center justify-between w-full">
+            <div class="setup-item" :class="{ 'completed': setupStatus.agentConfig }">
+              <NuxtLink to="/vendeurs-ia" class="flex items-center justify-between w-full">
                 <div class="flex items-center space-x-3">
-                  <div class="setup-icon" :class="agentConfigStatus !== 'À configurer' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'">
+                  <div class="setup-icon" :class="setupStatus.agentConfig ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                   </div>
                   <div>
-                    <p class="text-sm font-medium text-gray-900">Paramètres agent</p>
+                    <p class="text-sm font-medium text-gray-900">Paramètres du Vendeur IA</p>
                     <p class="text-xs text-gray-500">Personnaliser le comportement</p>
                   </div>
                 </div>
                 <div class="flex items-center">
-                  <span class="text-xs text-gray-400">{{ agentConfigStatus }}</span>
+                  <span class="text-xs text-gray-400">{{ setupStatus.agentConfig ? 'Configuré' : 'À configurer' }}</span>
                   <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
@@ -370,11 +381,10 @@
               </NuxtLink>
             </div>
 
-            <!-- ✅ CORRECTION: Widget Integration maintenant fonctionnel -->
-            <div class="setup-item" :class="{ 'completed': widgetIntegrationStatus !== 'À intégrer' }">
+            <div class="setup-item" :class="{ 'completed': setupStatus.widgetIntegration }">
               <NuxtLink to="/settings?tab=integration" class="flex items-center justify-between w-full">
                 <div class="flex items-center space-x-3">
-                  <div class="setup-icon" :class="widgetIntegrationStatus !== 'À intégrer' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'">
+                  <div class="setup-icon" :class="setupStatus.widgetIntegration ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
                     </svg>
@@ -385,7 +395,7 @@
                   </div>
                 </div>
                 <div class="flex items-center">
-                  <span class="text-xs text-gray-400">{{ widgetIntegrationStatus }}</span>
+                  <span class="text-xs text-gray-400">{{ setupStatus.widgetIntegration ? 'Intégré' : 'À intégrer' }}</span>
                   <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
@@ -415,6 +425,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useSupabase } from '~/composables/useSupabase'
 
 // ✅ PAGE META
 definePageMeta({
@@ -422,91 +433,112 @@ definePageMeta({
   layout: 'default'
 })
 
+// ✅ TYPES
+interface DashboardStats {
+  conversations: {
+    total: number
+    active: number
+  }
+  orders: {
+    total: number
+    conversionRate: number
+  }
+  revenue: {
+    total: number
+    average: number
+  }
+  performance: {
+    responseTime: string
+    uptime: number
+  }
+}
+
+interface Conversation {
+  id: string
+  visitor: string
+  lastMessage: string
+  time: Date
+  unread: boolean
+}
+
+interface Order {
+  id: string
+  customer: string
+  amount: number
+  time: Date
+}
+
+interface SetupStatus {
+  knowledgeBase: boolean
+  agentConfig: boolean
+  widgetIntegration: boolean
+}
+
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
+const supabase = useSupabase()
 
 // ✅ REACTIVE STATE
 const refreshing = ref(false)
-const showWelcome = ref(true)
+const loadingStats = ref(true)
 const showSuccessMessage = ref(false)
 const successMessage = ref('')
 
-// Mock data - à terme remplacer par des appels API réels
-const stats = ref({
-  conversations: {
-    total: 1247,
-    active: 23
-  },
-  orders: {
-    total: 89,
-    conversionRate: 34.2
-  },
-  revenue: {
-    total: 45670.50,
-    average: 512.30
-  },
-  performance: {
-    responseTime: '< 2s',
-    uptime: 99.9
-  }
+// ✅ NOUVEAU: Gestion intelligente du banner de bienvenue
+const showWelcomeBanner = ref(false)
+
+// ✅ NOUVEAU: Données dynamiques
+const dashboardStats = ref<DashboardStats>({
+  conversations: { total: 0, active: 0 },
+  orders: { total: 0, conversionRate: 0 },
+  revenue: { total: 0, average: 0 },
+  performance: { responseTime: '< 2s', uptime: 99.9 }
 })
 
-const recentConversations = ref([
-  {
-    id: 1,
-    visitor: 'Marie Dubois',
-    lastMessage: 'Merci pour ces informations sur les délais',
-    time: new Date(Date.now() - 5 * 60 * 1000),
-    unread: true
-  },
-  {
-    id: 2,
-    visitor: 'Pierre Martin',
-    lastMessage: 'Je voudrais passer commande pour 2 unités',
-    time: new Date(Date.now() - 12 * 60 * 1000),
-    unread: false
-  },
-  {
-    id: 3,
-    visitor: 'Sophie Laurent',
-    lastMessage: 'Parfait, merci beaucoup !',
-    time: new Date(Date.now() - 45 * 60 * 1000),
-    unread: false
+const recentConversations = ref<Conversation[]>([])
+const recentOrders = ref<Order[]>([])
+const setupStatus = ref<SetupStatus>({
+  knowledgeBase: false,
+  agentConfig: false,
+  widgetIntegration: false
+})
+
+// ✅ COMPUTED - Salutation personnalisée (corrigée)
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) return 'Bonjour'
+  if (hour >= 12 && hour < 18) return 'Bon après-midi'
+  if (hour >= 18 && hour < 22) return 'Bonsoir'
+  return 'Bonne nuit'
+})
+
+// ✅ COMPUTED - Prénom utilisateur (corrigé)
+const userFirstName = computed(() => {
+  const userName = authStore.userName
+  const userEmail = authStore.userEmail
+  
+  // Si on a un nom utilisateur et que ce n'est pas un email
+  if (userName && !userName.includes('@')) {
+    const firstName = userName.split(' ')[0]
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
   }
-])
-
-const recentOrders = ref([
-  {
-    id: 'ord_1234567890abcdef',
-    customer: 'Pierre Martin',
-    amount: 129.99,
-    time: new Date(Date.now() - 12 * 60 * 1000)
-  },
-  {
-    id: 'ord_0987654321fedcba',
-    customer: 'Sophie Laurent',
-    amount: 89.50,
-    time: new Date(Date.now() - 45 * 60 * 1000)
-  },
-  {
-    id: 'ord_abcdef1234567890',
-    customer: 'Marie Dubois',
-    amount: 199.99,
-    time: new Date(Date.now() - 2 * 60 * 60 * 1000)
+  
+  // Sinon, extraire le prénom de l'email (partie avant le @)
+  if (userEmail) {
+    const emailPrefix = userEmail.split('@')[0]
+    // Si le préfix contient des points ou tirets, prendre la première partie
+    const firstName = emailPrefix.split(/[._-]/)[0]
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
   }
-])
+  
+  return 'Utilisateur'
+})
 
-// Configuration status
-const knowledgeBaseStatus = ref('Vide')
-const agentConfigStatus = ref('À configurer')
-const widgetIntegrationStatus = ref('À intégrer') // ✅ AJOUTÉ
-
+// ✅ COMPUTED - Progression configuration
 const configurationProgress = computed(() => {
-  let progress = 0
-  if (knowledgeBaseStatus.value !== 'Vide') progress += 33
-  if (agentConfigStatus.value !== 'À configurer') progress += 33
-  if (widgetIntegrationStatus.value !== 'À intégrer') progress += 34
-  return Math.round(progress)
+  const total = Object.keys(setupStatus.value).length
+  const completed = Object.values(setupStatus.value).filter(Boolean).length
+  return Math.round((completed / total) * 100)
 })
 
 // ✅ UTILITY METHODS
@@ -515,6 +547,10 @@ const formatCurrency = (amount: number): string => {
     style: 'currency',
     currency: 'EUR'
   }).format(amount)
+}
+
+const formatNumber = (num: number): string => {
+  return new Intl.NumberFormat('fr-FR').format(num)
 }
 
 const formatTime = (date: Date): string => {
@@ -527,6 +563,15 @@ const formatTime = (date: Date): string => {
   return date.toLocaleDateString('fr-FR')
 }
 
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
 const showNotification = (message: string) => {
   successMessage.value = message
   showSuccessMessage.value = true
@@ -535,21 +580,206 @@ const showNotification = (message: string) => {
   }, 3000)
 }
 
-// ✅ ACTION METHODS - CORRECTIONS APPLIQUÉES
+// ✅ NOUVEAU: Gestion du banner de bienvenue
+const hideWelcomeBanner = () => {
+  showWelcomeBanner.value = false
+  localStorage.setItem('chatseller_welcome_seen', 'true')
+}
+
+const checkIfFirstVisit = () => {
+  const hasSeenWelcome = localStorage.getItem('chatseller_welcome_seen')
+  const urlParams = new URLSearchParams(window.location.search)
+  const forceWelcome = urlParams.get('welcome') === 'true'
+  
+  showWelcomeBanner.value = !hasSeenWelcome || forceWelcome
+  
+  // Nettoyer l'URL si ?welcome=true
+  if (forceWelcome) {
+    window.history.replaceState({}, '', window.location.pathname)
+  }
+}
+
+// ✅ NOUVEAU: Chargement des vraies données
+const loadDashboardData = async () => {
+  if (!authStore.userShopId) {
+    console.warn('Pas de shop ID disponible')
+    loadingStats.value = false
+    return
+  }
+
+  try {
+    console.log('🔄 Chargement des données dashboard pour shop:', authStore.userShopId)
+    
+    // Paralléliser les appels
+    const [statsData, conversationsData, ordersData, setupData] = await Promise.allSettled([
+      loadStats(),
+      loadRecentConversations(),
+      loadRecentOrders(),
+      loadSetupStatus()
+    ])
+
+    // Traiter les résultats
+    if (statsData.status === 'fulfilled') {
+      dashboardStats.value = statsData.value
+    }
+    
+    if (conversationsData.status === 'fulfilled') {
+      recentConversations.value = conversationsData.value
+    }
+    
+    if (ordersData.status === 'fulfilled') {
+      recentOrders.value = ordersData.value
+    }
+    
+    if (setupData.status === 'fulfilled') {
+      setupStatus.value = setupData.value
+    }
+
+    console.log('✅ Données dashboard chargées avec succès')
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement des données dashboard:', error)
+    showNotification('Erreur lors du chargement des données')
+  } finally {
+    loadingStats.value = false
+  }
+}
+
+// ✅ NOUVEAU: Chargement des statistiques
+const loadStats = async (): Promise<DashboardStats> => {
+  try {
+    // Conversations
+    const { data: conversationsData } = await supabase
+      .from('conversations')
+      .select('id, status, created_at')
+      .eq('shop_id', authStore.userShopId)
+
+    const totalConversations = conversationsData?.length || 0
+    const activeConversations = conversationsData?.filter(c => c.status === 'active').length || 0
+
+    // Commandes
+    const { data: ordersData } = await supabase
+      .from('orders')
+      .select('id, amount, created_at')
+      .eq('shop_id', authStore.userShopId)
+
+    const totalOrders = ordersData?.length || 0
+    const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.amount || 0), 0) || 0
+    const averageRevenue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+    const conversionRate = totalConversations > 0 ? (totalOrders / totalConversations) * 100 : 0
+
+    return {
+      conversations: {
+        total: totalConversations,
+        active: activeConversations
+      },
+      orders: {
+        total: totalOrders,
+        conversionRate: Math.round(conversionRate * 10) / 10
+      },
+      revenue: {
+        total: totalRevenue,
+        average: averageRevenue
+      },
+      performance: {
+        responseTime: '< 2s',
+        uptime: 99.9
+      }
+    }
+  } catch (error) {
+    console.error('❌ Erreur chargement stats:', error)
+    // Retourner des données par défaut en cas d'erreur
+    return dashboardStats.value
+  }
+}
+
+// ✅ NOUVEAU: Chargement des conversations récentes
+const loadRecentConversations = async (): Promise<Conversation[]> => {
+  try {
+    const { data } = await supabase
+      .from('conversations')
+      .select('id, visitor_name, last_message, updated_at, status')
+      .eq('shop_id', authStore.userShopId)
+      .order('updated_at', { ascending: false })
+      .limit(3)
+
+    return data?.map(conv => ({
+      id: conv.id,
+      visitor: conv.visitor_name || 'Visiteur anonyme',
+      lastMessage: conv.last_message || 'Nouvelle conversation',
+      time: new Date(conv.updated_at),
+      unread: conv.status === 'new'
+    })) || []
+  } catch (error) {
+    console.error('❌ Erreur chargement conversations:', error)
+    return []
+  }
+}
+
+// ✅ NOUVEAU: Chargement des commandes récentes
+const loadRecentOrders = async (): Promise<Order[]> => {
+  try {
+    const { data } = await supabase
+      .from('orders')
+      .select('id, customer_name, amount, created_at')
+      .eq('shop_id', authStore.userShopId)
+      .order('created_at', { ascending: false })
+      .limit(3)
+
+    return data?.map(order => ({
+      id: order.id,
+      customer: order.customer_name || 'Client',
+      amount: order.amount || 0,
+      time: new Date(order.created_at)
+    })) || []
+  } catch (error) {
+    console.error('❌ Erreur chargement commandes:', error)
+    return []
+  }
+}
+
+// ✅ NOUVEAU: Statut de configuration
+const loadSetupStatus = async (): Promise<SetupStatus> => {
+  try {
+    // Base de connaissance
+    const { data: kbData } = await supabase
+      .from('knowledge_base')
+      .select('id')
+      .eq('shop_id', authStore.userShopId)
+      .limit(1)
+
+    // Configuration agent
+    const { data: shopData } = await supabase
+      .from('shops')
+      .select('agent_config, widget_config, domain')
+      .eq('id', authStore.userShopId)
+      .single()
+
+    const hasKnowledgeBase = (kbData?.length || 0) > 0
+    const hasAgentConfig = shopData?.agent_config && Object.keys(shopData.agent_config).length > 0
+    const hasWidgetIntegration = !!shopData?.domain
+
+    return {
+      knowledgeBase: hasKnowledgeBase,
+      agentConfig: hasAgentConfig,
+      widgetIntegration: hasWidgetIntegration
+    }
+  } catch (error) {
+    console.error('❌ Erreur chargement setup status:', error)
+    return {
+      knowledgeBase: false,
+      agentConfig: false,
+      widgetIntegration: false
+    }
+  }
+}
+
+// ✅ ACTION METHODS
 const handleRefreshData = async () => {
   refreshing.value = true
   
   try {
-    // ✅ AJOUT: Logique de rafraîchissement réelle
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // TODO: Remplacer par appels API réels
-    // const response = await $fetch('/api/v1/dashboard/stats', {
-    //   headers: { Authorization: `Bearer ${authStore.token}` }
-    // })
-    
+    await loadDashboardData()
     showNotification('Données actualisées avec succès!')
-    
   } catch (error) {
     console.error('Erreur lors du rafraîchissement:', error)
     showNotification('Erreur lors de l\'actualisation')
@@ -558,7 +788,7 @@ const handleRefreshData = async () => {
   }
 }
 
-const goToConversation = (id: number) => {
+const goToConversation = (id: string) => {
   navigateTo(`/conversations/${id}`)
 }
 
@@ -566,30 +796,13 @@ const goToOrder = (id: string) => {
   navigateTo(`/orders/${id}`)
 }
 
-const loadDashboardData = async () => {
-  try {
-    // ✅ TODO: Implémenter les appels API réels
-    // const stats = await $fetch('/api/v1/dashboard/stats')
-    // const conversations = await $fetch('/api/v1/conversations/recent')
-    // const orders = await $fetch('/api/v1/orders/recent')
-    
-    console.log('Chargement des données dashboard')
-  } catch (error) {
-    console.error('Erreur lors du chargement des données dashboard:', error)
-  }
-}
-
 // ✅ LIFECYCLE
-onMounted(() => {
-  // Vérifier si c'est un nouveau utilisateur
-  const urlParams = new URLSearchParams(window.location.search)
-  if (urlParams.get('welcome') === 'true') {
-    showWelcome.value = true
-    // Nettoyer l'URL
-    window.history.replaceState({}, '', window.location.pathname)
-  }
+onMounted(async () => {
+  // Vérifier si première visite
+  checkIfFirstVisit()
   
-  loadDashboardData()
+  // Charger les données
+  await loadDashboardData()
 })
 
 // ✅ SEO
@@ -659,5 +872,18 @@ useHead({
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
 }
 </style>

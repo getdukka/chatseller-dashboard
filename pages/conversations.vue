@@ -1,4 +1,4 @@
-<!-- pages/conversations.vue - PAGE CONVERSATIONS MODERNE ET TEMPS RÉEL -->
+<!-- pages/conversations.vue - VERSION ADAPTÉE À VOTRE STRUCTURE DB -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -95,8 +95,8 @@
         <div class="card-modern-gradient from-yellow-500 to-orange-500">
           <div class="flex items-center justify-between text-white">
             <div>
-              <p class="text-orange-100 text-sm font-medium">En attente</p>
-              <p class="text-3xl font-bold">{{ stats.pending }}</p>
+              <p class="text-orange-100 text-sm font-medium">En cours</p>
+              <p class="text-3xl font-bold">{{ stats.inProgress }}</p>
               <p class="text-orange-100 text-sm mt-1">
                 {{ stats.averageWaitTime }}min moyenne
               </p>
@@ -137,20 +137,19 @@
             <select v-model="filters.status" class="input-modern w-full">
               <option value="">Tous les statuts</option>
               <option value="active">Actives</option>
-              <option value="pending">En attente</option>
               <option value="completed">Terminées</option>
               <option value="abandoned">Abandonnées</option>
             </select>
           </div>
 
-          <!-- Agent Filter -->
+          <!-- Product Filter -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Agent IA</label>
-            <select v-model="filters.agent" class="input-modern w-full">
-              <option value="">Tous les agents</option>
-              <option value="main">Agent principal</option>
-              <option value="support">Agent support</option>
-              <option value="sales">Agent ventes</option>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Produit</label>
+            <select v-model="filters.product" class="input-modern w-full">
+              <option value="">Tous les produits</option>
+              <option v-for="product in uniqueProducts" :key="product" :value="product">
+                {{ product }}
+              </option>
             </select>
           </div>
 
@@ -171,7 +170,7 @@
             <input
               v-model="filters.search"
               type="text"
-              placeholder="Nom, email, message..."
+              placeholder="Produit, visiteur..."
               class="input-modern w-full"
             >
           </div>
@@ -237,6 +236,20 @@
               </div>
             </div>
 
+            <!-- Error State -->
+            <div v-else-if="error" class="p-12 text-center">
+              <div class="text-red-600 mb-4">
+                <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
+              <p class="text-gray-500 mb-4">{{ error }}</p>
+              <button @click="loadConversations" class="btn-primary">
+                Réessayer
+              </button>
+            </div>
+
             <!-- Conversations List -->
             <div v-else-if="filteredConversations.length > 0" class="divide-y divide-gray-200">
               <div
@@ -250,7 +263,7 @@
                   <!-- Avatar -->
                   <div class="conversation-avatar" :class="getStatusColor(conversation.status)">
                     <span class="text-sm font-medium text-white">
-                      {{ getInitials(conversation.visitorName) }}
+                      {{ getInitials(conversation.product_name) }}
                     </span>
                   </div>
 
@@ -259,7 +272,7 @@
                     <div class="flex items-center justify-between mb-1">
                       <div class="flex items-center space-x-2">
                         <h3 class="text-sm font-medium text-gray-900 truncate">
-                          {{ conversation.visitorName || 'Visiteur anonyme' }}
+                          {{ conversation.product_name || 'Produit non spécifié' }}
                         </h3>
                         <span 
                           class="conversation-status-badge"
@@ -270,22 +283,25 @@
                       </div>
                       <div class="flex items-center space-x-2">
                         <span class="text-xs text-gray-400">
-                          {{ formatTimeAgo(conversation.updatedAt) }}
+                          {{ formatTimeAgo(conversation.last_activity) }}
                         </span>
-                        <div v-if="conversation.unreadCount > 0" class="unread-badge">
-                          {{ conversation.unreadCount }}
+                        <div v-if="conversation.conversion_completed" class="conversion-badge">
+                          💰
                         </div>
                       </div>
                     </div>
                     
                     <p class="text-sm text-gray-600 truncate mb-1">
-                      {{ conversation.lastMessage }}
+                      {{ getVisitorInfo(conversation) }}
                     </p>
                     
                     <div class="flex items-center space-x-4 text-xs text-gray-500">
-                      <span>{{ conversation.messageCount }} messages</span>
-                      <span v-if="conversation.visitorEmail">{{ conversation.visitorEmail }}</span>
-                      <span v-if="conversation.assignedAgent">{{ conversation.assignedAgent }}</span>
+                      <span>{{ conversation.message_count }} messages</span>
+                      <span v-if="conversation.product_price">{{ formatPrice(conversation.product_price) }}</span>
+                      <span class="capitalize">{{ conversation.language || 'fr' }}</span>
+                      <span v-if="conversation.conversion_completed" class="text-green-600 font-medium">
+                        ✓ Convertie
+                      </span>
                     </div>
                   </div>
 
@@ -317,17 +333,18 @@
                         v-if="activeActionMenu === conversation.id"
                         class="action-dropdown"
                       >
-                        <button @click="markAsRead(conversation)" class="action-dropdown-item">
+                        <button @click="viewDetails(conversation)" class="action-dropdown-item">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                          </svg>
+                          Voir détails
+                        </button>
+                        <button @click="markAsCompleted(conversation)" class="action-dropdown-item">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                           </svg>
-                          Marquer comme lu
-                        </button>
-                        <button @click="assignAgent(conversation)" class="action-dropdown-item">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                          </svg>
-                          Assigner agent
+                          Marquer terminée
                         </button>
                         <button @click="archiveConversation(conversation)" class="action-dropdown-item">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,10 +381,7 @@
                 }}
               </p>
               <div v-if="hasActiveFilters" class="mt-4">
-                <button
-                  @click="clearFilters"
-                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-200 transition-colors"
-                >
+                <button @click="clearFilters" class="btn-primary">
                   Effacer les filtres
                 </button>
               </div>
@@ -394,12 +408,12 @@
                 <div class="flex items-center space-x-3">
                   <div class="conversation-avatar" :class="getStatusColor(selectedConversation.status)">
                     <span class="text-sm font-medium text-white">
-                      {{ getInitials(selectedConversation.visitorName) }}
+                      {{ getInitials(selectedConversation.product_name) }}
                     </span>
                   </div>
                   <div>
-                    <h3 class="font-medium text-gray-900">{{ selectedConversation.visitorName }}</h3>
-                    <p class="text-sm text-gray-500">{{ selectedConversation.visitorEmail }}</p>
+                    <h3 class="font-medium text-gray-900">{{ selectedConversation.product_name || 'Produit non spécifié' }}</h3>
+                    <p class="text-sm text-gray-500">{{ getVisitorInfo(selectedConversation) }}</p>
                   </div>
                 </div>
                 <span 
@@ -410,13 +424,23 @@
                 </span>
               </div>
 
+              <!-- Messages Loading -->
+              <div v-if="loadingMessages" class="flex-1 flex items-center justify-center">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span class="ml-2 text-sm text-gray-600">Chargement des messages...</span>
+              </div>
+
               <!-- Conversation Messages -->
-              <div class="conversation-messages">
-                <div v-for="message in selectedConversation.messages" :key="message.id" class="message-item" :class="{ 'from-agent': message.fromAgent }">
+              <div v-else class="conversation-messages">
+                <div v-for="message in selectedConversationMessages" :key="message.id" class="message-item" :class="{ 'from-agent': message.role === 'assistant' }">
                   <div class="message-content">
                     <p class="text-sm">{{ message.content }}</p>
-                    <span class="message-time">{{ formatTime(message.createdAt) }}</span>
+                    <span class="message-time">{{ formatTime(message.created_at) }}</span>
                   </div>
+                </div>
+                
+                <div v-if="selectedConversationMessages.length === 0" class="text-center py-8 text-gray-500">
+                  <p class="text-sm">Aucun message dans cette conversation</p>
                 </div>
               </div>
 
@@ -428,14 +452,51 @@
                 </div>
                 <div class="info-item">
                   <span class="info-label">Messages :</span>
-                  <span class="info-value">{{ selectedConversation.messageCount }}</span>
+                  <span class="info-value">{{ selectedConversation.message_count }}</span>
+                </div>
+                <div v-if="selectedConversation.product_price" class="info-item">
+                  <span class="info-label">Prix produit :</span>
+                  <span class="info-value">{{ formatPrice(selectedConversation.product_price) }}</span>
+                </div>
+                <div v-if="selectedConversation.conversion_completed" class="info-item">
+                  <span class="info-label">Conversion :</span>
+                  <span class="info-value text-green-600">✓ Réussie</span>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">Agent :</span>
-                  <span class="info-value">{{ selectedConversation.assignedAgent || 'IA automatique' }}</span>
+                  <span class="info-label">Langue :</span>
+                  <span class="info-value uppercase">{{ selectedConversation.language || 'FR' }}</span>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div
+      v-if="notification.show"
+      class="fixed bottom-4 right-4 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden z-50"
+    >
+      <div class="p-4">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <svg v-if="notification.type === 'success'" class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <svg v-else class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+          </div>
+          <div class="ml-3 w-0 flex-1 pt-0.5">
+            <p class="text-sm font-medium text-gray-900">{{ notification.message }}</p>
+          </div>
+          <div class="ml-4 flex-shrink-0 flex">
+            <button @click="notification.show = false" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500">
+              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -444,8 +505,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useSupabase } from '~/composables/useSupabase'
 
 // ✅ PAGE META
 definePageMeta({
@@ -453,35 +515,67 @@ definePageMeta({
   layout: 'default'
 })
 
-// ✅ TYPES
+// ✅ TYPES - Adaptés à votre structure DB
 interface Conversation {
   id: string
-  visitorName: string
-  visitorEmail?: string
-  lastMessage: string
-  status: 'active' | 'pending' | 'completed' | 'abandoned'
-  messageCount: number
-  unreadCount: number
-  createdAt: string
-  updatedAt: string
-  assignedAgent?: string
-  messages?: Array<{
-    id: string
-    content: string
-    fromAgent: boolean
-    createdAt: string
-  }>
+  shop_id: string
+  visitor_id: string | null
+  visitor_ip: string | null
+  visitor_user_agent: string | null
+  product_id: string | null
+  product_name: string | null
+  product_url: string | null
+  product_price: number | null
+  status: 'active' | 'completed' | 'abandoned'
+  language: string | null
+  customer_data: any
+  started_at: string
+  last_activity: string
+  completed_at: string | null
+  message_count: number
+  conversion_completed: boolean
+  agent_id: string | null
+}
+
+interface Message {
+  id: string
+  conversation_id: string
+  role: string
+  content: string
+  content_type: string
+  tokens_used: number | null
+  response_time: number | null
+  model_used: string | null
+  action_taken: string | null
+  action_data: any
+  created_at: string
+}
+
+interface Stats {
+  active: number
+  completed: number
+  inProgress: number
+  abandoned: number
+  conversionRate: number
+  newToday: number
+  completionRate: number
+  averageWaitTime: number
+  conversionGrowth: number
 }
 
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
+const supabase = useSupabase()
 
 // ✅ REACTIVE STATE
 const loading = ref(true)
 const refreshing = ref(false)
+const loadingMessages = ref(false)
 const showFilters = ref(false)
 const activeActionMenu = ref<string | null>(null)
 const selectedConversation = ref<Conversation | null>(null)
+const selectedConversationMessages = ref<Message[]>([])
+const error = ref<string | null>(null)
 
 // Pagination
 const currentPage = ref(1)
@@ -490,66 +584,31 @@ const pageSize = ref(20)
 // Filters
 const filters = ref({
   status: '',
-  agent: '',
+  product: '',
   period: '',
   search: ''
 })
 
-// Stats
-const stats = ref({
-  active: 23,
-  completed: 127,
-  pending: 8,
-  conversionRate: 34.2,
-  newToday: 5,
-  completionRate: 89,
-  averageWaitTime: 3,
-  conversionGrowth: 12
+// Data
+const conversations = ref<Conversation[]>([])
+const stats = ref<Stats>({
+  active: 0,
+  completed: 0,
+  inProgress: 0,
+  abandoned: 0,
+  conversionRate: 0,
+  newToday: 0,
+  completionRate: 0,
+  averageWaitTime: 0,
+  conversionGrowth: 0
 })
 
-// Mock conversations data
-const conversations = ref<Conversation[]>([
-  {
-    id: '1',
-    visitorName: 'Marie Dubois',
-    visitorEmail: 'marie.dubois@email.com',
-    lastMessage: 'Merci pour ces informations sur les délais de livraison',
-    status: 'active',
-    messageCount: 8,
-    unreadCount: 2,
-    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    assignedAgent: 'Vendeur IAPrincipal',
-    messages: [
-      { id: '1', content: 'Bonjour ! Comment puis-je vous aider ?', fromAgent: true, createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
-      { id: '2', content: 'J\'aimerais connaître vos délais de livraison', fromAgent: false, createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString() },
-      { id: '3', content: 'Nos délais sont de 2-3 jours ouvrables en France', fromAgent: true, createdAt: new Date(Date.now() - 20 * 60 * 1000).toISOString() }
-    ]
-  },
-  {
-    id: '2',
-    visitorName: 'Pierre Martin',
-    visitorEmail: 'pierre.martin@email.com',
-    lastMessage: 'Je voudrais passer commande pour 2 unités',
-    status: 'pending',
-    messageCount: 12,
-    unreadCount: 0,
-    createdAt: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-    messages: []
-  },
-  {
-    id: '3',
-    visitorName: 'Sophie Laurent',
-    lastMessage: 'Parfait, merci beaucoup !',
-    status: 'completed',
-    messageCount: 6,
-    unreadCount: 0,
-    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    messages: []
-  }
-])
+// Notification
+const notification = ref({
+  show: false,
+  message: '',
+  type: 'success' as 'success' | 'error'
+})
 
 // ✅ COMPUTED
 const filteredConversations = computed(() => {
@@ -558,9 +617,8 @@ const filteredConversations = computed(() => {
   if (filters.value.search) {
     const query = filters.value.search.toLowerCase()
     filtered = filtered.filter(conv => 
-      conv.visitorName?.toLowerCase().includes(query) ||
-      conv.visitorEmail?.toLowerCase().includes(query) ||
-      conv.lastMessage.toLowerCase().includes(query)
+      conv.product_name?.toLowerCase().includes(query) ||
+      conv.visitor_id?.toLowerCase().includes(query)
     )
   }
 
@@ -568,14 +626,16 @@ const filteredConversations = computed(() => {
     filtered = filtered.filter(conv => conv.status === filters.value.status)
   }
 
-  if (filters.value.agent) {
-    filtered = filtered.filter(conv => conv.assignedAgent?.includes(filters.value.agent))
+  if (filters.value.product) {
+    filtered = filtered.filter(conv => 
+      conv.product_name?.toLowerCase().includes(filters.value.product.toLowerCase())
+    )
   }
 
   if (filters.value.period) {
     const now = new Date()
     filtered = filtered.filter(conv => {
-      const date = new Date(conv.updatedAt)
+      const date = new Date(conv.last_activity)
       switch (filters.value.period) {
         case 'today':
           return date.toDateString() === now.toDateString()
@@ -590,7 +650,7 @@ const filteredConversations = computed(() => {
     })
   }
 
-  return filtered.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  return filtered.sort((a, b) => new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime())
 })
 
 const paginatedConversations = computed(() => {
@@ -600,15 +660,19 @@ const paginatedConversations = computed(() => {
 })
 
 const totalPages = computed(() => Math.ceil(filteredConversations.value.length / pageSize.value))
-
-const activeFiltersCount = computed(() => {
-  return Object.values(filters.value).filter(value => value !== '').length
-})
-
+const activeFiltersCount = computed(() => Object.values(filters.value).filter(value => value !== '').length)
 const hasActiveFilters = computed(() => activeFiltersCount.value > 0)
 
+const uniqueProducts = computed(() => {
+  const products = conversations.value
+    .map(c => c.product_name)
+    .filter(Boolean)
+    .filter((value, index, self) => self.indexOf(value) === index)
+  return products.slice(0, 10) // Limite à 10 produits max
+})
+
 // ✅ UTILITY METHODS
-const getInitials = (name: string): string => {
+const getInitials = (name: string | null): string => {
   if (!name) return '??'
   return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)
 }
@@ -616,7 +680,6 @@ const getInitials = (name: string): string => {
 const getStatusLabel = (status: string): string => {
   const labels = {
     active: 'Active',
-    pending: 'En attente',
     completed: 'Terminée',
     abandoned: 'Abandonnée'
   }
@@ -626,7 +689,6 @@ const getStatusLabel = (status: string): string => {
 const getStatusBadgeClass = (status: string): string => {
   const classes = {
     active: 'bg-green-100 text-green-800',
-    pending: 'bg-yellow-100 text-yellow-800',
     completed: 'bg-blue-100 text-blue-800',
     abandoned: 'bg-gray-100 text-gray-800'
   }
@@ -636,11 +698,19 @@ const getStatusBadgeClass = (status: string): string => {
 const getStatusColor = (status: string): string => {
   const colors = {
     active: 'bg-green-500',
-    pending: 'bg-yellow-500',
     completed: 'bg-blue-500',
     abandoned: 'bg-gray-500'
   }
   return colors[status as keyof typeof colors] || 'bg-gray-500'
+}
+
+const getVisitorInfo = (conversation: Conversation): string => {
+  if (conversation.customer_data && typeof conversation.customer_data === 'object') {
+    const data = conversation.customer_data
+    if (data.name) return data.name
+    if (data.email) return data.email
+  }
+  return conversation.visitor_id ? `Visiteur ${conversation.visitor_id.slice(0, 8)}` : 'Visiteur anonyme'
 }
 
 const formatTimeAgo = (date: string): string => {
@@ -657,9 +727,17 @@ const formatTime = (date: string): string => {
   return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
+const formatPrice = (price: number | null): string => {
+  if (!price) return '-'
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR'
+  }).format(price)
+}
+
 const calculateDuration = (conversation: Conversation): string => {
-  const start = new Date(conversation.createdAt)
-  const end = new Date(conversation.updatedAt)
+  const start = new Date(conversation.started_at)
+  const end = conversation.completed_at ? new Date(conversation.completed_at) : new Date(conversation.last_activity)
   const diffInMinutes = Math.floor((end.getTime() - start.getTime()) / (1000 * 60))
   
   if (diffInMinutes < 60) return `${diffInMinutes}min`
@@ -668,19 +746,97 @@ const calculateDuration = (conversation: Conversation): string => {
   return `${hours}h ${minutes}min`
 }
 
-// ✅ ACTION METHODS
+const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+  notification.value = {
+    show: true,
+    message,
+    type
+  }
+  
+  setTimeout(() => {
+    notification.value.show = false
+  }, 5000)
+}
+
+// ✅ API METHODS
 const loadConversations = async () => {
+  if (!authStore.userShopId) {
+    error.value = 'ID utilisateur non trouvé'
+    loading.value = false
+    return
+  }
+
   loading.value = true
+  error.value = null
+
   try {
-    // Simuler chargement API
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const { data, error: supabaseError } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('shop_id', authStore.userShopId)
+      .order('last_activity', { ascending: false })
+
+    if (supabaseError) {
+      throw new Error(supabaseError.message)
+    }
+
+    conversations.value = data || []
+    console.log('✅ Conversations chargées:', conversations.value.length)
     
-    // TODO: Remplacer par vraie API
-    console.log('Conversations chargées')
-  } catch (error) {
-    console.error('Erreur chargement conversations:', error)
+    // Charger les statistiques
+    await loadStats()
+    
+  } catch (err: any) {
+    console.error('❌ Erreur chargement conversations:', err)
+    error.value = err.message || 'Erreur lors du chargement des conversations'
   } finally {
     loading.value = false
+  }
+}
+
+const loadStats = async () => {
+  try {
+    const convs = conversations.value
+    const today = new Date().toDateString()
+    
+    stats.value = {
+      active: convs.filter(c => c.status === 'active').length,
+      completed: convs.filter(c => c.status === 'completed').length,
+      inProgress: convs.filter(c => c.status === 'active').length, // Même que active
+      abandoned: convs.filter(c => c.status === 'abandoned').length,
+      newToday: convs.filter(c => new Date(c.started_at).toDateString() === today).length,
+      conversionRate: convs.length > 0 ? Math.round((convs.filter(c => c.conversion_completed).length / convs.length) * 100) : 0,
+      completionRate: convs.length > 0 ? Math.round((convs.filter(c => c.status === 'completed').length / convs.length) * 100) : 0,
+      averageWaitTime: 3, // TODO: Calculer réellement
+      conversionGrowth: 12 // TODO: Calculer réellement
+    }
+  } catch (err) {
+    console.warn('⚠️ Erreur chargement stats:', err)
+  }
+}
+
+const loadConversationMessages = async (conversationId: string) => {
+  loadingMessages.value = true
+  
+  try {
+    const { data, error: supabaseError } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true })
+
+    if (supabaseError) {
+      throw new Error(supabaseError.message)
+    }
+
+    selectedConversationMessages.value = data || []
+    console.log('✅ Messages chargés:', selectedConversationMessages.value.length)
+    
+  } catch (err: any) {
+    console.error('❌ Erreur chargement messages:', err)
+    showNotification('Erreur lors du chargement des messages', 'error')
+  } finally {
+    loadingMessages.value = false
   }
 }
 
@@ -688,16 +844,16 @@ const refreshConversations = async () => {
   refreshing.value = true
   try {
     await loadConversations()
+    showNotification('Conversations actualisées')
   } finally {
     refreshing.value = false
   }
 }
 
-const selectConversation = (conversation: Conversation) => {
+// ✅ ACTION METHODS
+const selectConversation = async (conversation: Conversation) => {
   selectedConversation.value = conversation
-  if (conversation.unreadCount > 0) {
-    markAsRead(conversation)
-  }
+  await loadConversationMessages(conversation.id)
 }
 
 const changePage = (page: number) => {
@@ -711,7 +867,7 @@ const applyFilters = () => {
 const clearFilters = () => {
   Object.assign(filters.value, {
     status: '',
-    agent: '',
+    product: '',
     period: '',
     search: ''
   })
@@ -722,35 +878,111 @@ const toggleActionMenu = (conversationId: string) => {
   activeActionMenu.value = activeActionMenu.value === conversationId ? null : conversationId
 }
 
-const markAsRead = async (conversation: Conversation) => {
-  conversation.unreadCount = 0
+const viewDetails = (conversation: Conversation) => {
+  selectConversation(conversation)
   activeActionMenu.value = null
 }
 
-const assignAgent = async (conversation: Conversation) => {
-  console.log('Assigner agent:', conversation.id)
-  activeActionMenu.value = null
+const markAsCompleted = async (conversation: Conversation) => {
+  try {
+    const { error: supabaseError } = await supabase
+      .from('conversations')
+      .update({ 
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', conversation.id)
+
+    if (supabaseError) {
+      throw new Error(supabaseError.message)
+    }
+
+    // Mise à jour locale
+    conversation.status = 'completed'
+    conversation.completed_at = new Date().toISOString()
+    if (selectedConversation.value?.id === conversation.id) {
+      selectedConversation.value.status = 'completed'
+      selectedConversation.value.completed_at = conversation.completed_at
+    }
+
+    await loadStats()
+    showNotification('Conversation marquée comme terminée')
+  } catch (err: any) {
+    console.error('❌ Erreur mark as completed:', err)
+    showNotification('Erreur lors de la mise à jour', 'error')
+  } finally {
+    activeActionMenu.value = null
+  }
 }
 
 const archiveConversation = async (conversation: Conversation) => {
-  console.log('Archiver:', conversation.id)
-  conversations.value = conversations.value.filter(c => c.id !== conversation.id)
-  activeActionMenu.value = null
+  try {
+    const { error: supabaseError } = await supabase
+      .from('conversations')
+      .update({ status: 'completed' })
+      .eq('id', conversation.id)
+
+    if (supabaseError) {
+      throw new Error(supabaseError.message)
+    }
+
+    // Mise à jour locale
+    conversation.status = 'completed'
+    if (selectedConversation.value?.id === conversation.id) {
+      selectedConversation.value.status = 'completed'
+    }
+
+    await loadStats()
+    showNotification('Conversation archivée')
+  } catch (err: any) {
+    console.error('❌ Erreur archive:', err)
+    showNotification('Erreur lors de l\'archivage', 'error')
+  } finally {
+    activeActionMenu.value = null
+  }
 }
 
 const deleteConversation = async (conversation: Conversation) => {
-  if (confirm('Supprimer cette conversation ?')) {
+  if (!confirm('Supprimer définitivement cette conversation ?')) {
+    activeActionMenu.value = null
+    return
+  }
+
+  try {
+    const { error: supabaseError } = await supabase
+      .from('conversations')
+      .delete()
+      .eq('id', conversation.id)
+
+    if (supabaseError) {
+      throw new Error(supabaseError.message)
+    }
+
+    // Suppression locale
     conversations.value = conversations.value.filter(c => c.id !== conversation.id)
     if (selectedConversation.value?.id === conversation.id) {
       selectedConversation.value = null
+      selectedConversationMessages.value = []
     }
+
+    await loadStats()
+    showNotification('Conversation supprimée')
+  } catch (err: any) {
+    console.error('❌ Erreur delete:', err)
+    showNotification('Erreur lors de la suppression', 'error')
+  } finally {
+    activeActionMenu.value = null
   }
-  activeActionMenu.value = null
 }
 
 const takeOver = async (conversation: Conversation) => {
-  console.log('Reprendre conversation:', conversation.id)
-  // TODO: Basculer en mode manuel
+  try {
+    // TODO: Logique de prise en charge humaine
+    showNotification('Fonctionnalité de prise en charge en développement')
+  } catch (err: any) {
+    console.error('❌ Erreur takeover:', err)
+    showNotification('Erreur lors de la prise en charge', 'error')
+  }
 }
 
 // Close action menu when clicking outside
@@ -759,6 +991,13 @@ const closeActionMenu = (event: Event) => {
     activeActionMenu.value = null
   }
 }
+
+// ✅ WATCHERS
+watch(() => filters.value, () => {
+  if (hasActiveFilters.value) {
+    applyFilters()
+  }
+}, { deep: true })
 
 // ✅ LIFECYCLE
 onMounted(() => {
@@ -815,8 +1054,8 @@ useHead({
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
 
-.unread-badge {
-  @apply flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full;
+.conversion-badge {
+  @apply flex items-center justify-center w-6 h-6 text-xs bg-green-100 rounded-full;
 }
 
 .action-button-primary {
@@ -845,7 +1084,7 @@ useHead({
 }
 
 .conversation-messages {
-  @apply flex-1 overflow-y-auto p-4 space-y-4;
+  @apply flex-1 overflow-y-auto p-4 space-y-4 max-h-96;
 }
 
 .message-item {
