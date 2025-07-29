@@ -1,4 +1,4 @@
-<!-- components/SidebarContent.vue - SIDEBAR AVEC BOUTON PRO CONDITIONNEL -->
+<!-- components/SidebarContent.vue - SIDEBAR CORRIGÉ -->
 <template>
   <div class="flex flex-col h-full">
     
@@ -99,31 +99,129 @@
       />
     </nav>
 
-    <!-- ✅ BOUTON UPGRADE "PASSER AU PRO" - CONDITIONNEL -->
-    <div v-if="shouldShowUpgradeButton" class="px-4 pb-4">
+    <!-- ✅ BOUTONS ADAPTATIFS SELON LE PLAN - LOGIQUE CORRIGÉE -->
+    <div class="px-4 pb-4">
+      
+      <!-- ✅ PLAN FREE + ESSAI ACTIF : Bouton "Passer à Starter" -->
       <button
-        @click="handleUpgradeClick"
-        :disabled="upgradingToPro"
-        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+        v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0"
+        @click="handleUpgradeClick('starter')"
+        :disabled="upgradingToPlan === 'starter'"
+        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
       >
-        <svg v-if="upgradingToPro" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Passer à Starter' }}</span>
+      </button>
+
+      <!-- ✅ PLAN FREE + ESSAI EXPIRÉ : Bouton rouge "Réactiver" -->
+      <button
+        v-else-if="userSubscriptionPlan === 'free' && (!userSubscriptionActive || trialDaysLeft === 0)"
+        @click="handleUpgradeClick('starter')"
+        :disabled="upgradingToPlan === 'starter'"
+        class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+      >
+        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver (Starter)' }}</span>
+      </button>
+
+      <!-- ✅ PLAN STARTER + ACTIF : Bouton "Passer au Pro" -->
+      <button
+        v-else-if="userSubscriptionPlan === 'starter' && userSubscriptionActive"
+        @click="handleUpgradeClick('pro')"
+        :disabled="upgradingToPlan === 'pro'"
+        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+      >
+        <svg v-if="upgradingToPlan === 'pro'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
         <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
         </svg>
-        <span>{{ upgradingToPro ? 'Redirection...' : 'Passer au Pro' }}</span>
+        <span>{{ upgradingToPlan === 'pro' ? 'Redirection...' : 'Passer au Pro' }}</span>
       </button>
-    </div>
 
-    <!-- ✅ BADGE PRO STATIQUE (quand l'utilisateur EST Pro) -->
-    <div v-else-if="userSubscriptionPlan === 'professional'" class="px-4 pb-4">
-      <div class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2">
+      <!-- ✅ PLAN PRO + ACTIF : Badge statique "Plan Pro Actif" -->
+      <div
+        v-else-if="userSubscriptionPlan === 'pro' && userSubscriptionActive"
+        class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 mb-3"
+      >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
         <span>Plan Pro Actif</span>
+      </div>
+
+      <!-- ✅ PLAN STARTER + INACTIF : Bouton "Réactiver Starter" -->
+      <button
+        v-else-if="userSubscriptionPlan === 'starter' && !userSubscriptionActive"
+        @click="handleUpgradeClick('starter')"
+        :disabled="upgradingToPlan === 'starter'"
+        class="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+      >
+        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver Starter' }}</span>
+      </button>
+
+      <!-- ✅ PLAN PRO + INACTIF : Bouton "Réactiver Pro" -->
+      <button
+        v-else-if="userSubscriptionPlan === 'pro' && !userSubscriptionActive"
+        @click="handleUpgradeClick('pro')"
+        :disabled="upgradingToPlan === 'pro'"
+        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+      >
+        <svg v-if="upgradingToPlan === 'pro'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span>{{ upgradingToPlan === 'pro' ? 'Redirection...' : 'Réactiver Pro' }}</span>
+      </button>
+
+      <!-- ✅ Affichage des jours d'essai restants (si plan free et essai actif) -->
+      <div 
+        v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0" 
+        class="text-center text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-lg py-2 px-3"
+      >
+        <div class="flex items-center justify-center space-x-1">
+          <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span class="font-medium text-blue-700">{{ trialDaysLeft }} jour(s) d'essai</span>
+        </div>
+      </div>
+
+      <!-- ✅ Message d'expiration (si essai terminé) -->
+      <div 
+        v-else-if="userSubscriptionPlan === 'free' && (!userSubscriptionActive || trialDaysLeft === 0)" 
+        class="text-center text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg py-2 px-3"
+      >
+        <div class="flex items-center justify-center space-x-1">
+          <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span class="font-medium">Essai expiré</span>
+        </div>
       </div>
     </div>
 
@@ -208,9 +306,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
-// ✅ INTERFACE PROPS MISE À JOUR
+// ✅ TYPES COHÉRENTS AVEC BILLING.VUE
+type SubscriptionPlan = 'free' | 'starter' | 'pro'
+
+// ✅ INTERFACE PROPS CORRIGÉE
 interface Props {
   unreadCount: number
   userName: string
@@ -218,15 +319,17 @@ interface Props {
   userInitials: string
   showProfileMenu: boolean
   isMobile?: boolean
-  userSubscriptionPlan?: string // ✅ NOUVEAU : Plan de l'utilisateur
-  userSubscriptionActive?: boolean // ✅ NOUVEAU : Statut de l'abonnement
+  userSubscriptionPlan: SubscriptionPlan
+  userSubscriptionActive: boolean
+  trialDaysLeft?: number
 }
 
 // ✅ PROPS ET EMITS
 const props = withDefaults(defineProps<Props>(), {
   isMobile: false,
   userSubscriptionPlan: 'free',
-  userSubscriptionActive: false
+  userSubscriptionActive: false,
+  trialDaysLeft: 0
 })
 
 const emit = defineEmits<{
@@ -234,16 +337,11 @@ const emit = defineEmits<{
   'close-profile': []
   'logout': []
   'close-mobile': []
-  'upgrade-to-pro': []
+  'upgrade-to-plan': [plan: 'starter' | 'pro']
 }>()
 
-// ✅ STATE POUR LE BOUTON UPGRADE
-const upgradingToPro = ref(false)
-
-// ✅ COMPUTED : AFFICHER LE BOUTON UPGRADE SEULEMENT SI PAS PRO
-const shouldShowUpgradeButton = computed(() => {
-  return props.userSubscriptionPlan !== 'professional' && props.userSubscriptionPlan !== 'enterprise'
-})
+// ✅ STATE POUR LES BOUTONS UPGRADE
+const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
 
 // ✅ HANDLE NAVIGATION CLICKS
 const handleNavClick = () => {
@@ -253,19 +351,19 @@ const handleNavClick = () => {
   }
 }
 
-// ✅ HANDLE UPGRADE CLICK - DÉCLENCHE DIRECTEMENT LE PAIEMENT STRIPE
-const handleUpgradeClick = async () => {
-  upgradingToPro.value = true
+// ✅ HANDLE UPGRADE CLICK - DIFFÉRENCIÉ PAR PLAN
+const handleUpgradeClick = async (targetPlan: 'starter' | 'pro') => {
+  upgradingToPlan.value = targetPlan
   
   try {
     // Émettre l'événement vers le parent pour déclencher Stripe
-    emit('upgrade-to-pro')
+    emit('upgrade-to-plan', targetPlan)
   } catch (error) {
     console.error('Erreur upgrade:', error)
   } finally {
-    // Remettre à false après 2 secondes (le temps de la redirection)
+    // Remettre à null après 2 secondes (le temps de la redirection)
     setTimeout(() => {
-      upgradingToPro.value = false
+      upgradingToPlan.value = null
     }, 2000)
   }
 }
