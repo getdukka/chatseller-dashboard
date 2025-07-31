@@ -573,20 +573,80 @@ const deleteAgentAction = async (agent: Agent) => {
 }
 
 // ✅ CORRECTION 2: Navigation améliorée vers configure
+
 const configureAgent = async (agent: Agent) => {
-  console.log('🔄 Navigation vers configuration agent:', agent.id)
+  console.log('🔄 [configureAgent] Navigation vers configuration:', {
+    id: agent.id,
+    name: agent.name,
+    type: agent.type
+  })
+  
   activeAgentMenu.value = null
   
+  // ✅ VALIDATION DE L'ID AGENT
+  if (!agent.id) {
+    console.error('❌ [configureAgent] ID agent manquant:', agent)
+    alert('Erreur: ID agent manquant')
+    return
+  }
+  
   try {
-    // ✅ Vérifier que la route existe avant de naviguer
-    await router.push({
-      path: `/vendeurs-ia/${agent.id}/configure`,
-      query: { name: agent.name }
+    // ✅ MÉTHODE 1: Navigation Nuxt avec await
+    console.log('🚀 [configureAgent] Tentative navigation Nuxt...')
+    
+    const targetRoute = `/vendeurs-ia/${agent.id}`
+    const queryParams = { 
+      name: agent.name,
+      type: agent.type
+    }
+    
+    console.log('🎯 [configureAgent] Route cible:', targetRoute, queryParams)
+    
+    // ✅ Utilisation de navigateTo avec gestion d'erreur
+    await navigateTo({
+      path: targetRoute,
+      query: queryParams
     })
-    console.log('✅ Navigation réussie vers configure')
-  } catch (error) {
-    console.error('❌ Erreur navigation:', error)
-    alert('Erreur lors de l\'accès à la configuration. Veuillez réessayer.')
+    
+    console.log('✅ [configureAgent] Navigation Nuxt réussie')
+    return
+    
+  } catch (navigationError) {
+    console.warn('⚠️ [configureAgent] Échec navigation Nuxt:', navigationError)
+    
+    try {
+      // ✅ MÉTHODE 2: Fallback avec router.push
+      console.log('🔄 [configureAgent] Fallback avec router.push...')
+      
+      await router.push({
+        path: `/vendeurs-ia/${agent.id}`,
+        query: { 
+          name: agent.name,
+          type: agent.type
+        }
+      })
+      
+      console.log('✅ [configureAgent] Navigation router.push réussie')
+      return
+      
+    } catch (routerError) {
+      console.warn('⚠️ [configureAgent] Échec router.push:', routerError)
+      
+      try {
+        // ✅ MÉTHODE 3: Force avec window.location (dernier recours)
+        console.log('🔄 [configureAgent] Fallback avec window.location...')
+        
+        const fullUrl = `/vendeurs-ia/${agent.id}?name=${encodeURIComponent(agent.name)}&type=${agent.type}`
+        console.log('🌍 [configureAgent] URL forcée:', fullUrl)
+        
+        // Utiliser window.location comme dernier recours
+        window.location.href = fullUrl
+        
+      } catch (windowError) {
+        console.error('❌ [configureAgent] Toutes les méthodes ont échoué:', windowError)
+        alert(`Erreur de navigation. Essayez d'aller manuellement à: /vendeurs-ia/${agent.id}`)
+      }
+    }
   }
 }
 

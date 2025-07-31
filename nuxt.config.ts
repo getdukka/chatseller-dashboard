@@ -1,11 +1,11 @@
-// nuxt.config.ts - CONFIGURATION SIMPLIFIÉE SUPABASE
+// nuxt.config.ts - CONFIGURATION CORRIGÉE POUR PAGES DYNAMIQUES
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
   // ✅ COMPATIBILITY DATE
   compatibilityDate: '2025-07-24',
 
-  // ✅ MODULES SIMPLIFIÉS - RETIRER @nuxtjs/supabase POUR L'INSTANT
+  // ✅ MODULES EXISTANTS - GARDÉS
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
@@ -29,7 +29,7 @@ export default defineNuxtConfig({
     typeCheck: false
   },
 
-  // ✅ RUNTIME CONFIG - CONFIGURATION SUPABASE MANUELLE
+  // ✅ RUNTIME CONFIG - CONFIGURATION EXISTANTE GARDÉE
   runtimeConfig: {
     // Privé (serveur seulement)
     jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-chatseller-dashboard',
@@ -47,6 +47,28 @@ export default defineNuxtConfig({
       appUrl: process.env.APP_URL || 'http://localhost:3000',
       widgetUrl: process.env.WIDGET_URL || 'https://widget.chatseller.app'
     }
+  },
+
+  // ✅ ROUTE RULES CORRIGÉES - LE CHANGEMENT PRINCIPAL
+  routeRules: {
+    // Pages statiques
+    '/': { prerender: true },
+    '/login': { prerender: true },
+    '/register': { prerender: true },
+    
+    // ✅ CORRECTION : Pages dynamiques en mode SPA (Client-Side Rendering)
+    '/vendeurs-ia/**': { 
+      ssr: false,  // ← CHANGEMENT PRINCIPAL : false au lieu de true
+      index: false
+    },
+    '/knowledge-base/**': { 
+      ssr: false,  // ← CHANGEMENT : false au lieu de true
+      index: false 
+    },
+    
+    // SPA mode pour dashboard interactif
+    '/dashboard': { spa: true },
+    '/analytics': { spa: true }
   },
 
   // ✅ AUTO-IMPORTS
@@ -95,6 +117,11 @@ export default defineNuxtConfig({
         defineModel: true,
         propsDestructure: true
       }
+    },
+    server: {
+      fs: {
+        allow: ['..']
+      }
     }
   },
 
@@ -118,7 +145,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // ✅ SSR CONFIG
+  // ✅ SSR CONFIG 
   ssr: true,
 
   // ✅ NITRO CONFIG
@@ -133,23 +160,33 @@ export default defineNuxtConfig({
     }
   },
 
-  // ✅ ROUTAGE
+  // ✅ ROUTAGE CONFIGURÉ POUR PAGES DYNAMIQUES
   router: {
     options: {
-      strict: false
+      strict: false,
+      sensitive: false
     }
   },
 
   // ✅ EXPERIMENTAL FEATURES
   experimental: {
     payloadExtraction: false,
-    typedPages: true
+    typedPages: true,
+    scanPageMeta: true
   },
 
-  // ✅ HOOKS
+  // ✅ HOOKS POUR DEBUG
   hooks: {
     'build:before': () => {
-      console.log('🚀 Building ChatSeller Dashboard with manual Supabase setup...')
+      console.log('🚀 Building ChatSeller Dashboard with dynamic routes support...')
+    },
+    'render:route': (url, result, context) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🛣️ [Nuxt] Route rendue:', url)
+        if (url.includes('/vendeurs-ia/')) {
+          console.log('🎯 [Nuxt] Route dynamique détectée:', url)
+        }
+      }
     }
   }
 })
