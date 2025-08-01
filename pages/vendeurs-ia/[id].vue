@@ -1,31 +1,17 @@
-<!-- pages/vendeurs-ia/[id].vue - VERSION AMÉLIORÉE ET ULTRA-ROBUSTE -->
+<!-- pages/vendeurs-ia/[id].vue - VERSION CORRIGÉE ET ROBUSTE -->
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Debug Info amélioré -->
+    <!-- Debug Info -->
     <div v-if="debugMode" class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
-      <h3 class="text-yellow-800 font-medium">🔧 Mode Debug Avancé</h3>
-      <div class="text-yellow-700 text-sm mt-2 space-y-1">
-        <p><strong>Agent ID:</strong> {{ agentId || 'NON DÉFINI' }}</p>
-        <p><strong>Route params:</strong> {{ JSON.stringify(route.params) }}</p>
-        <p><strong>Route query:</strong> {{ JSON.stringify(route.query) }}</p>
-        <p><strong>Route valide:</strong> {{ !!agentId ? '✅' : '❌' }}</p>
+      <h3 class="text-yellow-800 font-medium">🔧 Mode Debug</h3>
+      <div class="text-yellow-700 text-sm mt-2">
+        <p><strong>Agent ID:</strong> {{ agentId }}</p>
+        <p><strong>Route valide:</strong> {{ !!agentId }}</p>
         <p><strong>Auth Token:</strong> {{ authStore.token ? '✅ Présent' : '❌ Manquant' }}</p>
-        <p><strong>Loading:</strong> {{ loading ? '🔄' : '✅' }}</p>
+        <p><strong>Loading:</strong> {{ loading }}</p>
         <p><strong>Error:</strong> {{ error || 'Aucune' }}</p>
         <p><strong>Agent chargé:</strong> {{ agent ? '✅ Oui' : '❌ Non' }}</p>
-        <p><strong>Mode:</strong> {{ useMockData ? '🧪 Mock Data' : '🌐 API Backend' }}</p>
-        <p><strong>Timestamp:</strong> {{ new Date().toLocaleTimeString() }}</p>
-      </div>
-      <div class="mt-3 space-x-2">
-        <button @click="forceReload" class="px-3 py-1 bg-yellow-500 text-white rounded text-xs">
-          🔄 Force Reload
-        </button>
-        <button @click="toggleMockMode" class="px-3 py-1 bg-blue-500 text-white rounded text-xs">
-          {{ useMockData ? '🌐 Mode API' : '🧪 Mode Mock' }}
-        </button>
-        <button @click="testNavigation" class="px-3 py-1 bg-green-500 text-white rounded text-xs">
-          🧪 Test Navigation
-        </button>
+        <p><strong>Mode:</strong> {{ useMockData ? 'Mock Data' : 'API Backend' }}</p>
       </div>
     </div>
 
@@ -54,7 +40,7 @@
               @click="debugMode = !debugMode"
               class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              🔧 Debug {{ debugMode ? 'ON' : 'OFF' }}
+              🔧 Debug
             </button>
             
             <button
@@ -62,7 +48,7 @@
               :disabled="loading"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
-              <svg class="w-4 h-4 mr-2" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
               {{ loading ? 'Chargement...' : 'Recharger' }}
@@ -86,25 +72,17 @@
       </div>
     </div>
 
-    <!-- Loading State amélioré -->
+    <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-16">
-      <div class="text-center">
-        <div class="inline-flex items-center space-x-3 mb-4">
-          <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-          <span class="text-lg text-gray-600">Chargement de la configuration...</span>
-        </div>
-        <p class="text-sm text-gray-500">Agent ID: {{ agentId }}</p>
-        <div class="mt-4">
-          <button @click="forceReload" class="text-blue-600 hover:text-blue-800 text-sm">
-            🔄 Forcer le rechargement
-          </button>
-        </div>
+      <div class="inline-flex items-center space-x-3">
+        <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span class="text-lg text-gray-600">Chargement de la configuration...</span>
       </div>
     </div>
 
-    <!-- Error State amélioré -->
+    <!-- Error State -->
     <div v-else-if="error && !agent" class="p-8">
       <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
         <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,51 +90,18 @@
         </svg>
         <h3 class="mt-4 text-lg font-medium text-red-900">Erreur de chargement</h3>
         <p class="mt-2 text-red-700">{{ error }}</p>
-        <div class="mt-2 text-sm text-red-600">
-          <p>Agent ID: {{ agentId || 'Non défini' }}</p>
-          <p>Mode: {{ useMockData ? 'Mock Data' : 'API Backend' }}</p>
-        </div>
-        <div class="mt-6 space-x-3">
+        <div class="mt-4 space-x-2">
           <button 
             @click="loadAgent"
             class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
           >
-            🔄 Réessayer
+            Réessayer
           </button>
           <button 
-            @click="toggleMockMode"
+            @click="useMockData = true; loadAgent()"
             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
-            {{ useMockData ? '🌐 Essayer mode API' : '🧪 Essayer mode développement' }}
-          </button>
-          <button 
-            @click="goBack"
-            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            ← Retour à la liste
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Route invalide -->
-    <div v-else-if="!agentId" class="p-8">
-      <div class="bg-orange-50 border border-orange-200 rounded-xl p-6 text-center">
-        <svg class="mx-auto h-12 w-12 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.348 15.5c-.77.833.192 2.5 1.732 2.5z"/>
-        </svg>
-        <h3 class="mt-4 text-lg font-medium text-orange-900">Route invalide</h3>
-        <p class="mt-2 text-orange-700">L'ID de l'agent n'est pas valide ou manquant</p>
-        <div class="mt-2 text-sm text-orange-600">
-          <p>URL actuelle: {{ route.fullPath }}</p>
-          <p>Params: {{ JSON.stringify(route.params) }}</p>
-        </div>
-        <div class="mt-6">
-          <button 
-            @click="goBack"
-            class="inline-flex items-center px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors"
-          >
-            ← Retour à la liste des agents
+            Mode Développement
           </button>
         </div>
       </div>
@@ -169,16 +114,6 @@
         <!-- Configuration Panel -->
         <div class="lg:col-span-2 space-y-8">
           
-          <!-- Success Message -->
-          <div v-if="successMessage" class="bg-green-50 border border-green-200 rounded-xl p-4">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <p class="text-green-700">{{ successMessage }}</p>
-            </div>
-          </div>
-
           <!-- Agent Settings -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-6">Paramètres de l'Agent</h3>
@@ -390,20 +325,6 @@
               </p>
             </div>
           </div>
-
-          <!-- Test Agent -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Test de l'Agent</h3>
-            <button
-              @click="testAgent"
-              class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-              </svg>
-              Tester le Vendeur IA
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -411,7 +332,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 // ✅ PAGE META
@@ -443,7 +364,6 @@ interface AgentConfigData {
 const loading = ref(false)
 const saving = ref(false)
 const error = ref<string | null>(null)
-const successMessage = ref<string | null>(null)
 const agent = ref<any | null>(null)
 const knowledgeBase = ref<any[]>([])
 const debugMode = ref(false)
@@ -462,22 +382,10 @@ const configData = ref<AgentConfigData>({
   upsellEnabled: false
 })
 
-// ✅ COMPUTED - AMÉLIORATION DE LA DÉTECTION DE L'ID
+// ✅ COMPUTED
 const agentId = computed(() => {
-  // Essayer d'abord les params de route
-  let id = route.params.id as string
-  
-  // Si pas trouvé, essayer dans les query params (fallback)
-  if (!id || id === 'undefined' || id === 'null') {
-    id = route.query.agentId as string
-  }
-  
-  // Validation finale
-  if (!id || id === 'undefined' || id === 'null' || id.length < 10) {
-    return null
-  }
-  
-  return id
+  const id = route.params.id as string
+  return id && id !== 'undefined' && id !== 'null' ? id : null
 })
 
 // ✅ HELPER: Convertir query params en string
@@ -512,53 +420,24 @@ const integrationCode = computed(() => {
 
 // ✅ MÉTHODES
 const goBack = () => {
-  console.log('🔙 [goBack] Retour à la liste des agents')
   router.push('/vendeurs-ia')
 }
 
-// ✅ FONCTIONS DE DEBUG
-const forceReload = () => {
-  console.log('🔄 [forceReload] Force reload triggered')
-  error.value = null
-  agent.value = null
-  loadAgent()
-}
-
-const toggleMockMode = () => {
-  console.log('🔄 [toggleMockMode] Basculement mode:', useMockData.value ? 'API' : 'Mock')
-  useMockData.value = !useMockData.value
-  forceReload()
-}
-
-const testNavigation = () => {
-  console.log('🧪 [testNavigation] Test navigation')
-  console.log('Route actuelle:', route.fullPath)
-  console.log('Agent ID détecté:', agentId.value)
-  console.log('Route params:', route.params)
-  console.log('Route query:', route.query)
-}
-
-const testAgent = () => {
-  console.log('🧪 [testAgent] Test de l\'agent')
-  alert(`Test de l'agent "${agent.value?.name}" - Fonctionnalité en cours de développement`)
-}
-
-// ✅ CHARGER AGENT AVEC FALLBACK ULTRA-ROBUSTE
+// ✅ CHARGER AGENT AVEC FALLBACK ROBUSTE
 const loadAgent = async () => {
   loading.value = true
   error.value = null
-  successMessage.value = null
 
   try {
     if (!agentId.value) {
-      throw new Error('ID agent invalide ou manquant')
+      throw new Error('ID agent invalide')
     }
 
-    console.log('🔍 [loadAgent] Chargement agent:', agentId.value, '| Mode:', useMockData.value ? 'Mock' : 'API')
+    console.log('🔍 Chargement agent:', agentId.value)
 
     // ✅ MODE DÉVELOPPEMENT : Utiliser des données simulées
     if (useMockData.value || !authStore.token) {
-      console.log('📝 [loadAgent] Mode développement - données simulées')
+      console.log('📝 Mode développement - données simulées')
       
       const mockAgent = {
         id: agentId.value,
@@ -616,7 +495,7 @@ const loadAgent = async () => {
         upsellEnabled: mockAgent.config?.upsellEnabled ?? false
       }
 
-      console.log('✅ [loadAgent] Données simulées chargées:', mockAgent.name)
+      console.log('✅ Données simulées chargées:', mockAgent.name)
       return
     }
 
@@ -647,19 +526,19 @@ const loadAgent = async () => {
           upsellEnabled: agent.value.config?.upsellEnabled ?? false
         }
 
-        console.log('✅ [loadAgent] Agent chargé depuis API:', agent.value.name)
+        console.log('✅ Agent chargé depuis API:', agent.value.name)
       } else {
         throw new Error(response.error || 'Réponse API invalide')
       }
 
     } catch (apiError: any) {
-      console.warn('⚠️ [loadAgent] Erreur API, basculement vers mode développement:', apiError)
+      console.warn('⚠️ Erreur API, basculement vers mode développement:', apiError)
       useMockData.value = true
       await loadAgent() // Récursion avec mode mock
     }
 
   } catch (err: any) {
-    console.error('❌ [loadAgent] Erreur chargement agent:', err)
+    console.error('❌ Erreur chargement agent:', err)
     error.value = err.message || 'Erreur lors du chargement'
   } finally {
     loading.value = false
@@ -667,26 +546,22 @@ const loadAgent = async () => {
 }
 
 const reloadAgent = () => {
-  console.log('🔄 [reloadAgent] Rechargement agent')
   agent.value = null
   error.value = null
-  successMessage.value = null
   loadAgent()
 }
 
 const saveConfiguration = async () => {
   saving.value = true
-  error.value = null
-  successMessage.value = null
 
   try {
-    console.log('💾 [saveConfiguration] Sauvegarde configuration...')
+    console.log('💾 Sauvegarde configuration...')
 
     if (useMockData.value) {
       // Mode développement : simulation
       await new Promise(resolve => setTimeout(resolve, 500))
-      console.log('✅ [saveConfiguration] Configuration simulée sauvegardée')
-      successMessage.value = '✅ Configuration sauvegardée (mode développement)'
+      console.log('✅ Configuration simulée sauvegardée')
+      alert('✅ Configuration sauvegardée (mode développement)')
     } else {
       // Mode production : API
       const response = await $fetch(`/api/v1/agents/${agentId.value}/config`, {
@@ -702,21 +577,16 @@ const saveConfiguration = async () => {
       })
 
       if (response.success) {
-        console.log('✅ [saveConfiguration] Configuration sauvegardée')
-        successMessage.value = '✅ Configuration sauvegardée avec succès !'
+        console.log('✅ Configuration sauvegardée')
+        alert('✅ Configuration sauvegardée avec succès !')
       } else {
         throw new Error(response.error || 'Erreur de sauvegarde')
       }
     }
 
-    // Effacer le message de succès après 3 secondes
-    setTimeout(() => {
-      successMessage.value = null
-    }, 3000)
-
   } catch (err: any) {
-    console.error('❌ [saveConfiguration] Erreur sauvegarde:', err)
-    error.value = err.message || 'Erreur lors de la sauvegarde'
+    console.error('❌ Erreur sauvegarde:', err)
+    alert('❌ ' + (err.message || 'Erreur lors de la sauvegarde'))
   } finally {
     saving.value = false
   }
@@ -726,32 +596,16 @@ const copyCode = async () => {
   try {
     const codeToClipboard = integrationCode.value.replace(/\\\//g, '/')
     await navigator.clipboard.writeText(codeToClipboard)
-    successMessage.value = '✅ Code d\'intégration copié dans le presse-papier !'
-    
-    // Effacer le message après 3 secondes
-    setTimeout(() => {
-      successMessage.value = null
-    }, 3000)
+    alert('✅ Code d\'intégration copié dans le presse-papier !')
   } catch (err) {
-    console.error('❌ [copyCode] Erreur copie:', err)
-    error.value = 'Impossible de copier le code'
+    console.error('Erreur copie:', err)
+    alert('❌ Impossible de copier le code')
   }
 }
 
-// ✅ WATCHER POUR DÉBOGUER LES CHANGEMENTS DE ROUTE
-watch(() => route.params.id, (newId, oldId) => {
-  console.log('🔄 [watch] Route params changé:', { oldId, newId })
-  if (newId && newId !== oldId) {
-    console.log('🔄 [watch] Nouveau ID détecté, rechargement...')
-    loadAgent()
-  }
-}, { immediate: false })
-
 // ✅ LIFECYCLE
 onMounted(async () => {
-  console.log('🚀 [onMounted] Montage page configuration agent')
-  console.log('Route complète:', route.fullPath)
-  console.log('Agent ID détecté:', agentId.value)
+  console.log('🚀 Montage page configuration agent:', agentId.value)
   
   // ✅ Activer le debug en développement
   if (process.env.NODE_ENV === 'development') {
@@ -759,8 +613,7 @@ onMounted(async () => {
   }
   
   if (!agentId.value) {
-    error.value = 'ID agent invalide ou manquant dans l\'URL'
-    console.error('❌ [onMounted] ID agent invalide:', route.params)
+    error.value = 'ID agent invalide ou manquant'
     return
   }
   

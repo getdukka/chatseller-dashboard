@@ -572,11 +572,11 @@ const deleteAgentAction = async (agent: Agent) => {
 
 // ✅ NAVIGATION VERS CONFIGURATION - COMPLÈTEMENT REÉCRITE ET ULTRA-ROBUSTE
 const configureAgent = async (agent: Agent) => {
-  console.log('🔄 [configureAgent] Début navigation vers configuration:', agent.id, agent.name)
+  console.log('🔄 [configureAgent] Navigation vers configuration:', agent.id, agent.name)
   
   activeAgentMenu.value = null
   
-  // ✅ VALIDATION STRICTE DE L'ID AGENT
+  // ✅ VALIDATION DE L'ID AGENT
   if (!agent.id || agent.id === 'undefined' || agent.id === 'null') {
     console.error('❌ [configureAgent] ID agent invalide:', agent.id)
     alert('Erreur: ID agent invalide')
@@ -584,66 +584,42 @@ const configureAgent = async (agent: Agent) => {
   }
   
   try {
-    // ✅ MÉTHODE 1 : Navigation simple avec navigateTo (recommandée pour Nuxt 3)
-    console.log('🚀 [configureAgent] Tentative navigation avec navigateTo...')
+    // ✅ NAVIGATION VERS LA ROUTE DE CONFIGURATION ALTERNATIVE
+    console.log('🚀 [configureAgent] Navigation vers /agent-config...')
     
-    await navigateTo(`/vendeurs-ia/${agent.id}`, {
-      replace: false,
-      external: false
+    await navigateTo({
+      path: '/agent-config',
+      query: {
+        id: agent.id,
+        name: agent.name,
+        type: agent.type,
+        description: agent.description || '',
+        welcomeMessage: agent.welcomeMessage || '',
+        fallbackMessage: agent.fallbackMessage || ''
+      }
     })
     
-    console.log('✅ [configureAgent] Navigation réussie avec navigateTo')
+    console.log('✅ [configureAgent] Navigation réussie vers page de configuration')
     
   } catch (navigationError) {
-    console.warn('⚠️ [configureAgent] Échec navigateTo, tentative méthode 2:', navigationError)
+    console.warn('⚠️ [configureAgent] Erreur navigateTo, tentative fallback:', navigationError)
     
-    try {
-      // ✅ MÉTHODE 2 : Utiliser le router de Vue
-      console.log('🔄 [configureAgent] Tentative navigation avec router.push...')
-      
-      await router.push({
-        path: `/vendeurs-ia/${agent.id}`,
-        query: { 
-          name: agent.name,
-          type: agent.type,
-          timestamp: Date.now().toString() // Pour forcer le refresh
-        }
-      })
-      
-      console.log('✅ [configureAgent] Navigation réussie avec router.push')
-      
-    } catch (routerError) {
-      console.warn('⚠️ [configureAgent] Échec router.push, tentative méthode 3:', routerError)
-      
-      try {
-        // ✅ MÉTHODE 3 : Navigation avec nextTick pour éviter les conflits
-        await nextTick()
-        console.log('🔄 [configureAgent] Tentative navigation avec nextTick...')
-        
-        await navigateTo(`/vendeurs-ia/${agent.id}?fallback=true`)
-        console.log('✅ [configureAgent] Navigation réussie avec nextTick')
-        
-      } catch (nextTickError) {
-        console.error('❌ [configureAgent] Toutes les méthodes de navigation ont échoué:', nextTickError)
-        
-        // ✅ MÉTHODE 4 : Fallback avec window.location (en dernier recours)
-        console.log('🆘 [configureAgent] Fallback avec window.location...')
-        
-        const targetUrl = `/vendeurs-ia/${agent.id}?name=${encodeURIComponent(agent.name)}&type=${agent.type}&fallback=window`
-        console.log('🔗 [configureAgent] URL de fallback:', targetUrl)
-        
-        // Utiliser un timeout pour éviter les conflits de navigation
-        setTimeout(() => {
-          try {
-            window.location.href = targetUrl
-            console.log('✅ [configureAgent] Navigation forcée avec window.location')
-          } catch (windowError) {
-            console.error('❌ [configureAgent] Échec complet de navigation:', windowError)
-            alert('Erreur de navigation. Veuillez rafraîchir la page et réessayer.')
-          }
-        }, 100)
-      }
-    }
+    // ✅ FALLBACK AVEC WINDOW.LOCATION
+    const queryParams = new URLSearchParams({
+      id: agent.id,
+      name: agent.name,
+      type: agent.type,
+      ...(agent.description && { description: agent.description }),
+      ...(agent.welcomeMessage && { welcomeMessage: agent.welcomeMessage }),
+      ...(agent.fallbackMessage && { fallbackMessage: agent.fallbackMessage })
+    })
+    
+    const targetUrl = `/agent-config?${queryParams.toString()}`
+    console.log('🔗 [configureAgent] URL de fallback:', targetUrl)
+    
+    setTimeout(() => {
+      window.location.href = targetUrl
+    }, 100)
   }
 }
 
