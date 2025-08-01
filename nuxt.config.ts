@@ -1,4 +1,4 @@
-// nuxt.config.ts - CONFIGURATION CORRIGÉE POUR PAGES DYNAMIQUES
+// nuxt.config.ts - CONFIGURATION CORRIGÉE POUR RÉSOUDRE LA NAVIGATION
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
@@ -49,21 +49,22 @@ export default defineNuxtConfig({
     }
   },
 
-  // ✅ ROUTE RULES CORRIGÉES - LE CHANGEMENT PRINCIPAL
+  // ✅ ROUTE RULES SIMPLIFIÉES - LE CHANGEMENT PRINCIPAL
   routeRules: {
     // Pages statiques
     '/': { prerender: true },
     '/login': { prerender: true },
     '/register': { prerender: true },
     
-    // ✅ CORRECTION : Pages dynamiques en mode SPA (Client-Side Rendering)
+    // ✅ NOUVEAU : SIMPLIFICATION DES ROUTES DYNAMIQUES
+    // On retire les règles complexes et on laisse Nuxt gérer automatiquement
     '/vendeurs-ia/**': { 
-      ssr: false,  // ← CHANGEMENT PRINCIPAL : false au lieu de true
-      index: false
+      // On retire ssr: false qui causait des problèmes
+      // On garde juste les headers de cache pour le développement
+      headers: { 'cache-control': 'no-cache' }
     },
     '/knowledge-base/**': { 
-      ssr: false,  // ← CHANGEMENT : false au lieu de true
-      index: false 
+      headers: { 'cache-control': 'no-cache' }
     },
     
     // SPA mode pour dashboard interactif
@@ -97,7 +98,7 @@ export default defineNuxtConfig({
     transpile: ['@heroicons/vue', 'chart.js']
   },
 
-  // ✅ VITE OPTIMIZATIONS
+  // ✅ VITE OPTIMIZATIONS AMÉLIORÉES
   vite: {
     optimizeDeps: {
       include: [
@@ -109,6 +110,7 @@ export default defineNuxtConfig({
         '@supabase/supabase-js'
       ]
     },
+    // ✅ NOUVEAU : Configuration pour éviter les erreurs d'hydratation
     define: {
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
     },
@@ -145,7 +147,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // ✅ SSR CONFIG 
+  // ✅ SSR CONFIG SIMPLIFIÉ
   ssr: true,
 
   // ✅ NITRO CONFIG
@@ -175,10 +177,10 @@ export default defineNuxtConfig({
     scanPageMeta: true
   },
 
-  // ✅ HOOKS POUR DEBUG
+  // ✅ HOOKS POUR DEBUG AMÉLIORÉS
   hooks: {
     'build:before': () => {
-      console.log('🚀 Building ChatSeller Dashboard with dynamic routes support...')
+      console.log('🚀 Building ChatSeller Dashboard...')
     },
     'render:route': (url, result, context) => {
       if (process.env.NODE_ENV === 'development') {
@@ -186,6 +188,12 @@ export default defineNuxtConfig({
         if (url.includes('/vendeurs-ia/')) {
           console.log('🎯 [Nuxt] Route dynamique détectée:', url)
         }
+      }
+    },
+    // ✅ NOUVEAU : Hook pour diagnostiquer les erreurs de navigation
+    'app:error': (error) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ [Nuxt] Erreur app:', error)
       }
     }
   }

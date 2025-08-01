@@ -70,7 +70,7 @@
                       🚀 Essai gratuit : {{ subscriptionData.trialDaysLeft }} jour(s) restant(s)
                     </h2>
                     <p class="text-blue-100 text-lg">
-                      Votre Vendeur IA est actif ! Profitez de toutes les fonctionnalités gratuitement.
+                      Profitez de toutes les fonctionnalités Starter gratuitement pendant 7 jours.
                       <br>
                       <span class="font-semibold text-yellow-200">
                         Après {{ subscriptionData.trialDaysLeft }} jour(s), choisissez un plan pour continuer.
