@@ -241,6 +241,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useNotifications } from '~~/composables/useNotifications'
 import { useAuthStore } from '~~/stores/auth'
 
 // ✅ TYPES COHÉRENTS AVEC BILLING.VUE ET SIDEBAR
@@ -261,7 +262,7 @@ const mobileMenuOpen = ref(false)
 const showProfileMenu = ref(false)
 const showMobileProfileMenu = ref(false)
 const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
-const unreadCount = ref(3) // Mock - à remplacer par vraies données
+const { unreadCount, hasUnreadNotifications } = useNotifications()
 
 // ✅ DONNÉES D'ABONNEMENT AVEC TYPES STRICTS
 const subscriptionInfo = ref<SubscriptionInfo>({

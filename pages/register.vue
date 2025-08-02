@@ -1,4 +1,4 @@
-<!-- pages/register.vue - VERSION FINALE CORRIGÉE -->
+<!-- pages/register.vue - VERSION SIMPLIFIÉE -->
 <template>
   <div>
     <!-- Logo et titre -->
@@ -9,64 +9,55 @@
         </div>
       </div>
       <h2 class="text-3xl font-bold text-gray-900">
-        Créer votre compte ChatSeller
+        Rejoignez ChatSeller
       </h2>
       <p class="mt-2 text-sm text-gray-600">
-        Déployez votre Vendeur IA en quelques minutes
+        Créez votre compte en 30 secondes
       </p>
     </div>
 
-    <!-- Formulaire d'inscription -->
+    <!-- Formulaire d'inscription simplifié -->
     <div class="bg-white py-8 px-6 shadow-xl rounded-xl border border-gray-100">
-      <form @submit.prevent="handleRegister" class="space-y-6">
-        
-        <!-- Informations personnelles -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Prénom -->
-          <div>
-            <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2">
-              Prénom *
-            </label>
-            <input
-              id="firstName"
-              v-model="form.firstName"
-              type="text"
-              required
-              autocomplete="given-name"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': errors.firstName }"
-              placeholder="Jean"
-            />
-            <p v-if="errors.firstName" class="mt-1 text-sm text-red-600">
-              {{ errors.firstName }}
-            </p>
+      
+      <!-- ✅ MESSAGE DE CONFIRMATION EMAIL -->
+      <div v-if="emailSent" class="text-center space-y-6">
+        <div class="p-6 bg-green-50 border border-green-200 rounded-xl">
+          <div class="flex justify-center mb-4">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
           </div>
-
-          <!-- Nom -->
-          <div>
-            <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2">
-              Nom *
-            </label>
-            <input
-              id="lastName"
-              v-model="form.lastName"
-              type="text"
-              required
-              autocomplete="family-name"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': errors.lastName }"
-              placeholder="Dupont"
-            />
-            <p v-if="errors.lastName" class="mt-1 text-sm text-red-600">
-              {{ errors.lastName }}
-            </p>
-          </div>
+          <h3 class="text-lg font-semibold text-green-800 mb-2">Email de confirmation envoyé !</h3>
+          <p class="text-sm text-green-700 mb-4">
+            Nous venons d'envoyer un lien de confirmation à <strong>{{ form.email }}</strong>
+          </p>
+          <p class="text-xs text-green-600">
+            Cliquez sur le lien dans l'email pour activer votre compte et continuer l'inscription.
+          </p>
         </div>
+        
+        <div class="text-center">
+          <p class="text-sm text-gray-600 mb-3">
+            Vous n'avez pas reçu l'email ?
+          </p>
+          <button
+            @click="resendConfirmation"
+            :disabled="resendCooldown > 0"
+            class="text-sm font-medium text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+          >
+            {{ resendCooldown > 0 ? `Renvoyer dans ${resendCooldown}s` : 'Renvoyer l\'email' }}
+          </button>
+        </div>
+      </div>
 
+      <!-- ✅ FORMULAIRE SIMPLIFIÉ -->
+      <form v-else @submit.prevent="handleRegister" class="space-y-6">
         <!-- Email -->
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-            Adresse email professionnelle *
+            Adresse email professionnelle
           </label>
           <input
             id="email"
@@ -76,58 +67,17 @@
             autocomplete="email"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': errors.email }"
-            placeholder="jean.dupont@entreprise.com"
+            placeholder="votre@entreprise.com"
           />
           <p v-if="errors.email" class="mt-1 text-sm text-red-600">
             {{ errors.email }}
           </p>
         </div>
 
-        <!-- Entreprise -->
-        <div>
-          <label for="company" class="block text-sm font-medium text-gray-700 mb-2">
-            Nom de l'entreprise *
-          </label>
-          <input
-            id="company"
-            v-model="form.company"
-            type="text"
-            required
-            autocomplete="organization"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': errors.company }"
-            placeholder="Mon E-commerce"
-          />
-          <p v-if="errors.company" class="mt-1 text-sm text-red-600">
-            {{ errors.company }}
-          </p>
-        </div>
-
-        <!-- Plateforme e-commerce -->
-        <div>
-          <label for="platform" class="block text-sm font-medium text-gray-700 mb-2">
-            Plateforme e-commerce
-          </label>
-          <select
-            id="platform"
-            v-model="form.platform"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
-            <option value="">Sélectionnez votre plateforme</option>
-            <option value="shopify">Shopify</option>
-            <option value="woocommerce">WooCommerce</option>
-            <option value="wix">Wix</option>
-            <option value="prestashop">PrestaShop</option>
-            <option value="magento">Magento</option>
-            <option value="custom">Site personnalisé</option>
-            <option value="other">Autre</option>
-          </select>
-        </div>
-
         <!-- Mot de passe -->
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-            Mot de passe *
+            Mot de passe
           </label>
           <div class="relative">
             <input
@@ -162,26 +112,6 @@
           </p>
         </div>
 
-        <!-- Confirmation mot de passe -->
-        <div>
-          <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
-            Confirmer le mot de passe *
-          </label>
-          <input
-            id="confirmPassword"
-            v-model="form.confirmPassword"
-            type="password"
-            required
-            autocomplete="new-password"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': errors.confirmPassword }"
-            placeholder="••••••••"
-          />
-          <p v-if="errors.confirmPassword" class="mt-1 text-sm text-red-600">
-            {{ errors.confirmPassword }}
-          </p>
-        </div>
-
         <!-- Acceptation des conditions -->
         <div class="flex items-start">
           <div class="flex items-center h-5">
@@ -208,23 +138,6 @@
             <p v-if="errors.terms" class="mt-1 text-red-600">
               {{ errors.terms }}
             </p>
-          </div>
-        </div>
-
-        <!-- Newsletter -->
-        <div class="flex items-center">
-          <div class="flex items-center h-5">
-            <input
-              id="newsletter"
-              v-model="form.newsletter"
-              type="checkbox"
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </div>
-          <div class="ml-3 text-sm">
-            <label for="newsletter" class="text-gray-700">
-              Recevoir les mises à jour produit et conseils e-commerce (optionnel)
-            </label>
           </div>
         </div>
 
@@ -281,16 +194,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Aide et support -->
-    <div class="mt-8 text-center">
-      <p class="text-sm text-gray-600">
-        Questions sur ChatSeller ? 
-        <a href="https://chatseller.app/support" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-          Contactez notre équipe
-        </a>
-      </p>
-    </div>
   </div>
 </template>
 
@@ -302,39 +205,31 @@ definePageMeta({
   layout: 'auth'
 })
 
-// ✅ UTILISER LE COMPOSABLE AUTH CORRIGÉ
-const auth = useAuth()
+// ✅ COMPOSABLE AUTH
+const { $supabase } = useNuxtApp()
 
 // État du composant
 const loading = ref(false)
 const showPassword = ref(false)
 const registerError = ref('')
+const emailSent = ref(false)
+const resendCooldown = ref(0)
 
-// Formulaire
+// ✅ FORMULAIRE SIMPLIFIÉ
 const form = reactive({
-  firstName: '',
-  lastName: '',
   email: '',
-  company: '',
-  platform: '',
   password: '',
-  confirmPassword: '',
-  acceptTerms: false,
-  newsletter: false
+  acceptTerms: false
 })
 
 // Erreurs de validation
 const errors = reactive({
-  firstName: '',
-  lastName: '',
   email: '',
-  company: '',
   password: '',
-  confirmPassword: '',
   terms: ''
 })
 
-// Validation
+// ✅ VALIDATION SIMPLIFIÉE
 const validateForm = () => {
   // Reset errors
   Object.keys(errors).forEach(key => {
@@ -343,26 +238,11 @@ const validateForm = () => {
   
   let isValid = true
   
-  if (!form.firstName.trim()) {
-    errors.firstName = 'Le prénom est requis'
-    isValid = false
-  }
-  
-  if (!form.lastName.trim()) {
-    errors.lastName = 'Le nom est requis'
-    isValid = false
-  }
-  
   if (!form.email.trim()) {
     errors.email = 'L\'adresse email est requise'
     isValid = false
   } else if (!form.email.includes('@') || !form.email.includes('.')) {
     errors.email = 'Veuillez saisir une adresse email valide'
-    isValid = false
-  }
-  
-  if (!form.company.trim()) {
-    errors.company = 'Le nom de l\'entreprise est requis'
     isValid = false
   }
   
@@ -377,14 +257,6 @@ const validateForm = () => {
     isValid = false
   }
   
-  if (!form.confirmPassword) {
-    errors.confirmPassword = 'Veuillez confirmer votre mot de passe'
-    isValid = false
-  } else if (form.password !== form.confirmPassword) {
-    errors.confirmPassword = 'Les mots de passe ne correspondent pas'
-    isValid = false
-  }
-  
   if (!form.acceptTerms) {
     errors.terms = 'Vous devez accepter les conditions d\'utilisation'
     isValid = false
@@ -393,7 +265,7 @@ const validateForm = () => {
   return isValid
 }
 
-// ✅ GESTION DE L'INSCRIPTION - UTILISE LE COMPOSABLE AUTH
+// ✅ INSCRIPTION SIMPLIFIÉE AVEC CONFIRMATION EMAIL
 const handleRegister = async () => {
   if (!validateForm()) return
   
@@ -401,25 +273,29 @@ const handleRegister = async () => {
   registerError.value = ''
   
   try {
-    console.log('📝 Tentative d\'inscription...')
+    console.log('📝 Inscription simplifiée...')
     
-    // ✅ UTILISER LE COMPOSABLE AUTH
-    const result = await auth.register({
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
+    // ✅ INSCRIPTION SUPABASE AVEC CONFIRMATION EMAIL
+    const { data: authData, error: authError } = await $supabase.auth.signUp({
       email: form.email.trim().toLowerCase(),
-      company: form.company.trim(),
-      platform: form.platform,
       password: form.password,
-      newsletter: form.newsletter
+      options: {
+        emailRedirectTo: `${window.location.origin}/onboarding`
+      }
     })
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Erreur d\'inscription')
+
+    if (authError) {
+      console.error('❌ Erreur Supabase signup:', authError)
+      throw new Error(authError.message)
     }
-    
-    console.log('✅ Inscription réussie!')
-    // La navigation se fait automatiquement dans le composable auth
+
+    if (authData.user) {
+      console.log('✅ Inscription réussie, email de confirmation envoyé')
+      emailSent.value = true
+      startResendCooldown()
+    } else {
+      throw new Error('Erreur lors de la création du compte')
+    }
     
   } catch (error: any) {
     console.error('❌ Erreur d\'inscription:', error)
@@ -427,8 +303,8 @@ const handleRegister = async () => {
     // Messages d'erreur personnalisés
     if (error.message?.includes('email')) {
       registerError.value = 'Cette adresse email est déjà utilisée'
-    } else if (error.message?.includes('validation')) {
-      registerError.value = 'Veuillez vérifier les informations saisies'
+    } else if (error.message?.includes('password')) {
+      registerError.value = 'Le mot de passe ne respecte pas les critères'
     } else {
       registerError.value = error.message || 'Une erreur s\'est produite lors de la création du compte'
     }
@@ -437,29 +313,58 @@ const handleRegister = async () => {
   }
 }
 
-// Redirection si déjà connecté
-onMounted(async () => {
-  await auth.restoreSession()
-  if (auth.isAuthenticated.value) {
-    await navigateTo('/')
+// ✅ RENVOYER EMAIL DE CONFIRMATION
+const resendConfirmation = async () => {
+  if (resendCooldown.value > 0) return
+  
+  try {
+    const { error } = await $supabase.auth.resend({
+      type: 'signup',
+      email: form.email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/onboarding`
+      }
+    })
+    
+    if (error) throw error
+    
+    console.log('✅ Email de confirmation renvoyé')
+    startResendCooldown()
+    
+  } catch (error: any) {
+    console.error('❌ Erreur renvoie email:', error)
   }
+}
+
+// ✅ COOLDOWN POUR ÉVITER LE SPAM
+const startResendCooldown = () => {
+  resendCooldown.value = 60
+  const timer = setInterval(() => {
+    resendCooldown.value--
+    if (resendCooldown.value <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
+
+// SEO
+useHead({
+  title: 'Inscription - ChatSeller',
+  meta: [
+    { name: 'description', content: 'Créez votre compte ChatSeller et transformez vos visiteurs en clients avec notre vendeur IA.' }
+  ]
 })
 </script>
 
 <style scoped>
-/* Animations pour les transitions */
+/* Animations */
 .transition-colors {
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
 
-/* Animation de rotation pour le spinner */
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .animate-spin {
