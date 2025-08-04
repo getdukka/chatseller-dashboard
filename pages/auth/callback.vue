@@ -140,20 +140,34 @@ onMounted(async () => {
     console.log('🔗 Traitement du callback Supabase...')
     console.log('🔍 URL complète:', window.location.href)
     
-    // ✅ RÉCUPÉRER TOUS LES PARAMÈTRES URL
-    urlParams = new URLSearchParams(window.location.search)
+    // ✅ NOUVEAU: Gérer les deux formats (hash fragment ET query params)
+    let urlParams: URLSearchParams
+    let confirmationType: string | null = null
+    
+    // Format 1: Hash fragment (#access_token=...)
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log('📍 Format détecté: Hash fragment')
+      const hashParams = window.location.hash.substring(1) // Enlever le #
+      urlParams = new URLSearchParams(hashParams)
+    } 
+    // Format 2: Query parameters (?access_token=...)
+    else {
+      console.log('📍 Format détecté: Query parameters')
+      urlParams = new URLSearchParams(window.location.search)
+    }
+    
     confirmationType = urlParams.get('type')
     
     console.log('📋 Paramètres URL:', Object.fromEntries(urlParams.entries()))
     console.log('🔍 Type de confirmation:', confirmationType)
     
     // ✅ GESTION PAR TYPE DE CONFIRMATION
-    if (confirmationType === 'signup') {
-      await handleEmailConfirmation()
+    if (confirmationType === 'signup' || urlParams.get('access_token')) {
+      await handleEmailConfirmation(urlParams)
     } else if (confirmationType === 'recovery') {
-      await handlePasswordReset()
+      await handlePasswordReset(urlParams)
     } else if (confirmationType === 'email_change') {
-      await handleEmailChange()
+      await handleEmailChange(urlParams)
     } else {
       // ✅ FALLBACK : TENTER LA CONFIRMATION AUTOMATIQUE
       console.log('🔄 Type non reconnu, tentative de confirmation automatique...')
@@ -167,12 +181,12 @@ onMounted(async () => {
 })
 
 // ✅ GESTION CONFIRMATION EMAIL (SIGNUP)
-const handleEmailConfirmation = async () => {
+const handleEmailConfirmation = async (params: URLSearchParams) => {
   try {
     loadingMessage.value = 'Confirmation de votre email...'
     
     // ✅ MÉTHODE 1: Utiliser verifyOtp si token_hash présent
-    const tokenHash = urlParams.get('token_hash')
+    const tokenHash = params.get('token_hash')
     if (tokenHash) {
       console.log('🔑 Utilisation du token_hash pour confirmation...')
       
@@ -190,8 +204,8 @@ const handleEmailConfirmation = async () => {
     }
     
     // ✅ MÉTHODE 2: Utiliser access_token et refresh_token
-    const accessToken = urlParams.get('access_token')
-    const refreshToken = urlParams.get('refresh_token')
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
     
     if (accessToken) {
       console.log('🔑 Utilisation des tokens pour session...')
@@ -226,12 +240,12 @@ const handleEmailConfirmation = async () => {
 }
 
 // ✅ GESTION RESET PASSWORD
-const handlePasswordReset = async () => {
+const handlePasswordReset = async (params: URLSearchParams) => {
   try {
     loadingMessage.value = 'Validation du lien de réinitialisation...'
     
-    const accessToken = urlParams.get('access_token')
-    const refreshToken = urlParams.get('refresh_token')
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
     
     if (!accessToken) {
       throw new Error('Token de réinitialisation manquant')
@@ -263,7 +277,7 @@ const handlePasswordReset = async () => {
 }
 
 // ✅ GESTION CHANGEMENT EMAIL
-const handleEmailChange = async () => {
+const handleEmailChange = async (params: URLSearchParams) => {
   try {
     loadingMessage.value = 'Confirmation du changement d\'email...'
     
@@ -271,7 +285,9 @@ const handleEmailChange = async () => {
     
     successMessage.value = 'Email modifié avec succès !'
     successDescription.value = 'Votre nouvelle adresse email a été confirmée.'
-    redirectUrl.value = '/dashboard/settings'
+    redirectUrl.value = '/settings'
+    
+    showSuccess()
     
   } catch (err: any) {
     console.error('❌ Erreur changement email:', err)
@@ -390,7 +406,17 @@ const handleRedirect = () => {
 const retryConfirmation = async () => {
   loading.value = true
   error.value = false
-  await handleEmailConfirmation()
+  
+  // Récupérer les paramètres depuis l'URL actuelle
+  let retryParams: URLSearchParams
+  if (window.location.hash && window.location.hash.includes('access_token')) {
+    const hashParams = window.location.hash.substring(1)
+    retryParams = new URLSearchParams(hashParams)
+  } else {
+    retryParams = new URLSearchParams(window.location.search)
+  }
+  
+  await handleEmailConfirmation(retryParams)
 }
 
 // ✅ SEO

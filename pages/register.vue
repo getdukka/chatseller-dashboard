@@ -326,18 +326,18 @@ const handleRegister = async () => {
     console.log('🔗 URL de redirection:', redirectUrl)
     
     const { data, error } = await supabase.auth.signUp({
-      email: form.email.trim().toLowerCase(),
-      password: form.password,
-      options: {
-        data: {
-          first_name: form.firstName.trim(),
-          last_name: form.lastName.trim(),
-          name: `${form.firstName.trim()} ${form.lastName.trim()}`
-        },
-        // ✅ CONFIGURATION REDIRECTION CORRIGÉE
-        emailRedirectTo: redirectUrl
-      }
-    })
+    email: form.email.trim().toLowerCase(),
+    password: form.password,
+    options: {
+      data: {
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        name: `${form.firstName.trim()} ${form.lastName.trim()}`
+      },
+      // ✅ CONFIGURATION CORRIGÉE
+      emailRedirectTo: `${window.location.origin}/auth/callback`
+    }
+  })
     
     if (error) {
       console.error('❌ Erreur Supabase signup:', error)
