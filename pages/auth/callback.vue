@@ -1,4 +1,4 @@
-<!-- pages/auth/callback.vue - GESTION CONFIRMATION EMAIL -->
+<!-- pages/auth/callback.vue - VERSION CORRIGÉE FINALE -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
@@ -14,7 +14,7 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Confirmation de votre email...
+          {{ loadingMessage }}
         </h2>
         <p class="text-gray-600">
           Veuillez patienter pendant que nous validons votre compte.
@@ -31,10 +31,10 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Email confirmé avec succès !
+          {{ successMessage }}
         </h2>
         <p class="text-gray-600 mb-6">
-          Votre compte est maintenant activé. Nous allons finaliser la configuration de votre profil.
+          {{ successDescription }}
         </p>
         
         <!-- Progress bar de redirection -->
@@ -46,15 +46,15 @@
             ></div>
           </div>
           <p class="text-sm text-gray-500 mt-2">
-            Redirection vers la configuration dans {{ countdown }} secondes...
+            Redirection dans {{ countdown }} secondes...
           </p>
         </div>
         
         <button
-          @click="goToOnboarding"
+          @click="handleRedirect"
           class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
         >
-          Continuer maintenant
+          {{ redirectButtonText }}
         </button>
       </div>
 
@@ -74,6 +74,13 @@
           {{ errorMessage }}
         </p>
         <div class="space-y-3">
+          <button
+            @click="retryConfirmation"
+            v-if="canRetry"
+            class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Réessayer
+          </button>
           <NuxtLink
             to="/register"
             class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -114,72 +121,245 @@ const loading = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
+const loadingMessage = ref('Confirmation de votre email...')
+const successMessage = ref('Email confirmé avec succès !')
+const successDescription = ref('Votre compte est maintenant activé.')
+const redirectButtonText = ref('Continuer maintenant')
 const countdown = ref(5)
 const progressWidth = ref(0)
+const canRetry = ref(false)
+const redirectUrl = ref('/onboarding')
 
-// ✅ TRAITEMENT DE LA CONFIRMATION EMAIL
+// Variables pour retry
+let urlParams: URLSearchParams
+let confirmationType: string | null = null
+
+// ✅ TRAITEMENT UNIVERSEL DU CALLBACK SUPABASE
 onMounted(async () => {
   try {
-    console.log('🔗 Traitement du callback de confirmation email...')
+    console.log('🔗 Traitement du callback Supabase...')
+    console.log('🔍 URL complète:', window.location.href)
     
-    // Récupérer les paramètres d'URL pour la confirmation
-    const urlParams = new URLSearchParams(window.location.search)
+    // ✅ RÉCUPÉRER TOUS LES PARAMÈTRES URL
+    urlParams = new URLSearchParams(window.location.search)
+    confirmationType = urlParams.get('type')
+    
+    console.log('📋 Paramètres URL:', Object.fromEntries(urlParams.entries()))
+    console.log('🔍 Type de confirmation:', confirmationType)
+    
+    // ✅ GESTION PAR TYPE DE CONFIRMATION
+    if (confirmationType === 'signup') {
+      await handleEmailConfirmation()
+    } else if (confirmationType === 'recovery') {
+      await handlePasswordReset()
+    } else if (confirmationType === 'email_change') {
+      await handleEmailChange()
+    } else {
+      // ✅ FALLBACK : TENTER LA CONFIRMATION AUTOMATIQUE
+      console.log('🔄 Type non reconnu, tentative de confirmation automatique...')
+      await handleAuthCallback()
+    }
+    
+  } catch (err: any) {
+    console.error('❌ Erreur callback:', err)
+    showError(err.message || 'Une erreur inattendue s\'est produite.')
+  }
+})
+
+// ✅ GESTION CONFIRMATION EMAIL (SIGNUP)
+const handleEmailConfirmation = async () => {
+  try {
+    loadingMessage.value = 'Confirmation de votre email...'
+    
+    // ✅ MÉTHODE 1: Utiliser verifyOtp si token_hash présent
+    const tokenHash = urlParams.get('token_hash')
+    if (tokenHash) {
+      console.log('🔑 Utilisation du token_hash pour confirmation...')
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: 'email'
+      })
+      
+      if (error) throw error
+      
+      if (data.user) {
+        await handleSuccessfulConfirmation(data.user, 'signup')
+        return
+      }
+    }
+    
+    // ✅ MÉTHODE 2: Utiliser access_token et refresh_token
+    const accessToken = urlParams.get('access_token')
+    const refreshToken = urlParams.get('refresh_token')
+    
+    if (accessToken) {
+      console.log('🔑 Utilisation des tokens pour session...')
+      
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || ''
+      })
+      
+      if (error) throw error
+      
+      if (data.user) {
+        await handleSuccessfulConfirmation(data.user, 'signup')
+        return
+      }
+    }
+    
+    throw new Error('Aucun token de confirmation valide trouvé')
+    
+  } catch (err: any) {
+    console.error('❌ Erreur confirmation email:', err)
+    canRetry.value = true
+    
+    if (err.message?.includes('expired')) {
+      showError('Le lien de confirmation a expiré. Demandez un nouveau lien depuis la page de connexion.')
+    } else if (err.message?.includes('invalid')) {
+      showError('Le lien de confirmation est invalide. Vérifiez que vous avez cliqué sur le bon lien.')
+    } else {
+      showError('Impossible de confirmer votre email. Veuillez réessayer ou créer un nouveau compte.')
+    }
+  }
+}
+
+// ✅ GESTION RESET PASSWORD
+const handlePasswordReset = async () => {
+  try {
+    loadingMessage.value = 'Validation du lien de réinitialisation...'
+    
     const accessToken = urlParams.get('access_token')
     const refreshToken = urlParams.get('refresh_token')
     
     if (!accessToken) {
-      throw new Error('Token de confirmation manquant')
+      throw new Error('Token de réinitialisation manquant')
     }
     
-    // ✅ CONFIRMER LA SESSION AVEC LES TOKENS
-    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+    const { data, error } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken || ''
     })
     
-    if (sessionError || !sessionData.session) {
-      throw new Error('Impossible de confirmer la session')
+    if (error) throw error
+    
+    if (data.user) {
+      successMessage.value = 'Lien de réinitialisation validé !'
+      successDescription.value = 'Vous allez être redirigé pour définir votre nouveau mot de passe.'
+      redirectButtonText.value = 'Définir mon nouveau mot de passe'
+      redirectUrl.value = '/reset-password/new'
+      
+      showSuccess()
+      return
     }
     
-    // ✅ METTRE À JOUR LE STATUT EMAIL_VERIFIED
-    const userId = sessionData.session.user.id
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ 
-        email_verified: true,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
-    
-    if (updateError) {
-      console.warn('⚠️ Erreur mise à jour email_verified:', updateError)
-    }
-    
-    console.log('✅ Email confirmé avec succès pour:', sessionData.session.user.email)
-    
-    // ✅ AFFICHER LE SUCCÈS
-    loading.value = false
-    success.value = true
-    
-    // ✅ COUNTDOWN ET REDIRECTION AUTOMATIQUE
-    startCountdown()
+    throw new Error('Session invalide')
     
   } catch (err: any) {
-    console.error('❌ Erreur callback confirmation:', err)
-    
-    loading.value = false
-    error.value = true
-    
-    // Messages d'erreur personnalisés
-    if (err.message?.includes('expired')) {
-      errorMessage.value = 'Le lien de confirmation a expiré. Veuillez demander un nouveau lien.'
-    } else if (err.message?.includes('invalid') || err.message?.includes('manquant')) {
-      errorMessage.value = 'Le lien de confirmation est invalide. Vérifiez que vous avez cliqué sur le bon lien.'
-    } else {
-      errorMessage.value = 'Une erreur s\'est produite lors de la confirmation. Veuillez réessayer.'
-    }
+    console.error('❌ Erreur reset password:', err)
+    showError('Le lien de réinitialisation est invalide ou a expiré.')
   }
-})
+}
+
+// ✅ GESTION CHANGEMENT EMAIL
+const handleEmailChange = async () => {
+  try {
+    loadingMessage.value = 'Confirmation du changement d\'email...'
+    
+    await handleAuthCallback()
+    
+    successMessage.value = 'Email modifié avec succès !'
+    successDescription.value = 'Votre nouvelle adresse email a été confirmée.'
+    redirectUrl.value = '/dashboard/settings'
+    
+  } catch (err: any) {
+    console.error('❌ Erreur changement email:', err)
+    showError('Impossible de confirmer le changement d\'email.')
+  }
+}
+
+// ✅ GESTION GÉNÉRIQUE CALLBACK AUTH
+const handleAuthCallback = async () => {
+  const { data, error } = await supabase.auth.getSession()
+  
+  if (error) throw error
+  
+  if (data.session?.user) {
+    await handleSuccessfulConfirmation(data.session.user, confirmationType || 'unknown')
+  } else {
+    throw new Error('Aucune session valide trouvée')
+  }
+}
+
+// ✅ GESTION CONFIRMATION RÉUSSIE
+const handleSuccessfulConfirmation = async (user: any, type: string) => {
+  console.log('✅ Confirmation réussie pour:', user.email, 'Type:', type)
+  
+  try {
+    // ✅ METTRE À JOUR LA TABLE USERS
+    const { error: updateError } = await supabase
+      .from('users')
+      .upsert({
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.name || user.user_metadata?.full_name || '',
+        first_name: user.user_metadata?.first_name || '',
+        last_name: user.user_metadata?.last_name || '',
+        email_verified: true,
+        email_confirmed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'id'
+      })
+    
+    if (updateError) {
+      console.warn('⚠️ Erreur mise à jour users:', updateError)
+    }
+    
+    // ✅ VÉRIFIER SI ONBOARDING DÉJÀ TERMINÉ
+    const { data: userData } = await supabase
+      .from('users')
+      .select('onboarding_completed, company')
+      .eq('id', user.id)
+      .single()
+    
+    // ✅ DÉTERMINER LA REDIRECTION
+    if (userData?.onboarding_completed) {
+      successMessage.value = 'Connexion réussie !'
+      successDescription.value = 'Vous allez être redirigé vers votre dashboard.'
+      redirectButtonText.value = 'Accéder au dashboard'
+      redirectUrl.value = '/'
+    } else {
+      successMessage.value = 'Email confirmé avec succès !'
+      successDescription.value = 'Finalisons maintenant la configuration de votre compte.'
+      redirectButtonText.value = 'Continuer la configuration'
+      redirectUrl.value = '/onboarding'
+    }
+    
+    console.log('✅ Redirection vers:', redirectUrl.value)
+    showSuccess()
+    
+  } catch (err: any) {
+    console.error('❌ Erreur post-confirmation:', err)
+    // Continuer quand même vers le succès
+    showSuccess()
+  }
+}
+
+// ✅ AFFICHAGE SUCCÈS AVEC COUNTDOWN
+const showSuccess = () => {
+  loading.value = false
+  success.value = true
+  startCountdown()
+}
+
+// ✅ AFFICHAGE ERREUR
+const showError = (message: string) => {
+  loading.value = false
+  error.value = true
+  errorMessage.value = message
+}
 
 // ✅ COUNTDOWN AVEC PROGRESS BAR
 const startCountdown = () => {
@@ -189,21 +369,29 @@ const startCountdown = () => {
     
     if (countdown.value <= 0) {
       clearInterval(interval)
-      goToOnboarding()
+      handleRedirect()
     }
   }, 1000)
 }
 
-// ✅ REDIRECTION VERS ONBOARDING
-const goToOnboarding = () => {
-  navigateTo('/onboarding', { replace: true })
+// ✅ REDIRECTION
+const handleRedirect = () => {
+  navigateTo(redirectUrl.value, { replace: true })
+}
+
+// ✅ RETRY
+const retryConfirmation = async () => {
+  loading.value = true
+  error.value = false
+  await handleEmailConfirmation()
 }
 
 // ✅ SEO
 useHead({
   title: 'Confirmation de compte - ChatSeller',
   meta: [
-    { name: 'description', content: 'Confirmation de votre compte ChatSeller' }
+    { name: 'description', content: 'Confirmation de votre compte ChatSeller' },
+    { name: 'robots', content: 'noindex' }
   ]
 })
 </script>

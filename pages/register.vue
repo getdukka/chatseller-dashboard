@@ -1,4 +1,4 @@
-<!-- pages/register.vue - VERSION COMPLÈTE FONCTIONNELLE -->
+<!-- pages/register.vue - VERSION CORRIGÉE FINALE -->
 <template>
   <div>
     <!-- Logo et titre -->
@@ -16,7 +16,7 @@
       </p>
     </div>
 
-    <!-- Message de succès après inscription avec liens email -->
+    <!-- Message de succès après inscription -->
     <div v-if="registrationSuccess" class="bg-white py-8 px-6 shadow-xl rounded-xl border border-gray-100">
       <div class="text-center">
         <div class="flex justify-center mb-4">
@@ -62,16 +62,28 @@
           </div>
         </div>
 
-        <!-- Instructions -->
+        <!-- Instructions améliorées -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div class="text-sm text-blue-800">
             <p class="font-medium mb-2">📧 Étapes suivantes :</p>
             <ol class="text-left space-y-1">
               <li>1. Ouvrez votre boîte mail</li>
-              <li>2. Cherchez l'email de ChatSeller (vérifiez les spams)</li>
-              <li>3. Cliquez sur "Confirmer mon email"</li>
+              <li>2. Cherchez l'email de <strong>ChatSeller</strong> (vérifiez les spams)</li>
+              <li>3. Cliquez sur <strong>"Confirmer mon email"</strong></li>
               <li>4. Vous serez redirigé pour finaliser votre profil</li>
             </ol>
+          </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div class="text-sm text-yellow-800">
+            <p class="font-medium mb-2">🚨 Vous ne recevez pas l'email ?</p>
+            <ul class="text-left space-y-1">
+              <li>• Vérifiez votre dossier spam/courrier indésirable</li>
+              <li>• L'email peut prendre quelques minutes à arriver</li>
+              <li>• Vérifiez que l'adresse email est correcte</li>
+            </ul>
           </div>
         </div>
 
@@ -79,22 +91,22 @@
         <div class="text-center">
           <button
             @click="resendEmail"
-            :disabled="resendLoading"
-            class="text-sm text-gray-600 hover:text-gray-800 underline transition-colors"
+            :disabled="resendLoading || resendCooldown > 0"
+            class="text-sm font-medium transition-colors"
+            :class="resendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'"
           >
-            {{ resendLoading ? 'Renvoi en cours...' : 'Renvoyer l\'email de confirmation' }}
+            {{ resendCooldown > 0 ? `Renvoyer dans ${resendCooldown}s` : (resendLoading ? 'Renvoi en cours...' : 'Renvoyer l\'email de confirmation') }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Formulaire d'inscription simplifié -->
+    <!-- Formulaire d'inscription -->
     <div v-else class="bg-white py-8 px-6 shadow-xl rounded-xl border border-gray-100">
       <form @submit.prevent="handleRegister" class="space-y-6">
         
-        <!-- Prénom et Nom sur une ligne -->
+        <!-- Prénom et Nom -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Prénom -->
           <div>
             <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2">
               Prénom *
@@ -110,7 +122,6 @@
             />
           </div>
 
-          <!-- Nom -->
           <div>
             <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2">
               Nom *
@@ -276,7 +287,7 @@ definePageMeta({
   layout: 'auth'
 })
 
-// ✅ CLIENT SUPABASE DIRECT (évite les problèmes d'import)
+// ✅ CLIENT SUPABASE DIRECT
 const config = useRuntimeConfig()
 const supabase = createClient(
   config.public.supabaseUrl,
@@ -289,8 +300,9 @@ const showPassword = ref(false)
 const registerError = ref('')
 const registrationSuccess = ref(false)
 const resendLoading = ref(false)
+const resendCooldown = ref(0)
 
-// Formulaire simplifié
+// Formulaire
 const form = reactive({
   firstName: '',
   lastName: '',
@@ -299,7 +311,7 @@ const form = reactive({
   acceptTerms: false
 })
 
-// ✅ INSCRIPTION SIMPLIFIÉE
+// ✅ INSCRIPTION CORRIGÉE AVEC REDIRECTION DYNAMIQUE
 const handleRegister = async () => {
   if (!validateForm()) return
   
@@ -308,6 +320,10 @@ const handleRegister = async () => {
   
   try {
     console.log('📝 Inscription avec Supabase Auth...')
+    
+    // ✅ DÉTERMINER L'URL DE REDIRECTION DYNAMIQUEMENT
+    const redirectUrl = `${window.location.origin}/auth/callback`
+    console.log('🔗 URL de redirection:', redirectUrl)
     
     const { data, error } = await supabase.auth.signUp({
       email: form.email.trim().toLowerCase(),
@@ -318,40 +334,83 @@ const handleRegister = async () => {
           last_name: form.lastName.trim(),
           name: `${form.firstName.trim()} ${form.lastName.trim()}`
         },
-        // ✅ CONFIGURATION DE LA REDIRECTION APRÈS CONFIRMATION EMAIL
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        // ✅ CONFIGURATION REDIRECTION CORRIGÉE
+        emailRedirectTo: redirectUrl
       }
     })
     
     if (error) {
       console.error('❌ Erreur Supabase signup:', error)
-      throw new Error(error.message)
+      throw new Error(getErrorMessage(error))
     }
     
     if (data.user) {
       console.log('✅ Inscription réussie pour:', data.user.email)
+      console.log('📧 Email de confirmation envoyé')
+      
+      // ✅ CRÉER L'ENTRÉE DANS LA TABLE USERS
+      const { error: userError } = await supabase
+        .from('users')
+        .upsert({
+          id: data.user.id,
+          email: data.user.email,
+          name: `${form.firstName.trim()} ${form.lastName.trim()}`,
+          first_name: form.firstName.trim(),
+          last_name: form.lastName.trim(),
+          email_verified: false,
+          onboarding_completed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        })
+      
+      if (userError) {
+        console.warn('⚠️ Erreur création user:', userError)
+      }
+      
       registrationSuccess.value = true
+      startResendCooldown()
+      
     } else {
       throw new Error('Aucune donnée utilisateur reçue')
     }
     
   } catch (error: any) {
     console.error('❌ Erreur d\'inscription:', error)
-    
-    if (error.message?.includes('email')) {
-      registerError.value = 'Cette adresse email est déjà utilisée'
-    } else if (error.message?.includes('password')) {
-      registerError.value = 'Le mot de passe ne respecte pas les critères de sécurité'
-    } else {
-      registerError.value = error.message || 'Une erreur s\'est produite lors de la création du compte'
-    }
+    registerError.value = error.message || 'Une erreur s\'est produite lors de la création du compte'
   } finally {
     loading.value = false
   }
 }
 
-// Validation simple
+// ✅ MESSAGES D'ERREUR PERSONNALISÉS
+const getErrorMessage = (error: any): string => {
+  const message = error.message || ''
+  
+  if (message.includes('User already registered')) {
+    return 'Cette adresse email est déjà utilisée. Essayez de vous connecter ou utilisez une autre adresse.'
+  }
+  
+  if (message.includes('email')) {
+    return 'Cette adresse email est déjà utilisée'
+  }
+  
+  if (message.includes('password')) {
+    return 'Le mot de passe ne respecte pas les critères de sécurité (minimum 8 caractères)'
+  }
+  
+  if (message.includes('rate limit')) {
+    return 'Trop de tentatives. Veuillez patienter quelques minutes avant de réessayer.'
+  }
+  
+  return message || 'Une erreur s\'est produite lors de la création du compte'
+}
+
+// ✅ VALIDATION AMÉLIORÉE
 const validateForm = () => {
+  registerError.value = ''
+  
   if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.password || !form.acceptTerms) {
     registerError.value = 'Veuillez remplir tous les champs obligatoires'
     return false
@@ -362,7 +421,7 @@ const validateForm = () => {
     return false
   }
   
-  if (!form.email.includes('@')) {
+  if (!form.email.includes('@') || !form.email.includes('.')) {
     registerError.value = 'Veuillez saisir une adresse email valide'
     return false
   }
@@ -370,47 +429,27 @@ const validateForm = () => {
   return true
 }
 
-// Aller vers onboarding
-const goToOnboarding = () => {
-  navigateTo('/onboarding')
-}
-
-// Générer URL Gmail
-const getGmailUrl = (email: string) => {
-  const domain = email.split('@')[1]
-  if (domain === 'gmail.com') {
-    return 'https://mail.google.com/mail/u/0/#inbox'
-  }
-  // Pour les autres domaines, ouvrir Gmail quand même
-  return 'https://mail.google.com/'
-}
-
-// Générer URL Outlook
-const getOutlookUrl = (email: string) => {
-  const domain = email.split('@')[1]
-  if (domain === 'outlook.com' || domain === 'hotmail.com' || domain === 'live.com') {
-    return 'https://outlook.live.com/mail/0/inbox'
-  }
-  // Pour les autres domaines
-  return 'https://outlook.office.com/mail/'
-}
-
-// Renvoyer email de confirmation
+// ✅ RENVOYER EMAIL AVEC COOLDOWN
 const resendEmail = async () => {
+  if (resendCooldown.value > 0) return
+  
   resendLoading.value = true
   
   try {
     const { error } = await supabase.auth.resend({
       type: 'signup',
-      email: form.email.trim().toLowerCase()
+      email: form.email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+      }
     })
     
     if (error) {
       throw new Error(error.message)
     }
     
-    // Succès silencieux - pas de notification pour ne pas polluer l'UX
     console.log('✅ Email de confirmation renvoyé')
+    startResendCooldown()
     
   } catch (error: any) {
     console.error('❌ Erreur renvoi email:', error)
@@ -420,16 +459,53 @@ const resendEmail = async () => {
   }
 }
 
-// Redirection si déjà connecté
+// ✅ COOLDOWN POUR RENVOI EMAIL
+const startResendCooldown = () => {
+  resendCooldown.value = 60
+  const timer = setInterval(() => {
+    resendCooldown.value--
+    if (resendCooldown.value <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
+
+// Générer URL Gmail
+const getGmailUrl = (email: string) => {
+  const domain = email.split('@')[1]
+  if (domain === 'gmail.com') {
+    return 'https://mail.google.com/mail/u/0/#inbox'
+  }
+  return 'https://mail.google.com/'
+}
+
+// Générer URL Outlook
+const getOutlookUrl = (email: string) => {
+  const domain = email.split('@')[1]
+  if (['outlook.com', 'hotmail.com', 'live.com'].includes(domain)) {
+    return 'https://outlook.live.com/mail/0/inbox'
+  }
+  return 'https://outlook.office.com/mail/'
+}
+
+// ✅ REDIRECTION SI DÉJÀ CONNECTÉ
 onMounted(async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
+    if (user && user.email_confirmed_at) {
       await navigateTo('/')
     }
   } catch (error) {
     // Ignorer les erreurs
   }
+})
+
+// ✅ SEO
+useHead({
+  title: 'Créer un compte - ChatSeller',
+  meta: [
+    { name: 'description', content: 'Créez votre compte ChatSeller et déployez votre vendeur IA en quelques minutes.' }
+  ]
 })
 </script>
 
