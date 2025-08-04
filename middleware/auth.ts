@@ -1,4 +1,4 @@
-// middleware/auth.ts - MIDDLEWARE AVEC COMPOSABLE MANUEL
+// middleware/auth.ts - VERSION OPTIMISÉE POUR ÉVITER CONFLITS
 
 import { useSupabase } from "~~/composables/useSupabase"
 import { useAuthStore } from "~~/stores/auth"
@@ -12,11 +12,37 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     return
   }
 
+  // ✅ NOUVEAU: Ignorer les routes publiques et de callback
+  const publicRoutes = ['/login', '/register', '/auth/callback', '/reset-password', '/onboarding']
+  const isPublicRoute = publicRoutes.some(route => to.path.startsWith(route))
+  
+  if (isPublicRoute) {
+    console.log('✅ Middleware auth: Route publique, vérification simple...')
+    
+    // Pour les routes publiques, juste s'assurer que le store est à jour si connecté
+    try {
+      const authStore = useAuthStore()
+      const supabase = useSupabase()
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user && !authStore.isAuthenticated) {
+        console.log('🔄 Middleware auth: Mise à jour silencieuse du store')
+        await authStore.restoreSession()
+      }
+    } catch (error) {
+      console.warn('⚠️ Middleware auth: Erreur mise à jour silencieuse:', error)
+    }
+    
+    return // Laisser passer
+  }
+
+  // ✅ POUR LES ROUTES PROTÉGÉES UNIQUEMENT
   try {
     const authStore = useAuthStore()
     const supabase = useSupabase()
     
-    // ✅ VÉRIFIER LA SESSION SUPABASE DIRECTEMENT
+    // Vérifier la session Supabase
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error || !user) {
