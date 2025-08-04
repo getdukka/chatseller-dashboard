@@ -1,15 +1,238 @@
-<!-- pages/index.vue - DASHBOARD HOMEPAGE AMÉLIORÉE -->
+<!-- pages/index.vue - DASHBOARD AVEC MODAL DE BIENVENUE INSPIRÉ WAZZAP.AI -->
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Welcome Banner - NOUVEAU: Seulement première connexion -->
-    <div v-if="showWelcomeBanner" class="m-8 mb-6">
+    <!-- Modal de Bienvenue - Inspiré Wazzap.ai -->
+    <div 
+      v-if="showWelcomeModal" 
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click.self="closeWelcomeModal"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Header du Modal -->
+        <div class="px-8 py-6 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <span class="text-white font-bold text-lg">CS</span>
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">
+                  Bienvenue sur ChatSeller ! 👋
+                </h2>
+                <p class="text-gray-600">Créez votre Vendeur IA et automatisez vos ventes</p>
+              </div>
+            </div>
+            <button
+              @click="closeWelcomeModal"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenu du Modal -->
+        <div class="p-8">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Étapes de Configuration -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-6">Prochaines étapes pour optimiser vos ventes</h3>
+              
+              <div class="space-y-4">
+                <!-- Étape 1: Créer le Vendeur IA -->
+                <div class="welcome-step" :class="{ 'completed': stepStatus.vendeurIA }">
+                  <div class="flex items-start space-x-4">
+                    <div class="step-number">
+                      <span v-if="stepStatus.vendeurIA" class="text-green-600">✓</span>
+                      <span v-else class="text-blue-600 font-semibold">1</span>
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="font-medium text-gray-900">Créer votre Vendeur IA</h4>
+                      <p class="text-sm text-gray-600 mt-1">
+                        Configurez un assistant intelligent qui répond automatiquement à vos clients et collecte leurs informations de commande.
+                      </p>
+                      <button
+                        @click="goToStep('/vendeurs-ia')"
+                        class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
+                      >
+                        {{ stepStatus.vendeurIA ? 'Modifier' : 'Configurer maintenant' }}
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Étape 2: Former la Base de Connaissance -->
+                <div class="welcome-step" :class="{ 'completed': stepStatus.knowledgeBase }">
+                  <div class="flex items-start space-x-4">
+                    <div class="step-number">
+                      <span v-if="stepStatus.knowledgeBase" class="text-green-600">✓</span>
+                      <span v-else class="text-blue-600 font-semibold">2</span>
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="font-medium text-gray-900">Former votre Vendeur IA</h4>
+                      <p class="text-sm text-gray-600 mt-1">
+                        Ajoutez vos informations produits, FAQ et politiques pour que votre IA réponde avec précision.
+                      </p>
+                      <button
+                        @click="goToStep('/knowledge-base')"
+                        class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
+                      >
+                        {{ stepStatus.knowledgeBase ? 'Gérer' : 'Ajouter des connaissances' }}
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Étape 3: Intégrer le Widget -->
+                <div class="welcome-step" :class="{ 'completed': stepStatus.widgetIntegration }">
+                  <div class="flex items-start space-x-4">
+                    <div class="step-number">
+                      <span v-if="stepStatus.widgetIntegration" class="text-green-600">✓</span>
+                      <span v-else class="text-blue-600 font-semibold">3</span>
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="font-medium text-gray-900">Intégrer sur votre site</h4>
+                      <p class="text-sm text-gray-600 mt-1">
+                        Copiez le code d'intégration et ajoutez-le sur votre site pour activer votre Vendeur IA.
+                      </p>
+                      <button
+                        @click="goToStep('/settings?tab=integration')"
+                        class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
+                      >
+                        {{ stepStatus.widgetIntegration ? 'Voir l\'intégration' : 'Obtenir le code' }}
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progression -->
+              <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-blue-900">Configuration</span>
+                  <span class="text-sm font-medium text-blue-600">{{ configurationProgress }}%</span>
+                </div>
+                <div class="w-full bg-blue-200 rounded-full h-2">
+                  <div 
+                    class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                    :style="{ width: `${configurationProgress}%` }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Aperçu du Chat - Inspiré Wazzap.ai -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-6">Aperçu de votre Vendeur IA</h3>
+              
+              <!-- Mockup du Chat -->
+              <div class="chat-preview">
+                <div class="chat-header">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
+                      <span class="text-white text-sm font-bold">AI</span>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900">Assistant Commercial</p>
+                      <p class="text-xs text-green-600 flex items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                        En ligne
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="chat-messages">
+                  <!-- Message d'accueil de l'IA -->
+                  <div class="ai-message">
+                    <div class="message-bubble ai">
+                      <p class="text-sm">Bonjour ! 👋 Je serais ravi de vous aider. Quel type de consultation recherchez-vous ?</p>
+                    </div>
+                  </div>
+
+                  <!-- Réponse utilisateur -->
+                  <div class="user-message">
+                    <div class="message-bubble user">
+                      <p class="text-sm">Je cherche des informations sur vos produits</p>
+                    </div>
+                  </div>
+
+                  <!-- Réponse avec options -->
+                  <div class="ai-message">
+                    <div class="message-bubble ai">
+                      <p class="text-sm">Parfait ! Je peux vous aider à trouver le produit idéal. Voici nos catégories principales :</p>
+                      <div class="mt-3 space-y-2">
+                        <button class="quick-reply">🛍️ Découvrir nos produits</button>
+                        <button class="quick-reply">📞 Parler à un conseiller</button>
+                        <button class="quick-reply">💬 Poser une question</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="chat-input">
+                  <div class="flex items-center space-x-2">
+                    <input 
+                      type="text" 
+                      placeholder="Tapez votre message..."
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled
+                    />
+                    <button class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer du Modal -->
+        <div class="px-8 py-4 bg-gray-50 rounded-b-2xl flex items-center justify-between">
+          <div class="text-sm text-gray-600">
+            <span class="font-medium">Conseil :</span> Commencez par configurer votre Vendeur IA pour de meilleurs résultats
+          </div>
+          <div class="flex items-center space-x-3">
+            <button
+              @click="skipModal"
+              class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
+            >
+              Passer maintenant
+            </button>
+            <button
+              @click="goToStep('/vendeurs-ia')"
+              class="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
+            >
+              Commencer la configuration
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Welcome Banner - Condition mise à jour -->
+    <div v-if="showWelcomeBanner && !showWelcomeModal" class="m-8 mb-6">
       <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg overflow-hidden">
         <div class="px-8 py-6 text-white relative">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-2xl font-bold mb-2">🎉 Bienvenue sur ChatSeller !</h2>
+              <h2 class="text-2xl font-bold mb-2">🎉 Bon retour sur ChatSeller !</h2>
               <p class="text-blue-100 text-lg">
-                Paramétrez votre Vendeur IA pour transformer vos visiteurs en clients.
+                Continuez la configuration de votre Vendeur IA pour maximiser vos conversions.
               </p>
               <div class="mt-4 flex flex-wrap gap-3">
                 <NuxtLink 
@@ -19,7 +242,7 @@
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                   </svg>
-                  Créer mon Vendeur IA
+                  Configurer mon Vendeur IA
                 </NuxtLink>
                 <NuxtLink 
                   to="/knowledge-base" 
@@ -46,7 +269,7 @@
       </div>
     </div>
 
-    <!-- Header - NOUVEAU: Salutation personnalisée -->
+    <!-- Header -->
     <div class="px-8 py-6">
       <div class="flex items-center justify-between">
         <div>
@@ -102,7 +325,7 @@
 
     <!-- Main Content -->
     <div v-else class="px-8 pb-8">
-      <!-- KPI Cards - NOUVEAU: Vraies données -->
+      <!-- KPI Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Conversations Card -->
         <div class="card-modern-gradient from-blue-500 to-blue-600">
@@ -215,7 +438,7 @@
 
       <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Recent Conversations - NOUVEAU: Vraies données -->
+        <!-- Recent Conversations -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900">Conversations récentes</h3>
@@ -270,7 +493,7 @@
           </div>
         </div>
 
-        <!-- Recent Orders - NOUVEAU: Vraies données -->
+        <!-- Recent Orders -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900">Commandes récentes</h3>
@@ -326,7 +549,7 @@
           </div>
         </div>
 
-        <!-- Quick Setup - NOUVEAU: Configuration dynamique -->
+        <!-- Quick Setup -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900">Configuration rapide</h3>
@@ -474,6 +697,12 @@ interface SetupStatus {
   widgetIntegration: boolean
 }
 
+interface StepStatus {
+  vendeurIA: boolean
+  knowledgeBase: boolean
+  widgetIntegration: boolean
+}
+
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
 const supabase = useSupabase()
@@ -484,10 +713,11 @@ const loadingStats = ref(true)
 const showSuccessMessage = ref(false)
 const successMessage = ref('')
 
-// ✅ NOUVEAU: Gestion intelligente du banner de bienvenue
+// ✅ NOUVEAUX ÉTATS POUR MODAL DE BIENVENUE
+const showWelcomeModal = ref(false)
 const showWelcomeBanner = ref(false)
 
-// ✅ NOUVEAU: Données dynamiques
+// ✅ DONNÉES DYNAMIQUES
 const dashboardStats = ref<DashboardStats>({
   conversations: { total: 0, active: 0 },
   orders: { total: 0, conversionRate: 0 },
@@ -503,7 +733,14 @@ const setupStatus = ref<SetupStatus>({
   widgetIntegration: false
 })
 
-// ✅ COMPUTED - Salutation personnalisée (corrigée)
+// ✅ NOUVEAU : STATUS DES ÉTAPES POUR LE MODAL
+const stepStatus = ref<StepStatus>({
+  vendeurIA: false,
+  knowledgeBase: false,
+  widgetIntegration: false
+})
+
+// ✅ COMPUTED
 const greeting = computed(() => {
   const hour = new Date().getHours()
   if (hour >= 5 && hour < 12) return 'Bonjour'
@@ -512,21 +749,17 @@ const greeting = computed(() => {
   return 'Bonne nuit'
 })
 
-// ✅ COMPUTED - Prénom utilisateur (corrigé)
 const userFirstName = computed(() => {
   const userName = authStore.userName
   const userEmail = authStore.userEmail
   
-  // Si on a un nom utilisateur et que ce n'est pas un email
   if (userName && !userName.includes('@')) {
     const firstName = userName.split(' ')[0]
     return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
   }
   
-  // Sinon, extraire le prénom de l'email (partie avant le @)
   if (userEmail) {
     const emailPrefix = userEmail.split('@')[0]
-    // Si le préfix contient des points ou tirets, prendre la première partie
     const firstName = emailPrefix.split(/[._-]/)[0]
     return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
   }
@@ -534,7 +767,6 @@ const userFirstName = computed(() => {
   return 'Utilisateur'
 })
 
-// ✅ COMPUTED - Progression configuration
 const configurationProgress = computed(() => {
   const total = Object.keys(setupStatus.value).length
   const completed = Object.values(setupStatus.value).filter(Boolean).length
@@ -580,26 +812,43 @@ const showNotification = (message: string) => {
   }, 3000)
 }
 
-// ✅ NOUVEAU: Gestion du banner de bienvenue
+// ✅ GESTION MODAL DE BIENVENUE
+const checkWelcomeModal = () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const showWelcome = urlParams.get('welcome') === 'true'
+  const onboardingCompleted = urlParams.get('onboarding') === 'completed'
+  
+  if (showWelcome && onboardingCompleted) {
+    showWelcomeModal.value = true
+    // Nettoyer l'URL
+    window.history.replaceState({}, '', window.location.pathname)
+  } else if (showWelcome) {
+    showWelcomeBanner.value = true
+    // Nettoyer l'URL
+    window.history.replaceState({}, '', window.location.pathname)
+  }
+}
+
+const closeWelcomeModal = () => {
+  showWelcomeModal.value = false
+  localStorage.setItem('chatseller_welcome_modal_seen', 'true')
+}
+
+const skipModal = () => {
+  closeWelcomeModal()
+}
+
+const goToStep = (path: string) => {
+  closeWelcomeModal()
+  navigateTo(path)
+}
+
 const hideWelcomeBanner = () => {
   showWelcomeBanner.value = false
   localStorage.setItem('chatseller_welcome_seen', 'true')
 }
 
-const checkIfFirstVisit = () => {
-  const hasSeenWelcome = localStorage.getItem('chatseller_welcome_seen')
-  const urlParams = new URLSearchParams(window.location.search)
-  const forceWelcome = urlParams.get('welcome') === 'true'
-  
-  showWelcomeBanner.value = !hasSeenWelcome || forceWelcome
-  
-  // Nettoyer l'URL si ?welcome=true
-  if (forceWelcome) {
-    window.history.replaceState({}, '', window.location.pathname)
-  }
-}
-
-// ✅ NOUVEAU: Chargement des vraies données
+// ✅ DATA LOADING
 const loadDashboardData = async () => {
   if (!authStore.userShopId) {
     console.warn('Pas de shop ID disponible')
@@ -610,7 +859,6 @@ const loadDashboardData = async () => {
   try {
     console.log('🔄 Chargement des données dashboard pour shop:', authStore.userShopId)
     
-    // Paralléliser les appels
     const [statsData, conversationsData, ordersData, setupData] = await Promise.allSettled([
       loadStats(),
       loadRecentConversations(),
@@ -618,7 +866,6 @@ const loadDashboardData = async () => {
       loadSetupStatus()
     ])
 
-    // Traiter les résultats
     if (statsData.status === 'fulfilled') {
       dashboardStats.value = statsData.value
     }
@@ -633,6 +880,11 @@ const loadDashboardData = async () => {
     
     if (setupData.status === 'fulfilled') {
       setupStatus.value = setupData.value
+      stepStatus.value = {
+        vendeurIA: setupStatus.value.agentConfig,
+        knowledgeBase: setupStatus.value.knowledgeBase,
+        widgetIntegration: setupStatus.value.widgetIntegration
+      }
     }
 
     console.log('✅ Données dashboard chargées avec succès')
@@ -644,10 +896,8 @@ const loadDashboardData = async () => {
   }
 }
 
-// ✅ NOUVEAU: Chargement des statistiques
 const loadStats = async (): Promise<DashboardStats> => {
   try {
-    // Conversations
     const { data: conversationsData } = await supabase
       .from('conversations')
       .select('id, status, created_at')
@@ -656,7 +906,6 @@ const loadStats = async (): Promise<DashboardStats> => {
     const totalConversations = conversationsData?.length || 0
     const activeConversations = conversationsData?.filter(c => c.status === 'active').length || 0
 
-    // Commandes
     const { data: ordersData } = await supabase
       .from('orders')
       .select('id, amount, created_at')
@@ -687,12 +936,10 @@ const loadStats = async (): Promise<DashboardStats> => {
     }
   } catch (error) {
     console.error('❌ Erreur chargement stats:', error)
-    // Retourner des données par défaut en cas d'erreur
     return dashboardStats.value
   }
 }
 
-// ✅ NOUVEAU: Chargement des conversations récentes
 const loadRecentConversations = async (): Promise<Conversation[]> => {
   try {
     const { data } = await supabase
@@ -715,7 +962,6 @@ const loadRecentConversations = async (): Promise<Conversation[]> => {
   }
 }
 
-// ✅ NOUVEAU: Chargement des commandes récentes
 const loadRecentOrders = async (): Promise<Order[]> => {
   try {
     const { data } = await supabase
@@ -737,17 +983,14 @@ const loadRecentOrders = async (): Promise<Order[]> => {
   }
 }
 
-// ✅ NOUVEAU: Statut de configuration
 const loadSetupStatus = async (): Promise<SetupStatus> => {
   try {
-    // Base de connaissance
     const { data: kbData } = await supabase
       .from('knowledge_base')
       .select('id')
       .eq('shop_id', authStore.userShopId)
       .limit(1)
 
-    // Configuration agent
     const { data: shopData } = await supabase
       .from('shops')
       .select('agent_config, widget_config, domain')
@@ -798,8 +1041,8 @@ const goToOrder = (id: string) => {
 
 // ✅ LIFECYCLE
 onMounted(async () => {
-  // Vérifier si première visite
-  checkIfFirstVisit()
+  // Vérifier si modal de bienvenue à afficher
+  checkWelcomeModal()
   
   // Charger les données
   await loadDashboardData()
@@ -812,7 +1055,7 @@ useHead({
 </script>
 
 <style scoped>
-/* ✅ MODERN COMPONENTS */
+/* ✅ STYLES EXISTANTS */
 .card-modern {
   @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
 }
@@ -853,15 +1096,62 @@ useHead({
   @apply w-12 h-12 rounded-full border-4 border-gray-200 flex items-center justify-center;
 }
 
-/* ✅ RESPONSIVE */
-@media (max-width: 768px) {
-  .card-modern {
-    @apply p-4;
-  }
-  
-  .card-modern-gradient {
-    @apply p-4;
-  }
+/* ✅ NOUVEAUX STYLES POUR MODAL BIENVENUE */
+.welcome-step {
+  @apply p-4 border border-gray-200 rounded-lg transition-all hover:border-blue-300;
+}
+
+.welcome-step.completed {
+  @apply border-green-200 bg-green-50;
+}
+
+.step-number {
+  @apply w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium;
+}
+
+.welcome-step.completed .step-number {
+  @apply bg-green-100;
+}
+
+/* ✅ STYLES CHAT PREVIEW */
+.chat-preview {
+  @apply bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm;
+}
+
+.chat-header {
+  @apply px-4 py-3 bg-gray-50 border-b border-gray-200;
+}
+
+.chat-messages {
+  @apply p-4 space-y-3 max-h-64 overflow-y-auto bg-gray-25;
+}
+
+.ai-message {
+  @apply flex items-start space-x-2;
+}
+
+.user-message {
+  @apply flex items-start space-x-2 justify-end;
+}
+
+.message-bubble {
+  @apply px-3 py-2 rounded-2xl max-w-xs text-sm;
+}
+
+.message-bubble.ai {
+  @apply bg-blue-100 text-blue-900;
+}
+
+.message-bubble.user {
+  @apply bg-green-100 text-green-900;
+}
+
+.quick-reply {
+  @apply w-full text-left px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs hover:bg-gray-50 transition-colors;
+}
+
+.chat-input {
+  @apply p-3 bg-gray-50 border-t border-gray-200;
 }
 
 /* ✅ ANIMATIONS */
@@ -884,6 +1174,21 @@ useHead({
   }
   50% {
     opacity: .5;
+  }
+}
+
+/* ✅ RESPONSIVE */
+@media (max-width: 768px) {
+  .card-modern {
+    @apply p-4;
+  }
+  
+  .card-modern-gradient {
+    @apply p-4;
+  }
+  
+  .chat-preview {
+    @apply mx-2;
   }
 }
 </style>

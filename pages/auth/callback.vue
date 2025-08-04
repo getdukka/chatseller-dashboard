@@ -320,16 +320,23 @@ const handleSuccessfulConfirmation = async (user: any, type: string) => {
     // ✅ VÉRIFIER SI ONBOARDING DÉJÀ TERMINÉ
     const { data: userData } = await supabase
       .from('users')
-      .select('onboarding_completed, company')
+      .select('onboarding_completed, company, created_at')
       .eq('id', user.id)
       .single()
     
-    // ✅ DÉTERMINER LA REDIRECTION
-    if (userData?.onboarding_completed) {
+    console.log('📋 Données utilisateur:', userData)
+    
+    // ✅ DÉTERMINER LA REDIRECTION - LOGIQUE CORRIGÉE
+    const isOnboardingCompleted = userData?.onboarding_completed === true
+    const hasCompany = userData?.company && userData.company.trim().length > 0
+    
+    // Pour les nouveaux comptes : toujours vers l'onboarding
+    // Pour les comptes existants : vérifier si onboarding terminé
+    if (isOnboardingCompleted && hasCompany) {
       successMessage.value = 'Connexion réussie !'
       successDescription.value = 'Vous allez être redirigé vers votre dashboard.'
       redirectButtonText.value = 'Accéder au dashboard'
-      redirectUrl.value = '/'
+      redirectUrl.value = '/?welcome=true'
     } else {
       successMessage.value = 'Email confirmé avec succès !'
       successDescription.value = 'Finalisons maintenant la configuration de votre compte.'

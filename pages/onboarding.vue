@@ -1,4 +1,4 @@
-<!-- pages/onboarding.vue - VERSION SIMPLE FONCTIONNELLE -->
+<!-- pages/onboarding.vue - VERSION CORRIGÉE AVEC MODAL BIENVENUE -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
     <!-- Header simple -->
@@ -399,7 +399,7 @@ const previousStep = () => {
   }
 }
 
-// Finaliser l'onboarding
+// ✅ FINALISER L'ONBOARDING AVEC REDIRECTION MODAL
 const completeOnboarding = async () => {
   loading.value = true
   
@@ -431,9 +431,10 @@ const completeOnboarding = async () => {
     
     if (updateUserError) {
       console.error('❌ Erreur mise à jour utilisateur:', updateUserError)
+      throw new Error('Erreur lors de la mise à jour du profil')
     }
     
-    // Créer le shop
+    // ✅ CRÉER LE SHOP AVEC LES BONNES DONNÉES
     const { error: shopError } = await supabase
       .from('shops')
       .upsert({
@@ -446,22 +447,36 @@ const completeOnboarding = async () => {
         subscription_plan: 'free',
         is_active: true,
         trial_started_at: new Date().toISOString(),
+        // Configuration par défaut pour un nouveau shop
+        widget_config: {
+          theme: 'modern',
+          position: 'bottom-right',
+          color: '#3B82F6'
+        },
+        agent_config: {
+          name: 'Assistant Commercial',
+          type: 'vendeur_conversion',
+          tone: 'professionnel'
+        },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'id'
       })
     
     if (shopError) {
       console.error('❌ Erreur création shop:', shopError)
+      // Ne pas bloquer pour l'erreur shop, continuer
     }
     
     console.log('✅ Onboarding terminé avec succès!')
     
-    // Redirection vers le dashboard
-    await navigateTo('/', { replace: true })
+    // ✅ REDIRECTION VERS DASHBOARD AVEC MODAL DE BIENVENUE
+    await navigateTo('/?onboarding=completed&welcome=true', { replace: true })
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erreur finalisation onboarding:', error)
-    alert('Une erreur s\'est produite. Veuillez réessayer.')
+    alert('Une erreur s\'est produite : ' + error.message)
   } finally {
     loading.value = false
   }
@@ -478,7 +493,7 @@ const extractDomain = (url: string): string | null => {
   }
 }
 
-// Vérification au montage
+// ✅ VÉRIFICATION RENFORCÉE AU MONTAGE
 onMounted(async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -498,28 +513,50 @@ onMounted(async () => {
     
     console.log('✅ Utilisateur connecté avec email confirmé:', user.email)
     
-    // Vérifier si l'onboarding est déjà terminé
+    // ✅ VÉRIFIER SI L'ONBOARDING EST DÉJÀ TERMINÉ
     const { data: userData } = await supabase
       .from('users')
-      .select('onboarding_completed, company')
+      .select('onboarding_completed, company, industry, platform')
       .eq('id', user.id)
       .single()
     
-    if (userData?.onboarding_completed) {
+    // Si onboarding déjà terminé, rediriger vers dashboard
+    if (userData?.onboarding_completed === true) {
       console.log('✅ Onboarding déjà terminé, redirection vers dashboard')
       await navigateTo('/', { replace: true })
       return
     }
     
-    // Pré-remplir avec les données existantes si disponibles
-    if (userData?.company) {
-      form.company = userData.company
+    // ✅ PRÉ-REMPLIR LE FORMULAIRE AVEC DONNÉES EXISTANTES
+    if (userData) {
+      if (userData.company) form.company = userData.company
+      if (userData.industry) form.industry = userData.industry
+      if (userData.platform) form.platform = userData.platform
     }
+    
+    // Pré-remplir le nom de l'entreprise avec les métadonnées utilisateur si disponible
+    if (!form.company && user.user_metadata?.company) {
+      form.company = user.user_metadata.company
+    }
+    
+    console.log('✅ Onboarding prêt, formulaire pré-rempli:', {
+      company: form.company,
+      industry: form.industry,
+      platform: form.platform
+    })
     
   } catch (error) {
     console.error('❌ Erreur vérification onboarding:', error)
     await navigateTo('/register', { replace: true })
   }
+})
+
+// ✅ SEO
+useHead({
+  title: 'Configuration de votre compte - ChatSeller',
+  meta: [
+    { name: 'description', content: 'Configurez votre compte ChatSeller en quelques étapes simples.' }
+  ]
 })
 </script>
 
