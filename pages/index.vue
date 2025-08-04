@@ -880,10 +880,11 @@ const loadDashboardData = async () => {
     
     if (setupData.status === 'fulfilled') {
       setupStatus.value = setupData.value
+      // ✅ CORRECTION : Mapper correctement les propriétés
       stepStatus.value = {
-        vendeurIA: setupStatus.value.agentConfig,
-        knowledgeBase: setupStatus.value.knowledgeBase,
-        widgetIntegration: setupStatus.value.widgetIntegration
+        vendeurIA: setupData.value.agentConfig,
+        knowledgeBase: setupData.value.knowledgeBase,
+        widgetIntegration: setupData.value.widgetIntegration
       }
     }
 
@@ -1123,7 +1124,7 @@ useHead({
 }
 
 .chat-messages {
-  @apply p-4 space-y-3 max-h-64 overflow-y-auto bg-gray-25;
+  @apply p-4 space-y-3 max-h-64 overflow-y-auto bg-gray-50;
 }
 
 .ai-message {
