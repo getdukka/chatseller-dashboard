@@ -1,30 +1,30 @@
-<!-- pages/agent-config.vue - VERSION COMPLÈTE AVEC CORRECTIONS TYPESCRIPT -->
+<!-- pages/agent-config.vue - VERSION CORRIGÉE RESPONSIVE AVEC STORE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
     <div class="bg-white shadow-sm border-b border-gray-200">
-      <div class="px-8 py-6">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <button @click="goBack" class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+      <div class="px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
+          <div class="flex items-center space-x-3 lg:space-x-4 min-w-0 flex-1">
+            <button @click="goBack" class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
             </button>
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900">
-                {{ agentName }} - Configuration Complète
+            <div class="min-w-0 flex-1">
+              <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
+                {{ agentName }} - Configuration
               </h1>
-              <p class="mt-1 text-gray-600">
+              <p class="mt-1 text-xs sm:text-sm text-gray-600">
                 Agent IA • Widget • Test • Intégration
               </p>
             </div>
           </div>
           
-          <div class="flex items-center space-x-3">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
             <!-- Navigation par onglets (mobile) -->
-            <div class="lg:hidden">
-              <select v-model="activeTab" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <div class="sm:hidden">
+              <select v-model="activeTab" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                 <option v-for="tab in tabs" :key="tab.id" :value="tab.id">
                   {{ tab.icon }} {{ tab.name }}
                 </option>
@@ -32,28 +32,29 @@
             </div>
             
             <!-- Navigation par onglets (desktop) -->
-            <div class="hidden lg:flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <div class="hidden sm:flex space-x-1 bg-gray-100 p-1 rounded-lg">
               <button
                 v-for="tab in tabs"
                 :key="tab.id"
                 @click="activeTab = tab.id"
                 :class="[
-                  'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+                  'px-2 lg:px-3 py-1.5 text-xs lg:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
                   activeTab === tab.id 
                     ? 'bg-white text-blue-600 shadow-sm' 
                     : 'text-gray-500 hover:text-gray-700'
                 ]"
               >
-                {{ tab.icon }} {{ tab.name }}
+                <span class="hidden lg:inline">{{ tab.icon }}</span>
+                <span class="lg:ml-1">{{ tab.name }}</span>
               </button>
             </div>
             
-            <span class="text-sm text-gray-500">ID: {{ agentId.substring(0, 8) }}...</span>
+            <span class="hidden lg:inline text-sm text-gray-500">ID: {{ agentId.substring(0, 8) }}...</span>
             
             <button
               @click="saveAllConfig"
               :disabled="saving || !isConfigValid"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              class="inline-flex items-center justify-center px-3 lg:px-4 py-2 bg-blue-600 text-white text-xs lg:text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               <svg v-if="saving" class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -61,7 +62,7 @@
               <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
               </svg>
-              {{ saving ? 'Sauvegarde...' : 'Sauvegarder Tout' }}
+              <span class="hidden sm:inline">{{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}</span>
             </button>
           </div>
         </div>
@@ -69,23 +70,23 @@
     </div>
 
     <!-- Messages -->
-    <div class="mx-8 mt-4 space-y-2">
-      <div v-if="successMessage" class="p-4 bg-green-50 border border-green-200 rounded-lg">
+    <div class="mx-4 sm:mx-6 lg:mx-8 mt-4 space-y-2">
+      <div v-if="successMessage" class="p-3 lg:p-4 bg-green-50 border border-green-200 rounded-lg">
         <div class="flex items-center">
           <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          <p class="text-green-700">{{ successMessage }}</p>
+          <p class="text-green-700 text-sm">{{ successMessage }}</p>
         </div>
       </div>
       
-      <div v-if="error" class="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div v-if="error" class="p-3 lg:p-4 bg-red-50 border border-red-200 rounded-lg">
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <svg class="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <p class="text-red-700">{{ error }}</p>
+            <p class="text-red-700 text-sm">{{ error }}</p>
           </div>
           <button @click="clearError" class="text-red-400 hover:text-red-600">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,39 +95,63 @@
           </button>
         </div>
       </div>
+
+      <!-- Data Loading Issue -->
+      <div v-if="dataLoadingError" class="p-3 lg:p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div class="flex items-start space-x-3">
+          <svg class="w-5 h-5 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z"/>
+          </svg>
+          <div class="flex-1">
+            <h4 class="text-sm font-medium text-yellow-800">Problème de chargement des données</h4>
+            <p class="text-xs text-yellow-700 mt-1">{{ dataLoadingError }}</p>
+            <div class="mt-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+              <button @click="attemptDataRecovery" class="inline-flex items-center px-3 py-1 bg-yellow-600 text-white text-xs rounded-md hover:bg-yellow-700 transition-colors">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Réessayer
+              </button>
+              <button @click="goBack" class="inline-flex items-center px-3 py-1 border border-yellow-600 text-yellow-700 text-xs rounded-md hover:bg-yellow-50 transition-colors">
+                Retour aux agents
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-16">
+    <div v-if="loading" class="flex items-center justify-center py-12 lg:py-16">
       <div class="text-center">
-        <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="animate-spin h-6 lg:h-8 w-6 lg:w-8 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
-        <p class="text-gray-600">Chargement de la configuration...</p>
+        <p class="text-gray-600 text-sm lg:text-base">Chargement de la configuration...</p>
       </div>
     </div>
 
     <!-- Content avec onglets -->
-    <div v-else-if="config" class="p-8">
+    <div v-else-if="config || hasValidAgentData" class="p-4 sm:p-6 lg:p-8">
       
       <!-- ✅ ONGLET 1: CONFIGURATION AGENT -->
-      <div v-if="activeTab === 'agent'" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div v-if="activeTab === 'agent'" class="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
         
         <!-- Configuration Panel -->
-        <div class="lg:col-span-2 space-y-8">
+        <div class="xl:col-span-2 space-y-6 lg:space-y-8">
           
           <!-- Informations de base -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">🤖 Informations de l'Agent</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🤖 Informations de l'Agent</h3>
             
-            <div class="space-y-6">
+            <div class="space-y-4 lg:space-y-6">
               <!-- Nom -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Nom de l'agent *</label>
                 <input
                   v-model="localConfig.agent.name"
                   type="text"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm lg:text-base"
                   placeholder="Ex: Sarah, Expert Produits"
                 />
               </div>
@@ -135,7 +160,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Type de vendeur</label>
-                  <select v-model="localConfig.agent.type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <select v-model="localConfig.agent.type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
                     <option value="general">🎯 Vendeur généraliste</option>
                     <option value="product_specialist">🛍️ Spécialiste produit</option>
                     <option value="support">🆘 Support & SAV</option>
@@ -145,7 +170,7 @@
                 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Personnalité</label>
-                  <select v-model="localConfig.agent.personality" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <select v-model="localConfig.agent.personality" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
                     <option value="professional">💼 Professionnel</option>
                     <option value="friendly">😊 Amical</option>
                     <option value="expert">🎓 Expert technique</option>
@@ -160,7 +185,7 @@
                 <textarea
                   v-model="localConfig.agent.description"
                   rows="3"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                   placeholder="Ex: Spécialisé dans la vente de produits tech, aide les clients à choisir selon leurs besoins..."
                 ></textarea>
               </div>
@@ -171,7 +196,7 @@
                 <textarea
                   v-model="localConfig.agent.welcomeMessage"
                   rows="3"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                   placeholder="Bonjour ! Je suis Sarah, spécialiste produits. Comment puis-je vous aider à trouver le produit parfait ?"
                 ></textarea>
                 <!-- Aperçu en temps réel -->
@@ -190,7 +215,7 @@
                 <textarea
                   v-model="localConfig.agent.fallbackMessage"
                   rows="2"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                   placeholder="Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt."
                 ></textarea>
               </div>
@@ -198,14 +223,14 @@
           </div>
 
           <!-- Configuration commerciale -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">💼 Configuration Commerciale</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">💼 Configuration Commerciale</h3>
             
-            <div class="space-y-6">
+            <div class="space-y-4 lg:space-y-6">
               <!-- Collection d'informations -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-3">Informations à collecter</label>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <label class="flex items-center">
                     <input v-model="localConfig.agent.config.collectName" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="ml-2 text-sm text-gray-700">👤 Nom complet</span>
@@ -227,7 +252,7 @@
 
               <!-- Fonctionnalités commerciales -->
               <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                   <div>
                     <h4 class="text-sm font-medium text-gray-900">💎 Propositions d'upsell</h4>
                     <p class="text-xs text-gray-500">L'agent propose des produits complémentaires</p>
@@ -248,7 +273,7 @@
                   </button>
                 </div>
 
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                   <div>
                     <h4 class="text-sm font-medium text-gray-900">⚡ Création d'urgence</h4>
                     <p class="text-xs text-gray-500">Stock limité, offres temporaires</p>
@@ -305,8 +330,8 @@
         <!-- Info Panel -->
         <div class="space-y-6">
           <!-- Agent Status -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">📊 Statut Agent</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">📊 Statut Agent</h3>
             
             <div class="space-y-3 text-sm">
               <div class="flex justify-between">
@@ -354,45 +379,45 @@
           </div>
 
           <!-- Statistics -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">📈 Statistiques</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">📈 Statistiques</h3>
             <div class="space-y-3">
               <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600">Conversations</span>
-                <span class="text-lg font-bold text-blue-600">{{ config.agent.stats.conversations }}</span>
+                <span class="text-lg font-bold text-blue-600">{{ localConfig.agent.stats.conversations }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600">Conversions</span>
-                <span class="text-lg font-bold text-green-600">{{ config.agent.stats.conversions }}</span>
+                <span class="text-lg font-bold text-green-600">{{ localConfig.agent.stats.conversions }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600">Taux de conversion</span>
                 <span class="text-lg font-bold text-purple-600">
-                  {{ config.agent.stats.conversations > 0 ? Math.round((config.agent.stats.conversions / config.agent.stats.conversations) * 100) : 0 }}%
+                  {{ localConfig.agent.stats.conversations > 0 ? Math.round((localConfig.agent.stats.conversions / localConfig.agent.stats.conversations) * 100) : 0 }}%
                 </span>
               </div>
             </div>
           </div>
 
           <!-- Quick Actions -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">⚡ Actions Rapides</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">⚡ Actions Rapides</h3>
             <div class="space-y-3">
               <button
                 @click="activeTab = 'playground'"
-                class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm lg:text-base"
               >
                 🧪 Tester l'Agent
               </button>
               <button
                 @click="activeTab = 'widget'"
-                class="w-full px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                class="w-full px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm lg:text-base"
               >
                 🎨 Configurer Widget
               </button>
               <button
                 @click="activeTab = 'integration'"
-                class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm lg:text-base"
               >
                 🔗 Code d'Intégration
               </button>
@@ -402,23 +427,23 @@
       </div>
 
       <!-- ✅ ONGLET 2: CONFIGURATION WIDGET -->
-      <div v-if="activeTab === 'widget'" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div v-if="activeTab === 'widget'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         
         <!-- Widget Configuration -->
-        <div class="space-y-8">
+        <div class="space-y-6 lg:space-y-8">
           
           <!-- Apparence -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">🎨 Apparence du Widget</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🎨 Apparence du Widget</h3>
             
-            <div class="space-y-6">
+            <div class="space-y-4 lg:space-y-6">
               <!-- Texte du bouton -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Texte du bouton</label>
                 <input
                   v-model="localConfig.widget.buttonText"
                   type="text"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                   placeholder="Parler au vendeur"
                 />
               </div>
@@ -432,7 +457,7 @@
                     :key="color.value"
                     @click="localConfig.widget.primaryColor = color.value"
                     :class="[
-                      'w-10 h-10 rounded-full border-2 transition-transform',
+                      'w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 transition-transform',
                       localConfig.widget.primaryColor === color.value
                         ? 'border-gray-800 scale-110 shadow-lg'
                         : 'border-gray-300 hover:scale-105'
@@ -441,7 +466,7 @@
                     :title="color.name"
                   ></button>
                 </div>
-                <div class="flex space-x-2">
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <input
                     v-model="localConfig.widget.primaryColor"
                     type="color"
@@ -450,7 +475,7 @@
                   <input
                     v-model="localConfig.widget.primaryColor"
                     type="text"
-                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="#3B82F6"
                   />
                 </div>
@@ -459,7 +484,7 @@
               <!-- Position -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-3">Position sur la page</label>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
                     v-for="position in widgetPositions"
                     :key="position.value"
@@ -478,10 +503,10 @@
               </div>
 
               <!-- Theme et style -->
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Thème</label>
-                  <select v-model="localConfig.widget.theme" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <select v-model="localConfig.widget.theme" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
                     <option value="modern">🎨 Moderne</option>
                     <option value="minimal">⚡ Minimal</option>
                     <option value="brand_adaptive">🎭 Adaptatif</option>
@@ -490,7 +515,7 @@
                 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Taille</label>
-                  <select v-model="localConfig.widget.widgetSize" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <select v-model="localConfig.widget.widgetSize" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
                     <option value="small">📱 Petit</option>
                     <option value="medium">💻 Moyen</option>
                     <option value="large">🖥️ Grand</option>
@@ -501,11 +526,11 @@
           </div>
 
           <!-- Comportement -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">⚙️ Comportement</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">⚙️ Comportement</h3>
             
             <div class="space-y-4">
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h4 class="text-sm font-medium text-gray-900">Ouverture automatique</h4>
                   <p class="text-xs text-gray-500">Ouvre le chat automatiquement après 5 secondes</p>
@@ -526,7 +551,7 @@
                 </button>
               </div>
 
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h4 class="text-sm font-medium text-gray-900">Afficher l'avatar</h4>
                   <p class="text-xs text-gray-500">Montre l'avatar de l'agent dans le chat</p>
@@ -547,7 +572,7 @@
                 </button>
               </div>
 
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h4 class="text-sm font-medium text-gray-900">Son de notification</h4>
                   <p class="text-xs text-gray-500">Son lors de nouveaux messages</p>
@@ -569,7 +594,7 @@
               </div>
 
               <!-- Widget Status -->
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h4 class="text-sm font-medium text-gray-900">Widget actif</h4>
                   <p class="text-xs text-gray-500">Activez ou désactivez le widget sur votre site</p>
@@ -594,8 +619,8 @@
         </div>
 
         <!-- Widget Preview -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-6">👁️ Aperçu du Widget</h3>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+          <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">👁️ Aperçu du Widget</h3>
           
           <!-- Mock browser -->
           <div class="border border-gray-300 rounded-lg overflow-hidden">
@@ -610,11 +635,11 @@
             </div>
             
             <!-- Browser content avec widget preview -->
-            <div class="bg-gray-50 h-80 relative p-6">
-              <div class="text-center text-gray-400 mt-12">
-                <div class="text-3xl mb-4">🛍️</div>
-                <div class="text-lg font-medium mb-2">Votre boutique en ligne</div>
-                <div class="text-sm">Aperçu du widget sur votre site</div>
+            <div class="bg-gray-50 h-64 lg:h-80 relative p-4 lg:p-6">
+              <div class="text-center text-gray-400 mt-8 lg:mt-12">
+                <div class="text-2xl lg:text-3xl mb-4">🛍️</div>
+                <div class="text-base lg:text-lg font-medium mb-2">Votre boutique en ligne</div>
+                <div class="text-xs lg:text-sm">Aperçu du widget sur votre site</div>
               </div>
               
               <!-- Widget preview button -->
@@ -631,11 +656,11 @@
                     ...(getWidgetSizeStyles(localConfig.widget.widgetSize))
                   }"
                   :class="[
-                    'text-white rounded-lg font-medium transition-all hover:opacity-90 flex items-center justify-center shadow-lg',
+                    'text-white rounded-lg font-medium transition-all hover:opacity-90 flex items-center justify-center shadow-lg text-xs lg:text-sm',
                     getWidgetThemeClasses(localConfig.widget.theme)
                   ]"
                 >
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 lg:w-4 h-3 lg:h-4 mr-1 lg:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                   </svg>
                   {{ localConfig.widget.buttonText }}
@@ -650,40 +675,40 @@
             class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
             @click.self="showChatPreview = false"
           >
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full h-96 flex flex-col">
+            <div class="bg-white rounded-lg shadow-xl max-w-sm w-full h-80 lg:h-96 flex flex-col">
               <div 
-                class="p-4 text-white rounded-t-lg"
+                class="p-3 lg:p-4 text-white rounded-t-lg"
                 :style="{ backgroundColor: localConfig.widget.primaryColor }"
               >
                 <div class="flex items-center space-x-3">
-                  <div v-if="localConfig.widget.showAvatar" class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <span class="text-sm font-medium">{{ localConfig.agent.name.charAt(0) }}</span>
+                  <div v-if="localConfig.widget.showAvatar" class="w-8 lg:w-10 h-8 lg:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <span class="text-xs lg:text-sm font-medium">{{ localConfig.agent.name.charAt(0) }}</span>
                   </div>
                   <div>
-                    <h4 class="font-medium">{{ localConfig.agent.name }}</h4>
+                    <h4 class="font-medium text-sm lg:text-base">{{ localConfig.agent.name }}</h4>
                     <p class="text-xs opacity-90">En ligne</p>
                   </div>
                 </div>
               </div>
-              <div class="flex-1 p-4 bg-gray-50">
-                <div class="bg-white p-3 rounded-lg shadow-sm max-w-xs">
-                  <p class="text-sm">{{ localConfig.agent.welcomeMessage }}</p>
+              <div class="flex-1 p-3 lg:p-4 bg-gray-50">
+                <div class="bg-white p-2 lg:p-3 rounded-lg shadow-sm max-w-xs">
+                  <p class="text-xs lg:text-sm">{{ localConfig.agent.welcomeMessage }}</p>
                 </div>
               </div>
-              <div class="p-4 border-t">
+              <div class="p-3 lg:p-4 border-t">
                 <div class="flex space-x-2">
                   <input 
                     type="text" 
                     placeholder="Tapez votre message..."
-                    class="flex-1 px-3 py-2 border rounded-lg text-sm"
+                    class="flex-1 px-2 lg:px-3 py-1 lg:py-2 border rounded-lg text-xs lg:text-sm"
                     disabled
                   />
                   <button 
-                    class="px-3 py-2 text-white rounded-lg"
+                    class="px-2 lg:px-3 py-1 lg:py-2 text-white rounded-lg text-xs lg:text-sm"
                     :style="{ backgroundColor: localConfig.widget.primaryColor }"
                     disabled
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 lg:w-4 h-3 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                     </svg>
                   </button>
@@ -695,27 +720,27 @@
       </div>
 
       <!-- ✅ ONGLET 3: PLAYGROUND -->
-      <div v-if="activeTab === 'playground'" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div v-if="activeTab === 'playground'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         
         <!-- Chat Interface -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[600px]">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-96 lg:h-[600px]">
           <div 
-            class="px-6 py-4 text-white"
+            class="px-4 lg:px-6 py-3 lg:py-4 text-white"
             :style="{ background: `linear-gradient(135deg, ${localConfig.widget.primaryColor} 0%, ${adjustColor(localConfig.widget.primaryColor, -20)} 100%)` }"
           >
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                <span class="text-sm font-medium">{{ localConfig.agent.name.charAt(0) }}</span>
+              <div class="w-8 lg:w-10 h-8 lg:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <span class="text-xs lg:text-sm font-medium">{{ localConfig.agent.name.charAt(0) }}</span>
               </div>
               <div>
-                <h4 class="font-medium">{{ localConfig.agent.name }}</h4>
+                <h4 class="font-medium text-sm lg:text-base">{{ localConfig.agent.name }}</h4>
                 <p class="text-xs text-white text-opacity-90">{{ getTypeLabel(localConfig.agent.type) }} • Test</p>
               </div>
             </div>
           </div>
           
-          <div class="flex-1 p-4 overflow-y-auto bg-gray-50" ref="chatContainer">
-            <div class="space-y-4">
+          <div class="flex-1 p-3 lg:p-4 overflow-y-auto bg-gray-50" ref="chatContainer">
+            <div class="space-y-3 lg:space-y-4">
               <div 
                 v-for="message in testMessages" 
                 :key="message.id"
@@ -724,7 +749,7 @@
               >
                 <div 
                   :class="[
-                    'w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium',
+                    'w-6 lg:w-8 h-6 lg:h-8 rounded-full flex items-center justify-center text-xs font-medium',
                     message.role === 'user' ? 'bg-gray-500 text-white' : 'text-white'
                   ]"
                   :style="message.role === 'assistant' ? { backgroundColor: localConfig.widget.primaryColor } : {}"
@@ -733,7 +758,7 @@
                 </div>
                 <div 
                   :class="[
-                    'max-w-xs p-3 rounded-lg text-sm',
+                    'max-w-xs p-2 lg:p-3 rounded-lg text-xs lg:text-sm',
                     message.role === 'user' 
                       ? 'bg-gray-500 text-white rounded-tr-sm' 
                       : 'bg-white border border-gray-200 rounded-tl-sm'
@@ -751,23 +776,23 @@
             </div>
           </div>
           
-          <div class="p-4 border-t border-gray-200 bg-white">
+          <div class="p-3 lg:p-4 border-t border-gray-200 bg-white">
             <div class="flex space-x-2">
               <input
                 v-model="testMessage"
                 @keyup.enter="sendTestMessage"
                 type="text"
                 placeholder="Tapez votre message de test..."
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="flex-1 px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs lg:text-sm"
                 :disabled="sendingTestMessage"
               />
               <button 
                 @click="sendTestMessage"
                 :disabled="!testMessage.trim() || sendingTestMessage"
-                class="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+                class="px-3 lg:px-4 py-1 lg:py-2 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 text-xs lg:text-sm"
                 :style="{ backgroundColor: localConfig.widget.primaryColor }"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 lg:w-4 h-3 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                 </svg>
               </button>
@@ -779,25 +804,25 @@
         <div class="space-y-6">
           
           <!-- Test Scenarios -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">🎯 Scénarios de Test</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">🎯 Scénarios de Test</h3>
             <div class="space-y-2">
               <button
                 v-for="scenario in testScenarios"
                 :key="scenario.id"
                 @click="runTestScenario(scenario)"
-                class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 :disabled="sendingTestMessage"
               >
-                <div class="font-medium text-sm">{{ scenario.title }}</div>
+                <div class="font-medium">{{ scenario.title }}</div>
                 <div class="text-xs text-gray-500">{{ scenario.description }}</div>
               </button>
             </div>
           </div>
 
           <!-- Performance -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">📊 Performance Test</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">📊 Performance Test</h3>
             <div class="space-y-3 text-sm">
               <div class="flex justify-between">
                 <span>Messages envoyés:</span>
@@ -815,13 +840,13 @@
           </div>
 
           <!-- Advanced Testing -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">🔬 Test Avancé</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">🔬 Test Avancé</h3>
             <div class="space-y-3">
               <button
                 @click="startAITestSession"
                 :disabled="testSessionActive || !isPaidUser"
-                class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm lg:text-base"
                 :title="!isPaidUser ? 'Réservé aux utilisateurs payants (Starter/Pro)' : ''"
               >
                 {{ testSessionActive ? '✅ Session Active' : '🚀 Démarrer Test IA' }}
@@ -829,7 +854,7 @@
               
               <button
                 @click="resetTestChat"
-                class="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                class="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm lg:text-base"
               >
                 🔄 Réinitialiser
               </button>
@@ -847,11 +872,11 @@
       <div v-if="activeTab === 'integration'" class="max-w-4xl mx-auto">
         
         <!-- Guide d'intégration -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <h3 class="text-2xl font-semibold text-gray-900 mb-6">🔗 Guide d'Intégration</h3>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+          <h3 class="text-xl lg:text-2xl font-semibold text-gray-900 mb-4 lg:mb-6">🔗 Guide d'Intégration</h3>
           
           <!-- Informations de base -->
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 lg:mb-8">
             <div class="flex">
               <div class="flex-shrink-0">
                 <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -869,21 +894,21 @@
           </div>
 
           <!-- Code d'intégration -->
-          <div class="space-y-8">
+          <div class="space-y-6 lg:space-y-8">
             
             <!-- Code JavaScript -->
-            <div class="border-l-4 border-blue-500 pl-6">
-              <h4 class="text-lg font-medium text-gray-900 mb-3">1. Code d'intégration JavaScript</h4>
+            <div class="border-l-4 border-blue-500 pl-4 lg:pl-6">
+              <h4 class="text-base lg:text-lg font-medium text-gray-900 mb-3">1. Code d'intégration JavaScript</h4>
               <div class="relative">
-                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                  <pre class="text-green-400 text-sm"><code>{{ integrationCode }}</code></pre>
+                <div class="bg-gray-900 rounded-lg p-3 lg:p-4 overflow-x-auto">
+                  <pre class="text-green-400 text-xs lg:text-sm"><code>{{ integrationCode }}</code></pre>
                 </div>
                 
                 <button
-                  @click="copyIntegrationCode"
-                  class="absolute top-4 right-4 inline-flex items-center px-3 py-1 border border-gray-600 text-xs font-medium rounded text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors"
+                  @click="copyIntegrationCodeAction"
+                  class="absolute top-3 lg:top-4 right-3 lg:right-4 inline-flex items-center px-2 lg:px-3 py-1 border border-gray-600 text-xs font-medium rounded text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors"
                 >
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 lg:w-4 h-3 lg:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                   </svg>
                   {{ codeCopied ? 'Copié !' : 'Copier' }}
@@ -892,17 +917,17 @@
             </div>
 
             <!-- Instructions par plateforme -->
-            <div class="border-l-4 border-green-500 pl-6">
-              <h4 class="text-lg font-medium text-gray-900 mb-3">2. Instructions par plateforme</h4>
+            <div class="border-l-4 border-green-500 pl-4 lg:pl-6">
+              <h4 class="text-base lg:text-lg font-medium text-gray-900 mb-3">2. Instructions par plateforme</h4>
               
               <!-- Platform tabs -->
-              <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
+              <div class="flex flex-wrap space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
                 <button
                   v-for="platform in platforms"
                   :key="platform.id"
                   @click="activePlatform = platform.id"
                   :class="[
-                    'px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                    'px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
                     activePlatform === platform.id 
                       ? 'bg-white text-gray-900 shadow-sm' 
                       : 'text-gray-500 hover:text-gray-700'
@@ -959,8 +984,8 @@
             </div>
 
             <!-- Test et validation -->
-            <div class="border-l-4 border-purple-500 pl-6">
-              <h4 class="text-lg font-medium text-gray-900 mb-3">3. Test et validation</h4>
+            <div class="border-l-4 border-purple-500 pl-4 lg:pl-6">
+              <h4 class="text-base lg:text-lg font-medium text-gray-900 mb-3">3. Test et validation</h4>
               <div class="space-y-3 text-sm text-gray-600">
                 <p><strong>✅ Vérifications à faire:</strong></p>
                 <ul class="list-disc list-inside space-y-1 ml-4">
@@ -980,7 +1005,7 @@
           </div>
 
           <!-- Support -->
-          <div class="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="mt-6 lg:mt-8 p-4 lg:p-6 bg-blue-50 border border-blue-200 rounded-lg">
             <h4 class="font-medium text-blue-900 mb-2">🆘 Besoin d'aide ?</h4>
             <p class="text-sm text-blue-800">
               Notre équipe peut vous aider avec l'intégration. Contactez-nous à 
@@ -991,12 +1016,12 @@
       </div>
 
       <!-- Message de succès pour copie -->
-      <div v-if="codeCopied" class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+      <div v-if="codeCopied" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg shadow-lg z-50">
         <div class="flex items-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 lg:w-5 h-4 lg:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          Code d'intégration copié !
+          <span class="text-sm lg:text-base">Code d'intégration copié !</span>
         </div>
       </div>
     </div>
@@ -1007,6 +1032,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
+import { useAgentConfigStore } from '~/stores/agentConfig' // ✅ NOUVEAU STORE
 import { useAgentConfig } from '~/composables/useAgentConfig'
 import { useAITest } from '~/composables/useAITest'
 
@@ -1027,6 +1053,8 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const agentConfigStore = useAgentConfigStore() // ✅ NOUVEAU STORE
+
 const { 
   loading, 
   saving, 
@@ -1057,6 +1085,10 @@ const activePlatform = ref('shopify')
 const successMessage = ref<string | null>(null)
 const codeCopied = ref(false)
 const showChatPreview = ref(false)
+
+// ✅ NOUVEAUX ÉTATS POUR GESTION D'ERREURS
+const dataLoadingError = ref<string | null>(null)
+const hasValidAgentData = ref(false)
 
 // ✅ LOCAL CONFIG POUR ÉDITION AVEC TYPES CORRECTS
 const localConfig = ref({
@@ -1106,8 +1138,23 @@ const testSessionActive = ref(false)
 const chatContainer = ref<HTMLElement>()
 
 // ✅ COMPUTED
-const agentId = computed(() => route.query.id as string || 'unknown')
-const agentName = computed(() => localConfig.value.agent.name || 'Agent IA')
+const agentId = computed(() => {
+  // Priorité : route query > store > URL fallback
+  if (route.query.id && typeof route.query.id === 'string') {
+    return route.query.id
+  }
+  
+  const storeAgent = agentConfigStore.getAgentForConfig()
+  if (storeAgent?.id) {
+    return storeAgent.id
+  }
+  
+  return 'unknown'
+})
+
+const agentName = computed(() => {
+  return localConfig.value.agent.name || 'Agent IA'
+})
 
 // ✅ DATA
 const tabs = [
@@ -1196,7 +1243,112 @@ const testScenarios = [
 
 // ✅ METHODS
 const goBack = () => {
+  // Nettoyer le store avant de partir
+  agentConfigStore.clearAgentConfig()
   router.push('/vendeurs-ia')
+}
+
+// ✅ NOUVELLE MÉTHODE: Récupération des données sécurisée
+const loadAgentData = async () => {
+  console.log('🔄 [loadAgentData] Début chargement données agent...')
+  
+  try {
+    loading.value = true
+    dataLoadingError.value = null
+    
+    // ✅ STRATÉGIE 1: Récupérer depuis le store
+    const storeAgent = agentConfigStore.getAgentForConfig()
+    if (storeAgent && agentConfigStore.isDataFresh) {
+      console.log('✅ [loadAgentData] Données récupérées depuis store:', storeAgent.name)
+      
+      localConfig.value.agent = {
+        id: storeAgent.id,
+        name: storeAgent.name,
+        type: storeAgent.type as AgentType,
+        personality: storeAgent.personality as PersonalityType || 'friendly',
+        description: storeAgent.description || '',
+        welcomeMessage: storeAgent.welcomeMessage || '',
+        fallbackMessage: storeAgent.fallbackMessage || '',
+        avatar: storeAgent.avatar || '',
+        isActive: storeAgent.isActive,
+        config: storeAgent.config || {
+          collectName: true,
+          collectPhone: true,
+          collectEmail: true,
+          collectAddress: false,
+          collectPayment: true,
+          upsellEnabled: false,
+          urgencyEnabled: false,
+          specificInstructions: []
+        },
+        stats: storeAgent.stats || { conversations: 0, conversions: 0 }
+      }
+      
+      hasValidAgentData.value = true
+      return
+    }
+    
+    // ✅ STRATÉGIE 2: Récupérer depuis l'API si ID disponible
+    if (agentId.value && agentId.value !== 'unknown') {
+      console.log('🌐 [loadAgentData] Récupération depuis API pour ID:', agentId.value)
+      
+      try {
+        await fetchAgentConfig(agentId.value)
+        if (config.value) {
+          console.log('✅ [loadAgentData] Données récupérées depuis API')
+          hasValidAgentData.value = true
+          return
+        }
+      } catch (apiError) {
+        console.warn('⚠️ [loadAgentData] Erreur API, tentative fallback:', apiError)
+      }
+    }
+    
+    // ✅ STRATÉGIE 3: Récupération depuis sessionStorage (fallback)
+    if (process.client) {
+      try {
+        const fallbackData = sessionStorage.getItem('chatseller_agent_config_fallback')
+        if (fallbackData) {
+          const parsed = JSON.parse(fallbackData)
+          const age = Date.now() - parsed.timestamp
+          
+          if (age < 5 * 60 * 1000 && parsed.agentId) { // 5 minutes max
+            console.log('🔄 [loadAgentData] Fallback depuis sessionStorage, récupération API...')
+            
+            await fetchAgentConfig(parsed.agentId)
+            if (config.value) {
+              console.log('✅ [loadAgentData] Récupération fallback réussie')
+              hasValidAgentData.value = true
+              
+              // Nettoyer le fallback
+              sessionStorage.removeItem('chatseller_agent_config_fallback')
+              return
+            }
+          }
+        }
+      } catch (fallbackError) {
+        console.warn('⚠️ [loadAgentData] Erreur fallback sessionStorage:', fallbackError)
+      }
+    }
+    
+    // ✅ STRATÉGIE 4: Échec - pas de données disponibles
+    console.error('❌ [loadAgentData] Aucune donnée agent disponible')
+    dataLoadingError.value = 'Impossible de charger les données de l\'agent. Les données ont peut-être expiré ou l\'agent a été supprimé.'
+    hasValidAgentData.value = false
+    
+  } catch (globalError) {
+    console.error('❌ [loadAgentData] Erreur globale:', globalError)
+    dataLoadingError.value = `Erreur de chargement: ${globalError.message || 'Erreur inconnue'}`
+    hasValidAgentData.value = false
+  } finally {
+    loading.value = false
+  }
+}
+
+// ✅ NOUVELLE MÉTHODE: Récupération de données d'urgence
+const attemptDataRecovery = async () => {
+  console.log('🆘 [attemptDataRecovery] Tentative de récupération...')
+  await loadAgentData()
 }
 
 const saveAllConfig = async () => {
@@ -1250,20 +1402,20 @@ const adjustColor = (color: string, percent: number): string => {
 
 const getWidgetPositionClass = (position: WidgetPosition): string => {
   const classes = {
-    'above-cta': 'top-16 left-1/2 transform -translate-x-1/2',
-    'below-cta': 'bottom-16 left-1/2 transform -translate-x-1/2',
-    'beside-cta': 'top-1/2 right-4 transform -translate-y-1/2',
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4'
+    'above-cta': 'top-12 lg:top-16 left-1/2 transform -translate-x-1/2',
+    'below-cta': 'bottom-12 lg:bottom-16 left-1/2 transform -translate-x-1/2',
+    'beside-cta': 'top-1/2 right-3 lg:right-4 transform -translate-y-1/2',
+    'bottom-right': 'bottom-3 lg:bottom-4 right-3 lg:right-4',
+    'bottom-left': 'bottom-3 lg:bottom-4 left-3 lg:left-4'
   }
-  return classes[position] || 'bottom-4 right-4'
+  return classes[position] || 'bottom-3 lg:bottom-4 right-3 lg:right-4'
 }
 
 const getWidgetSizeStyles = (size: WidgetSize) => {
   const styles = {
-    small: { padding: '8px 16px', fontSize: '14px' },
-    medium: { padding: '12px 20px', fontSize: '15px' },
-    large: { padding: '16px 24px', fontSize: '16px' }
+    small: { padding: '6px 12px', fontSize: '12px' },
+    medium: { padding: '8px 16px', fontSize: '14px' },
+    large: { padding: '12px 20px', fontSize: '16px' }
   }
   return styles[size] || styles.medium
 }
@@ -1392,7 +1544,7 @@ const runTestScenario = (scenario: any) => {
 
 const startAITestSession = async () => {
   if (!isPaidUser.value) {
-    alert('La fonctionnalité de test IA est réservée aux utilisateurs des plans Starter et Pro.')
+    dataLoadingError.value = 'La fonctionnalité de test IA est réservée aux utilisateurs des plans Starter et Pro.'
     return
   }
 
@@ -1441,6 +1593,8 @@ watch(() => config.value, (newConfig) => {
     if (!localConfig.value.agent.config.specificInstructions) {
       localConfig.value.agent.config.specificInstructions = []
     }
+    
+    hasValidAgentData.value = true
   }
 }, { immediate: true })
 
@@ -1454,13 +1608,13 @@ watch(() => aiTestMessages.value, (newMessages) => {
 
 // ✅ LIFECYCLE
 onMounted(async () => {
-  console.log('🚀 [agent-config] Page montée, chargement config agent:', agentId.value)
+  console.log('🚀 [agent-config] Page montée, chargement config agent...')
   
   // Initialiser le chat de test
   initializeTestChat()
   
-  // Charger la configuration
-  await fetchAgentConfig(agentId.value)
+  // ✅ NOUVEAU: Charger les données de manière sécurisée
+  await loadAgentData()
 })
 
 // ✅ SEO
@@ -1511,6 +1665,39 @@ useHead({
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ✅ RESPONSIVE IMPROVEMENTS */
+@media (max-width: 640px) {
+  .bg-white {
+    @apply rounded-lg;
+  }
+  
+  .p-4 {
+    @apply p-3;
+  }
+  
+  .text-base {
+    @apply text-sm;
+  }
+  
+  .grid-cols-2 {
+    @apply grid-cols-1;
+  }
+}
+
+@media (max-width: 768px) {
+  .xl\:col-span-2 {
+    @apply col-span-1;
+  }
+  
+  .lg\:grid-cols-2 {
+    @apply grid-cols-1;
+  }
+  
+  .space-y-8 {
+    @apply space-y-6;
   }
 }
 </style>

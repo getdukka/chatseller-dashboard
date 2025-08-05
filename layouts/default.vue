@@ -1,11 +1,11 @@
-<!-- layouts/default.vue - VERSION FINALE CORRIGÉE -->
+<!-- layouts/default.vue - VERSION AVEC BADGE CONVERSATIONS RÉEL -->
 <template>
   <div class="min-h-screen bg-gray-50">
     
     <!-- ✅ DESKTOP SIDEBAR - VISIBLE UNIQUEMENT SUR LARGE SCREENS -->
     <div class="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-64 lg:bg-white lg:shadow-xl lg:border-r lg:border-gray-100">
       <SidebarContent 
-        :unreadCount="unreadCount"
+        :unreadCount="unreadConversationsCount"
         :userName="userName"
         :userEmail="userEmail"
         :userInitials="userInitials"
@@ -40,7 +40,7 @@
       >
         <div v-if="mobileMenuOpen" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl">
           <SidebarContent 
-            :unreadCount="unreadCount"
+            :unreadCount="unreadConversationsCount"
             :userName="userName"
             :userEmail="userEmail"
             :userInitials="userInitials"
@@ -242,6 +242,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '~~/stores/auth'
+import { useSupabase } from '~~/composables/useSupabase'
 
 // ✅ TYPES COHÉRENTS AVEC BILLING.VUE ET SIDEBAR
 type SubscriptionPlan = 'free' | 'starter' | 'pro'
@@ -255,13 +256,17 @@ interface SubscriptionInfo {
 // ✅ UTILISER LE STORE AUTH POUR LES DONNÉES DYNAMIQUES
 const authStore = useAuthStore()
 const config = useRuntimeConfig()
+const supabase = useSupabase()
 
 // États locaux
 const mobileMenuOpen = ref(false)
 const showProfileMenu = ref(false)
 const showMobileProfileMenu = ref(false)
 const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
-const unreadCount = ref(3) // Mock - à remplacer par vraies données
+
+// ✅ NOUVEAU : ÉTAT POUR LES CONVERSATIONS NON LUES
+const unreadConversationsCount = ref(0)
+const loadingConversations = ref(false)
 
 // ✅ DONNÉES D'ABONNEMENT AVEC TYPES STRICTS
 const subscriptionInfo = ref<SubscriptionInfo>({
@@ -275,10 +280,41 @@ const userName = computed(() => authStore.userName || 'Utilisateur')
 const userEmail = computed(() => authStore.userEmail || 'email@exemple.com')
 const userInitials = computed(() => authStore.userInitials || 'U')
 
+// ✅ NOUVELLE MÉTHODE : CHARGER LES CONVERSATIONS NON LUES
+const loadUnreadConversations = async () => {
+  if (!authStore.userShopId || loadingConversations.value) {
+    return
+  }
+
+  try {
+    loadingConversations.value = true
+    console.log('🔄 Chargement conversations non lues pour shop:', authStore.userShopId)
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('id, status')
+      .eq('shop_id', authStore.userShopId)
+      .in('status', ['new', 'active'])
+
+    if (error) {
+      console.error('❌ Erreur chargement conversations:', error)
+      return
+    }
+
+    const unreadCount = data?.length || 0
+    unreadConversationsCount.value = unreadCount
+    
+    console.log('✅ Conversations non lues chargées:', unreadCount)
+  } catch (error) {
+    console.error('❌ Erreur loading conversations:', error)
+  } finally {
+    loadingConversations.value = false
+  }
+}
+
 // ✅ MOBILE MENU METHODS
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value
-  // Fermer le profil mobile si ouvert
   if (mobileMenuOpen.value) {
     showMobileProfileMenu.value = false
   }
@@ -288,7 +324,7 @@ const closeMobileMenu = () => {
   mobileMenuOpen.value = false
 }
 
-// ✅ NOUVELLE MÉTHODE : HANDLE UPGRADE TO PLAN DIFFÉRENCIÉ
+// ✅ HANDLE UPGRADE TO PLAN
 const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
   upgradingToPlan.value = targetPlan
   showMobileProfileMenu.value = false
@@ -296,8 +332,7 @@ const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
   try {
     console.log(`🚀 Initiation upgrade vers ${targetPlan} depuis le layout`)
     
-    // ✅ MAPPING SIMPLIFIÉ - PAS DE CONVERSION
-    const apiPlan = targetPlan // Direct mapping
+    const apiPlan = targetPlan
     
     const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/create-checkout-session`, {
       method: 'POST',
@@ -328,7 +363,7 @@ const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
   }
 }
 
-// ✅ CHARGER LES INFORMATIONS D'ABONNEMENT CORRIGÉ
+// ✅ CHARGER LES INFORMATIONS D'ABONNEMENT 
 const loadSubscriptionInfo = async () => {
   try {
     console.log('🔄 Chargement des informations d\'abonnement...')
@@ -336,14 +371,13 @@ const loadSubscriptionInfo = async () => {
     if (!authStore.token) {
       console.log('⚠️ Mode développement - calcul de l\'essai gratuit')
       
-      // Calcul basé sur la date de création du compte
       const accountCreationDate = new Date(authStore.user?.createdAt || Date.now())
       const daysSinceCreation = Math.floor((Date.now() - accountCreationDate.getTime()) / (1000 * 60 * 60 * 24))
       const trialDaysLeft = Math.max(0, 7 - daysSinceCreation)
       
       subscriptionInfo.value = {
         plan: 'free',
-        isActive: trialDaysLeft > 0, // Actif seulement si essai en cours
+        isActive: trialDaysLeft > 0,
         trialDaysLeft: trialDaysLeft
       }
       
@@ -362,7 +396,6 @@ const loadSubscriptionInfo = async () => {
     if (response.success) {
       const subscription = response.subscription
       
-      // ✅ MAPPING DIRECT - PAS DE CONVERSION COMPLEXE
       let frontendPlan: SubscriptionPlan = 'free'
       if (subscription.plan === 'starter') {
         frontendPlan = 'starter'
@@ -370,7 +403,6 @@ const loadSubscriptionInfo = async () => {
         frontendPlan = 'pro'
       }
       
-      // Calcul des jours d'essai si plan gratuit
       let trialDaysLeft = 0
       let isActive = subscription.isActive
       
@@ -391,16 +423,15 @@ const loadSubscriptionInfo = async () => {
     }
   } catch (error) {
     console.error('❌ Erreur chargement subscription info:', error)
-    // En cas d'erreur, on garde l'essai gratuit par défaut
     subscriptionInfo.value = {
       plan: 'free',
       isActive: true,
-      trialDaysLeft: 5 // 5 jours par défaut
+      trialDaysLeft: 5
     }
   }
 }
 
-// ✅ FONCTION DE DÉCONNEXION CORRIGÉE
+// ✅ FONCTION DE DÉCONNEXION
 const handleLogout = async () => {
   showProfileMenu.value = false
   showMobileProfileMenu.value = false
@@ -413,7 +444,6 @@ const handleLogout = async () => {
 const handleClickOutside = (event: Event) => {
   const target = event.target as Element
   
-  // Fermer le profil mobile si clic à l'extérieur
   if (showMobileProfileMenu.value && !target.closest('.relative')) {
     showMobileProfileMenu.value = false
   }
@@ -435,12 +465,23 @@ watch(mobileMenuOpen, updateBodyScroll)
 watch(() => authStore.token, async (newToken) => {
   if (newToken) {
     await loadSubscriptionInfo()
+    await loadUnreadConversations()
   } else {
     subscriptionInfo.value = {
       plan: 'free',
       isActive: false,
       trialDaysLeft: 7
     }
+    unreadConversationsCount.value = 0
+  }
+})
+
+// ✅ WATCHER pour recharger conversations si userShopId change
+watch(() => authStore.userShopId, async (newShopId) => {
+  if (newShopId) {
+    await loadUnreadConversations()
+  } else {
+    unreadConversationsCount.value = 0
   }
 })
 
@@ -454,10 +495,23 @@ watch(() => route.path, () => {
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   
-  // Charger les informations d'abonnement au montage
+  // Charger les données initiales
   if (authStore.token) {
     await loadSubscriptionInfo()
+    await loadUnreadConversations()
   }
+
+  // ✅ POLLING PÉRIODIQUE DES CONVERSATIONS (toutes les 30 secondes)
+  const conversationInterval = setInterval(async () => {
+    if (authStore.userShopId && !loadingConversations.value) {
+      await loadUnreadConversations()
+    }
+  }, 30000) // 30 secondes
+
+  // Nettoyer l'intervalle au démontage
+  onUnmounted(() => {
+    clearInterval(conversationInterval)
+  })
 })
 
 onUnmounted(() => {

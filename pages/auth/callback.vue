@@ -1,4 +1,4 @@
-<!-- pages/auth/callback.vue - VERSION MINIMALISTE SANS CONFLIT -->
+<!-- pages/auth/callback.vue - VERSION SIMPLIFIÉE SANS CONFLITS -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
@@ -14,7 +14,7 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Confirmation de votre email...
+          Confirmation en cours...
         </h2>
         <p class="text-gray-600">
           Veuillez patienter pendant que nous validons votre compte.
@@ -31,13 +31,13 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Email confirmé avec succès !
+          Email confirmé !
         </h2>
         <p class="text-gray-600 mb-6">
-          Finalisons maintenant la configuration de votre compte.
+          Redirection automatique en cours...
         </p>
         
-        <!-- Progress bar de redirection -->
+        <!-- Progress bar -->
         <div class="mb-4">
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div 
@@ -49,13 +49,6 @@
             Redirection dans {{ countdown }} secondes...
           </p>
         </div>
-        
-        <button
-          @click="goToOnboarding"
-          class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          Continuer la configuration
-        </button>
       </div>
 
       <!-- Error State -->
@@ -96,8 +89,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { createClient } from '@supabase/supabase-js'
+import { useAuthStore } from '~/stores/auth'
 
-// ✅ PAS DE LAYOUT (page standalone)
+// ✅ PAS DE LAYOUT
 definePageMeta({
   layout: false
 })
@@ -109,51 +103,43 @@ const supabase = createClient(
   config.public.supabaseAnonKey
 )
 
+// ✅ STORE AUTH
+const authStore = useAuthStore()
+
 // ✅ STATE
 const loading = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
-const countdown = ref(5)
+const countdown = ref(3) // ✅ RÉDUIT À 3 SECONDES
 const progressWidth = ref(0)
 
-// ✅ TRAITEMENT MINIMAL - SEULEMENT GÉRER LA SESSION
+// ✅ TRAITEMENT SIMPLIFIÉ DE LA CONFIRMATION
 onMounted(async () => {
   try {
-    console.log('🔗 Callback minimal: Traitement de la confirmation...')
-    console.log('🔍 URL complète:', window.location.href)
+    console.log('🔗 Callback: Traitement confirmation email...')
     
-    // ✅ RÉCUPÉRATION UNIVERSELLE DES TOKENS
+    // ✅ RÉCUPÉRATION TOKENS (HASH OU QUERY)
     let accessToken = ''
     let refreshToken = ''
     
-    // Format 1: Hash fragment (#access_token=...)
     if (window.location.hash && window.location.hash.includes('access_token')) {
-      console.log('📍 Format détecté: Hash fragment')
       const hashParams = new URLSearchParams(window.location.hash.substring(1))
       accessToken = hashParams.get('access_token') || ''
       refreshToken = hashParams.get('refresh_token') || ''
-    } 
-    // Format 2: Query parameters (?access_token=...)
-    else {
-      console.log('📍 Format détecté: Query parameters')
+    } else {
       const urlParams = new URLSearchParams(window.location.search)
       accessToken = urlParams.get('access_token') || ''
       refreshToken = urlParams.get('refresh_token') || ''
     }
     
-    console.log('📋 Tokens récupérés:', { 
-      hasAccessToken: !!accessToken, 
-      hasRefreshToken: !!refreshToken 
-    })
-    
     if (!accessToken) {
-      throw new Error('Token de confirmation manquant')
+      throw new Error('Token de confirmation manquant dans l\'URL')
     }
     
-    // ✅ SEULEMENT CRÉER LA SESSION - PAS DE MODIFICATION DB
-    console.log('🔑 Création de la session...')
+    console.log('🔑 Tokens récupérés, création session Supabase...')
     
+    // ✅ CRÉER SESSION SUPABASE
     const { data, error: sessionError } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken
@@ -164,12 +150,20 @@ onMounted(async () => {
       throw new Error('Impossible de créer la session')
     }
     
-    console.log('✅ Session créée avec succès pour:', data.user.email)
-    console.log('🚀 REDIRECTION FORCÉE VERS ONBOARDING')
+    console.log('✅ Session créée pour:', data.user.email)
     
-    // ✅ SUCCÈS ET REDIRECTION VERS ONBOARDING
+    // ✅ METTRE À JOUR LE STORE
+    const userData = await authStore.fetchCompleteUserData(data.user)
+    authStore.setUser(userData, data.session.access_token)
+    
+    // ✅ NETTOYER L'URL POUR ÉVITER LES LOOPS
+    window.history.replaceState({}, '', window.location.pathname)
+    
+    // ✅ SUCCÈS - DÉMARRER COUNTDOWN
     loading.value = false
     success.value = true
+    
+    console.log('✅ Confirmation réussie, démarrage countdown...')
     startCountdown()
     
   } catch (err: any) {
@@ -178,32 +172,35 @@ onMounted(async () => {
     loading.value = false
     error.value = true
     
+    // ✅ MESSAGES D'ERREUR CLAIRS
     if (err.message?.includes('expired')) {
       errorMessage.value = 'Le lien de confirmation a expiré. Veuillez créer un nouveau compte.'
     } else if (err.message?.includes('invalid') || err.message?.includes('manquant')) {
       errorMessage.value = 'Le lien de confirmation est invalide. Veuillez réessayer.'
     } else {
-      errorMessage.value = 'Une erreur s\'est produite lors de la confirmation.'
+      errorMessage.value = 'Erreur lors de la confirmation. Contactez le support si le problème persiste.'
     }
   }
 })
 
-// ✅ COUNTDOWN AVEC PROGRESS BAR
+// ✅ COUNTDOWN SIMPLE
 const startCountdown = () => {
   const interval = setInterval(() => {
     countdown.value--
-    progressWidth.value = ((5 - countdown.value) / 5) * 100
+    progressWidth.value = ((3 - countdown.value) / 3) * 100
     
     if (countdown.value <= 0) {
       clearInterval(interval)
-      goToOnboarding()
+      redirectToApp()
     }
   }, 1000)
 }
 
-// ✅ REDIRECTION DIRECTE VERS ONBOARDING
-const goToOnboarding = () => {
-  navigateTo('/onboarding', { replace: true })
+// ✅ REDIRECTION SIMPLE VERS LA RACINE
+const redirectToApp = () => {
+  console.log('🚀 Redirection vers l\'application (middleware gérera onboarding)')
+  // ✅ REDIRECTION SIMPLE - Le middleware d'onboarding s'occupera du reste
+  navigateTo('/', { replace: true })
 }
 
 // ✅ SEO
@@ -217,7 +214,6 @@ useHead({
 </script>
 
 <style scoped>
-/* ✅ SPINNER */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

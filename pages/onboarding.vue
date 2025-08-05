@@ -1,350 +1,362 @@
-<!-- pages/onboarding.vue - VERSION CORRIGÉE AVEC MODAL BIENVENUE -->
+<!-- pages/onboarding.vue -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-    <!-- Header simple -->
-    <header class="relative z-10 bg-white/80 backdrop-blur-sm border-b border-gray-100">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-center items-center h-16">
-          <div class="flex items-center space-x-3">
-            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-              <span class="text-sm font-bold text-white">CS</span>
-            </div>
-            <span class="text-xl font-bold text-gray-900">ChatSeller</span>
-          </div>
+  <div class="min-h-screen bg-gray-900 text-white relative overflow-hidden">
+    
+    <!-- Background avec gradient -->
+    <div class="absolute inset-0 bg-gradient-to-br from-blue-900 via-gray-900 to-purple-900"></div>
+    <div class="absolute inset-0 bg-black/20"></div>
+    
+    <!-- Header avec logo -->
+    <header class="relative z-10 p-6">
+      <div class="flex items-center space-x-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-lg">
+          <span class="text-lg font-bold text-white">CS</span>
         </div>
+        <span class="text-2xl font-bold text-white">ChatSeller</span>
       </div>
     </header>
 
-    <!-- Contenu principal responsive -->
-    <div class="flex-1 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-4xl w-full">
-        
-        <!-- Progress bar responsive -->
-        <div class="mb-6 sm:mb-8">
-          <div class="flex items-center justify-between text-sm font-medium text-gray-600 mb-2">
-            <span>Étape {{ currentStep }} sur 3</span>
-            <span>{{ Math.round((currentStep / 3) * 100) }}% terminé</span>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              class="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-in-out"
-              :style="{ width: `${(currentStep / 3) * 100}%` }"
-            ></div>
-          </div>
+    <!-- Progress bar en haut -->
+    <div class="relative z-10 px-6 pb-8">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between text-sm text-gray-300 mb-4">
+          <span>Étape {{ currentStep }} sur 3</span>
+          <span>{{ Math.round((currentStep / 3) * 100) }}% terminé</span>
         </div>
+        
+        <!-- Barre de progression moderne -->
+        <div class="w-full bg-gray-800 rounded-full h-2 shadow-inner">
+          <div 
+            class="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-700 ease-out shadow-lg"
+            :style="{ width: `${(currentStep / 3) * 100}%` }"
+          ></div>
+        </div>
+      </div>
+    </div>
 
+    <!-- Contenu principal -->
+    <div class="relative z-10 px-6 pb-6">
+      <div class="max-w-5xl mx-auto">
+        
         <!-- Étape 1: Informations entreprise -->
-        <div v-if="currentStep === 1" class="bg-white rounded-xl shadow-xl border border-gray-100 p-6 sm:p-8 lg:p-10">
-          <div class="text-center mb-6 sm:mb-8">
-            <div class="flex justify-center mb-4">
-              <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0H3m2 0v-4m0 4h4"/>
-                </svg>
+        <div v-if="currentStep === 1" class="transition-all duration-500 ease-in-out">
+          <div class="text-center mb-12">
+            <div class="inline-flex p-4 bg-blue-600/20 rounded-2xl mb-6">
+              <svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0H3m2 0v-4m0 4h4"/>
+              </svg>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Votre entreprise
+            </h1>
+            <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+              Configurons ChatSeller pour votre activité
+            </p>
+          </div>
+
+          <form @submit.prevent="nextStep" class="max-w-2xl mx-auto space-y-8">
+            <div class="space-y-6">
+              <div>
+                <label class="block text-lg font-medium text-gray-200 mb-3">
+                  Nom de l'entreprise *
+                </label>
+                <input
+                  v-model="form.company"
+                  type="text"
+                  required
+                  class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg placeholder-gray-400 backdrop-blur"
+                  placeholder="Mon E-commerce"
+                />
+              </div>
+
+              <div>
+                <label class="block text-lg font-medium text-gray-200 mb-3">
+                  Site web
+                </label>
+                <input
+                  v-model="form.website"
+                  type="url"
+                  class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg placeholder-gray-400 backdrop-blur"
+                  placeholder="https://mon-site.com"
+                />
+              </div>
+
+              <div>
+                <label class="block text-lg font-medium text-gray-200 mb-3">
+                  Secteur d'activité
+                </label>
+                <select
+                  v-model="form.industry"
+                  class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg"
+                >
+                  <option value="" class="bg-gray-800">Sélectionnez votre secteur</option>
+                  <option value="fashion" class="bg-gray-800">Mode et vêtements</option>
+                  <option value="beauty" class="bg-gray-800">Beauté et cosmétiques</option>
+                  <option value="electronics" class="bg-gray-800">Électronique et high-tech</option>
+                  <option value="home" class="bg-gray-800">Maison et décoration</option>
+                  <option value="sports" class="bg-gray-800">Sport et fitness</option>
+                  <option value="food" class="bg-gray-800">Alimentation</option>
+                  <option value="health" class="bg-gray-800">Santé et bien-être</option>
+                  <option value="automotive" class="bg-gray-800">Automobile</option>
+                  <option value="jewelry" class="bg-gray-800">Bijouterie</option>
+                  <option value="toys" class="bg-gray-800">Jouets et enfants</option>
+                  <option value="other" class="bg-gray-800">Autre</option>
+                </select>
               </div>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Votre entreprise</h2>
-            <p class="mt-2 text-gray-600 max-w-2xl mx-auto">Aidez-nous à configurer ChatSeller pour votre activité</p>
-          </div>
 
-          <form @submit.prevent="nextStep" class="space-y-6 max-w-2xl mx-auto">
-            <div>
-              <label for="company" class="block text-sm font-medium text-gray-700 mb-2">
-                Nom de l'entreprise *
-              </label>
-              <input
-                id="company"
-                v-model="form.company"
-                type="text"
-                required
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
-                placeholder="Mon E-commerce"
-              />
-            </div>
-
-            <div>
-              <label for="website" class="block text-sm font-medium text-gray-700 mb-2">
-                Site web
-              </label>
-              <input
-                id="website"
-                v-model="form.website"
-                type="url"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
-                placeholder="https://mon-site.com"
-              />
-            </div>
-
-            <div>
-              <label for="industry" class="block text-sm font-medium text-gray-700 mb-2">
-                Secteur d'activité
-              </label>
-              <select
-                id="industry"
-                v-model="form.industry"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
-              >
-                <option value="">Sélectionnez votre secteur</option>
-                <option value="fashion">Mode et vêtements</option>
-                <option value="beauty">Beauté et cosmétiques</option>
-                <option value="electronics">Électronique et high-tech</option>
-                <option value="home">Maison et décoration</option>
-                <option value="sports">Sport et fitness</option>
-                <option value="food">Alimentation</option>
-                <option value="health">Santé et bien-être</option>
-                <option value="automotive">Automobile</option>
-                <option value="jewelry">Bijouterie</option>
-                <option value="toys">Jouets et enfants</option>
-                <option value="other">Autre</option>
-              </select>
-            </div>
-
-            <div class="flex justify-end pt-4">
+            <div class="flex justify-end pt-8">
               <button
                 type="submit"
-                class="px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-base"
+                class="px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all shadow-lg transform hover:scale-105"
               >
                 Continuer
+                <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
               </button>
             </div>
           </form>
         </div>
 
         <!-- Étape 2: Plateforme -->
-        <div v-if="currentStep === 2" class="bg-white rounded-xl shadow-xl border border-gray-100 p-6 sm:p-8 lg:p-10">
-          <div class="text-center mb-6 sm:mb-8">
-            <div class="flex justify-center mb-4">
-              <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                </svg>
-              </div>
+        <div v-if="currentStep === 2" class="transition-all duration-500 ease-in-out">
+          <div class="text-center mb-12">
+            <div class="inline-flex p-4 bg-green-600/20 rounded-2xl mb-6">
+              <svg class="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+              </svg>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Votre plateforme</h2>
-            <p class="mt-2 text-gray-600 max-w-2xl mx-auto">Pour une intégration optimale de ChatSeller</p>
+            <h1 class="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+              Votre plateforme
+            </h1>
+            <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+              Pour une intégration optimale de ChatSeller
+            </p>
           </div>
 
-          <form @submit.prevent="nextStep" class="space-y-6 max-w-4xl mx-auto">
+          <form @submit.prevent="nextStep" class="max-w-4xl mx-auto space-y-8">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-4 text-center">
+              <label class="block text-xl font-medium text-gray-200 mb-8 text-center">
                 Quelle plateforme utilisez-vous ? *
               </label>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <label class="relative flex items-center p-4 sm:p-6 border rounded-lg cursor-pointer hover:border-blue-300 transition-all"
-                       :class="form.platform === 'shopify' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Option Shopify -->
+                <label class="relative group cursor-pointer">
                   <input v-model="form.platform" type="radio" value="shopify" class="sr-only">
-                  <div class="flex flex-col items-center text-center space-y-3 w-full">
-                    <div class="text-3xl">🛒</div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">Shopify</div>
-                      <div class="text-xs text-gray-500">Plateforme populaire</div>
+                  <div class="p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur"
+                       :class="form.platform === 'shopify' ? 'border-blue-500 bg-blue-600/20 shadow-lg shadow-blue-500/20' : 'border-gray-700'">
+                    <div class="text-center space-y-4">
+                      <div class="text-5xl">🛒</div>
+                      <div>
+                        <div class="text-lg font-semibold text-white">Shopify</div>
+                        <div class="text-sm text-gray-400">Plateforme populaire</div>
+                      </div>
+                    </div>
+                    <div v-if="form.platform === 'shopify'" class="absolute top-4 right-4">
+                      <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                  <div v-if="form.platform === 'shopify'" class="absolute top-3 right-3">
-                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                  </div>
                 </label>
-                
-                <label class="relative flex items-center p-4 sm:p-6 border rounded-lg cursor-pointer hover:border-blue-300 transition-all"
-                       :class="form.platform === 'woocommerce' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'">
+
+                <!-- Option WooCommerce -->
+                <label class="relative group cursor-pointer">
                   <input v-model="form.platform" type="radio" value="woocommerce" class="sr-only">
-                  <div class="flex flex-col items-center text-center space-y-3 w-full">
-                    <div class="text-3xl">🔗</div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">WooCommerce</div>
-                      <div class="text-xs text-gray-500">Plugin WordPress</div>
+                  <div class="p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur"
+                       :class="form.platform === 'woocommerce' ? 'border-blue-500 bg-blue-600/20 shadow-lg shadow-blue-500/20' : 'border-gray-700'">
+                    <div class="text-center space-y-4">
+                      <div class="text-5xl">🔗</div>
+                      <div>
+                        <div class="text-lg font-semibold text-white">WooCommerce</div>
+                        <div class="text-sm text-gray-400">Plugin WordPress</div>
+                      </div>
+                    </div>
+                    <div v-if="form.platform === 'woocommerce'" class="absolute top-4 right-4">
+                      <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                  <div v-if="form.platform === 'woocommerce'" class="absolute top-3 right-3">
-                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                  </div>
                 </label>
-                
-                <label class="relative flex items-center p-4 sm:p-6 border rounded-lg cursor-pointer hover:border-blue-300 transition-all"
-                       :class="form.platform === 'prestashop' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'">
-                  <input v-model="form.platform" type="radio" value="prestashop" class="sr-only">
-                  <div class="flex flex-col items-center text-center space-y-3 w-full">
-                    <div class="text-3xl">🏪</div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">PrestaShop</div>
-                      <div class="text-xs text-gray-500">Solution open source</div>
-                    </div>
-                  </div>
-                  <div v-if="form.platform === 'prestashop'" class="absolute top-3 right-3">
-                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                  </div>
-                </label>
-                
-                <label class="relative flex items-center p-4 sm:p-6 border rounded-lg cursor-pointer hover:border-blue-300 transition-all"
-                       :class="form.platform === 'wix' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'">
-                  <input v-model="form.platform" type="radio" value="wix" class="sr-only">
-                  <div class="flex flex-col items-center text-center space-y-3 w-full">
-                    <div class="text-3xl">🎨</div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">Wix</div>
-                      <div class="text-xs text-gray-500">Constructeur de site</div>
-                    </div>
-                  </div>
-                  <div v-if="form.platform === 'wix'" class="absolute top-3 right-3">
-                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                  </div>
-                </label>
-                
-                <label class="relative flex items-center p-4 sm:p-6 border rounded-lg cursor-pointer hover:border-blue-300 transition-all"
-                       :class="form.platform === 'custom' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'">
+
+                <!-- Option Custom -->
+                <label class="relative group cursor-pointer">
                   <input v-model="form.platform" type="radio" value="custom" class="sr-only">
-                  <div class="flex flex-col items-center text-center space-y-3 w-full">
-                    <div class="text-3xl">⚙️</div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">Site personnalisé</div>
-                      <div class="text-xs text-gray-500">Développé sur mesure</div>
+                  <div class="p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur"
+                       :class="form.platform === 'custom' ? 'border-blue-500 bg-blue-600/20 shadow-lg shadow-blue-500/20' : 'border-gray-700'">
+                    <div class="text-center space-y-4">
+                      <div class="text-5xl">⚙️</div>
+                      <div>
+                        <div class="text-lg font-semibold text-white">Site personnalisé</div>
+                        <div class="text-sm text-gray-400">Développé sur mesure</div>
+                      </div>
                     </div>
-                  </div>
-                  <div v-if="form.platform === 'custom'" class="absolute top-3 right-3">
-                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
+                    <div v-if="form.platform === 'custom'" class="absolute top-4 right-4">
+                      <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </label>
-                
-                <label class="relative flex items-center p-4 sm:p-6 border rounded-lg cursor-pointer hover:border-blue-300 transition-all"
-                       :class="form.platform === 'other' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'">
+
+                <!-- Option Other -->
+                <label class="relative group cursor-pointer sm:col-start-2 lg:col-start-auto">
                   <input v-model="form.platform" type="radio" value="other" class="sr-only">
-                  <div class="flex flex-col items-center text-center space-y-3 w-full">
-                    <div class="text-3xl">📦</div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">Autre</div>
-                      <div class="text-xs text-gray-500">Autre plateforme</div>
+                  <div class="p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur"
+                       :class="form.platform === 'other' ? 'border-blue-500 bg-blue-600/20 shadow-lg shadow-blue-500/20' : 'border-gray-700'">
+                    <div class="text-center space-y-4">
+                      <div class="text-5xl">📦</div>
+                      <div>
+                        <div class="text-lg font-semibold text-white">Autre</div>
+                        <div class="text-sm text-gray-400">Autre plateforme</div>
+                      </div>
                     </div>
-                  </div>
-                  <div v-if="form.platform === 'other'" class="absolute top-3 right-3">
-                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
+                    <div v-if="form.platform === 'other'" class="absolute top-4 right-4">
+                      <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </label>
               </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+            <div class="flex justify-between pt-8">
               <button
                 type="button"
                 @click="previousStep"
-                class="px-8 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors text-base order-2 sm:order-1"
+                class="px-8 py-4 bg-gray-800 text-white text-lg font-medium rounded-xl hover:bg-gray-700 transition-all border border-gray-700"
               >
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
                 Retour
               </button>
               <button
                 type="submit"
-                class="px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-base order-1 sm:order-2"
+                class="px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg transform hover:scale-105"
               >
                 Continuer
+                <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
               </button>
             </div>
           </form>
         </div>
 
         <!-- Étape 3: Finalisation -->
-        <div v-if="currentStep === 3" class="bg-white rounded-xl shadow-xl border border-gray-100 p-6 sm:p-8 lg:p-10">
-          <div class="text-center mb-6 sm:mb-8">
-            <div class="flex justify-center mb-4">
-              <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
-                <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-              </div>
+        <div v-if="currentStep === 3" class="transition-all duration-500 ease-in-out">
+          <div class="text-center mb-12">
+            <div class="inline-flex p-4 bg-emerald-600/20 rounded-2xl mb-6">
+              <svg class="w-12 h-12 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Presque terminé !</h2>
-            <p class="mt-2 text-gray-600 max-w-2xl mx-auto">Comment avez-vous connu ChatSeller ?</p>
+            <h1 class="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+              Presque terminé !
+            </h1>
+            <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+              Une dernière information pour personnaliser votre expérience
+            </p>
           </div>
 
-          <form @submit.prevent="completeOnboarding" class="space-y-6 max-w-2xl mx-auto">
-            <div>
-              <label for="source" class="block text-sm font-medium text-gray-700 mb-2">
-                Source de découverte
-              </label>
-              <select
-                id="source"
-                v-model="form.acquisitionSource"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
-              >
-                <option value="">Sélectionnez une source</option>
-                <option value="search_google">Recherche Google</option>
-                <option value="social_media">Réseaux sociaux</option>
-                <option value="recommendation">Recommandation</option>
-                <option value="blog_article">Article de blog</option>
-                <option value="youtube">YouTube</option>
-                <option value="conference">Conférence / Événement</option>
-                <option value="newsletter">Newsletter e-commerce</option>
-                <option value="shopify_app_store">Shopify App Store</option>
-                <option value="competitor_comparison">Comparaison avec un concurrent</option>
-                <option value="podcast">Podcast</option>
-                <option value="other">Autre</option>
-              </select>
-            </div>
-
-            <div class="flex items-start">
-              <div class="flex items-center h-5">
-                <input
-                  id="newsletter"
-                  v-model="form.newsletter"
-                  type="checkbox"
-                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-              </div>
-              <div class="ml-3">
-                <label for="newsletter" class="text-sm font-medium text-gray-700">
-                  Recevoir les conseils d'optimisation et les mises à jour produit
+          <form @submit.prevent="completeOnboarding" class="max-w-2xl mx-auto space-y-8">
+            <div class="space-y-6">
+              <div>
+                <label class="block text-lg font-medium text-gray-200 mb-3">
+                  Comment avez-vous connu ChatSeller ?
                 </label>
-                <p class="text-xs text-gray-500 mt-1">
-                  Conseils pour maximiser vos conversions et nouvelles fonctionnalités.
-                </p>
+                <select
+                  v-model="form.acquisitionSource"
+                  class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg"
+                >
+                  <option value="" class="bg-gray-800">Sélectionnez une source</option>
+                  <option value="search_google" class="bg-gray-800">Recherche Google</option>
+                  <option value="social_media" class="bg-gray-800">Réseaux sociaux</option>
+                  <option value="recommendation" class="bg-gray-800">Recommandation</option>
+                  <option value="blog_article" class="bg-gray-800">Article de blog</option>
+                  <option value="youtube" class="bg-gray-800">YouTube</option>
+                  <option value="other" class="bg-gray-800">Autre</option>
+                </select>
               </div>
-            </div>
 
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
-              <div class="flex items-start">
-                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <div class="text-sm">
-                  <p class="font-medium text-blue-800 mb-1">Votre essai gratuit commence maintenant</p>
-                  <p class="text-blue-700">
-                    Vous bénéficiez de <strong>7 jours d'essai gratuit</strong> pour tester toutes les fonctionnalités.
-                  </p>
+              <div class="bg-gray-800/30 border border-gray-700 rounded-xl p-6 backdrop-blur">
+                <div class="flex items-start space-x-4">
+                  <div class="flex items-center h-5 mt-1">
+                    <input
+                      id="newsletter"
+                      v-model="form.newsletter"
+                      type="checkbox"
+                      class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-800 rounded"
+                    />
+                  </div>
+                  <div>
+                    <label for="newsletter" class="text-lg font-medium text-gray-200">
+                      Recevoir les conseils d'optimisation
+                    </label>
+                    <p class="text-sm text-gray-400 mt-1">
+                      Conseils pour maximiser vos conversions et nouvelles fonctionnalités
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-blue-900/20 border border-blue-800 rounded-xl p-6 backdrop-blur">
+                <div class="flex items-start space-x-4">
+                  <svg class="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <div>
+                    <p class="font-semibold text-blue-300 mb-2">Votre essai gratuit commence maintenant</p>
+                    <p class="text-blue-200">
+                      Vous bénéficiez de <strong>7 jours d'essai gratuit</strong> pour tester toutes les fonctionnalités.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+            <div class="flex justify-between pt-8">
               <button
                 type="button"
                 @click="previousStep"
-                class="px-8 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors text-base order-2 sm:order-1"
+                class="px-8 py-4 bg-gray-800 text-white text-lg font-medium rounded-xl hover:bg-gray-700 transition-all border border-gray-700"
               >
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
                 Retour
               </button>
               <button
                 type="submit"
                 :disabled="loading"
-                class="px-8 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 text-base order-1 sm:order-2"
+                class="px-12 py-4 bg-gradient-to-r from-emerald-600 to-blue-600 text-white text-lg font-semibold rounded-xl hover:from-emerald-700 hover:to-blue-700 transition-all shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
               >
-                <span v-if="loading" class="flex items-center justify-center">
-                  <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <span v-if="loading" class="flex items-center">
+                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Finalisation...
                 </span>
-                <span v-else>Accéder à mon dashboard</span>
+                <span v-else class="flex items-center">
+                  🎉 Accéder à mon dashboard
+                  <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </span>
               </button>
             </div>
           </form>
@@ -358,23 +370,24 @@
 import { ref, reactive, onMounted } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 
-// Layout
+// ✅ LAYOUT AUTH
 definePageMeta({
   layout: 'auth'
+  // ✅ Pas de middleware explicite - utilise les middlewares globaux
 })
 
-// ✅ CLIENT SUPABASE DIRECT
+// ✅ CLIENT SUPABASE
 const config = useRuntimeConfig()
 const supabase = createClient(
   config.public.supabaseUrl,
   config.public.supabaseAnonKey
 )
 
-// State
+// ✅ STATE
 const currentStep = ref(1)
 const loading = ref(false)
 
-// Formulaire
+// ✅ FORMULAIRE
 const form = reactive({
   company: '',
   website: '',
@@ -384,7 +397,7 @@ const form = reactive({
   newsletter: true
 })
 
-// Navigation
+// ✅ NAVIGATION
 const nextStep = () => {
   if (currentStep.value < 3) {
     currentStep.value++
@@ -399,19 +412,16 @@ const previousStep = () => {
   }
 }
 
-// ✅ FINALISER L'ONBOARDING AVEC REDIRECTION MODAL
+// ✅ COMPLETION ONBOARDING
 const completeOnboarding = async () => {
   loading.value = true
   
   try {
-    // Récupérer l'utilisateur actuel
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
       throw new Error('Utilisateur non trouvé')
     }
-    
-    console.log('✅ Finalisation de l\'onboarding pour:', user.email)
     
     // Mettre à jour la table users
     const { error: updateUserError } = await supabase
@@ -430,11 +440,10 @@ const completeOnboarding = async () => {
       .eq('id', user.id)
     
     if (updateUserError) {
-      console.error('❌ Erreur mise à jour utilisateur:', updateUserError)
-      throw new Error('Erreur lors de la mise à jour du profil')
+      throw new Error('Erreur lors de la mise à jour du profil: ' + updateUserError.message)
     }
     
-    // ✅ CRÉER LE SHOP AVEC LES BONNES DONNÉES
+    // Créer/mettre à jour le shop
     const { error: shopError } = await supabase
       .from('shops')
       .upsert({
@@ -447,7 +456,6 @@ const completeOnboarding = async () => {
         subscription_plan: 'free',
         is_active: true,
         trial_started_at: new Date().toISOString(),
-        // Configuration par défaut pour un nouveau shop
         widget_config: {
           theme: 'modern',
           position: 'bottom-right',
@@ -465,24 +473,21 @@ const completeOnboarding = async () => {
       })
     
     if (shopError) {
-      console.error('❌ Erreur création shop:', shopError)
-      // Ne pas bloquer pour l'erreur shop, continuer
+      console.warn('⚠️ Erreur création shop (non bloquante):', shopError)
     }
     
-    console.log('✅ Onboarding terminé avec succès!')
-    
-    // ✅ REDIRECTION VERS DASHBOARD AVEC MODAL DE BIENVENUE
+    // Redirection vers dashboard
     await navigateTo('/?onboarding=completed&welcome=true', { replace: true })
     
   } catch (error: any) {
     console.error('❌ Erreur finalisation onboarding:', error)
-    alert('Une erreur s\'est produite : ' + error.message)
+    alert('Une erreur s\'est produite lors de la finalisation : ' + error.message)
   } finally {
     loading.value = false
   }
 }
 
-// Helper pour extraire le domaine
+// ✅ HELPER POUR EXTRAIRE DOMAINE
 const extractDomain = (url: string): string | null => {
   if (!url) return null
   try {
@@ -493,60 +498,41 @@ const extractDomain = (url: string): string | null => {
   }
 }
 
-// ✅ VÉRIFICATION RENFORCÉE AU MONTAGE
+// ✅ INITIALISATION
 onMounted(async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      console.log('❌ Utilisateur non connecté, redirection vers register')
       await navigateTo('/register', { replace: true })
       return
     }
     
-    // ✅ VÉRIFIER QUE L'EMAIL EST CONFIRMÉ
     if (!user.email_confirmed_at) {
-      console.log('❌ Email non confirmé, redirection vers register')
       await navigateTo('/register', { replace: true })
       return
     }
     
-    console.log('✅ Utilisateur connecté avec email confirmé:', user.email)
-    
-    // ✅ VÉRIFIER SI L'ONBOARDING EST DÉJÀ TERMINÉ
+    // Pré-remplir le formulaire si données existantes
     const { data: userData } = await supabase
       .from('users')
-      .select('onboarding_completed, company, industry, platform')
+      .select('company, industry, platform')
       .eq('id', user.id)
       .single()
     
-    // Si onboarding déjà terminé, rediriger vers dashboard
-    if (userData?.onboarding_completed === true) {
-      console.log('✅ Onboarding déjà terminé, redirection vers dashboard')
-      await navigateTo('/', { replace: true })
-      return
-    }
-    
-    // ✅ PRÉ-REMPLIR LE FORMULAIRE AVEC DONNÉES EXISTANTES
     if (userData) {
       if (userData.company) form.company = userData.company
       if (userData.industry) form.industry = userData.industry
       if (userData.platform) form.platform = userData.platform
     }
     
-    // Pré-remplir le nom de l'entreprise avec les métadonnées utilisateur si disponible
+    // Fallback sur métadonnées utilisateur
     if (!form.company && user.user_metadata?.company) {
       form.company = user.user_metadata.company
     }
     
-    console.log('✅ Onboarding prêt, formulaire pré-rempli:', {
-      company: form.company,
-      industry: form.industry,
-      platform: form.platform
-    })
-    
   } catch (error) {
-    console.error('❌ Erreur vérification onboarding:', error)
+    console.error('❌ Erreur initialisation onboarding:', error)
     await navigateTo('/register', { replace: true })
   }
 })
@@ -561,27 +547,24 @@ useHead({
 </script>
 
 <style scoped>
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-.bg-gradient-to-br {
-  background-size: 400% 400%;
-  animation: gradient 15s ease infinite;
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* Animations fluides */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
 
-.backdrop-blur-sm {
-  backdrop-filter: blur(4px);
+/* Effet glassmorphism */
+.backdrop-blur {
+  backdrop-filter: blur(10px);
 }
 </style>

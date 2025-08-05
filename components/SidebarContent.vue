@@ -1,4 +1,4 @@
-<!-- components/SidebarContent.vue - SIDEBAR CORRIGÉ -->
+<!-- components/SidebarContent.vue - SIDEBAR AVEC NAVIGATION CORRIGÉE -->
 <template>
   <div class="flex flex-col h-full">
     
@@ -33,6 +33,7 @@
         @click="handleNavClick"
       />
 
+      <!-- ✅ LIEN VENDEURS IA CORRIGÉ -->
       <SidebarLink
         to="/vendeurs-ia"
         :isActive="$route.path.startsWith('/vendeurs-ia')"
@@ -41,6 +42,7 @@
         @click="handleNavClick"
       />
 
+      <!-- ✅ LIEN CONVERSATIONS AVEC BADGE DYNAMIQUE -->
       <SidebarLink
         to="/conversations"
         :isActive="$route.path.startsWith('/conversations')"
@@ -343,10 +345,13 @@ const emit = defineEmits<{
 // ✅ STATE POUR LES BOUTONS UPGRADE
 const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
 
-// ✅ HANDLE NAVIGATION CLICKS
-const handleNavClick = () => {
+// ✅ HANDLE NAVIGATION CLICKS - AVEC DEBUG
+const handleNavClick = (event?: Event) => {
+  console.log('🖱️ SidebarContent: Navigation click détecté')
+  
   // Fermer le menu mobile lors de la navigation (si mobile)
   if (props.isMobile) {
+    console.log('📱 SidebarContent: Fermeture du menu mobile')
     emit('close-mobile')
   }
 }
