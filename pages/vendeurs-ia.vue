@@ -781,9 +781,9 @@ const getFallbackMessagePlaceholder = () => {
   return templates[agentForm.value.personality as keyof typeof templates] || "Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt."
 }
 
-// ✅ NOUVELLES MÉTHODES DE GÉNÉRATION
+// ✅ NOUVELLES MÉTHODES DE GÉNÉRATION (TYPES CORRIGÉS)
 const selectAgentType = (type: string) => {
-  agentForm.value.type = type
+  agentForm.value.type = type as Agent['type']
   // Auto-générer la description si elle est vide
   if (!agentForm.value.description) {
     agentForm.value.description = getDescriptionPlaceholder()
@@ -798,7 +798,7 @@ const selectAgentType = (type: string) => {
 }
 
 const selectPersonality = (personality: string) => {
-  agentForm.value.personality = personality
+  agentForm.value.personality = personality as Agent['personality']
   // Régénérer les messages avec la nouvelle personnalité
   agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
   agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
