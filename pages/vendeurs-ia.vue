@@ -1,4 +1,4 @@
-<!-- pages/vendeurs-ia.vue - VERSION COMPLÈTE AVEC NAVIGATION CORRIGÉE -->
+<!-- pages/vendeurs-ia.vue - VERSION ULTRA-INTUITIVE AVEC TEMPLATES ET IA -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -243,7 +243,7 @@
       </div>
     </div>
 
-    <!-- Create/Edit Agent Modal -->
+    <!-- ✅ MODAL CRÉATION/MODIFICATION AMÉLIORÉ -->
     <div v-if="showCreateModal || editingAgent" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content modal-large">
         <div class="modal-header">
@@ -258,74 +258,229 @@
         </div>
         
         <div class="modal-body">
+          <!-- ✅ INTRODUCTION GUIDÉE -->
+          <div v-if="!editingAgent" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start space-x-3">
+              <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <h4 class="font-medium text-blue-900 mb-1">🎯 Créer votre Vendeur IA en 3 étapes</h4>
+                <p class="text-sm text-blue-700">
+                  <strong>1.</strong> Choisissez le type → <strong>2.</strong> Nom et personnalité → <strong>3.</strong> Activez ! 
+                  Les descriptions et messages sont générés automatiquement.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div class="space-y-6">
-            <!-- Basic Info -->
+            <!-- ✅ ÉTAPE 1: TYPE DE VENDEUR (AMÉLIORÉ) -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Nom du Vendeur IA *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                <span class="flex items-center">
+                  <span class="w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2">1</span>
+                  Quel type de vendeur IA voulez-vous ?
+                </span>
+              </label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  v-for="type in agentTypes"
+                  :key="type.value"
+                  @click="selectAgentType(type.value)"
+                  :class="[
+                    'p-4 border-2 rounded-lg text-left transition-all hover:border-blue-300 hover:bg-blue-50',
+                    agentForm.type === type.value 
+                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
+                      : 'border-gray-200'
+                  ]"
+                >
+                  <div class="flex items-start space-x-3">
+                    <div :class="[
+                      'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                      type.color
+                    ]">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="type.icon"/>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="font-medium text-gray-900">{{ type.label }}</h4>
+                      <p class="text-xs text-gray-500 mt-1">{{ type.description }}</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- ✅ ÉTAPE 2: INFORMATIONS DE BASE -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <span class="flex items-center">
+                  <span class="w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2">2</span>
+                  Nom du Vendeur IA *
+                </span>
+              </label>
               <input
                 v-model="agentForm.name"
+                @input="onNameChange"
                 type="text"
                 class="input-modern w-full"
-                placeholder="Ex: Assistant vente produits tech"
+                :placeholder="getNamePlaceholder()"
               >
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Type de vendeur</label>
-              <select v-model="agentForm.type" class="input-modern w-full">
-                <option value="general">Vendeur généraliste</option>
-                <option value="product_specialist">Spécialiste produit</option>
-                <option value="support">Support & SAV</option>
-                <option value="upsell">Upsell & Cross-sell</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <textarea
-                v-model="agentForm.description"
-                rows="3"
-                class="input-modern w-full"
-                placeholder="Décrivez le rôle et les objectifs de ce vendeur IA..."
-              ></textarea>
+              <p class="text-xs text-gray-500 mt-1">
+                Exemples: {{ getNameExamples() }}
+              </p>
             </div>
 
-            <!-- Personality -->
+            <!-- ✅ PERSONNALITÉ AVEC PREVIEW -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Personnalité</label>
-              <select v-model="agentForm.personality" class="input-modern w-full">
-                <option value="professional">Professionnel</option>
-                <option value="friendly">Amical</option>
-                <option value="expert">Expert technique</option>
-                <option value="casual">Décontracté</option>
-              </select>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Personnalité et ton</label>
+              <div class="grid grid-cols-2 gap-3">
+                <button
+                  v-for="personality in personalityOptions"
+                  :key="personality.value"
+                  @click="selectPersonality(personality.value)"
+                  :class="[
+                    'p-3 border-2 rounded-lg text-left transition-all',
+                    agentForm.personality === personality.value 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  ]"
+                >
+                  <div class="flex items-center space-x-2">
+                    <span class="text-lg">{{ personality.emoji }}</span>
+                    <div>
+                      <div class="font-medium text-sm">{{ personality.label }}</div>
+                      <div class="text-xs text-gray-500">{{ personality.description }}</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
 
-            <!-- Messages -->
+            <!-- ✅ DESCRIPTION INTELLIGENTE -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Message d'accueil</label>
-              <textarea
-                v-model="agentForm.welcomeMessage"
-                rows="2"
-                class="input-modern w-full"
-                placeholder="Bonjour ! Comment puis-je vous aider aujourd'hui ?"
-              ></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Description et rôle
+                <span class="text-gray-500 font-normal">(générée automatiquement)</span>
+              </label>
+              <div class="relative">
+                <textarea
+                  v-model="agentForm.description"
+                  rows="3"
+                  class="input-modern w-full pr-20"
+                  :placeholder="getDescriptionPlaceholder()"
+                ></textarea>
+                <button
+                  @click="generateDescription"
+                  :disabled="generatingDescription || !agentForm.name || !agentForm.type"
+                  class="absolute top-2 right-2 px-3 py-1 bg-purple-600 text-white text-xs font-medium rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg v-if="generatingDescription" class="w-3 h-3 animate-spin mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <svg v-else class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  ✨ IA
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">
+                Décrit le rôle et les objectifs de votre vendeur IA. Click "✨ IA" pour générer automatiquement.
+              </p>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Message de fallback</label>
-              <textarea
-                v-model="agentForm.fallbackMessage"
-                rows="2"
-                class="input-modern w-full"
-                placeholder="Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt."
-              ></textarea>
+            <!-- ✅ MESSAGES PRÉDÉFINIS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Message d'accueil
+                  <span class="text-gray-500 font-normal">(suggéré)</span>
+                </label>
+                <div class="relative">
+                  <textarea
+                    v-model="agentForm.welcomeMessage"
+                    rows="2"
+                    class="input-modern w-full pr-12"
+                    :placeholder="getWelcomeMessagePlaceholder()"
+                  ></textarea>
+                  <button
+                    @click="generateWelcomeMessage"
+                    :disabled="!agentForm.name"
+                    class="absolute top-1 right-1 p-1 text-gray-400 hover:text-purple-600 transition-colors"
+                    title="Régénérer avec IA"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Message si l'IA ne sait pas
+                  <span class="text-gray-500 font-normal">(suggéré)</span>
+                </label>
+                <div class="relative">
+                  <textarea
+                    v-model="agentForm.fallbackMessage"
+                    rows="2"
+                    class="input-modern w-full pr-12"
+                    :placeholder="getFallbackMessagePlaceholder()"
+                  ></textarea>
+                  <button
+                    @click="generateFallbackMessage"
+                    :disabled="!agentForm.name"
+                    class="absolute top-1 right-1 p-1 text-gray-400 hover:text-purple-600 transition-colors"
+                    title="Régénérer avec IA"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <!-- Activation -->
+            <!-- ✅ PREVIEW EN TEMPS RÉEL -->
+            <div v-if="agentForm.name" class="bg-gray-50 rounded-lg p-4">
+              <h4 class="font-medium text-gray-900 mb-3 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                Aperçu de votre Vendeur IA
+              </h4>
+              <div class="bg-white border rounded-lg p-4 max-w-sm">
+                <div class="flex items-start space-x-3">
+                  <div :class="[
+                    'w-10 h-10 rounded-full flex items-center justify-center',
+                    getAvatarClass(agentForm.type)
+                  ]">
+                    <span class="text-white font-medium text-sm">
+                      {{ agentForm.name ? agentForm.name[0].toUpperCase() : 'V' }}
+                    </span>
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-medium text-gray-900">{{ agentForm.name || 'Votre Vendeur IA' }}</div>
+                    <div class="text-sm text-gray-500">{{ getTypeLabel(agentForm.type) }}</div>
+                    <div class="mt-2 text-sm text-gray-700 bg-gray-100 rounded-lg p-2">
+                      {{ agentForm.welcomeMessage || getWelcomeMessagePlaceholder() }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ ACTIVATION -->
             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <h4 class="text-sm font-medium text-gray-900">Activer immédiatement</h4>
+                <h4 class="text-sm font-medium text-gray-900 flex items-center">
+                  <span class="w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2">3</span>
+                  Activer immédiatement
+                </h4>
                 <p class="text-xs text-gray-500">Le vendeur IA sera disponible dès sa création</p>
               </div>
               <button
@@ -353,7 +508,10 @@
             :disabled="!agentForm.name || saving" 
             class="btn-primary"
           >
-            {{ saving ? 'Sauvegarde...' : (editingAgent ? 'Mettre à jour' : 'Créer le Vendeur IA') }}
+            <svg v-if="saving" class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            {{ saving ? 'Création...' : (editingAgent ? 'Mettre à jour' : 'Créer le Vendeur IA') }}
           </button>
         </div>
       </div>
@@ -427,7 +585,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgents, type Agent, type CreateAgentData, type UpdateAgentData } from '~/composables/useAgents'
 
@@ -445,6 +603,65 @@ interface ChatMessage {
   timestamp: Date
   loading?: boolean
 }
+
+// ✅ NOUVELLES DÉFINITIONS DE TYPES D'AGENTS
+const agentTypes = ref([
+  {
+    value: 'general',
+    label: 'Vendeur Généraliste',
+    description: 'Polyvalent, adapté à tous types de produits',
+    icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+    color: 'bg-blue-500'
+  },
+  {
+    value: 'product_specialist',
+    label: 'Spécialiste Produit',
+    description: 'Expert technique, recommandations précises',
+    icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
+    color: 'bg-green-500'
+  },
+  {
+    value: 'support',
+    label: 'Support & SAV',
+    description: 'Résout les problèmes, rassure les clients',
+    icon: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    color: 'bg-orange-500'
+  },
+  {
+    value: 'upsell',
+    label: 'Upsell & Cross-sell',
+    description: 'Optimise le panier, propose des compléments',
+    icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+    color: 'bg-purple-500'
+  }
+])
+
+const personalityOptions = ref([
+  {
+    value: 'professional',
+    label: 'Professionnel',
+    description: 'Formel, expert',
+    emoji: '💼'
+  },
+  {
+    value: 'friendly',
+    label: 'Amical',
+    description: 'Chaleureux, accessible',
+    emoji: '😊'
+  },
+  {
+    value: 'expert',
+    label: 'Expert technique',
+    description: 'Très technique, précis',
+    emoji: '🔧'
+  },
+  {
+    value: 'casual',
+    label: 'Décontracté',
+    description: 'Cool, moderne',
+    emoji: '😎'
+  }
+])
 
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
@@ -478,6 +695,9 @@ const activeAgentMenu = ref<string | null>(null)
 const showTestModal = ref(false)
 const selectedAgent = ref<Agent | null>(null)
 
+// ✅ NOUVELLES VARIABLES POUR GÉNÉRATION IA
+const generatingDescription = ref(false)
+
 // ✅ CHAT TEST STATE
 const chatMessages = ref<ChatMessage[]>([])
 const testMessage = ref('')
@@ -505,7 +725,184 @@ const isPaidUser = computed(() => {
   return plan === 'starter' || plan === 'pro'
 })
 
-// ✅ ACTION METHODS
+// ✅ NOUVELLES MÉTHODES POUR TEMPLATES
+const getNamePlaceholder = () => {
+  const examples = {
+    general: "Ex: Assistant Commercial Sophie",
+    product_specialist: "Ex: Expert Tech Marc",
+    support: "Ex: Support Client Julie",
+    upsell: "Ex: Conseiller Premium Lisa"
+  }
+  return examples[agentForm.value.type as keyof typeof examples] || "Ex: Votre Vendeur IA"
+}
+
+const getNameExamples = () => {
+  const examples = {
+    general: "Sophie, Marc, Assistant Vente",
+    product_specialist: "Expert Tech, Conseiller Pro, Spécialiste",
+    support: "Support Client, Aide Premium, Assistant SAV",
+    upsell: "Conseiller Plus, Premium Assistant, VIP Support"
+  }
+  return examples[agentForm.value.type as keyof typeof examples] || "Sophie, Marc, Lisa"
+}
+
+const getDescriptionPlaceholder = () => {
+  const templates = {
+    general: "Vendeur IA polyvalent capable d'accompagner les clients dans tous leurs achats. Expertise transversale sur l'ensemble du catalogue produits.",
+    product_specialist: "Expert technique spécialisé dans [votre secteur]. Maîtrise parfaite des spécifications produits et des besoins clients avancés.",
+    support: "Spécialiste support et service après-vente. Résout les problèmes clients et transforme les objections en opportunités de vente.",
+    upsell: "Expert en optimisation panier et ventes additionnelles. Identifie les besoins complémentaires pour maximiser la valeur client."
+  }
+  return templates[agentForm.value.type as keyof typeof templates] || "Décrivez le rôle de votre vendeur IA..."
+}
+
+const getWelcomeMessagePlaceholder = () => {
+  const personality = agentForm.value.personality
+  const name = agentForm.value.name || "Votre conseiller"
+  
+  const templates = {
+    professional: `Bonjour, je suis ${name}. Comment puis-je vous accompagner dans votre achat aujourd'hui ?`,
+    friendly: `Salut ! 👋 Je suis ${name}, votre conseiller. Une question sur nos produits ?`,
+    expert: `Bonjour, ${name} à votre service. Je suis là pour vous guider techniquement. Que recherchez-vous ?`,
+    casual: `Hey ! C'est ${name} 😊 Besoin d'un coup de main pour choisir ?`
+  }
+  
+  return templates[personality as keyof typeof templates] || `Bonjour ! Je suis ${name}. Comment puis-je vous aider ?`
+}
+
+const getFallbackMessagePlaceholder = () => {
+  const templates = {
+    professional: "Je transmets votre question à notre équipe d'experts. Un conseiller vous recontactera rapidement.",
+    friendly: "Bonne question ! Je vais demander à mon équipe et on revient vers vous très vite 😊",
+    expert: "Cette question nécessite une expertise approfondie. Je vous mets en relation avec notre équipe technique.",
+    casual: "Alors là, tu me poses une colle ! 😅 Laisse-moi demander aux pros et je reviens vers toi !"
+  }
+  
+  return templates[agentForm.value.personality as keyof typeof templates] || "Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt."
+}
+
+// ✅ NOUVELLES MÉTHODES DE GÉNÉRATION
+const selectAgentType = (type: string) => {
+  agentForm.value.type = type
+  // Auto-générer la description si elle est vide
+  if (!agentForm.value.description) {
+    agentForm.value.description = getDescriptionPlaceholder()
+  }
+  // Auto-générer les messages si ils sont vides
+  if (!agentForm.value.welcomeMessage) {
+    agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
+  }
+  if (!agentForm.value.fallbackMessage) {
+    agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
+  }
+}
+
+const selectPersonality = (personality: string) => {
+  agentForm.value.personality = personality
+  // Régénérer les messages avec la nouvelle personnalité
+  agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
+  agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
+}
+
+const onNameChange = () => {
+  // Régénérer les messages quand le nom change
+  if (agentForm.value.welcomeMessage === '' || agentForm.value.welcomeMessage.includes('Votre conseiller')) {
+    agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
+  }
+}
+
+// ✅ GÉNÉRATION AVEC IA (SIMULATION)
+const generateDescription = async () => {
+  if (!agentForm.value.name || !agentForm.value.type) return
+  
+  generatingDescription.value = true
+  
+  try {
+    // Simulation de génération IA
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    const aiTemplates = {
+      general: [
+        `${agentForm.value.name} est votre conseiller commercial polyvalent, expert dans l'accompagnement personnalisé de chaque client. Spécialisé dans la découverte des besoins et la recommandation de solutions adaptées.`,
+        `Vendeur IA expérimenté et empathique, ${agentForm.value.name} maîtrise l'art de la vente consultative. Capable de s'adapter à tous profils clients pour maximiser satisfaction et conversion.`,
+        `${agentForm.value.name} combine expertise produit et sens commercial pour transformer chaque interaction en opportunité. Approche centrée client et résultats optimaux garantis.`
+      ],
+      product_specialist: [
+        `${agentForm.value.name} est votre expert technique de référence. Maîtrise approfondie des spécifications produits et capacité unique à traduire les besoins techniques en solutions concrètes.`,
+        `Spécialiste confirmé avec expertise pointue, ${agentForm.value.name} excelle dans le conseil technique avancé. Accompagne les clients les plus exigeants vers la solution optimale.`,
+        `${agentForm.value.name} allie expertise technique et pédagogie pour rendre accessible les produits les plus complexes. Référent incontournable pour les achats techniques.`
+      ],
+      support: [
+        `${agentForm.value.name} est votre spécialiste support et relation client. Excellence dans la résolution de problèmes et transformation des difficultés en opportunités commerciales.`,
+        `Expert en service client, ${agentForm.value.name} combine écoute active et solutions pragmatiques. Spécialisé dans la fidélisation et la montée en gamme des clients existants.`,
+        `${agentForm.value.name} maîtrise l'art de transformer les objections en arguments de vente. Approche consultative pour rassurer, convaincre et fidéliser.`
+      ],
+      upsell: [
+        `${agentForm.value.name} est votre expert en optimisation de panier et ventes additionnelles. Identifie intuitivement les besoins complémentaires pour maximiser la valeur client.`,
+        `Spécialiste en montée en gamme, ${agentForm.value.name} excelle dans la proposition de solutions premium et complémentaires. Approche subtile et efficace.`,
+        `${agentForm.value.name} maîtrise les techniques avancées de cross-selling et upselling. Capable de doubler la valeur panier tout en préservant l'expérience client.`
+      ]
+    }
+    
+    const typeTemplates = aiTemplates[agentForm.value.type as keyof typeof aiTemplates] || aiTemplates.general
+    const randomTemplate = typeTemplates[Math.floor(Math.random() * typeTemplates.length)]
+    
+    agentForm.value.description = randomTemplate
+    
+  } catch (error) {
+    console.error('Erreur génération description:', error)
+  } finally {
+    generatingDescription.value = false
+  }
+}
+
+const generateWelcomeMessage = async () => {
+  if (!agentForm.value.name) return
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 800))
+    agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
+  } catch (error) {
+    console.error('Erreur génération message accueil:', error)
+  }
+}
+
+const generateFallbackMessage = async () => {
+  if (!agentForm.value.name) return
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 800))
+    agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
+  } catch (error) {
+    console.error('Erreur génération message fallback:', error)
+  }
+}
+
+// ✅ WATCH POUR AUTO-COMPLÉTION
+watch(() => agentForm.value.type, (newType) => {
+  if (newType && !editingAgent.value) {
+    // Auto-remplir seulement si en mode création
+    if (!agentForm.value.description) {
+      agentForm.value.description = getDescriptionPlaceholder()
+    }
+    if (!agentForm.value.welcomeMessage) {
+      agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
+    }
+    if (!agentForm.value.fallbackMessage) {
+      agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
+    }
+  }
+})
+
+watch(() => agentForm.value.personality, () => {
+  if (!editingAgent.value) {
+    // Régénérer les messages avec la nouvelle personnalité
+    agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
+    agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
+  }
+})
+
+// ✅ ACTION METHODS (INCHANGÉES)
 const refreshAgents = async () => {
   await fetchAgents()
 }
@@ -516,6 +913,16 @@ const openCreateModal = () => {
     return
   }
   showCreateModal.value = true
+  // Reset form avec templates par défaut
+  agentForm.value = {
+    name: '',
+    type: 'general',
+    personality: 'professional',
+    description: '',
+    welcomeMessage: '',
+    fallbackMessage: '',
+    isActive: true
+  }
 }
 
 const toggleAgentMenu = (agentId: string) => {
@@ -570,13 +977,11 @@ const deleteAgentAction = async (agent: Agent) => {
   }
 }
 
-// ✅ NAVIGATION VERS CONFIGURATION - COMPLÈTEMENT REÉCRITE ET ULTRA-ROBUSTE
 const configureAgent = async (agent: Agent) => {
   console.log('🔄 [configureAgent] Navigation vers configuration:', agent.id, agent.name)
   
   activeAgentMenu.value = null
   
-  // ✅ VALIDATION DE L'ID AGENT
   if (!agent.id || agent.id === 'undefined' || agent.id === 'null') {
     console.error('❌ [configureAgent] ID agent invalide:', agent.id)
     alert('Erreur: ID agent invalide')
@@ -584,7 +989,6 @@ const configureAgent = async (agent: Agent) => {
   }
   
   try {
-    // ✅ NAVIGATION VERS LA ROUTE DE CONFIGURATION ALTERNATIVE
     console.log('🚀 [configureAgent] Navigation vers /agent-config...')
     
     await navigateTo({
@@ -604,7 +1008,6 @@ const configureAgent = async (agent: Agent) => {
   } catch (navigationError) {
     console.warn('⚠️ [configureAgent] Erreur navigateTo, tentative fallback:', navigationError)
     
-    // ✅ FALLBACK AVEC WINDOW.LOCATION
     const queryParams = new URLSearchParams({
       id: agent.id,
       name: agent.name,
@@ -632,7 +1035,6 @@ const testAgent = (agent: Agent) => {
   showTestModal.value = true
   selectedAgent.value = agent
   
-  // Initialiser la conversation
   chatMessages.value = [
     {
       id: Date.now().toString(),
@@ -643,7 +1045,6 @@ const testAgent = (agent: Agent) => {
   ]
 }
 
-// ✅ ENVOYER MESSAGE DE TEST
 const sendTestMessage = async () => {
   if (!testMessage.value.trim() || sendingMessage.value || !selectedAgent.value) return
   
@@ -651,7 +1052,6 @@ const sendTestMessage = async () => {
   testMessage.value = ''
   sendingMessage.value = true
   
-  // Ajouter le message utilisateur
   const userMsg: ChatMessage = {
     id: Date.now().toString(),
     role: 'user',
@@ -660,7 +1060,6 @@ const sendTestMessage = async () => {
   }
   chatMessages.value.push(userMsg)
   
-  // Ajouter un message de chargement pour l'IA
   const loadingMsg: ChatMessage = {
     id: (Date.now() + 1).toString(),
     role: 'assistant',
@@ -670,14 +1069,12 @@ const sendTestMessage = async () => {
   }
   chatMessages.value.push(loadingMsg)
   
-  // Scroll vers le bas
   await nextTick()
   if (chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
   }
   
   try {
-    // ✅ SIMULATION DE RÉPONSE IA
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     const aiResponses = [
@@ -689,7 +1086,6 @@ const sendTestMessage = async () => {
     
     const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
     
-    // Remplacer le message de chargement par la vraie réponse
     const msgIndex = chatMessages.value.findIndex(msg => msg.loading)
     if (msgIndex !== -1) {
       chatMessages.value[msgIndex] = {
@@ -703,7 +1099,6 @@ const sendTestMessage = async () => {
   } catch (error) {
     console.error('❌ Erreur simulation IA:', error)
     
-    // Remplacer par un message d'erreur
     const msgIndex = chatMessages.value.findIndex(msg => msg.loading)
     if (msgIndex !== -1) {
       chatMessages.value[msgIndex] = {
@@ -716,7 +1111,6 @@ const sendTestMessage = async () => {
   } finally {
     sendingMessage.value = false
     
-    // Scroll vers le bas
     await nextTick()
     if (chatContainer.value) {
       chatContainer.value.scrollTop = chatContainer.value.scrollHeight
@@ -760,7 +1154,6 @@ const closeModal = () => {
   }
 }
 
-// Close dropdown on outside click
 const handleClickOutside = (event: Event) => {
   const target = event.target as Element
   if (!target.closest('.dropdown')) {
@@ -779,7 +1172,6 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-// ✅ SEO
 useHead({
   title: 'Vendeurs IA - ChatSeller Dashboard'
 })
@@ -849,7 +1241,7 @@ useHead({
 }
 
 .modal-large {
-  @apply max-w-2xl;
+  @apply max-w-4xl;
 }
 
 .modal-header {

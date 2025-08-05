@@ -1,4 +1,4 @@
-<!-- pages/auth/callback.vue - VERSION SIMPLIFIÉE SANS ERREURS TS -->
+<!-- pages/auth/callback.vue - VERSION MINIMALISTE SANS CONFLIT -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
@@ -14,7 +14,7 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          {{ loadingMessage }}
+          Confirmation de votre email...
         </h2>
         <p class="text-gray-600">
           Veuillez patienter pendant que nous validons votre compte.
@@ -31,10 +31,10 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          {{ successMessage }}
+          Email confirmé avec succès !
         </h2>
         <p class="text-gray-600 mb-6">
-          {{ successDescription }}
+          Finalisons maintenant la configuration de votre compte.
         </p>
         
         <!-- Progress bar de redirection -->
@@ -51,10 +51,10 @@
         </div>
         
         <button
-          @click="handleRedirect"
+          @click="goToOnboarding"
           class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
         >
-          {{ redirectButtonText }}
+          Continuer la configuration
         </button>
       </div>
 
@@ -74,13 +74,6 @@
           {{ errorMessage }}
         </p>
         <div class="space-y-3">
-          <button
-            @click="retryConfirmation"
-            v-if="canRetry"
-            class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Réessayer
-          </button>
           <NuxtLink
             to="/register"
             class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -121,25 +114,18 @@ const loading = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
-const loadingMessage = ref('Confirmation de votre email...')
-const successMessage = ref('Email confirmé avec succès !')
-const successDescription = ref('Votre compte est maintenant activé.')
-const redirectButtonText = ref('Continuer maintenant')
 const countdown = ref(5)
 const progressWidth = ref(0)
-const canRetry = ref(false)
-const redirectUrl = ref('/onboarding')
 
-// ✅ TRAITEMENT UNIVERSEL DU CALLBACK SUPABASE (SIMPLIFIÉ)
+// ✅ TRAITEMENT MINIMAL - SEULEMENT GÉRER LA SESSION
 onMounted(async () => {
   try {
-    console.log('🔗 Traitement du callback Supabase...')
+    console.log('🔗 Callback minimal: Traitement de la confirmation...')
     console.log('🔍 URL complète:', window.location.href)
     
-    // ✅ RÉCUPÉRATION UNIVERSELLE DES PARAMÈTRES
+    // ✅ RÉCUPÉRATION UNIVERSELLE DES TOKENS
     let accessToken = ''
     let refreshToken = ''
-    let confirmationType = ''
     
     // Format 1: Hash fragment (#access_token=...)
     if (window.location.hash && window.location.hash.includes('access_token')) {
@@ -147,7 +133,6 @@ onMounted(async () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1))
       accessToken = hashParams.get('access_token') || ''
       refreshToken = hashParams.get('refresh_token') || ''
-      confirmationType = hashParams.get('type') || 'signup'
     } 
     // Format 2: Query parameters (?access_token=...)
     else {
@@ -155,17 +140,19 @@ onMounted(async () => {
       const urlParams = new URLSearchParams(window.location.search)
       accessToken = urlParams.get('access_token') || ''
       refreshToken = urlParams.get('refresh_token') || ''
-      confirmationType = urlParams.get('type') || 'signup'
     }
     
-    console.log('📋 Tokens récupérés:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type: confirmationType })
+    console.log('📋 Tokens récupérés:', { 
+      hasAccessToken: !!accessToken, 
+      hasRefreshToken: !!refreshToken 
+    })
     
     if (!accessToken) {
       throw new Error('Token de confirmation manquant')
     }
     
-    // ✅ UTILISER LES TOKENS POUR CRÉER LA SESSION
-    console.log('🔑 Création de la session avec les tokens...')
+    // ✅ SEULEMENT CRÉER LA SESSION - PAS DE MODIFICATION DB
+    console.log('🔑 Création de la session...')
     
     const { data, error: sessionError } = await supabase.auth.setSession({
       access_token: accessToken,
@@ -173,87 +160,30 @@ onMounted(async () => {
     })
     
     if (sessionError || !data.session || !data.user) {
+      console.error('❌ Erreur session:', sessionError)
       throw new Error('Impossible de créer la session')
     }
     
     console.log('✅ Session créée avec succès pour:', data.user.email)
+    console.log('🚀 REDIRECTION FORCÉE VERS ONBOARDING')
     
-    // ✅ METTRE À JOUR LA TABLE USERS
-    const { error: updateError } = await supabase
-      .from('users')
-      .upsert({
-        id: data.user.id,
-        email: data.user.email,
-        first_name: data.user.user_metadata?.first_name || '',
-        last_name: data.user.user_metadata?.last_name || '',
-        email_verified: true,
-        email_confirmed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'id'
-      })
-    
-    if (updateError) {
-      console.warn('⚠️ Erreur mise à jour users:', updateError)
-    }
-    
-    // ✅ POUR LA CONFIRMATION EMAIL, TOUJOURS REDIRIGER VERS ONBOARDING
-    if (confirmationType === 'signup' || window.location.href.includes('access_token')) {
-      console.log('📧 Confirmation email détectée - REDIRECTION FORCÉE VERS ONBOARDING')
-      
-      successMessage.value = 'Email confirmé avec succès !'
-      successDescription.value = 'Finalisons maintenant la configuration de votre compte.'
-      redirectButtonText.value = 'Continuer la configuration'
-      redirectUrl.value = '/onboarding'
-    } else {
-      // ✅ VÉRIFIER SI ONBOARDING DÉJÀ TERMINÉ (pour autres cas)
-      const { data: userData } = await supabase
-        .from('users')
-        .select('onboarding_completed, company, created_at, first_name, last_name')
-        .eq('id', data.user.id)
-        .single()
-      
-      console.log('📋 Données utilisateur complètes:', userData)
-      
-      const isOnboardingCompleted = userData?.onboarding_completed === true
-      const hasCompany = userData?.company && userData.company.trim().length > 0
-      
-      if (isOnboardingCompleted && hasCompany) {
-        successMessage.value = 'Connexion réussie !'
-        successDescription.value = 'Vous allez être redirigé vers votre dashboard.'
-        redirectButtonText.value = 'Accéder au dashboard'
-        redirectUrl.value = '/?welcome=true'
-      } else {
-        successMessage.value = 'Email confirmé avec succès !'
-        successDescription.value = 'Finalisons maintenant la configuration de votre compte.'
-        redirectButtonText.value = 'Continuer la configuration'
-        redirectUrl.value = '/onboarding'
-      }
-    }
-    
-    console.log('✅ Redirection vers:', redirectUrl.value)
-    
-    // ✅ AFFICHER LE SUCCÈS
+    // ✅ SUCCÈS ET REDIRECTION VERS ONBOARDING
     loading.value = false
     success.value = true
-    
-    // ✅ COUNTDOWN ET REDIRECTION AUTOMATIQUE
     startCountdown()
     
   } catch (err: any) {
-    console.error('❌ Erreur callback confirmation:', err)
+    console.error('❌ Erreur callback:', err)
     
     loading.value = false
     error.value = true
-    canRetry.value = true
     
-    // Messages d'erreur personnalisés
     if (err.message?.includes('expired')) {
-      errorMessage.value = 'Le lien de confirmation a expiré. Veuillez demander un nouveau lien.'
+      errorMessage.value = 'Le lien de confirmation a expiré. Veuillez créer un nouveau compte.'
     } else if (err.message?.includes('invalid') || err.message?.includes('manquant')) {
-      errorMessage.value = 'Le lien de confirmation est invalide. Vérifiez que vous avez cliqué sur le bon lien.'
+      errorMessage.value = 'Le lien de confirmation est invalide. Veuillez réessayer.'
     } else {
-      errorMessage.value = 'Une erreur s\'est produite lors de la confirmation : ' + err.message
+      errorMessage.value = 'Une erreur s\'est produite lors de la confirmation.'
     }
   }
 })
@@ -266,22 +196,14 @@ const startCountdown = () => {
     
     if (countdown.value <= 0) {
       clearInterval(interval)
-      handleRedirect()
+      goToOnboarding()
     }
   }, 1000)
 }
 
-// ✅ REDIRECTION
-const handleRedirect = () => {
-  navigateTo(redirectUrl.value, { replace: true })
-}
-
-// ✅ RETRY SIMPLE
-const retryConfirmation = () => {
-  loading.value = true
-  error.value = false
-  // Recharger la page pour relancer le traitement
-  window.location.reload()
+// ✅ REDIRECTION DIRECTE VERS ONBOARDING
+const goToOnboarding = () => {
+  navigateTo('/onboarding', { replace: true })
 }
 
 // ✅ SEO
