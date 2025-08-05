@@ -197,29 +197,38 @@ onMounted(async () => {
       console.warn('⚠️ Erreur mise à jour users:', updateError)
     }
     
-    // ✅ VÉRIFIER SI ONBOARDING DÉJÀ TERMINÉ
-    const { data: userData } = await supabase
-      .from('users')
-      .select('onboarding_completed, company, created_at')
-      .eq('id', data.user.id)
-      .single()
-    
-    console.log('📋 Données utilisateur:', userData)
-    
-    // ✅ DÉTERMINER LA REDIRECTION - LOGIQUE CORRIGÉE
-    const isOnboardingCompleted = userData?.onboarding_completed === true
-    const hasCompany = userData?.company && userData.company.trim().length > 0
-    
-    if (isOnboardingCompleted && hasCompany) {
-      successMessage.value = 'Connexion réussie !'
-      successDescription.value = 'Vous allez être redirigé vers votre dashboard.'
-      redirectButtonText.value = 'Accéder au dashboard'
-      redirectUrl.value = '/?welcome=true'
-    } else {
+    // ✅ POUR LA CONFIRMATION EMAIL, TOUJOURS REDIRIGER VERS ONBOARDING
+    if (confirmationType === 'signup' || window.location.href.includes('access_token')) {
+      console.log('📧 Confirmation email détectée - REDIRECTION FORCÉE VERS ONBOARDING')
+      
       successMessage.value = 'Email confirmé avec succès !'
       successDescription.value = 'Finalisons maintenant la configuration de votre compte.'
       redirectButtonText.value = 'Continuer la configuration'
       redirectUrl.value = '/onboarding'
+    } else {
+      // ✅ VÉRIFIER SI ONBOARDING DÉJÀ TERMINÉ (pour autres cas)
+      const { data: userData } = await supabase
+        .from('users')
+        .select('onboarding_completed, company, created_at, first_name, last_name')
+        .eq('id', data.user.id)
+        .single()
+      
+      console.log('📋 Données utilisateur complètes:', userData)
+      
+      const isOnboardingCompleted = userData?.onboarding_completed === true
+      const hasCompany = userData?.company && userData.company.trim().length > 0
+      
+      if (isOnboardingCompleted && hasCompany) {
+        successMessage.value = 'Connexion réussie !'
+        successDescription.value = 'Vous allez être redirigé vers votre dashboard.'
+        redirectButtonText.value = 'Accéder au dashboard'
+        redirectUrl.value = '/?welcome=true'
+      } else {
+        successMessage.value = 'Email confirmé avec succès !'
+        successDescription.value = 'Finalisons maintenant la configuration de votre compte.'
+        redirectButtonText.value = 'Continuer la configuration'
+        redirectUrl.value = '/onboarding'
+      }
     }
     
     console.log('✅ Redirection vers:', redirectUrl.value)
