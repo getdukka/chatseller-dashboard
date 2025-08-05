@@ -1,4 +1,4 @@
-<!-- pages/auth/callback.vue - VERSION CORRIGÉE FINALE -->
+<!-- pages/auth/callback.vue - VERSION SIMPLIFIÉE SANS ERREURS TS -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
@@ -130,198 +130,62 @@ const progressWidth = ref(0)
 const canRetry = ref(false)
 const redirectUrl = ref('/onboarding')
 
-// Variables pour retry
-let urlParams: URLSearchParams
-let confirmationType: string | null = null
-
-// ✅ TRAITEMENT UNIVERSEL DU CALLBACK SUPABASE
+// ✅ TRAITEMENT UNIVERSEL DU CALLBACK SUPABASE (SIMPLIFIÉ)
 onMounted(async () => {
   try {
     console.log('🔗 Traitement du callback Supabase...')
     console.log('🔍 URL complète:', window.location.href)
     
-    // ✅ NOUVEAU: Gérer les deux formats (hash fragment ET query params)
-    let urlParams: URLSearchParams
-    let confirmationType: string | null = null
+    // ✅ RÉCUPÉRATION UNIVERSELLE DES PARAMÈTRES
+    let accessToken = ''
+    let refreshToken = ''
+    let confirmationType = ''
     
     // Format 1: Hash fragment (#access_token=...)
     if (window.location.hash && window.location.hash.includes('access_token')) {
       console.log('📍 Format détecté: Hash fragment')
-      const hashParams = window.location.hash.substring(1) // Enlever le #
-      urlParams = new URLSearchParams(hashParams)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      accessToken = hashParams.get('access_token') || ''
+      refreshToken = hashParams.get('refresh_token') || ''
+      confirmationType = hashParams.get('type') || 'signup'
     } 
     // Format 2: Query parameters (?access_token=...)
     else {
       console.log('📍 Format détecté: Query parameters')
-      urlParams = new URLSearchParams(window.location.search)
+      const urlParams = new URLSearchParams(window.location.search)
+      accessToken = urlParams.get('access_token') || ''
+      refreshToken = urlParams.get('refresh_token') || ''
+      confirmationType = urlParams.get('type') || 'signup'
     }
     
-    confirmationType = urlParams.get('type')
-    
-    console.log('📋 Paramètres URL:', Object.fromEntries(urlParams.entries()))
-    console.log('🔍 Type de confirmation:', confirmationType)
-    
-    // ✅ GESTION PAR TYPE DE CONFIRMATION
-    if (confirmationType === 'signup' || urlParams.get('access_token')) {
-      await handleEmailConfirmation(urlParams)
-    } else if (confirmationType === 'recovery') {
-      await handlePasswordReset(urlParams)
-    } else if (confirmationType === 'email_change') {
-      await handleEmailChange(urlParams)
-    } else {
-      // ✅ FALLBACK : TENTER LA CONFIRMATION AUTOMATIQUE
-      console.log('🔄 Type non reconnu, tentative de confirmation automatique...')
-      await handleAuthCallback()
-    }
-    
-  } catch (err: any) {
-    console.error('❌ Erreur callback:', err)
-    showError(err.message || 'Une erreur inattendue s\'est produite.')
-  }
-})
-
-// ✅ GESTION CONFIRMATION EMAIL (SIGNUP)
-const handleEmailConfirmation = async (params: URLSearchParams) => {
-  try {
-    loadingMessage.value = 'Confirmation de votre email...'
-    
-    // ✅ MÉTHODE 1: Utiliser verifyOtp si token_hash présent
-    const tokenHash = params.get('token_hash')
-    if (tokenHash) {
-      console.log('🔑 Utilisation du token_hash pour confirmation...')
-      
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type: 'email'
-      })
-      
-      if (error) throw error
-      
-      if (data.user) {
-        await handleSuccessfulConfirmation(data.user, 'signup')
-        return
-      }
-    }
-    
-    // ✅ MÉTHODE 2: Utiliser access_token et refresh_token
-    const accessToken = params.get('access_token')
-    const refreshToken = params.get('refresh_token')
-    
-    if (accessToken) {
-      console.log('🔑 Utilisation des tokens pour session...')
-      
-      const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken || ''
-      })
-      
-      if (error) throw error
-      
-      if (data.user) {
-        await handleSuccessfulConfirmation(data.user, 'signup')
-        return
-      }
-    }
-    
-    throw new Error('Aucun token de confirmation valide trouvé')
-    
-  } catch (err: any) {
-    console.error('❌ Erreur confirmation email:', err)
-    canRetry.value = true
-    
-    if (err.message?.includes('expired')) {
-      showError('Le lien de confirmation a expiré. Demandez un nouveau lien depuis la page de connexion.')
-    } else if (err.message?.includes('invalid')) {
-      showError('Le lien de confirmation est invalide. Vérifiez que vous avez cliqué sur le bon lien.')
-    } else {
-      showError('Impossible de confirmer votre email. Veuillez réessayer ou créer un nouveau compte.')
-    }
-  }
-}
-
-// ✅ GESTION RESET PASSWORD
-const handlePasswordReset = async (params: URLSearchParams) => {
-  try {
-    loadingMessage.value = 'Validation du lien de réinitialisation...'
-    
-    const accessToken = params.get('access_token')
-    const refreshToken = params.get('refresh_token')
+    console.log('📋 Tokens récupérés:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type: confirmationType })
     
     if (!accessToken) {
-      throw new Error('Token de réinitialisation manquant')
+      throw new Error('Token de confirmation manquant')
     }
     
-    const { data, error } = await supabase.auth.setSession({
+    // ✅ UTILISER LES TOKENS POUR CRÉER LA SESSION
+    console.log('🔑 Création de la session avec les tokens...')
+    
+    const { data, error: sessionError } = await supabase.auth.setSession({
       access_token: accessToken,
-      refresh_token: refreshToken || ''
+      refresh_token: refreshToken
     })
     
-    if (error) throw error
-    
-    if (data.user) {
-      successMessage.value = 'Lien de réinitialisation validé !'
-      successDescription.value = 'Vous allez être redirigé pour définir votre nouveau mot de passe.'
-      redirectButtonText.value = 'Définir mon nouveau mot de passe'
-      redirectUrl.value = '/reset-password/new'
-      
-      showSuccess()
-      return
+    if (sessionError || !data.session || !data.user) {
+      throw new Error('Impossible de créer la session')
     }
     
-    throw new Error('Session invalide')
+    console.log('✅ Session créée avec succès pour:', data.user.email)
     
-  } catch (err: any) {
-    console.error('❌ Erreur reset password:', err)
-    showError('Le lien de réinitialisation est invalide ou a expiré.')
-  }
-}
-
-// ✅ GESTION CHANGEMENT EMAIL
-const handleEmailChange = async (params: URLSearchParams) => {
-  try {
-    loadingMessage.value = 'Confirmation du changement d\'email...'
-    
-    await handleAuthCallback()
-    
-    successMessage.value = 'Email modifié avec succès !'
-    successDescription.value = 'Votre nouvelle adresse email a été confirmée.'
-    redirectUrl.value = '/settings'
-    
-    showSuccess()
-    
-  } catch (err: any) {
-    console.error('❌ Erreur changement email:', err)
-    showError('Impossible de confirmer le changement d\'email.')
-  }
-}
-
-// ✅ GESTION GÉNÉRIQUE CALLBACK AUTH
-const handleAuthCallback = async () => {
-  const { data, error } = await supabase.auth.getSession()
-  
-  if (error) throw error
-  
-  if (data.session?.user) {
-    await handleSuccessfulConfirmation(data.session.user, confirmationType || 'unknown')
-  } else {
-    throw new Error('Aucune session valide trouvée')
-  }
-}
-
-// ✅ GESTION CONFIRMATION RÉUSSIE
-const handleSuccessfulConfirmation = async (user: any, type: string) => {
-  console.log('✅ Confirmation réussie pour:', user.email, 'Type:', type)
-  
-  try {
     // ✅ METTRE À JOUR LA TABLE USERS
     const { error: updateError } = await supabase
       .from('users')
       .upsert({
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata?.name || user.user_metadata?.full_name || '',
-        first_name: user.user_metadata?.first_name || '',
-        last_name: user.user_metadata?.last_name || '',
+        id: data.user.id,
+        email: data.user.email,
+        first_name: data.user.user_metadata?.first_name || '',
+        last_name: data.user.user_metadata?.last_name || '',
         email_verified: true,
         email_confirmed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -337,7 +201,7 @@ const handleSuccessfulConfirmation = async (user: any, type: string) => {
     const { data: userData } = await supabase
       .from('users')
       .select('onboarding_completed, company, created_at')
-      .eq('id', user.id)
+      .eq('id', data.user.id)
       .single()
     
     console.log('📋 Données utilisateur:', userData)
@@ -346,8 +210,6 @@ const handleSuccessfulConfirmation = async (user: any, type: string) => {
     const isOnboardingCompleted = userData?.onboarding_completed === true
     const hasCompany = userData?.company && userData.company.trim().length > 0
     
-    // Pour les nouveaux comptes : toujours vers l'onboarding
-    // Pour les comptes existants : vérifier si onboarding terminé
     if (isOnboardingCompleted && hasCompany) {
       successMessage.value = 'Connexion réussie !'
       successDescription.value = 'Vous allez être redirigé vers votre dashboard.'
@@ -361,28 +223,31 @@ const handleSuccessfulConfirmation = async (user: any, type: string) => {
     }
     
     console.log('✅ Redirection vers:', redirectUrl.value)
-    showSuccess()
+    
+    // ✅ AFFICHER LE SUCCÈS
+    loading.value = false
+    success.value = true
+    
+    // ✅ COUNTDOWN ET REDIRECTION AUTOMATIQUE
+    startCountdown()
     
   } catch (err: any) {
-    console.error('❌ Erreur post-confirmation:', err)
-    // Continuer quand même vers le succès
-    showSuccess()
+    console.error('❌ Erreur callback confirmation:', err)
+    
+    loading.value = false
+    error.value = true
+    canRetry.value = true
+    
+    // Messages d'erreur personnalisés
+    if (err.message?.includes('expired')) {
+      errorMessage.value = 'Le lien de confirmation a expiré. Veuillez demander un nouveau lien.'
+    } else if (err.message?.includes('invalid') || err.message?.includes('manquant')) {
+      errorMessage.value = 'Le lien de confirmation est invalide. Vérifiez que vous avez cliqué sur le bon lien.'
+    } else {
+      errorMessage.value = 'Une erreur s\'est produite lors de la confirmation : ' + err.message
+    }
   }
-}
-
-// ✅ AFFICHAGE SUCCÈS AVEC COUNTDOWN
-const showSuccess = () => {
-  loading.value = false
-  success.value = true
-  startCountdown()
-}
-
-// ✅ AFFICHAGE ERREUR
-const showError = (message: string) => {
-  loading.value = false
-  error.value = true
-  errorMessage.value = message
-}
+})
 
 // ✅ COUNTDOWN AVEC PROGRESS BAR
 const startCountdown = () => {
@@ -402,21 +267,12 @@ const handleRedirect = () => {
   navigateTo(redirectUrl.value, { replace: true })
 }
 
-// ✅ RETRY
-const retryConfirmation = async () => {
+// ✅ RETRY SIMPLE
+const retryConfirmation = () => {
   loading.value = true
   error.value = false
-  
-  // Récupérer les paramètres depuis l'URL actuelle
-  let retryParams: URLSearchParams
-  if (window.location.hash && window.location.hash.includes('access_token')) {
-    const hashParams = window.location.hash.substring(1)
-    retryParams = new URLSearchParams(hashParams)
-  } else {
-    retryParams = new URLSearchParams(window.location.search)
-  }
-  
-  await handleEmailConfirmation(retryParams)
+  // Recharger la page pour relancer le traitement
+  window.location.reload()
 }
 
 // ✅ SEO
@@ -430,18 +286,6 @@ useHead({
 </script>
 
 <style scoped>
-/* ✅ GRADIENT ANIMÉ */
-.bg-gradient-to-br {
-  background-size: 400% 400%;
-  animation: gradient 15s ease infinite;
-}
-
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 /* ✅ SPINNER */
 @keyframes spin {
   from { transform: rotate(0deg); }
