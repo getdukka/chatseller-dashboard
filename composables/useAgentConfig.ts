@@ -1,4 +1,4 @@
-// composables/useAgentConfig.ts - VERSION PRODUCTION SANS MOCKS
+// composables/useAgentConfig.ts - VERSION CORRIGÉE AVEC SYNCHRONISATION WIDGET
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
@@ -28,11 +28,24 @@ export interface AgentConfig {
       escalationKeywords?: string[]
       customPrompt?: string
       specificInstructions?: string[]
+      // ✅ NOUVELLE : Liaison base de connaissances
+      linkedKnowledgeBase?: string[]
+      aiProvider?: 'openai' | 'claude' // ✅ NOUVEAU : Choix du LLM
+      temperature?: number
+      maxTokens?: number
     }
     stats: {
       conversations: number
       conversions: number
     }
+    // ✅ NOUVEAU : Documents liés
+    knowledgeBase?: Array<{
+      id: string
+      title: string
+      contentType: string
+      isActive: boolean
+      tags: string[]
+    }>
   }
   widget: {
     buttonText: string
@@ -74,6 +87,8 @@ export const useAgentConfig = () => {
   const saving = ref(false)
   const error = ref<string | null>(null)
   const agentConfig = ref<AgentConfig | null>(null)
+  // ✅ NOUVEAU : State pour la sync widget
+  const widgetSyncStatus = ref<'idle' | 'syncing' | 'synced' | 'error'>('idle')
 
   // ✅ COMPUTED
   const isConfigValid = computed(() => {
@@ -86,24 +101,44 @@ export const useAgentConfig = () => {
     if (!agentConfig.value) return ''
     
     const shopId = authStore.userShopId || agentConfig.value.integration.shopId
+    const agentId = agentConfig.value.agent.id
     const baseUrl = config.public.widgetUrl || 'https://widget.chatseller.app'
     
-    return `<script>
+    // ✅ CODE D'INTÉGRATION CORRIGÉ ET OPTIMISÉ
+    return `<!-- ChatSeller Widget - Agent: ${agentConfig.value.agent.name} -->
+<script>
 (function() {
+  // Configuration du widget
+  window.ChatSellerConfig = {
+    shopId: '${shopId}',
+    agentId: '${agentId}',
+    apiUrl: '${config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'}',
+    buttonText: '${agentConfig.value.widget.buttonText}',
+    primaryColor: '${agentConfig.value.widget.primaryColor}',
+    position: '${agentConfig.value.widget.position}',
+    theme: '${agentConfig.value.widget.theme}',
+    language: 'fr',
+    autoDetectProduct: true,
+    debug: false
+  };
+  
+  // Chargement du widget
   var script = document.createElement('script');
-  script.src = '${baseUrl}/widget.js';
-  script.setAttribute('data-shop-id', '${shopId}');
-  script.setAttribute('data-agent-id', '${agentConfig.value.agent.id}');
-  script.setAttribute('data-config', '${JSON.stringify({
-    buttonText: agentConfig.value.widget.buttonText,
-    primaryColor: agentConfig.value.widget.primaryColor,
-    position: agentConfig.value.widget.position,
-    theme: agentConfig.value.widget.theme,
-    autoOpen: agentConfig.value.widget.autoOpen
-  })}');
+  script.src = '${baseUrl}/embed.js';
+  script.async = true;
+  script.onload = function() {
+    console.log('✅ ChatSeller widget chargé');
+    if (window.ChatSeller) {
+      window.ChatSeller.init(window.ChatSellerConfig);
+    }
+  };
+  script.onerror = function() {
+    console.error('❌ Erreur chargement ChatSeller widget');
+  };
   document.head.appendChild(script);
 })();
-</script>`
+</script>
+<!-- Fin ChatSeller Widget -->`
   })
 
   // ✅ HELPER: Headers avec authentification
@@ -118,7 +153,7 @@ export const useAgentConfig = () => {
     }
   }
 
-  // ✅ RÉCUPÉRER LA CONFIGURATION - VERSION PRODUCTION
+  // ✅ RÉCUPÉRER LA CONFIGURATION - VERSION AMÉLIORÉE
   const fetchAgentConfig = async (agentId: string) => {
     loading.value = true
     error.value = null
@@ -126,7 +161,6 @@ export const useAgentConfig = () => {
     try {
       console.log('🔍 [useAgentConfig] Récupération configuration agent:', agentId)
       
-      // ✅ VALIDATION STRICTE
       if (!agentId || agentId === 'undefined' || agentId === 'null') {
         throw new Error('ID agent invalide')
       }
@@ -135,11 +169,17 @@ export const useAgentConfig = () => {
         throw new Error('Session expirée. Veuillez vous reconnecter.')
       }
 
-      // ✅ APPEL API AGENT CONFIG
-      const agentResponse = await $fetch(`/api/v1/agents/${agentId}/config`, {
-        baseURL: config.public.apiBaseUrl,
-        headers: getAuthHeaders()
-      })
+      // ✅ RÉCUPÉRATION CONFIGURATION AGENT + KNOWLEDGE BASE
+      const [agentResponse, kbResponse] = await Promise.all([
+        $fetch(`/api/v1/agents/${agentId}/config`, {
+          baseURL: config.public.apiBaseUrl,
+          headers: getAuthHeaders()
+        }),
+        $fetch(`/api/v1/agents/${agentId}/knowledge`, {
+          baseURL: config.public.apiBaseUrl,
+          headers: getAuthHeaders()
+        }).catch(() => ({ success: true, data: [] })) // Fallback si pas de KB
+      ])
 
       if (!agentResponse.success) {
         throw new Error(agentResponse.error || 'Erreur lors de la récupération de la configuration agent')
@@ -156,7 +196,7 @@ export const useAgentConfig = () => {
         headers: getAuthHeaders()
       })
 
-      // ✅ CONSTRUIRE CONFIG COMPLÈTE VALIDÉE
+      // ✅ CONSTRUIRE CONFIG COMPLÈTE AVEC KB
       const completeConfig: AgentConfig = {
         agent: {
           id: agentResponse.data.agent.id,
@@ -168,11 +208,20 @@ export const useAgentConfig = () => {
           fallbackMessage: agentResponse.data.agent.fallbackMessage,
           avatar: agentResponse.data.agent.avatar,
           isActive: agentResponse.data.agent.isActive,
-          config: agentResponse.data.agent.config || {},
+          config: {
+            ...agentResponse.data.agent.config,
+            // ✅ NOUVELLES PROPRIÉTÉS
+            linkedKnowledgeBase: kbResponse.data?.map((kb: any) => kb.id) || [],
+            aiProvider: agentResponse.data.agent.config?.aiProvider || 'openai',
+            temperature: agentResponse.data.agent.config?.temperature || 0.7,
+            maxTokens: agentResponse.data.agent.config?.maxTokens || 1000
+          },
           stats: {
             conversations: agentResponse.data.agent.totalConversations || 0,
             conversions: agentResponse.data.agent.totalConversions || 0
-          }
+          },
+          // ✅ DOCUMENTS DE BASE DE CONNAISSANCES LIÉS
+          knowledgeBase: kbResponse.data || []
         },
         widget: {
           buttonText: shopResponse.widget_config?.buttonText || 'Parler à un conseiller',
@@ -206,23 +255,57 @@ export const useAgentConfig = () => {
     } catch (err: any) {
       console.error('❌ [useAgentConfig] Erreur fetchAgentConfig:', err)
       error.value = err.message || 'Erreur lors de la récupération de la configuration'
-      
-      // ✅ PAS DE FALLBACK MOCKÉS EN PRODUCTION
       return { success: false, error: error.value }
     } finally {
       loading.value = false
     }
   }
 
-  // ✅ SAUVEGARDER CONFIGURATION COMPLÈTE - VERSION PRODUCTION
+  // ✅ NOUVEAU : LIER DOCUMENTS DE BASE DE CONNAISSANCES
+  const linkKnowledgeBaseDocuments = async (agentId: string, documentIds: string[]) => {
+    saving.value = true
+    error.value = null
+
+    try {
+      console.log('🔗 [useAgentConfig] Liaison documents KB:', documentIds.length)
+      
+      const response = await $fetch(`/api/v1/agents/${agentId}/knowledge`, {
+        method: 'POST',
+        baseURL: config.public.apiBaseUrl,
+        headers: getAuthHeaders(),
+        body: { knowledgeBaseIds: documentIds }
+      })
+
+      if (!response.success) {
+        throw new Error(response.error || 'Erreur lors de la liaison')
+      }
+
+      // ✅ METTRE À JOUR CONFIG LOCALE
+      if (agentConfig.value) {
+        agentConfig.value.agent.config.linkedKnowledgeBase = documentIds
+      }
+
+      console.log('✅ [useAgentConfig] Documents KB liés avec succès')
+      return { success: true }
+
+    } catch (err: any) {
+      console.error('❌ [useAgentConfig] Erreur linkKnowledgeBase:', err)
+      error.value = err.message || 'Erreur lors de la liaison des documents'
+      return { success: false, error: error.value }
+    } finally {
+      saving.value = false
+    }
+  }
+
+  // ✅ SAUVEGARDER CONFIGURATION COMPLÈTE AVEC SYNC WIDGET
   const saveCompleteConfig = async (agentId: string, updates: Partial<AgentConfig>) => {
     saving.value = true
+    widgetSyncStatus.value = 'syncing'
     error.value = null
 
     try {
       const results = []
 
-      // ✅ VALIDATION AVANT SAUVEGARDE
       if (!authStore.token) {
         throw new Error('Session expirée. Veuillez vous reconnecter.')
       }
@@ -231,14 +314,24 @@ export const useAgentConfig = () => {
         throw new Error('ID agent manquant')
       }
 
-      // Sauvegarder agent si fourni
+      // ✅ SAUVEGARDER AGENT SI FOURNI
       if (updates.agent) {
         console.log('💾 Sauvegarde configuration agent...')
+        
         const agentResult = await $fetch(`/api/v1/agents/${agentId}`, {
           method: 'PUT',
           baseURL: config.public.apiBaseUrl,
           headers: getAuthHeaders(),
-          body: updates.agent
+          body: {
+            ...updates.agent,
+            config: {
+              ...updates.agent.config,
+              // ✅ S'assurer que les nouvelles propriétés sont incluses
+              aiProvider: updates.agent.config?.aiProvider || 'openai',
+              temperature: updates.agent.config?.temperature || 0.7,
+              maxTokens: updates.agent.config?.maxTokens || 1000
+            }
+          }
         })
 
         if (!agentResult.success) {
@@ -248,7 +341,7 @@ export const useAgentConfig = () => {
         results.push(agentResult)
       }
 
-      // Sauvegarder widget si fourni
+      // ✅ SAUVEGARDER WIDGET SI FOURNI
       if (updates.widget) {
         console.log('🎨 Sauvegarde configuration widget...')
         const shopId = authStore.userShopId
@@ -268,38 +361,98 @@ export const useAgentConfig = () => {
         results.push({ success: true, data: widgetResult })
       }
 
+      // ✅ LIER DOCUMENTS KB SI FOURNI
+      if (updates.agent?.config?.linkedKnowledgeBase) {
+        await linkKnowledgeBaseDocuments(agentId, updates.agent.config.linkedKnowledgeBase)
+      }
+
+      // ✅ SYNCHRONISER AVEC LE WIDGET (NOUVEAU)
+      await syncWithWidget(agentId)
+
       // ✅ RECHARGER LA CONFIG APRÈS SAUVEGARDE
       await fetchAgentConfig(agentId)
       
-      console.log('✅ Configuration complète sauvegardée et rechargée')
+      widgetSyncStatus.value = 'synced'
+      console.log('✅ Configuration complète sauvegardée et synchronisée')
       return { success: true, message: 'Configuration sauvegardée avec succès' }
 
     } catch (err: any) {
       console.error('❌ [useAgentConfig] Erreur saveCompleteConfig:', err)
       error.value = err.message || 'Erreur lors de la sauvegarde'
+      widgetSyncStatus.value = 'error'
       return { success: false, error: error.value }
     } finally {
       saving.value = false
+      // Reset sync status après 3 secondes
+      setTimeout(() => {
+        if (widgetSyncStatus.value !== 'error') {
+          widgetSyncStatus.value = 'idle'
+        }
+      }, 3000)
     }
   }
 
-  // ✅ TESTER LA CONNEXION API
-  const testApiConnection = async () => {
+  // ✅ NOUVEAU : SYNCHRONISER AVEC LE WIDGET
+  const syncWithWidget = async (agentId: string) => {
     try {
-      const response = await $fetch('/health', {
-        baseURL: config.public.apiBaseUrl
-      })
-      
-      return { 
-        success: true, 
-        data: response,
-        message: 'API accessible' 
+      // ✅ NOTIFIER LE WIDGET DE LA MISE À JOUR VIA POSTMESSAGE
+      if (typeof window !== 'undefined') {
+        // Envoyer un message à tous les iframes du widget
+        const widgetFrames = document.querySelectorAll('iframe[src*="widget.chatseller.app"]')
+        widgetFrames.forEach(frame => {
+          try {
+            (frame as HTMLIFrameElement).contentWindow?.postMessage({
+              type: 'CHATSELLER_CONFIG_UPDATE',
+              agentId: agentId,
+              timestamp: Date.now()
+            }, '*')
+          } catch (e) {
+            console.warn('Impossible d\'envoyer le message au widget:', e)
+          }
+        })
+
+        // ✅ DÉCLENCHER UN REFRESH DE LA CONFIG WIDGET VIA EVENT
+        window.dispatchEvent(new CustomEvent('chatseller:config-updated', {
+          detail: { agentId, timestamp: Date.now() }
+        }))
+
+        console.log('🔄 Synchronisation widget déclenchée')
       }
-    } catch (err: any) {
-      return { 
-        success: false, 
-        error: err.message,
-        message: 'API inaccessible' 
+    } catch (error) {
+      console.warn('⚠️ Erreur synchronisation widget:', error)
+    }
+  }
+
+  // ✅ NOUVEAU : TESTER L'IA EN TEMPS RÉEL
+  const testAIMessage = async (message: string, agentId: string) => {
+    try {
+      const response = await $fetch('/api/v1/chat/test', {
+        method: 'POST',
+        baseURL: config.public.apiBaseUrl,
+        headers: getAuthHeaders(),
+        body: {
+          message,
+          agentId,
+          shopId: authStore.userShopId,
+          testMode: true
+        }
+      })
+
+      if (response.success) {
+        return {
+          success: true,
+          message: response.data.message,
+          provider: response.data.provider || 'openai',
+          responseTime: response.data.responseTime || 0
+        }
+      } else {
+        throw new Error(response.error || 'Erreur lors du test IA')
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur test IA:', error)
+      return {
+        success: false,
+        error: error.message || 'Erreur lors du test IA'
       }
     }
   }
@@ -322,6 +475,9 @@ export const useAgentConfig = () => {
   // ✅ RÉINITIALISER L'ERREUR
   const clearError = () => {
     error.value = null
+    if (widgetSyncStatus.value === 'error') {
+      widgetSyncStatus.value = 'idle'
+    }
   }
 
   return {
@@ -330,6 +486,7 @@ export const useAgentConfig = () => {
     saving: readonly(saving),
     error: readonly(error),
     agentConfig: readonly(agentConfig),
+    widgetSyncStatus: readonly(widgetSyncStatus),
 
     // Computed
     isConfigValid,
@@ -338,7 +495,9 @@ export const useAgentConfig = () => {
     // Actions
     fetchAgentConfig,
     saveCompleteConfig,
-    testApiConnection,
+    linkKnowledgeBaseDocuments,
+    syncWithWidget,
+    testAIMessage,
     copyIntegrationCode,
     clearError
   }

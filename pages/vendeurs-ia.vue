@@ -1,4 +1,4 @@
-<!-- pages/vendeurs-ia.vue - VERSION COMPLÈTE AVEC CORRECTIONS -->
+<!-- pages/vendeurs-ia.vue - VERSION PRODUCTION COMPLÈTE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -275,7 +275,7 @@
           </div>
 
           <div class="space-y-6">
-            <!-- ✅ ÉTAPE 1: TYPE DE VENDEUR (AMÉLIORÉ) -->
+            <!-- ✅ ÉTAPE 1: TYPE DE VENDEUR -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">
                 <span class="flex items-center">
@@ -587,7 +587,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
-import { useSupabase } from '~/composables/useSupabase'
+import { useAgents, type Agent, type CreateAgentData } from '~/composables/useAgents'
 
 // ✅ PAGE META AVEC MIDDLEWARES CORRECTS
 definePageMeta({
@@ -595,32 +595,7 @@ definePageMeta({
   layout: 'default'
 })
 
-// ✅ INTERFACES
-interface Agent {
-  id: string
-  name: string
-  type: 'general' | 'product_specialist' | 'support' | 'upsell'
-  personality: 'professional' | 'friendly' | 'expert' | 'casual'
-  description?: string
-  welcomeMessage?: string
-  fallbackMessage?: string
-  isActive: boolean
-  stats?: {
-    conversations: number
-    conversions: number
-  }
-}
-
-interface CreateAgentData {
-  name: string
-  type: Agent['type']
-  personality: Agent['personality']
-  description?: string
-  welcomeMessage?: string
-  fallbackMessage?: string
-  isActive: boolean
-}
-
+// ✅ INTERFACE POUR LE CHAT
 interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -631,8 +606,28 @@ interface ChatMessage {
 
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
-const supabase = useSupabase()
 const router = useRouter()
+
+// ✅ UTILISER LE COMPOSABLE AGENTS POUR LA PRODUCTION
+const {
+  agents,
+  loading,
+  saving,
+  error,
+  planLimit,
+  canCreateAgent,
+  fetchAgents,
+  createAgent,
+  updateAgent,
+  deleteAgent,
+  toggleAgentStatus,
+  duplicateAgent,
+  getTypeLabel,
+  getAgentIcon,
+  getAvatarClass,
+  getStatusBadgeClass,
+  clearError
+} = useAgents()
 
 // ✅ DÉFINITIONS DE TYPES D'AGENTS
 const agentTypes = ref([
@@ -694,9 +689,6 @@ const personalityOptions = ref([
 ])
 
 // ✅ REACTIVE STATE
-const loading = ref(true)
-const saving = ref(false)
-const error = ref<string | null>(null)
 const showCreateModal = ref(false)
 const editingAgent = ref<Agent | null>(null)
 const activeAgentMenu = ref<string | null>(null)
@@ -704,29 +696,11 @@ const showTestModal = ref(false)
 const selectedAgent = ref<Agent | null>(null)
 const generatingDescription = ref(false)
 
-// ✅ DONNÉES MOCKÉES POUR DÉVELOPPEMENT
-const agents = ref<Agent[]>([
-  {
-    id: '1',
-    name: 'Anna - Assistante d\'achat',
-    type: 'general',
-    personality: 'friendly',
-    description: 'Vendeur IA expérimenté et empathique, Anna - Assistante d\'achat maîtrise l\'art de la vente consultative. Capable de s\'adapter à tous profils clients pour...',
-    welcomeMessage: 'Bonjour ! Je suis Anna, votre assistante d\'achat. Comment puis-je vous aider aujourd\'hui ?',
-    fallbackMessage: 'Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt.',
-    isActive: true,
-    stats: {
-      conversations: 0,
-      conversions: 0
-    }
-  }
-])
-
 // ✅ CHAT TEST STATE
 const chatMessages = ref<ChatMessage[]>([])
 const testMessage = ref('')
 const sendingMessage = ref(false)
-const chatContainer = ref<HTMLElement | null>(null)
+const chatContainer = ref<HTMLElement>()
 
 // ✅ FORM STATE
 const agentForm = ref<CreateAgentData>({
@@ -747,14 +721,6 @@ const subscriptionPlan = computed(() => {
 const isPaidUser = computed(() => {
   const plan = subscriptionPlan.value
   return plan === 'starter' || plan === 'pro'
-})
-
-const planLimit = computed(() => {
-  return subscriptionPlan.value === 'starter' ? 1 : 3
-})
-
-const canCreateAgent = computed(() => {
-  return agents.value.length < planLimit.value
 })
 
 // ✅ HELPER METHODS POUR TEMPLATES
@@ -813,43 +779,6 @@ const getFallbackMessagePlaceholder = () => {
   return templates[agentForm.value.personality as keyof typeof templates] || "Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt."
 }
 
-// ✅ HELPER METHODS POUR AFFICHAGE
-const getTypeLabel = (type: string): string => {
-  const labels = {
-    general: 'Vendeur généraliste',
-    product_specialist: 'Spécialiste produit',
-    support: 'Support & SAV',
-    upsell: 'Upsell & Cross-sell'
-  }
-  return labels[type as keyof typeof labels] || type
-}
-
-const getAgentIcon = (type: string): string => {
-  const icons = {
-    general: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-    product_specialist: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
-    support: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-    upsell: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
-  }
-  return icons[type as keyof typeof icons] || icons.general
-}
-
-const getAvatarClass = (type: string): string => {
-  const classes = {
-    general: 'bg-blue-500',
-    product_specialist: 'bg-green-500',
-    support: 'bg-orange-500',
-    upsell: 'bg-purple-500'
-  }
-  return classes[type as keyof typeof classes] || 'bg-blue-500'
-}
-
-const getStatusBadgeClass = (isActive: boolean): string => {
-  return isActive 
-    ? 'bg-green-100 text-green-800 border border-green-200'
-    : 'bg-red-100 text-red-800 border border-red-200'
-}
-
 // ✅ MÉTHODES DE GÉNÉRATION
 const selectAgentType = (type: string) => {
   agentForm.value.type = type as Agent['type']
@@ -871,7 +800,7 @@ const selectPersonality = (personality: string) => {
 }
 
 const onNameChange = () => {
-  if (agentForm.value.welcomeMessage === '' || agentForm.value.welcomeMessage.includes('Votre conseiller')) {
+  if (agentForm.value.welcomeMessage === '' || agentForm.value.welcomeMessage?.includes('Votre conseiller')) {
     agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
   }
 }
@@ -936,14 +865,7 @@ const generateFallbackMessage = async () => {
 
 // ✅ ACTION METHODS
 const refreshAgents = async () => {
-  loading.value = true
-  setTimeout(() => {
-    loading.value = false
-  }, 1000)
-}
-
-const clearError = () => {
-  error.value = null
+  await fetchAgents()
 }
 
 const openCreateModal = () => {
@@ -988,23 +910,26 @@ const duplicateAgentAction = async (agent: Agent) => {
   }
   
   activeAgentMenu.value = null
-  console.log('Duplication agent:', agent.name)
+  const result = await duplicateAgent(agent.id)
+  if (result.success) {
+    console.log('Agent dupliqué avec succès')
+  }
 }
 
 const toggleAgentStatusAction = async (agent: Agent) => {
   activeAgentMenu.value = null
-  const index = agents.value.findIndex(a => a.id === agent.id)
-  if (index !== -1) {
-    agents.value[index].isActive = !agents.value[index].isActive
+  const result = await toggleAgentStatus(agent.id, !agent.isActive)
+  if (result.success) {
+    console.log(`Agent ${agent.isActive ? 'désactivé' : 'activé'} avec succès`)
   }
 }
 
 const deleteAgentAction = async (agent: Agent) => {
   if (confirm('Êtes-vous sûr de vouloir supprimer ce vendeur IA ?')) {
     activeAgentMenu.value = null
-    const index = agents.value.findIndex(a => a.id === agent.id)
-    if (index !== -1) {
-      agents.value.splice(index, 1)
+    const result = await deleteAgent(agent.id)
+    if (result.success) {
+      console.log('Agent supprimé avec succès')
     }
   }
 }
@@ -1015,29 +940,67 @@ const configureAgent = async (agent: Agent) => {
   activeAgentMenu.value = null
   
   try {
-    await navigateTo({
-      path: '/agent-config',
-      query: {
-        id: agent.id,
-        name: agent.name,
-        type: agent.type,
-        description: agent.description || '',
-        welcomeMessage: agent.welcomeMessage || '',
-        fallbackMessage: agent.fallbackMessage || ''
-      }
-    })
-  } catch (navigationError) {
-    console.warn('⚠️ Erreur navigation, fallback:', navigationError)
-    const queryParams = new URLSearchParams({
+    // ✅ ÉTAPE 1: Sauvegarder l'agent dans le store avant navigation
+    const { useAgentConfigStore } = await import('~/stores/agentConfig')
+    const agentConfigStore = useAgentConfigStore()
+    
+    // Préparer les données complètes pour le store
+    const agentDataForConfig = {
       id: agent.id,
       name: agent.name,
       type: agent.type,
-      ...(agent.description && { description: agent.description }),
-      ...(agent.welcomeMessage && { welcomeMessage: agent.welcomeMessage }),
-      ...(agent.fallbackMessage && { fallbackMessage: agent.fallbackMessage })
+      personality: agent.personality || 'friendly',
+      description: agent.description || '',
+      welcomeMessage: agent.welcomeMessage || '',
+      fallbackMessage: agent.fallbackMessage || '',
+      avatar: agent.avatar || '',
+      isActive: agent.isActive,
+      config: agent.config || {},
+      stats: agent.stats || { conversations: 0, conversions: 0 },
+      sourceComponent: 'vendeurs-ia'
+    }
+    
+    // ✅ ÉTAPE 2: Sauvegarder dans le store
+    agentConfigStore.setAgentForConfig(agentDataForConfig, 'vendeurs-ia')
+    console.log('✅ Agent sauvegardé dans store pour configuration')
+    
+    // ✅ ÉTAPE 3: Navigation avec ID simple
+    await navigateTo({
+      path: '/agent-config',
+      query: { id: agent.id }
     })
     
-    window.location.href = `/agent-config?${queryParams.toString()}`
+  } catch (navigationError) {
+    console.warn('⚠️ Erreur navigation, fallback sessionStorage:', navigationError)
+    
+    // ✅ FALLBACK: Sauvegarder dans sessionStorage pour récupération
+    if (process.client) {
+      try {
+        sessionStorage.setItem('chatseller_agent_config_fallback', JSON.stringify({
+          agentId: agent.id,
+          agentData: {
+            id: agent.id,
+            name: agent.name,
+            type: agent.type,
+            personality: agent.personality || 'friendly',
+            description: agent.description || '',
+            welcomeMessage: agent.welcomeMessage || '',
+            fallbackMessage: agent.fallbackMessage || '',
+            avatar: agent.avatar || '',
+            isActive: agent.isActive,
+            config: agent.config || {},
+            stats: agent.stats || { conversations: 0, conversions: 0 }
+          },
+          timestamp: Date.now()
+        }))
+        console.log('💾 Fallback sessionStorage sauvegardé')
+      } catch (storageError) {
+        console.error('❌ Erreur sauvegarde fallback:', storageError)
+      }
+    }
+    
+    // Navigation simple avec query param
+    window.location.href = `/agent-config?id=${agent.id}`
   }
 }
 
@@ -1135,36 +1098,25 @@ const sendTestMessage = async () => {
 
 const saveAgent = async () => {
   if (!agentForm.value.name) return
-
-  saving.value = true
   
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
     if (editingAgent.value) {
       // Modifier agent existant
-      const index = agents.value.findIndex(a => a.id === editingAgent.value!.id)
-      if (index !== -1) {
-        agents.value[index] = {
-          ...agents.value[index],
-          ...agentForm.value
-        }
+      const result = await updateAgent(editingAgent.value.id, agentForm.value)
+      if (result.success) {
+        console.log('Agent modifié avec succès')
+        closeModal()
       }
     } else {
       // Créer nouvel agent
-      const newAgent: Agent = {
-        id: Date.now().toString(),
-        ...agentForm.value,
-        stats: { conversations: 0, conversions: 0 }
+      const result = await createAgent(agentForm.value)
+      if (result.success) {
+        console.log('Agent créé avec succès')
+        closeModal()
       }
-      agents.value.push(newAgent)
     }
-    
-    closeModal()
   } catch (error) {
     console.error('Erreur sauvegarde:', error)
-  } finally {
-    saving.value = false
   }
 }
 
@@ -1222,8 +1174,8 @@ onMounted(async () => {
   
   document.addEventListener('click', handleClickOutside)
   
-  // Simuler le chargement initial
-  await refreshAgents()
+  // ✅ CHARGER LES VRAIES DONNÉES DEPUIS L'API
+  await fetchAgents()
 })
 
 onUnmounted(() => {

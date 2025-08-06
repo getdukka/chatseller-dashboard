@@ -13,7 +13,8 @@ export interface AgentConfigData {
   isActive: boolean
   config?: any
   stats?: any
-  sourceComponent?: string // Pour tracking d'où vient la navigation
+  sourceComponent?: string 
+  knowledgeBase?: any[]
 }
 
 export const useAgentConfigStore = defineStore('agentConfig', {

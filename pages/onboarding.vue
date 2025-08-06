@@ -1,4 +1,4 @@
-<!-- pages/onboarding.vue -->
+<!-- pages/onboarding.vue - DESIGN DESKTOP FULL-WIDTH -->
 <template>
   <div class="min-h-screen bg-gray-900 text-white relative overflow-hidden">
     
@@ -18,7 +18,7 @@
 
     <!-- Progress bar en haut -->
     <div class="relative z-10 px-6 pb-8">
-      <div class="max-w-4xl mx-auto">
+      <div class="max-w-6xl mx-auto">
         <div class="flex items-center justify-between text-sm text-gray-300 mb-4">
           <span>Étape {{ currentStep }} sur 3</span>
           <span>{{ Math.round((currentStep / 3) * 100) }}% terminé</span>
@@ -36,87 +36,127 @@
 
     <!-- Contenu principal -->
     <div class="relative z-10 px-6 pb-6">
-      <div class="max-w-5xl mx-auto">
+      <!-- Layout responsive : centré sur mobile, plus large sur desktop -->
+      <div class="max-w-7xl mx-auto">
         
         <!-- Étape 1: Informations entreprise -->
         <div v-if="currentStep === 1" class="transition-all duration-500 ease-in-out">
-          <div class="text-center mb-12">
-            <div class="inline-flex p-4 bg-blue-600/20 rounded-2xl mb-6">
-              <svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0H3m2 0v-4m0 4h4"/>
-              </svg>
-            </div>
-            <h1 class="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Votre entreprise
-            </h1>
-            <p class="text-xl text-gray-300 max-w-2xl mx-auto">
-              Configurons ChatSeller pour votre activité
-            </p>
-          </div>
-
-          <form @submit.prevent="nextStep" class="max-w-2xl mx-auto space-y-8">
-            <div class="space-y-6">
-              <div>
-                <label class="block text-lg font-medium text-gray-200 mb-3">
-                  Nom de l'entreprise *
-                </label>
-                <input
-                  v-model="form.company"
-                  type="text"
-                  required
-                  class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg placeholder-gray-400 backdrop-blur"
-                  placeholder="Mon E-commerce"
-                />
-              </div>
-
-              <div>
-                <label class="block text-lg font-medium text-gray-200 mb-3">
-                  Site web
-                </label>
-                <input
-                  v-model="form.website"
-                  type="url"
-                  class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg placeholder-gray-400 backdrop-blur"
-                  placeholder="https://mon-site.com"
-                />
-              </div>
-
-              <div>
-                <label class="block text-lg font-medium text-gray-200 mb-3">
-                  Secteur d'activité
-                </label>
-                <select
-                  v-model="form.industry"
-                  class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg"
-                >
-                  <option value="" class="bg-gray-800">Sélectionnez votre secteur</option>
-                  <option value="fashion" class="bg-gray-800">Mode et vêtements</option>
-                  <option value="beauty" class="bg-gray-800">Beauté et cosmétiques</option>
-                  <option value="electronics" class="bg-gray-800">Électronique et high-tech</option>
-                  <option value="home" class="bg-gray-800">Maison et décoration</option>
-                  <option value="sports" class="bg-gray-800">Sport et fitness</option>
-                  <option value="food" class="bg-gray-800">Alimentation</option>
-                  <option value="health" class="bg-gray-800">Santé et bien-être</option>
-                  <option value="automotive" class="bg-gray-800">Automobile</option>
-                  <option value="jewelry" class="bg-gray-800">Bijouterie</option>
-                  <option value="toys" class="bg-gray-800">Jouets et enfants</option>
-                  <option value="other" class="bg-gray-800">Autre</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="flex justify-end pt-8">
-              <button
-                type="submit"
-                class="px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all shadow-lg transform hover:scale-105"
-              >
-                Continuer
-                <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          <!-- Layout Desktop : 2 colonnes -->
+          <div class="grid lg:grid-cols-2 gap-12 items-center">
+            
+            <!-- Colonne gauche : Titre et description -->
+            <div class="text-center lg:text-left">
+              <div class="inline-flex p-4 bg-blue-600/20 rounded-2xl mb-6 lg:mb-8">
+                <svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0H3m2 0v-4m0 4h4"/>
                 </svg>
-              </button>
+              </div>
+              <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Votre entreprise
+              </h1>
+              <p class="text-xl lg:text-2xl text-gray-300 mb-8">
+                Configurons ChatSeller pour votre activité
+              </p>
+              
+              <!-- Features list sur desktop -->
+              <div class="hidden lg:block space-y-4">
+                <div class="flex items-center space-x-3 text-gray-300">
+                  <div class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span>Vendeur IA personnalisé</span>
+                </div>
+                <div class="flex items-center space-x-3 text-gray-300">
+                  <div class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span>Augmentation du taux de conversion</span>
+                </div>
+                <div class="flex items-center space-x-3 text-gray-300">
+                  <div class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span>Intégration simple et rapide</span>
+                </div>
+              </div>
             </div>
-          </form>
+
+            <!-- Colonne droite : Formulaire -->
+            <div class="w-full">
+              <form @submit.prevent="nextStep" class="space-y-6">
+                <div class="bg-gray-800/30 backdrop-blur border border-gray-700 rounded-2xl p-8">
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block text-lg font-medium text-gray-200 mb-3">
+                        Nom de l'entreprise *
+                      </label>
+                      <input
+                        v-model="form.company"
+                        type="text"
+                        required
+                        class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg placeholder-gray-400"
+                        placeholder="Mon E-commerce"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-lg font-medium text-gray-200 mb-3">
+                        Site web
+                      </label>
+                      <input
+                        v-model="form.website"
+                        type="url"
+                        class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg placeholder-gray-400"
+                        placeholder="https://mon-site.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-lg font-medium text-gray-200 mb-3">
+                        Secteur d'activité
+                      </label>
+                      <select
+                        v-model="form.industry"
+                        class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg"
+                      >
+                        <option value="" class="bg-gray-800">Sélectionnez votre secteur</option>
+                        <option value="fashion" class="bg-gray-800">Produits Digitaux</option>
+                        <option value="fashion" class="bg-gray-800">Mode et vêtements</option>
+                        <option value="beauty" class="bg-gray-800">Beauté et cosmétiques</option>
+                        <option value="electronics" class="bg-gray-800">Électronique et high-tech</option>
+                        <option value="home" class="bg-gray-800">Maison et décoration</option>
+                        <option value="sports" class="bg-gray-800">Sport et fitness</option>
+                        <option value="food" class="bg-gray-800">Alimentation</option>
+                        <option value="health" class="bg-gray-800">Santé et bien-être</option>
+                        <option value="automotive" class="bg-gray-800">Automobile</option>
+                        <option value="jewelry" class="bg-gray-800">Bijouterie</option>
+                        <option value="toys" class="bg-gray-800">Jouets et enfants</option>
+                        <option value="other" class="bg-gray-800">Autre</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end pt-8">
+                    <button
+                      type="submit"
+                      class="px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all shadow-lg transform hover:scale-105"
+                    >
+                      Continuer
+                      <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
 
         <!-- Étape 2: Plateforme -->
@@ -127,28 +167,29 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
             </div>
-            <h1 class="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
               Votre plateforme
             </h1>
-            <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+            <p class="text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto">
               Pour une intégration optimale de ChatSeller
             </p>
           </div>
 
-          <form @submit.prevent="nextStep" class="max-w-4xl mx-auto space-y-8">
+          <form @submit.prevent="nextStep" class="space-y-8">
             <div>
               <label class="block text-xl font-medium text-gray-200 mb-8 text-center">
                 Quelle plateforme utilisez-vous ? *
               </label>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <!-- Grid responsive : 2 colonnes sur mobile, 4 sur desktop -->
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 
                 <!-- Option Shopify -->
                 <label class="relative group cursor-pointer">
                   <input v-model="form.platform" type="radio" value="shopify" class="sr-only">
-                  <div class="p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur"
+                  <div class="p-6 lg:p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur h-full"
                        :class="form.platform === 'shopify' ? 'border-blue-500 bg-blue-600/20 shadow-lg shadow-blue-500/20' : 'border-gray-700'">
-                    <div class="text-center space-y-4">
-                      <div class="text-5xl">🛒</div>
+                    <div class="text-center space-y-4 h-full flex flex-col justify-center">
+                      <div class="text-4xl lg:text-5xl">🛒</div>
                       <div>
                         <div class="text-lg font-semibold text-white">Shopify</div>
                         <div class="text-sm text-gray-400">Plateforme populaire</div>
@@ -167,10 +208,10 @@
                 <!-- Option WooCommerce -->
                 <label class="relative group cursor-pointer">
                   <input v-model="form.platform" type="radio" value="woocommerce" class="sr-only">
-                  <div class="p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur"
+                  <div class="p-6 lg:p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur h-full"
                        :class="form.platform === 'woocommerce' ? 'border-blue-500 bg-blue-600/20 shadow-lg shadow-blue-500/20' : 'border-gray-700'">
-                    <div class="text-center space-y-4">
-                      <div class="text-5xl">🔗</div>
+                    <div class="text-center space-y-4 h-full flex flex-col justify-center">
+                      <div class="text-4xl lg:text-5xl">🔗</div>
                       <div>
                         <div class="text-lg font-semibold text-white">WooCommerce</div>
                         <div class="text-sm text-gray-400">Plugin WordPress</div>
@@ -189,10 +230,10 @@
                 <!-- Option Custom -->
                 <label class="relative group cursor-pointer">
                   <input v-model="form.platform" type="radio" value="custom" class="sr-only">
-                  <div class="p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur"
+                  <div class="p-6 lg:p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur h-full"
                        :class="form.platform === 'custom' ? 'border-blue-500 bg-blue-600/20 shadow-lg shadow-blue-500/20' : 'border-gray-700'">
-                    <div class="text-center space-y-4">
-                      <div class="text-5xl">⚙️</div>
+                    <div class="text-center space-y-4 h-full flex flex-col justify-center">
+                      <div class="text-4xl lg:text-5xl">⚙️</div>
                       <div>
                         <div class="text-lg font-semibold text-white">Site personnalisé</div>
                         <div class="text-sm text-gray-400">Développé sur mesure</div>
@@ -209,12 +250,12 @@
                 </label>
 
                 <!-- Option Other -->
-                <label class="relative group cursor-pointer sm:col-start-2 lg:col-start-auto">
+                <label class="relative group cursor-pointer">
                   <input v-model="form.platform" type="radio" value="other" class="sr-only">
-                  <div class="p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur"
+                  <div class="p-6 lg:p-8 bg-gray-800/30 border-2 rounded-2xl transition-all group-hover:bg-gray-800/50 backdrop-blur h-full"
                        :class="form.platform === 'other' ? 'border-blue-500 bg-blue-600/20 shadow-lg shadow-blue-500/20' : 'border-gray-700'">
-                    <div class="text-center space-y-4">
-                      <div class="text-5xl">📦</div>
+                    <div class="text-center space-y-4 h-full flex flex-col justify-center">
+                      <div class="text-4xl lg:text-5xl">📦</div>
                       <div>
                         <div class="text-lg font-semibold text-white">Autre</div>
                         <div class="text-sm text-gray-400">Autre plateforme</div>
@@ -232,7 +273,7 @@
               </div>
             </div>
 
-            <div class="flex justify-between pt-8">
+            <div class="flex justify-between pt-8 max-w-4xl mx-auto">
               <button
                 type="button"
                 @click="previousStep"
@@ -258,69 +299,32 @@
 
         <!-- Étape 3: Finalisation -->
         <div v-if="currentStep === 3" class="transition-all duration-500 ease-in-out">
-          <div class="text-center mb-12">
-            <div class="inline-flex p-4 bg-emerald-600/20 rounded-2xl mb-6">
-              <svg class="w-12 h-12 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-            </div>
-            <h1 class="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-              Presque terminé !
-            </h1>
-            <p class="text-xl text-gray-300 max-w-2xl mx-auto">
-              Une dernière information pour personnaliser votre expérience
-            </p>
-          </div>
-
-          <form @submit.prevent="completeOnboarding" class="max-w-2xl mx-auto space-y-8">
-            <div class="space-y-6">
-              <div>
-                <label class="block text-lg font-medium text-gray-200 mb-3">
-                  Comment avez-vous connu ChatSeller ?
-                </label>
-                <select
-                  v-model="form.acquisitionSource"
-                  class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg"
-                >
-                  <option value="" class="bg-gray-800">Sélectionnez une source</option>
-                  <option value="search_google" class="bg-gray-800">Recherche Google</option>
-                  <option value="social_media" class="bg-gray-800">Réseaux sociaux</option>
-                  <option value="recommendation" class="bg-gray-800">Recommandation</option>
-                  <option value="blog_article" class="bg-gray-800">Article de blog</option>
-                  <option value="youtube" class="bg-gray-800">YouTube</option>
-                  <option value="other" class="bg-gray-800">Autre</option>
-                </select>
+          <!-- Layout Desktop : 2 colonnes -->
+          <div class="grid lg:grid-cols-2 gap-12 items-center">
+            
+            <!-- Colonne gauche : Titre et informations -->
+            <div class="text-center lg:text-left">
+              <div class="inline-flex p-4 bg-emerald-600/20 rounded-2xl mb-6 lg:mb-8">
+                <svg class="w-12 h-12 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
               </div>
+              <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                Presque terminé !
+              </h1>
+              <p class="text-xl lg:text-2xl text-gray-300 mb-8">
+                Une dernière information pour personnaliser votre expérience
+              </p>
 
-              <div class="bg-gray-800/30 border border-gray-700 rounded-xl p-6 backdrop-blur">
+              <!-- Info essai gratuit -->
+              <div class="hidden lg:block bg-blue-900/20 border border-blue-800 rounded-2xl p-6">
                 <div class="flex items-start space-x-4">
-                  <div class="flex items-center h-5 mt-1">
-                    <input
-                      id="newsletter"
-                      v-model="form.newsletter"
-                      type="checkbox"
-                      class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-800 rounded"
-                    />
-                  </div>
-                  <div>
-                    <label for="newsletter" class="text-lg font-medium text-gray-200">
-                      Recevoir les conseils d'optimisation
-                    </label>
-                    <p class="text-sm text-gray-400 mt-1">
-                      Conseils pour maximiser vos conversions et nouvelles fonctionnalités
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="bg-blue-900/20 border border-blue-800 rounded-xl p-6 backdrop-blur">
-                <div class="flex items-start space-x-4">
-                  <svg class="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-8 h-8 text-blue-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                   <div>
-                    <p class="font-semibold text-blue-300 mb-2">Votre essai gratuit commence maintenant</p>
-                    <p class="text-blue-200">
+                    <p class="font-semibold text-blue-300 mb-2 text-xl">Votre essai gratuit commence maintenant</p>
+                    <p class="text-blue-200 text-lg">
                       Vous bénéficiez de <strong>7 jours d'essai gratuit</strong> pour tester toutes les fonctionnalités.
                     </p>
                   </div>
@@ -328,38 +332,101 @@
               </div>
             </div>
 
-            <div class="flex justify-between pt-8">
-              <button
-                type="button"
-                @click="previousStep"
-                class="px-8 py-4 bg-gray-800 text-white text-lg font-medium rounded-xl hover:bg-gray-700 transition-all border border-gray-700"
-              >
-                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-                Retour
-              </button>
-              <button
-                type="submit"
-                :disabled="loading"
-                class="px-12 py-4 bg-gradient-to-r from-emerald-600 to-blue-600 text-white text-lg font-semibold rounded-xl hover:from-emerald-700 hover:to-blue-700 transition-all shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
-              >
-                <span v-if="loading" class="flex items-center">
-                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Finalisation...
-                </span>
-                <span v-else class="flex items-center">
-                  🎉 Accéder à mon dashboard
-                  <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </span>
-              </button>
+            <!-- Colonne droite : Formulaire -->
+            <div class="w-full">
+              <form @submit.prevent="completeOnboarding" class="space-y-6">
+                <div class="bg-gray-800/30 backdrop-blur border border-gray-700 rounded-2xl p-8">
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block text-lg font-medium text-gray-200 mb-3">
+                        Comment avez-vous connu ChatSeller ?
+                      </label>
+                      <select
+                        v-model="form.acquisitionSource"
+                        class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg"
+                      >
+                        <option value="" class="bg-gray-800">Sélectionnez une source</option>
+                        <option value="search_google" class="bg-gray-800">Recherche Google</option>
+                        <option value="social_media" class="bg-gray-800">Réseaux sociaux</option>
+                        <option value="recommendation" class="bg-gray-800">Recommandation</option>
+                        <option value="blog_article" class="bg-gray-800">Article de blog</option>
+                        <option value="youtube" class="bg-gray-800">YouTube</option>
+                        <option value="other" class="bg-gray-800">Autre</option>
+                      </select>
+                    </div>
+
+                    <div class="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                      <div class="flex items-start space-x-4">
+                        <div class="flex items-center h-5 mt-1">
+                          <input
+                            id="newsletter"
+                            v-model="form.newsletter"
+                            type="checkbox"
+                            class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-800 rounded"
+                          />
+                        </div>
+                        <div>
+                          <label for="newsletter" class="text-lg font-medium text-gray-200">
+                            Recevoir les conseils d'optimisation
+                          </label>
+                          <p class="text-sm text-gray-400 mt-1">
+                            Conseils pour maximiser vos conversions et nouvelles fonctionnalités
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Info mobile -->
+                    <div class="lg:hidden bg-blue-900/20 border border-blue-800 rounded-xl p-6">
+                      <div class="flex items-start space-x-4">
+                        <svg class="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                          <p class="font-semibold text-blue-300 mb-2">Votre essai gratuit commence maintenant</p>
+                          <p class="text-blue-200">
+                            Vous bénéficiez de <strong>7 jours d'essai gratuit</strong> pour tester toutes les fonctionnalités.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col sm:flex-row justify-between gap-4 pt-8">
+                    <button
+                      type="button"
+                      @click="previousStep"
+                      class="px-8 py-4 bg-gray-800 text-white text-lg font-medium rounded-xl hover:bg-gray-700 transition-all border border-gray-700 order-2 sm:order-1"
+                    >
+                      <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                      </svg>
+                      Retour
+                    </button>
+                    <button
+                      type="submit"
+                      :disabled="loading"
+                      class="px-12 py-4 bg-gradient-to-r from-emerald-600 to-blue-600 text-white text-lg font-semibold rounded-xl hover:from-emerald-700 hover:to-blue-700 transition-all shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:transform-none order-1 sm:order-2"
+                    >
+                      <span v-if="loading" class="flex items-center justify-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Finalisation...
+                      </span>
+                      <span v-else class="flex items-center justify-center">
+                        🎉 Accéder à mon dashboard
+                        <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
@@ -369,19 +436,15 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { createClient } from '@supabase/supabase-js'
+import { useSupabaseSingleton } from '~~/composables/useSupabaseSingleton'
 
 // ✅ LAYOUT AUTH
 definePageMeta({
-  layout: 'auth'
-  // ✅ Pas de middleware explicite - utilise les middlewares globaux
+  layout: false // ✅ PAS DE LAYOUT - Page fullscreen
 })
 
-// ✅ CLIENT SUPABASE
-const config = useRuntimeConfig()
-const supabase = createClient(
-  config.public.supabaseUrl,
-  config.public.supabaseAnonKey
-)
+// ✅ CLIENT SUPABASE SINGLETON (évite les conflits)
+const supabase = useSupabaseSingleton()
 
 // ✅ STATE
 const currentStep = ref(1)
@@ -412,21 +475,37 @@ const previousStep = () => {
   }
 }
 
-// ✅ COMPLETION ONBOARDING
+// ✅ COMPLETION ONBOARDING AVEC DEBUG DÉTAILLÉ
 const completeOnboarding = async () => {
   loading.value = true
   
   try {
+    console.log('🚀 [ONBOARDING] Début finalisation...')
+    
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
       throw new Error('Utilisateur non trouvé')
     }
     
-    // Mettre à jour la table users
-    const { error: updateUserError } = await supabase
+    console.log('✅ [ONBOARDING] Utilisateur trouvé:', user.email)
+    console.log('📝 [ONBOARDING] Données formulaire:', {
+      company: form.company,
+      website: form.website,
+      industry: form.industry,
+      platform: form.platform,
+      acquisitionSource: form.acquisitionSource,
+      newsletter: form.newsletter
+    })
+    
+    // ✅ METTRE À JOUR LA TABLE USERS AVEC GESTION D'ERREURS
+    console.log('💾 [ONBOARDING] Mise à jour table users...')
+    
+    const { error: updateUserError, data: updateData } = await supabase
       .from('users')
-      .update({
+      .upsert({
+        id: user.id,
+        email: user.email,
         company: form.company,
         website: form.website,
         industry: form.industry,
@@ -436,19 +515,25 @@ const completeOnboarding = async () => {
         onboarding_completed: true,
         onboarding_completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'id'
       })
-      .eq('id', user.id)
     
     if (updateUserError) {
-      throw new Error('Erreur lors de la mise à jour du profil: ' + updateUserError.message)
+      console.error('❌ [ONBOARDING] Erreur mise à jour users:', updateUserError)
+      throw new Error('Erreur sauvegarde profil: ' + updateUserError.message)
     }
     
-    // Créer/mettre à jour le shop
+    console.log('✅ [ONBOARDING] Table users mise à jour')
+    
+    // ✅ CRÉER/METTRE À JOUR LE SHOP AVEC GESTION D'ERREURS
+    console.log('🏪 [ONBOARDING] Création/mise à jour shop...')
+    
     const { error: shopError } = await supabase
       .from('shops')
       .upsert({
         id: user.id,
-        name: form.company || `Shop de ${user.user_metadata?.first_name || 'Utilisateur'}`,
+        name: form.company || `Shop de ${user.user_metadata?.first_name || user.email}`,
         email: user.email,
         domain: extractDomain(form.website),
         industry: form.industry,
@@ -473,15 +558,39 @@ const completeOnboarding = async () => {
       })
     
     if (shopError) {
-      console.warn('⚠️ Erreur création shop (non bloquante):', shopError)
+      console.warn('⚠️ [ONBOARDING] Erreur shop (non bloquante):', shopError)
+      // Ne pas bloquer pour l'erreur shop
+    } else {
+      console.log('✅ [ONBOARDING] Shop créé/mis à jour')
     }
     
-    // Redirection vers dashboard
-    await navigateTo('/?onboarding=completed&welcome=true', { replace: true })
+    console.log('🎉 [ONBOARDING] Finalisation terminée avec succès!')
+    
+    // ✅ ATTENDRE UN PEU POUR S'ASSURER QUE TOUT EST SAUVEGARDÉ
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // ✅ REDIRECTION SÉCURISÉE VERS DASHBOARD
+    console.log('🚀 [ONBOARDING] Redirection vers dashboard...')
+    
+    // Utiliser window.location pour une redirection forcée
+    window.location.href = '/?onboarding=completed&welcome=true'
     
   } catch (error: any) {
-    console.error('❌ Erreur finalisation onboarding:', error)
-    alert('Une erreur s\'est produite lors de la finalisation : ' + error.message)
+    console.error('❌ [ONBOARDING] Erreur finalisation:', error)
+    
+    // ✅ GESTION D'ERREUR AVEC MESSAGE UTILISATEUR CLAIR
+    let userMessage = 'Une erreur s\'est produite lors de la finalisation.'
+    
+    if (error.message?.includes('406')) {
+      userMessage = 'Erreur de permissions. Veuillez réessayer ou contacter le support.'
+    } else if (error.message?.includes('network')) {
+      userMessage = 'Problème de connexion. Vérifiez votre internet et réessayez.'
+    } else if (error.message?.includes('auth')) {
+      userMessage = 'Session expirée. Veuillez vous reconnecter.'
+    }
+    
+    alert(userMessage + '\n\nDétails: ' + error.message)
+    
   } finally {
     loading.value = false
   }
@@ -556,7 +665,7 @@ useHead({
   animation: spin 1s linear infinite;
 }
 
-/* Animations fluides */
+/* Transitions fluides */
 .transition-all {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -566,5 +675,12 @@ useHead({
 /* Effet glassmorphism */
 .backdrop-blur {
   backdrop-filter: blur(10px);
+}
+
+/* Responsive heights */
+@media (min-width: 1024px) {
+  .min-h-screen {
+    min-height: 100vh;
+  }
 }
 </style>

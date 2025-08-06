@@ -1,4 +1,4 @@
-// middleware/auth.ts - VERSION AVEC PROTECTION DASHBOARD CORRIGÉE
+// middleware/auth.ts - VERSION CORRIGÉE SANS REDIRECTION FORCÉE ONBOARDING
 
 import { useSupabase } from "~~/composables/useSupabase"
 import { useAuthStore } from "~~/stores/auth"
@@ -87,12 +87,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return
     }
 
-    // 🔍 POUR LE DASHBOARD ET PAGES PROTÉGÉES - VÉRIFIER ONBOARDING
-    console.log('🔍 [AUTH] Vérification statut onboarding pour route protégée:', to.path)
+    // 🔍 POUR LE DASHBOARD ET PAGES PROTÉGÉES - VÉRIFICATION INTELLIGENTE DE L'ONBOARDING
+    console.log('🔍 [AUTH] Vérification intelligente du statut onboarding pour:', to.path)
     
     const { data: userData, error: onboardingError } = await supabase
       .from('users')
-      .select('onboarding_completed, company, first_name, last_name')
+      .select('onboarding_completed, company, first_name, last_name, email, created_at')
       .eq('id', user.id)
       .single()
 
@@ -103,15 +103,15 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       console.error('❌ [AUTH] Erreur DB onboarding:', onboardingError.code, onboardingError.message)
       
       if (onboardingError.code === 'PGRST116') {
-        console.log('🆕 [AUTH] Utilisateur inexistant en DB, création...')
+        console.log('🆕 [AUTH] Utilisateur inexistant en DB, création et redirection vers onboarding...')
         
         const { error: insertError } = await supabase
           .from('users')
           .insert({
             id: user.id,
             email: user.email,
-            first_name: authStore.user?.firstName || '',
-            last_name: authStore.user?.lastName || '',
+            first_name: user.user_metadata?.first_name || '',
+            last_name: user.user_metadata?.last_name || '',
             onboarding_completed: false,
             created_at: new Date().toISOString()
           })
@@ -123,37 +123,73 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         console.log('🚀 [AUTH] Redirection vers onboarding (utilisateur créé)')
         return navigateTo('/onboarding')
       } else {
-        console.warn('⚠️ [AUTH] Erreur DB non critique, redirection vers onboarding')
-        return navigateTo('/onboarding')
+        console.warn('⚠️ [AUTH] Erreur DB non critique, autorisation d\'accès')
+        return // ✅ AUTORISER L'ACCÈS EN CAS D'ERREUR DB
       }
     }
 
-    // ✅ VÉRIFICATION STATUT ONBOARDING
+    // 🧠 LOGIQUE INTELLIGENTE DE VÉRIFICATION ONBOARDING
     const hasCompletedOnboarding = userData?.onboarding_completed === true
-    const hasMinimalInfo = !!(userData?.company && (userData?.first_name || userData?.last_name))
+    const hasMinimalInfo = !!(userData?.company || userData?.first_name || userData?.last_name)
+    const accountAge = userData?.created_at ? 
+      (Date.now() - new Date(userData.created_at).getTime()) / (1000 * 60 * 60 * 24) : 0 // Age en jours
     
-    console.log('📋 [AUTH] État onboarding:', {
+    console.log('🧠 [AUTH] Analyse intelligente onboarding:', {
       completed: hasCompletedOnboarding,
       hasInfo: hasMinimalInfo,
+      accountAge: Math.round(accountAge),
       route: to.path,
       company: userData?.company,
       firstName: userData?.first_name,
       lastName: userData?.last_name
     })
 
-    // 🚀 REDIRECTION ONBOARDING SI NÉCESSAIRE
-    if (!hasCompletedOnboarding || !hasMinimalInfo) {
-      console.log('🚨 [AUTH] Onboarding requis pour accéder à:', to.path)
-      console.log('🚀 [AUTH] Redirection vers /onboarding')
-      return navigateTo('/onboarding')
+    // ✅ LOGIQUE INTELLIGENTE : Pas de redirection forcée pour les comptes existants
+    if (!hasCompletedOnboarding) {
+      
+      // 🔄 SI L'UTILISATEUR A DES INFOS ET COMPTE > 1 JOUR = AUTO-COMPLETE ONBOARDING
+      if (hasMinimalInfo && accountAge > 1) {
+        console.log('🔄 [AUTH] Compte existant avec infos détecté, auto-completion onboarding...')
+        
+        try {
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({
+              onboarding_completed: true,
+              onboarding_completed_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id)
+          
+          if (!updateError) {
+            console.log('✅ [AUTH] Onboarding auto-complété pour compte existant')
+            return // ✅ AUTORISER L'ACCÈS
+          }
+        } catch (error) {
+          console.warn('⚠️ [AUTH] Erreur auto-completion onboarding, autorisation quand même')
+        }
+        
+        return // ✅ AUTORISER L'ACCÈS MÊME SI L'UPDATE A ÉCHOUÉ
+      }
+      
+      // 🚨 SEULEMENT REDIRIGER VERS ONBOARDING SI COMPTE RÉCENT SANS INFOS
+      if (!hasMinimalInfo && accountAge <= 1) {
+        console.log('🚨 [AUTH] Compte récent sans infos, redirection vers onboarding')
+        return navigateTo('/onboarding')
+      }
+      
+      // ✅ POUR TOUS LES AUTRES CAS = ACCÈS AUTORISÉ
+      console.log('✅ [AUTH] Autorisation d\'accès malgré onboarding non complété')
     }
 
-    // ✅ TOUT OK - ACCÈS AUTORISÉ
-    console.log('✅ [AUTH] Onboarding terminé - Accès autorisé à:', to.path)
+    // ✅ ACCÈS AUTORISÉ - ONBOARDING COMPLÉTÉ OU EXCEPTIONS
+    console.log('✅ [AUTH] Accès autorisé à:', to.path)
 
   } catch (error) {
     console.error('❌ [AUTH] Erreur critique lors de la vérification:', error)
-    console.log('🚀 [AUTH] Redirection d\'urgence vers /login')
-    return navigateTo('/login')
+    
+    // 🚨 EN CAS D'ERREUR CRITIQUE, AUTORISER L'ACCÈS PLUTÔT QUE BLOQUER
+    console.log('⚠️ [AUTH] Erreur critique, autorisation d\'accès par défaut')
+    return // ✅ ACCÈS AUTORISÉ PAR DÉFAUT
   }
 })

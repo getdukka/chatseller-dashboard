@@ -8,12 +8,13 @@ interface User {
   id: string
   email: string
   name?: string
-  firstName?: string // ✅ NOUVEAU
-  lastName?: string  // ✅ NOUVEAU
+  firstName?: string 
+  lastName?: string  
   shopId?: string
   shop_id?: string
   avatar?: string
   role?: 'admin' | 'user'
+  subscription_plan?: "free" | "professional" | "enterprise"
   createdAt?: string
   updatedAt?: string
   shop?: any
