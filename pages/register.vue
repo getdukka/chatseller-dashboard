@@ -394,21 +394,26 @@ const resendEmail = async () => {
   resendLoading.value = true
   
   try {
-    console.log('🔄 [Register] Renvoi email via composable auth...')
+    console.log('🔄 [Register] Renvoi email de confirmation...')
     
-    // ✅ UTILISER LE COMPOSABLE AUTH AU LIEU DE SUPABASE DIRECT
-    const result = await auth.resetPassword(form.email.trim().toLowerCase())
+    // ✅ UTILISER SUPABASE DIRECTEMENT POUR RENVOYER EMAIL CONFIRMATION
+    const supabase = useSupabase()
     
-    if (!result.success) {
-      throw new Error(result.error || 'Erreur lors du renvoi')
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: form.email.trim().toLowerCase()
+    })
+    
+    if (error) {
+      throw new Error(error.message)
     }
     
-    console.log('✅ [Register] Email de confirmation renvoyé via auth')
+    console.log('✅ [Register] Email de confirmation renvoyé')
     startResendCooldown()
     
   } catch (error: any) {
     console.error('❌ [Register] Erreur renvoi email:', error)
-    // Afficher une notification d'erreur si nécessaire
+    registerError.value = `Erreur lors du renvoi: ${error.message}`
   } finally {
     resendLoading.value = false
   }

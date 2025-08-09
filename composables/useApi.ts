@@ -400,34 +400,32 @@ export const useApi = () => {
   // =====================================
   
   const shops = {
-    // ✅ ROUTE RÉELLE : GET /api/v1/shops/:id
-    get: async (shopId?: string): Promise<ApiResponse<any>> => {
-      const authStore = useAuthStore()
-      const targetShopId = shopId || authStore.userShopId
-      
-      if (!targetShopId) {
-        return { success: false, error: 'Shop ID manquant' }
-      }
-      
-      return apiCall(`/api/v1/shops/${targetShopId}`)
-    },
-
-    // ✅ ROUTE RÉELLE : PUT /api/v1/shops/:id
-    update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/shops/${shopId}`, {
-        method: 'PUT',
-        body: data
-      })
-    },
-
-    // ✅ ROUTE RÉELLE : POST /api/v1/shops
-    create: async (data: any): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/shops', {
-        method: 'POST',
-        body: data
-      })
+  get: async (shopId?: string): Promise<ApiResponse<any>> => {
+    const authStore = useAuthStore()
+    const targetShopId = shopId || authStore.userShopId
+    
+    if (!targetShopId) {
+      return { success: false, error: 'Shop ID manquant' }
     }
+    
+    return apiCall(`/api/v1/shops/${targetShopId}`)
+  },
+
+  // ✅ AJOUTER CETTE FONCTION MANQUANTE :
+  create: async (data: any): Promise<ApiResponse<any>> => {
+    return apiCall('/api/v1/shops', {
+      method: 'POST',
+      body: data
+    })
+  },
+
+  update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
+    return apiCall(`/api/v1/shops/${shopId}`, {
+      method: 'PUT',
+      body: data
+    })
   }
+}
 
   // =====================================
   // ✅ CHAT - ROUTES RÉELLES SELON CHAT.TS

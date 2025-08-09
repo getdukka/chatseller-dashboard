@@ -554,61 +554,119 @@ const extractDomain = (url: string): string | null => {
   }
 }
 
-// ✅ INITIALISATION SÉCURISÉE
-onMounted(async () => {
+// ✅ NOUVELLE FONCTION : S'assurer que le shop existe
+const ensureShopExists = async (user: any) => {
   try {
-    console.log('🔄 [Onboarding] Vérification accès...')
+    console.log('🏪 [Onboarding] Vérification existence shop...')
     
-    // ✅ VÉRIFIER QUE L'UTILISATEUR EST CONNECTÉ
-    if (!auth.isAuthenticated.value) {
-      console.log('❌ [Onboarding] Utilisateur non connecté, redirection login')
-      await navigateTo('/login')
-      return
+    const api = useApi()
+    
+    // Essayer de récupérer le shop
+    const shopResponse = await api.shops.get(user.id)
+    
+    if (shopResponse.success && shopResponse.data) {
+      console.log('✅ [Onboarding] Shop existe déjà:', shopResponse.data.id)
+      return shopResponse.data
     }
     
-    // ✅ VÉRIFIER SESSION SUPABASE
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user || !user.email_confirmed_at) {
-      console.log('❌ [Onboarding] Email non confirmé, redirection register')
-      await navigateTo('/register')
-      return
-    }
-    
-    console.log('✅ [Onboarding] Accès autorisé pour:', user.email)
-    
-    // ✅ PRÉ-REMPLIR LE FORMULAIRE SI DONNÉES EXISTANTES
-    try {
-      const api = useApi()
-      const shopResponse = await api.shops.get(user.id)
+    // Si shop n'existe pas (404), le créer
+    if (!shopResponse.success && shopResponse.error?.includes('404')) {
+      console.log('🆕 [Onboarding] Shop manquant, création...')
       
-      if (shopResponse.success && shopResponse.data) {
-        const shopData = shopResponse.data
+      const createResponse = await api.shops.create({
+        id: user.id,
+        name: `Shop de ${user.user_metadata?.first_name || user.email?.split('@')[0]}`,
+        email: user.email,
+        subscription_plan: 'free',
+        is_active: true,
+        widget_config: {
+          theme: 'modern',
+          primaryColor: '#E91E63',
+          position: 'bottom-right',
+          buttonText: 'Parler au vendeur',
+          language: 'fr'
+        },
+        agent_config: {
+          name: 'Rose',
+          avatar: 'https://ui-avatars.com/api/?name=Rose&background=E91E63&color=fff',
+          welcomeMessage: 'Bonjour ! Je suis votre assistante d\'achat. Comment puis-je vous aider ?',
+          fallbackMessage: 'Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt.',
+          collectPaymentMethod: true,
+          upsellEnabled: false
+        }
+      })
+      
+      if (!createResponse.success) {
+        throw new Error(`Erreur création shop: ${createResponse.error}`)
+      }
+      
+      console.log('✅ [Onboarding] Shop créé avec succès')
+      
+      // Rafraîchir les données utilisateur dans le store
+      await authStore.restoreSession()
+      
+      return createResponse.data
+    }
+    
+    // Autre erreur
+    throw new Error(`Erreur shop: ${shopResponse.error}`)
+    
+  } catch (error: any) {
+    console.error('❌ [Onboarding] Erreur ensure shop:', error)
+    throw error
+  }
+}
+
+  // ✅ INITIALISATION SÉCURISÉE
+  onMounted(async () => {
+    try {
+      console.log('🔄 [Onboarding] Vérification accès...')
+      
+      if (!auth.isAuthenticated.value) {
+        console.log('❌ [Onboarding] Utilisateur non connecté, redirection login')
+        await navigateTo('/login')
+        return
+      }
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user || !user.email_confirmed_at) {
+        console.log('❌ [Onboarding] Email non confirmé, redirection register')
+        await navigateTo('/register')
+        return
+      }
+      
+      console.log('✅ [Onboarding] Accès autorisé pour:', user.email)
+      
+      // ✅ NOUVEAU : S'assurer que le shop existe
+      try {
+        const shopData = await ensureShopExists(user)
         
+        // Pré-remplir le formulaire avec les données du shop
         if (shopData.name && shopData.name !== `Shop de ${user.email?.split('@')[0]}`) {
           form.company = shopData.name
         }
         if (shopData.industry) form.industry = shopData.industry
         if (shopData.platform) form.platform = shopData.platform
         
-        console.log('✅ [Onboarding] Formulaire pré-rempli depuis shop existant')
+        console.log('✅ [Onboarding] Shop vérifié et formulaire pré-rempli')
+        
+      } catch (shopError) {
+        console.error('❌ [Onboarding] Erreur critique shop:', shopError)
+        alert('Erreur lors de l\'initialisation. Contactez le support.')
+        return
       }
-    } catch (prefillError) {
-      console.warn('⚠️ [Onboarding] Erreur pré-remplissage (non bloquante):', prefillError)
+      
+      // Fallback sur métadonnées utilisateur
+      if (!form.company && user.user_metadata?.company) {
+        form.company = user.user_metadata.company
+      }
+      
+    } catch (error) {
+      console.error('❌ [Onboarding] Erreur initialisation:', error)
+      await navigateTo('/login')
     }
-    
-    // ✅ FALLBACK SUR MÉTADONNÉES UTILISATEUR
-    if (!form.company && user.user_metadata?.company) {
-      form.company = user.user_metadata.company
-    }
-    
-  } catch (error) {
-    console.error('❌ [Onboarding] Erreur initialisation:', error)
-    
-    // ✅ REDIRECTION SÉCURITAIRE EN CAS D'ERREUR
-    await navigateTo('/login')
-  }
-})
+  })
 
 // ✅ SEO
 useHead({

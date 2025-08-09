@@ -377,38 +377,43 @@ export const useAuthStore = defineStore('auth', {
 
     // ✅ ACTION REGISTER INCHANGÉE
     async register(data: RegisterData) {
-      this.loading = true
+    this.loading = true
+    
+    try {
+      console.log('📝 Store Supabase: Tentative d\'inscription pour:', data.email)
       
-      try {
-        console.log('📝 Store Supabase: Tentative d\'inscription pour:', data.email)
-        
-        const supabase = useSupabase()
-        
-        const nameParts = data.name.trim().split(' ')
-        const firstName = nameParts[0] || data.firstName || ''
-        const lastName = nameParts.slice(1).join(' ') || data.lastName || ''
-        
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
-          options: {
-            data: {
-              name: data.name,
-              first_name: firstName,
-              last_name: lastName,
-              company: data.company || '',
-              platform: data.platform || ''
-            }
+      const supabase = useSupabase()
+      
+      const nameParts = data.name.trim().split(' ')
+      const firstName = nameParts[0] || data.firstName || ''
+      const lastName = nameParts.slice(1).join(' ') || data.lastName || ''
+      
+      // ✅ ÉTAPE 1 : Créer l'utilisateur dans Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            first_name: firstName,
+            last_name: lastName,
+            company: data.company || '',
+            platform: data.platform || ''
           }
-        })
-
-        if (authError) {
-          console.error('❌ Supabase signup error:', authError)
-          throw new Error(authError.message)
         }
+      })
 
-        if (authData.user && authData.session) {
-          console.log('✅ Supabase signup success:', authData.user.id)
+      if (authError) {
+        console.error('❌ Supabase signup error:', authError)
+        throw new Error(authError.message)
+      }
+
+      if (authData.user) {
+        console.log('✅ Supabase signup success:', authData.user.id)
+        
+        // ✅ CORRECTION CRITIQUE : NE PAS ESSAYER DE CRÉER LE SHOP SI PAS DE SESSION
+        if (authData.session) {
+          console.log('✅ Session créée, création du shop...')
           
           try {
             const config = useRuntimeConfig()
@@ -446,35 +451,41 @@ export const useAuthStore = defineStore('auth', {
             }) as any
 
             console.log('✅ Shop créé via API:', shopCreateResponse)
+            
+            // ✅ RÉCUPÉRER LES DONNÉES COMPLÈTES ET CONNECTER
+            const userData = await this.fetchCompleteUserDataViaAPI(authData.user, authData.session.access_token)
+            this.setUser(userData, authData.session.access_token)
+            
           } catch (apiError) {
-            console.warn('⚠️ Erreur création shop via API:', apiError)
-          }
-
-          const userData = await this.fetchCompleteUserDataViaAPI(authData.user, authData.session.access_token)
-
-          this.setUser(userData, authData.session.access_token)
-
-          console.log('✅ Inscription terminée avec plan FREE (7 jours d\'essai)')
-          return { 
-            success: true, 
-            data: { 
-              user: userData, 
-              token: authData.session.access_token 
-            } 
+            console.warn('⚠️ Erreur création shop via API (non bloquante):', apiError)
           }
         } else {
-          throw new Error('Erreur lors de la création du compte')
+          console.log('⚠️ Pas de session immédiate - email confirmation requis')
+          // ✅ NE PAS CONNECTER L'UTILISATEUR, JUSTE INDIQUER LE SUCCÈS
         }
-      } catch (error: any) {
-        console.error('❌ Store: Erreur register:', error)
+
+        console.log('✅ Inscription terminée - confirmation email requise')
         return { 
-          success: false, 
-          error: error.message || 'Erreur lors de l\'inscription' 
+          success: true, 
+          data: { 
+            user: authData.user,
+            session: authData.session,
+            needsEmailConfirmation: !authData.session // ✅ IMPORTANT FLAG
+          } 
         }
-      } finally {
-        this.loading = false
+      } else {
+        throw new Error('Erreur lors de la création du compte')
       }
-    },
+    } catch (error: any) {
+      console.error('❌ Store: Erreur register:', error)
+      return { 
+        success: false, 
+        error: error.message || 'Erreur lors de l\'inscription' 
+      }
+    } finally {
+      this.loading = false
+    }
+  },
 
     // ✅ ACTION RESTORE SESSION CORRIGÉE AVEC FORCE REFRESH
     async restoreSession(forceRefresh: boolean = false) {
