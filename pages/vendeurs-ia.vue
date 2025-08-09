@@ -1,4 +1,4 @@
-<!-- pages/vendeurs-ia.vue - VERSION PRODUCTION COMPLÈTE -->
+<!-- pages/vendeurs-ia.vue - VERSION API PURE FINALE 100% FONCTIONNELLE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -32,8 +32,9 @@
             
             <button
               @click="openCreateModal"
-              :disabled="!canCreateAgent"
+              :disabled="!canCreateAgent || trialExpired"
               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              :title="!canCreateAgent ? `Plan ${subscriptionPlan} limité à ${planDetails.agentLimit} agent(s)` : trialExpired ? 'Essai gratuit expiré' : ''"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -45,7 +46,93 @@
       </div>
     </div>
 
-    <!-- Error Banner -->
+    <!-- ✅ BANNERS DE PLAN - PRIORITAIRES ET INFORMATIFS -->
+    <div class="mx-8 mt-4 mb-6">
+      <!-- Banner essai expiré -->
+      <div v-if="trialExpired" class="bg-gradient-to-r from-red-600 to-red-800 rounded-xl shadow-lg overflow-hidden">
+        <div class="px-8 py-6 text-white relative">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold mb-2 flex items-center">
+                ⏰ Essai gratuit terminé
+              </h2>
+              <p class="text-red-100 text-base mb-4">
+                Votre période d'essai de 7 jours est terminée. Vos Vendeurs IA et Widgets sont maintenant <strong>désactivés</strong>.
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <NuxtLink 
+                  to="/billing"
+                  class="inline-flex items-center px-6 py-3 bg-white text-red-600 rounded-lg font-medium hover:bg-red-50 transition-all"
+                >
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
+                  Passer au plan Starter - 14€/mois
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner plan Starter -->
+      <div v-else-if="subscriptionPlan === 'starter'" class="bg-gradient-to-r from-blue-700 to-purple-500 rounded-xl shadow-lg overflow-hidden">
+        <div class="px-8 py-6 text-white relative">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold mb-2">⚡ Plan Starter - Limité à 1 Vendeur IA</h2>
+              <p class="text-blue-100 text-base mb-4">
+                Passez au plan Pro pour créer jusqu'à 3 Vendeurs IA spécialisés et débloquer toutes les fonctionnalités avancées.
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <NuxtLink 
+                  to="/billing"
+                  class="inline-flex items-center px-6 py-3 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all backdrop-blur-sm"
+                >
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
+                  Passer au Pro - 29€/mois
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner essai gratuit actif -->
+      <div v-else-if="subscriptionPlan === 'free' && planDetails.trialDaysLeft && planDetails.trialDaysLeft > 0" class="bg-gradient-to-r from-green-600 to-green-800 rounded-xl shadow-lg overflow-hidden">
+        <div class="px-8 py-6 text-white relative">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold mb-2">🎉 Essai gratuit actif</h2>
+              <p class="text-green-100 text-base mb-4">
+                Encore <strong>{{ planDetails.trialDaysLeft }} jour{{ planDetails.trialDaysLeft > 1 ? 's' : '' }}</strong> 
+                pour profiter de toutes les fonctionnalités Starter gratuitement !
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <NuxtLink 
+                  to="/billing"
+                  class="inline-flex items-center px-6 py-3 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all backdrop-blur-sm"
+                >
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
+                  Passer au plan payant
+                </NuxtLink>
+              </div>
+            </div>
+            <div class="hidden lg:block">
+              <div class="w-20 h-20 bg-white bg-opacity-10 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <span class="text-2xl font-bold">{{ planDetails.trialDaysLeft }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message d'erreur -->
     <div v-if="error" class="p-4 bg-red-50 border-l-4 border-red-400 mx-8 mt-4 rounded-r-lg">
       <div class="flex items-center justify-between">
         <div class="flex">
@@ -64,40 +151,6 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- Plan Limitation Banner -->
-      <div v-if="subscriptionPlan === 'starter'" class="mb-8">
-        <div class="bg-gradient-to-r from-blue-700 to-purple-500 rounded-xl shadow-lg overflow-hidden">
-          <div class="px-8 py-6 text-white relative">
-            <div class="flex items-center justify-between">
-              <div>
-                <h2 class="text-xl font-bold mb-2">⚡ Plan Starter - Limité à 1 Vendeur IA</h2>
-                <p class="text-orange-100 text-base mb-4">
-                  Passez au plan Pro pour créer jusqu'à 3 Vendeurs IA spécialisés et débloquer toutes les fonctionnalités avancées.
-                </p>
-                <div class="flex flex-wrap gap-3">
-                  <NuxtLink 
-                    to="/billing"
-                    class="inline-flex items-center px-6 py-3 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all backdrop-blur-sm"
-                  >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
-                    Passer au Pro - 29€/mois
-                  </NuxtLink>
-                </div>
-              </div>
-              <div class="hidden lg:block">
-                <div class="w-20 h-20 bg-white bg-opacity-10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Loading State -->
       <div v-if="loading && agents.length === 0" class="text-center py-16">
         <div class="inline-flex items-center space-x-3">
@@ -108,13 +161,16 @@
         </div>
       </div>
 
-      <!-- Agents Grid -->
+      <!-- ✅ AGENTS GRID AVEC STATUTS RÉELS -->
       <div v-else-if="agents.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="agent in agents"
           :key="agent.id"
           class="agent-card"
-          :class="{ 'agent-card-active': agent.isActive }"
+          :class="{ 
+            'agent-card-active': agent.isActive && !trialExpired,
+            'agent-card-disabled': trialExpired
+          }"
         >
           <!-- Agent Header -->
           <div class="flex items-center justify-between mb-4">
@@ -131,18 +187,25 @@
             </div>
             
             <div class="flex items-center space-x-2">
+              <!-- ✅ STATUT RÉEL BASÉ SUR L'ESSAI -->
               <span :class="getStatusBadgeClass(agent.isActive)" class="status-badge">
-                {{ agent.isActive ? 'Actif' : 'Inactif' }}
+                {{ trialExpired ? 'Désactivé (Essai expiré)' : (agent.isActive ? 'Actif' : 'Inactif') }}
               </span>
               
               <div class="dropdown relative">
-                <button @click="toggleAgentMenu(agent.id)" class="agent-menu-btn">
+                <button 
+                  @click="toggleAgentMenu(agent.id)" 
+                  :disabled="trialExpired"
+                  class="agent-menu-btn"
+                  :class="{ 'opacity-50 cursor-not-allowed': trialExpired }"
+                >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
                   </svg>
                 </button>
                 
-                <div v-if="activeAgentMenu === agent.id" class="dropdown-menu">
+                <!-- ✅ MENU DÉSACTIVÉ SI ESSAI EXPIRÉ -->
+                <div v-if="activeAgentMenu === agent.id && !trialExpired" class="dropdown-menu">
                   <button @click="editAgent(agent)" class="dropdown-item">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -177,8 +240,19 @@
             {{ agent.description || 'Aucune description fournie.' }}
           </p>
 
+          <!-- ✅ OVERLAY SI ESSAI EXPIRÉ -->
+          <div v-if="trialExpired" class="absolute inset-0 bg-gray-900 bg-opacity-50 rounded-xl flex items-center justify-center">
+            <div class="text-center text-white p-4">
+              <svg class="w-8 h-8 mx-auto mb-2 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="text-sm font-medium">Essai expiré</p>
+              <p class="text-xs text-gray-300">Passez au plan Starter</p>
+            </div>
+          </div>
+
           <!-- Agent Stats -->
-          <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="grid grid-cols-2 gap-4 mb-4" :class="{ 'opacity-30': trialExpired }">
             <div class="stat-item">
               <div class="stat-value">{{ agent.stats?.conversations || 0 }}</div>
               <div class="stat-label">Conversations</div>
@@ -193,25 +267,28 @@
           <div class="flex items-center space-x-2">
             <button 
               @click="configureAgent(agent)"
+              :disabled="!canConfigureAgents || trialExpired"
               class="flex-1 btn-secondary"
+              :class="{ 'opacity-50 cursor-not-allowed': !canConfigureAgents || trialExpired }"
+              :title="trialExpired ? 'Essai gratuit expiré' : !canConfigureAgents ? 'Accès limité selon votre plan' : ''"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
-              Configurer
+              {{ trialExpired ? 'Bloqué' : 'Configurer' }}
             </button>
             <button 
               @click="testAgent(agent)"
-              :disabled="!isPaidUser"
+              :disabled="!canTestAgents || trialExpired"
               class="flex-1 btn-primary"
-              :class="{ 'opacity-50 cursor-not-allowed': !isPaidUser }"
-              :title="!isPaidUser ? 'Réservé aux utilisateurs payants (Starter/Pro)' : ''"
+              :class="{ 'opacity-50 cursor-not-allowed': !canTestAgents || trialExpired }"
+              :title="trialExpired ? 'Essai gratuit expiré' : !canTestAgents ? 'Test réservé aux plans payants' : ''"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
-              Tester
+              {{ trialExpired ? 'Bloqué' : 'Tester' }}
             </button>
           </div>
         </div>
@@ -224,12 +301,28 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
           </svg>
         </div>
-        <h3 class="mt-4 text-xl font-medium text-gray-900">Créez votre premier Vendeur IA</h3>
+        <h3 class="mt-4 text-xl font-medium text-gray-900">
+          {{ trialExpired ? 'Accès limité - Essai gratuit terminé' : 'Créez votre premier Vendeur IA' }}
+        </h3>
         <p class="mt-2 text-gray-500 max-w-md mx-auto">
-          Commencez par créer un agent IA commercial personnalisé pour transformer vos visiteurs en clients.
+          {{ trialExpired 
+            ? 'Passez au plan Starter pour réactiver vos Vendeurs IA et continuer à utiliser ChatSeller.' 
+            : 'Commencez par créer un agent IA commercial personnalisé pour transformer vos visiteurs en clients.' 
+          }}
         </p>
         <div class="mt-8">
           <button
+            v-if="trialExpired"
+            @click="$router.push('/billing')"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 transition-all duration-200"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+            Passer au plan Starter - 14€/mois
+          </button>
+          <button
+            v-else
             @click="openCreateModal"
             :disabled="!canCreateAgent"
             class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -243,8 +336,8 @@
       </div>
     </div>
 
-    <!-- ✅ MODAL CRÉATION/MODIFICATION AMÉLIORÉ -->
-    <div v-if="showCreateModal || editingAgent" class="modal-overlay" @click.self="closeModal">
+    <!-- ✅ MODAL CRÉATION/MODIFICATION - BLOQUÉ SI ESSAI EXPIRÉ -->
+    <div v-if="(showCreateModal || editingAgent) && !trialExpired" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content modal-large">
         <div class="modal-header">
           <h3 class="modal-title">
@@ -258,7 +351,7 @@
         </div>
         
         <div class="modal-body">
-          <!-- ✅ INTRODUCTION GUIDÉE -->
+          <!-- Introduction guidée -->
           <div v-if="!editingAgent" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div class="flex items-start space-x-3">
               <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -270,12 +363,16 @@
                   <strong>1.</strong> Choisissez le type → <strong>2.</strong> Nom et personnalité → <strong>3.</strong> Activez ! 
                   Les descriptions et messages sont générés automatiquement.
                 </p>
+                <p v-if="planDetails.agentLimit > 0" class="text-xs text-blue-600 mt-2">
+                  💡 Votre plan permet {{ planDetails.agentLimit === -1 ? 'un nombre illimité' : planDetails.agentLimit }} agent{{ planDetails.agentLimit > 1 ? 's' : '' }}. 
+                  Vous avez utilisé {{ agents.length }}/{{ planDetails.agentLimit === -1 ? '∞' : planDetails.agentLimit }} emplacements.
+                </p>
               </div>
             </div>
           </div>
 
           <div class="space-y-6">
-            <!-- ✅ ÉTAPE 1: TYPE DE VENDEUR -->
+            <!-- ÉTAPE 1: TYPE DE VENDEUR -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">
                 <span class="flex items-center">
@@ -313,7 +410,7 @@
               </div>
             </div>
 
-            <!-- ✅ ÉTAPE 2: INFORMATIONS DE BASE -->
+            <!-- ÉTAPE 2: INFORMATIONS DE BASE -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 <span class="flex items-center">
@@ -333,7 +430,7 @@
               </p>
             </div>
 
-            <!-- ✅ PERSONNALITÉ AVEC PREVIEW -->
+            <!-- PERSONNALITÉ AVEC PREVIEW -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Personnalité et ton</label>
               <div class="grid grid-cols-2 gap-3">
@@ -359,7 +456,7 @@
               </div>
             </div>
 
-            <!-- ✅ DESCRIPTION INTELLIGENTE -->
+            <!-- DESCRIPTION INTELLIGENTE -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Description et rôle
@@ -386,65 +483,22 @@
                   ✨ IA
                 </button>
               </div>
-              <p class="text-xs text-gray-500 mt-1">
-                Décrit le rôle et les objectifs de votre vendeur IA. Click "✨ IA" pour générer automatiquement.
-              </p>
             </div>
 
-            <!-- ✅ MESSAGES PRÉDÉFINIS -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Message d'accueil
-                  <span class="text-gray-500 font-normal">(suggéré)</span>
-                </label>
-                <div class="relative">
-                  <textarea
-                    v-model="agentForm.welcomeMessage"
-                    rows="2"
-                    class="input-modern w-full pr-12"
-                    :placeholder="getWelcomeMessagePlaceholder()"
-                  ></textarea>
-                  <button
-                    @click="generateWelcomeMessage"
-                    :disabled="!agentForm.name"
-                    class="absolute top-1 right-1 p-1 text-gray-400 hover:text-purple-600 transition-colors"
-                    title="Régénérer avec IA"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Message si l'IA ne sait pas
-                  <span class="text-gray-500 font-normal">(suggéré)</span>
-                </label>
-                <div class="relative">
-                  <textarea
-                    v-model="agentForm.fallbackMessage"
-                    rows="2"
-                    class="input-modern w-full pr-12"
-                    :placeholder="getFallbackMessagePlaceholder()"
-                  ></textarea>
-                  <button
-                    @click="generateFallbackMessage"
-                    :disabled="!agentForm.name"
-                    class="absolute top-1 right-1 p-1 text-gray-400 hover:text-purple-600 transition-colors"
-                    title="Régénérer avec IA"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
+            <!-- MESSAGE D'ACCUEIL -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Message d'accueil *
+              </label>
+              <textarea
+                v-model="agentForm.welcomeMessage"
+                rows="2"
+                class="input-modern w-full"
+                :placeholder="getWelcomeMessagePlaceholder()"
+              ></textarea>
             </div>
 
-            <!-- ✅ PREVIEW EN TEMPS RÉEL -->
+            <!-- PREVIEW EN TEMPS RÉEL -->
             <div v-if="agentForm.name" class="bg-gray-50 rounded-lg p-4">
               <h4 class="font-medium text-gray-900 mb-3 flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -474,7 +528,7 @@
               </div>
             </div>
 
-            <!-- ✅ ACTIVATION -->
+            <!-- ACTIVATION -->
             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <h4 class="text-sm font-medium text-gray-900 flex items-center">
@@ -517,8 +571,8 @@
       </div>
     </div>
 
-    <!-- Test Chat Modal -->
-    <div v-if="showTestModal && selectedAgent" class="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4">
+    <!-- Test Chat Modal - Bloqué si essai expiré -->
+    <div v-if="showTestModal && selectedAgent && !trialExpired" class="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4">
       <div class="bg-white rounded-xl shadow-xl max-w-md w-full h-96 flex flex-col">
         <div class="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 class="text-lg font-semibold text-gray-900">Test - {{ selectedAgent.name }}</h3>
@@ -577,7 +631,7 @@
               </svg>
             </button>
           </div>
-          <p class="text-xs text-gray-500 mt-2">Test en direct avec IA • Réservé aux utilisateurs payants</p>
+          <p class="text-xs text-gray-500 mt-2">Test en direct avec IA • {{ subscriptionPlan }} plan</p>
         </div>
       </div>
     </div>
@@ -585,17 +639,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import { useAgents, type Agent, type CreateAgentData } from '~/composables/useAgents'
 
-// ✅ PAGE META AVEC MIDDLEWARES CORRECTS
+// ✅ PAGE META
 definePageMeta({
   middleware: 'auth', 
   layout: 'default'
 })
 
-// ✅ INTERFACE POUR LE CHAT
+// ✅ INTERFACES
 interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -608,14 +663,21 @@ interface ChatMessage {
 const authStore = useAuthStore()
 const router = useRouter()
 
-// ✅ UTILISER LE COMPOSABLE AGENTS POUR LA PRODUCTION
+// ✅ UTILISER LE COMPOSABLE AGENTS API PURE
 const {
   agents,
   loading,
   saving,
   error,
-  planLimit,
+  planDetails,
+  subscriptionPlan,
+  isPaidUser,
+  hasActiveAccess,
+  trialExpired,
   canCreateAgent,
+  canConfigureAgents,
+  canTestAgents,
+  activeAgents,
   fetchAgents,
   createAgent,
   updateAgent,
@@ -629,7 +691,32 @@ const {
   clearError
 } = useAgents()
 
-// ✅ DÉFINITIONS DE TYPES D'AGENTS
+// ✅ STATE
+const showCreateModal = ref(false)
+const editingAgent = ref<Agent | null>(null)
+const activeAgentMenu = ref<string | null>(null)
+const showTestModal = ref(false)
+const selectedAgent = ref<Agent | null>(null)
+const generatingDescription = ref(false)
+
+// ✅ CHAT TEST STATE
+const chatMessages = ref<ChatMessage[]>([])
+const testMessage = ref('')
+const sendingMessage = ref(false)
+const chatContainer = ref<HTMLElement>()
+
+// ✅ FORM STATE
+const agentForm = ref<CreateAgentData>({
+  name: '',
+  type: 'general',
+  personality: 'professional',
+  description: '',
+  welcomeMessage: '',
+  fallbackMessage: '',
+  isActive: true
+})
+
+// ✅ TYPES D'AGENTS
 const agentTypes = ref([
   {
     value: 'general',
@@ -688,42 +775,7 @@ const personalityOptions = ref([
   }
 ])
 
-// ✅ REACTIVE STATE
-const showCreateModal = ref(false)
-const editingAgent = ref<Agent | null>(null)
-const activeAgentMenu = ref<string | null>(null)
-const showTestModal = ref(false)
-const selectedAgent = ref<Agent | null>(null)
-const generatingDescription = ref(false)
-
-// ✅ CHAT TEST STATE
-const chatMessages = ref<ChatMessage[]>([])
-const testMessage = ref('')
-const sendingMessage = ref(false)
-const chatContainer = ref<HTMLElement>()
-
-// ✅ FORM STATE
-const agentForm = ref<CreateAgentData>({
-  name: '',
-  type: 'general',
-  personality: 'professional',
-  description: '',
-  welcomeMessage: '',
-  fallbackMessage: '',
-  isActive: true
-})
-
-// ✅ COMPUTED
-const subscriptionPlan = computed(() => {
-  return authStore.user?.shop?.subscription_plan || 'starter'
-})
-
-const isPaidUser = computed(() => {
-  const plan = subscriptionPlan.value
-  return plan === 'starter' || plan === 'pro'
-})
-
-// ✅ HELPER METHODS POUR TEMPLATES
+// ✅ HELPER METHODS
 const getNamePlaceholder = () => {
   const examples = {
     general: "Ex: Assistant Commercial Sophie",
@@ -768,18 +820,37 @@ const getWelcomeMessagePlaceholder = () => {
   return templates[personality as keyof typeof templates] || `Bonjour ! Je suis ${name}. Comment puis-je vous aider ?`
 }
 
-const getFallbackMessagePlaceholder = () => {
-  const templates = {
-    professional: "Je transmets votre question à notre équipe d'experts. Un conseiller vous recontactera rapidement.",
-    friendly: "Bonne question ! Je vais demander à mon équipe et on revient vers vous très vite 😊",
-    expert: "Cette question nécessite une expertise approfondie. Je vous mets en relation avec notre équipe technique.",
-    casual: "Alors là, tu me poses une colle ! 😅 Laisse-moi demander aux pros et je reviens vers toi !"
-  }
-  
-  return templates[agentForm.value.personality as keyof typeof templates] || "Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt."
+// ✅ METHODS
+const refreshAgents = async () => {
+  await fetchAgents()
 }
 
-// ✅ MÉTHODES DE GÉNÉRATION
+const openCreateModal = () => {
+  if (trialExpired.value) {
+    alert('❌ Votre essai gratuit de 7 jours est terminé.\n\nPassez au plan Starter (14€/mois) pour continuer à utiliser ChatSeller et créer vos agents IA.')
+    router.push('/billing')
+    return
+  }
+
+  if (!canCreateAgent.value) {
+    const limit = planDetails.value.agentLimit
+    alert(`❌ Plan ${subscriptionPlan.value} limité à ${limit} agent(s).\n\nPassez au plan supérieur pour créer plus d'agents IA.`)
+    router.push('/billing')
+    return
+  }
+
+  showCreateModal.value = true
+  agentForm.value = {
+    name: '',
+    type: 'general',
+    personality: 'professional',
+    description: '',
+    welcomeMessage: '',
+    fallbackMessage: '',
+    isActive: true
+  }
+}
+
 const selectAgentType = (type: string) => {
   agentForm.value.type = type as Agent['type']
   if (!agentForm.value.description) {
@@ -788,15 +859,11 @@ const selectAgentType = (type: string) => {
   if (!agentForm.value.welcomeMessage) {
     agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
   }
-  if (!agentForm.value.fallbackMessage) {
-    agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
-  }
 }
 
 const selectPersonality = (personality: string) => {
   agentForm.value.personality = personality as Agent['personality']
   agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
-  agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
 }
 
 const onNameChange = () => {
@@ -841,55 +908,17 @@ const generateDescription = async () => {
   }
 }
 
-const generateWelcomeMessage = async () => {
-  if (!agentForm.value.name) return
-  
-  try {
-    await new Promise(resolve => setTimeout(resolve, 800))
-    agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
-  } catch (error) {
-    console.error('Erreur génération message accueil:', error)
-  }
-}
-
-const generateFallbackMessage = async () => {
-  if (!agentForm.value.name) return
-  
-  try {
-    await new Promise(resolve => setTimeout(resolve, 800))
-    agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
-  } catch (error) {
-    console.error('Erreur génération message fallback:', error)
-  }
-}
-
-// ✅ ACTION METHODS
-const refreshAgents = async () => {
-  await fetchAgents()
-}
-
-const openCreateModal = () => {
-  if (!canCreateAgent.value) {
-    alert(`Plan ${subscriptionPlan.value} limité à ${planLimit.value} agent(s). Passez au plan supérieur pour en créer plus.`)
-    return
-  }
-  showCreateModal.value = true
-  agentForm.value = {
-    name: '',
-    type: 'general',
-    personality: 'professional',
-    description: '',
-    welcomeMessage: '',
-    fallbackMessage: '',
-    isActive: true
-  }
-}
-
 const toggleAgentMenu = (agentId: string) => {
+  if (trialExpired.value) return
   activeAgentMenu.value = activeAgentMenu.value === agentId ? null : agentId
 }
 
 const editAgent = (agent: Agent) => {
+  if (trialExpired.value) {
+    alert('❌ Votre essai gratuit est terminé. Passez au plan Starter pour modifier vos agents.')
+    return
+  }
+
   editingAgent.value = agent
   agentForm.value = {
     name: agent.name,
@@ -904,8 +933,14 @@ const editAgent = (agent: Agent) => {
 }
 
 const duplicateAgentAction = async (agent: Agent) => {
+  if (trialExpired.value) {
+    alert('❌ Votre essai gratuit est terminé. Passez au plan Starter pour dupliquer vos agents.')
+    return
+  }
+
   if (!canCreateAgent.value) {
-    alert(`Plan ${subscriptionPlan.value} limité à ${planLimit.value} agent(s). Passez au plan supérieur pour en créer plus.`)
+    const limit = planDetails.value.agentLimit
+    alert(`❌ Plan ${subscriptionPlan.value} limité à ${limit} agent(s). Passez au plan supérieur pour créer plus d'agents.`)
     return
   }
   
@@ -917,6 +952,11 @@ const duplicateAgentAction = async (agent: Agent) => {
 }
 
 const toggleAgentStatusAction = async (agent: Agent) => {
+  if (trialExpired.value) {
+    alert('❌ Votre essai gratuit est terminé. Passez au plan Starter pour gérer vos agents.')
+    return
+  }
+
   activeAgentMenu.value = null
   const result = await toggleAgentStatus(agent.id, !agent.isActive)
   if (result.success) {
@@ -925,6 +965,11 @@ const toggleAgentStatusAction = async (agent: Agent) => {
 }
 
 const deleteAgentAction = async (agent: Agent) => {
+  if (trialExpired.value) {
+    alert('❌ Votre essai gratuit est terminé. Passez au plan Starter pour gérer vos agents.')
+    return
+  }
+
   if (confirm('Êtes-vous sûr de vouloir supprimer ce vendeur IA ?')) {
     activeAgentMenu.value = null
     const result = await deleteAgent(agent.id)
@@ -937,14 +982,19 @@ const deleteAgentAction = async (agent: Agent) => {
 const configureAgent = async (agent: Agent) => {
   console.log('🔄 Navigation vers configuration:', agent.id, agent.name)
   
+  if (trialExpired.value) {
+    alert('❌ Votre essai gratuit est terminé.\n\nPassez au plan Starter pour accéder à la configuration de vos agents IA.')
+    router.push('/billing')
+    return
+  }
+
   activeAgentMenu.value = null
   
   try {
-    // ✅ ÉTAPE 1: Sauvegarder l'agent dans le store avant navigation
+    // Sauvegarder l'agent dans le store avant navigation
     const { useAgentConfigStore } = await import('~/stores/agentConfig')
     const agentConfigStore = useAgentConfigStore()
     
-    // Préparer les données complètes pour le store
     const agentDataForConfig = {
       id: agent.id,
       name: agent.name,
@@ -960,53 +1010,30 @@ const configureAgent = async (agent: Agent) => {
       sourceComponent: 'vendeurs-ia'
     }
     
-    // ✅ ÉTAPE 2: Sauvegarder dans le store
     agentConfigStore.setAgentForConfig(agentDataForConfig, 'vendeurs-ia')
     console.log('✅ Agent sauvegardé dans store pour configuration')
     
-    // ✅ ÉTAPE 3: Navigation avec ID simple
     await navigateTo({
       path: '/agent-config',
       query: { id: agent.id }
     })
     
   } catch (navigationError) {
-    console.warn('⚠️ Erreur navigation, fallback sessionStorage:', navigationError)
-    
-    // ✅ FALLBACK: Sauvegarder dans sessionStorage pour récupération
-    if (process.client) {
-      try {
-        sessionStorage.setItem('chatseller_agent_config_fallback', JSON.stringify({
-          agentId: agent.id,
-          agentData: {
-            id: agent.id,
-            name: agent.name,
-            type: agent.type,
-            personality: agent.personality || 'friendly',
-            description: agent.description || '',
-            welcomeMessage: agent.welcomeMessage || '',
-            fallbackMessage: agent.fallbackMessage || '',
-            avatar: agent.avatar || '',
-            isActive: agent.isActive,
-            config: agent.config || {},
-            stats: agent.stats || { conversations: 0, conversions: 0 }
-          },
-          timestamp: Date.now()
-        }))
-        console.log('💾 Fallback sessionStorage sauvegardé')
-      } catch (storageError) {
-        console.error('❌ Erreur sauvegarde fallback:', storageError)
-      }
-    }
-    
-    // Navigation simple avec query param
+    console.warn('⚠️ Erreur navigation:', navigationError)
     window.location.href = `/agent-config?id=${agent.id}`
   }
 }
 
 const testAgent = (agent: Agent) => {
-  if (!isPaidUser.value) {
-    alert('La fonctionnalité de test est réservée aux utilisateurs des plans Starter et Pro.')
+  if (trialExpired.value) {
+    alert('❌ Votre essai gratuit est terminé.\n\nPassez au plan Starter pour tester vos agents IA.')
+    router.push('/billing')
+    return
+  }
+  
+  if (!canTestAgents.value) {
+    alert('❌ La fonctionnalité de test est réservée aux utilisateurs des plans payants.')
+    router.push('/billing')
     return
   }
   
@@ -1101,14 +1128,12 @@ const saveAgent = async () => {
   
   try {
     if (editingAgent.value) {
-      // Modifier agent existant
       const result = await updateAgent(editingAgent.value.id, agentForm.value)
       if (result.success) {
         console.log('Agent modifié avec succès')
         closeModal()
       }
     } else {
-      // Créer nouvel agent
       const result = await createAgent(agentForm.value)
       if (result.success) {
         console.log('Agent créé avec succès')
@@ -1145,36 +1170,16 @@ const handleClickOutside = (event: Event) => {
   }
 }
 
-// ✅ WATCHERS
-watch(() => agentForm.value.type, (newType) => {
-  if (newType && !editingAgent.value) {
-    if (!agentForm.value.description) {
-      agentForm.value.description = getDescriptionPlaceholder()
-    }
-    if (!agentForm.value.welcomeMessage) {
-      agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
-    }
-    if (!agentForm.value.fallbackMessage) {
-      agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
-    }
-  }
-})
-
-watch(() => agentForm.value.personality, () => {
-  if (!editingAgent.value) {
-    agentForm.value.welcomeMessage = getWelcomeMessagePlaceholder()
-    agentForm.value.fallbackMessage = getFallbackMessagePlaceholder()
-  }
-})
-
 // ✅ LIFECYCLE
 onMounted(async () => {
-  console.log('🚀 [vendeurs-ia] Page montée avec middlewares corrects')
+  console.log('🚀 [vendeurs-ia] Page montée - API PURE')
   console.log('👤 Utilisateur:', authStore.user?.email)
+  console.log('📋 Plan:', subscriptionPlan.value)
+  console.log('⏰ Essai expiré:', trialExpired.value)
   
   document.addEventListener('click', handleClickOutside)
   
-  // ✅ CHARGER LES VRAIES DONNÉES DEPUIS L'API
+  // Charger les données via l'API pure
   await fetchAgents()
 })
 
@@ -1190,11 +1195,15 @@ useHead({
 <style scoped>
 /* ✅ MODERN COMPONENTS */
 .agent-card {
-  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all hover:shadow-md;
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all hover:shadow-md relative;
 }
 
 .agent-card-active {
   @apply border-green-300 bg-green-50/30;
+}
+
+.agent-card-disabled {
+  @apply border-red-300 bg-red-50/30 opacity-75;
 }
 
 .agent-avatar {

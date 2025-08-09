@@ -1,23 +1,29 @@
-// composables/useAuth.ts - COMPOSABLE AUTH COMPATIBLE FINAL
+// composables/useAuth.ts - VERSION CORRIGÉE API PURE
 
 import { useAuthStore } from '~/stores/auth'
 
 export const useAuth = () => {
   const authStore = useAuthStore()
 
-  // ✅ GETTERS PINIA SONT DÉJÀ REACTIFS - PAS BESOIN DE COMPUTED()
+  // ✅ GETTERS REACTIFS PINIA
   const user = computed(() => authStore.user)
   const isAuthenticated = computed(() => authStore.isAuthenticated)
   const isLoggedIn = computed(() => authStore.isLoggedIn)
   const loading = computed(() => authStore.loading)
   const token = computed(() => authStore.token)
   
-  // ✅ CORRECTION CRITIQUE : Accès direct aux getters Pinia
+  // ✅ ACCÈS AUX GETTERS PINIA CORRIGÉS
   const userShopId = computed(() => authStore.userShopId)
   const userEmail = computed(() => authStore.userEmail)
   const userName = computed(() => authStore.userName)
+  const userInitials = computed(() => authStore.userInitials)
+  const planDetails = computed(() => authStore.planDetails)
+  const currentPlan = computed(() => authStore.currentPlan)
+  const isPaidUser = computed(() => authStore.isPaidUser)
+  const hasActiveAccess = computed(() => authStore.hasActiveAccess)
+  const trialExpired = computed(() => authStore.trialExpired)
 
-  // ✅ ACTIONS - AVEC NAVIGATION INTÉGRÉE
+  // ✅ ACTIONS AVEC NAVIGATION INTÉGRÉE
   const login = async (credentials: { email: string; password: string }) => {
     const result = await authStore.login(credentials)
     
@@ -34,7 +40,7 @@ export const useAuth = () => {
     password: string
     firstName: string
     lastName: string
-    company: string
+    company?: string
     platform?: string
     newsletter?: boolean
   }) => {
@@ -42,15 +48,18 @@ export const useAuth = () => {
     const storeData = {
       email: data.email,
       password: data.password,
-      name: `${data.firstName} ${data.lastName}` // Combiner prénom et nom
+      name: `${data.firstName} ${data.lastName}`,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      company: data.company,
+      platform: data.platform,
+      newsletter: data.newsletter
     }
     
     const result = await authStore.register(storeData)
     
-    // Navigation après inscription réussie
-    if (result.success) {
-      await navigateTo('/')
-    }
+    // ✅ PAS DE NAVIGATION AUTOMATIQUE APRÈS REGISTER
+    // Car l'utilisateur doit confirmer son email
     
     return result
   }
@@ -84,6 +93,11 @@ export const useAuth = () => {
     return result
   }
 
+  // ✅ NOUVELLE FONCTION : FETCH USER DATA VIA API
+  const fetchCompleteUserData = async (authUser: any): Promise<any> => {
+    return await authStore.fetchCompleteUserDataViaAPI(authUser, authStore.token || '')
+  }
+
   // ✅ UTILITAIRES
   const requireAuth = async () => {
     if (!authStore.isLoggedIn) {
@@ -107,17 +121,39 @@ export const useAuth = () => {
   }
 
   const getInitials = (name?: string): string => {
-    if (!name) return authStore.userInitials || 'U'
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+    if (name) {
+      return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    }
+    return authStore.userInitials || 'U'
+  }
+
+  // ✅ VÉRIFICATION ONBOARDING
+  const needsOnboarding = (): boolean => {
+    if (!authStore.user?.shop) return true
+    
+    const shop = authStore.user.shop
+    return !shop.onboarding_completed
+  }
+
+  const checkOnboardingStatus = async (): Promise<{ needsOnboarding: boolean; redirectTo?: string }> => {
+    if (!authStore.isAuthenticated) {
+      return { needsOnboarding: false, redirectTo: '/login' }
+    }
+
+    if (needsOnboarding()) {
+      return { needsOnboarding: true, redirectTo: '/onboarding' }
+    }
+
+    return { needsOnboarding: false }
   }
 
   return {
-    // State - Access Pinia getters directly through computed
+    // State - Accès aux getters Pinia via computed
     user,
     isAuthenticated,
     isLoggedIn,
@@ -126,6 +162,12 @@ export const useAuth = () => {
     userShopId,
     userEmail,
     userName,
+    userInitials,
+    planDetails,
+    currentPlan,
+    isPaidUser,
+    hasActiveAccess,
+    trialExpired,
     
     // Actions
     login,
@@ -135,11 +177,14 @@ export const useAuth = () => {
     updateProfile,
     restoreSession,
     refreshToken,
+    fetchCompleteUserData,
     
     // Utilities
     requireAuth,
     requireGuest,
     hasPermission,
-    getInitials
+    getInitials,
+    needsOnboarding,
+    checkOnboardingStatus
   }
 }

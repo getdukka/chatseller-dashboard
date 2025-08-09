@@ -1,4 +1,4 @@
-<!-- pages/orders.vue - VERSION ADAPTÉE À VOTRE STRUCTURE DB RÉELLE -->
+<!-- pages/orders.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header Modern -->
@@ -113,48 +113,42 @@
 
       <!-- Filters & Search -->
       <div class="card-modern mb-6">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <!-- Search -->
-          <div class="flex-1 max-w-lg">
-            <div class="relative">
-              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Rechercher une commande..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
+        <div class="p-6">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <!-- Search -->
+            <div class="flex-1 max-w-lg">
+              <div class="relative">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Rechercher une commande..."
+                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                >
+              </div>
             </div>
-          </div>
-          
-          <!-- Filters -->
-          <div class="flex flex-wrap items-center space-x-4">
-            <select v-model="filters.status" class="input-modern">
-              <option value="">Tous les statuts</option>
-              <option value="pending">En attente</option>
-              <option value="confirmed">Confirmée</option>
-              <option value="shipped">Expédiée</option>
-              <option value="delivered">Livrée</option>
-              <option value="cancelled">Annulée</option>
-            </select>
             
-            <select v-model="filters.period" class="input-modern">
-              <option value="">Toutes les périodes</option>
-              <option value="today">Aujourd'hui</option>
-              <option value="week">Cette semaine</option>
-              <option value="month">Ce mois</option>
-              <option value="quarter">Ce trimestre</option>
-            </select>
-            
-            <button
-              v-if="hasActiveFilters"
-              @click="clearFilters"
-              class="text-sm text-gray-500 hover:text-gray-700 underline"
-            >
-              Effacer les filtres
-            </button>
+            <!-- Filters -->
+            <div class="flex flex-wrap items-center space-x-4">
+              <select v-model="filters.status" class="input-modern">
+                <option value="">Tous les statuts</option>
+                <option value="pending">En attente</option>
+                <option value="confirmed">Confirmée</option>
+                <option value="shipped">Expédiée</option>
+                <option value="delivered">Livrée</option>
+                <option value="cancelled">Annulée</option>
+              </select>
+              
+              <button
+                v-if="hasActiveFilters"
+                @click="clearFilters"
+                class="text-sm text-gray-500 hover:text-gray-700 underline"
+              >
+                Effacer les filtres
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -217,13 +211,11 @@
               >
                 <!-- Order ID -->
                 <td class="table-cell">
-                  <div class="flex items-center">
-                    <div class="text-sm font-medium text-gray-900">
-                      #{{ order.id.slice(-8).toUpperCase() }}
-                    </div>
-                    <div v-if="order.external_order_id" class="ml-2 text-xs text-gray-500">
-                      Ext: {{ order.external_order_id }}
-                    </div>
+                  <div class="text-sm font-medium text-gray-900">
+                    #{{ order.id.slice(-8).toUpperCase() }}
+                  </div>
+                  <div v-if="order.external_order_id" class="text-xs text-gray-500">
+                    Ext: {{ order.external_order_id }}
                   </div>
                 </td>
                 
@@ -299,41 +291,6 @@
                     >
                       Voir
                     </button>
-                    <div class="order-actions">
-                      <button
-                        @click="toggleActionMenu(order.id)"
-                        class="action-button-secondary"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
-                        </svg>
-                      </button>
-
-                      <!-- Dropdown Actions -->
-                      <div
-                        v-if="activeActionMenu === order.id"
-                        class="action-dropdown"
-                      >
-                        <button @click="updateOrderStatus(order)" class="action-dropdown-item">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                          </svg>
-                          Modifier statut
-                        </button>
-                        <button @click="markAsExported(order)" class="action-dropdown-item">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                          </svg>
-                          Marquer exportée
-                        </button>
-                        <button @click="addNotes(order)" class="action-dropdown-item">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                          </svg>
-                          Ajouter notes
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 </td>
               </tr>
@@ -356,227 +313,6 @@
               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-200 transition-colors"
             >
               Effacer les filtres
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Order Details Modal -->
-    <div
-      v-if="showOrderModal && selectedOrder"
-      class="fixed inset-0 z-50 overflow-y-auto"
-      @click.self="closeOrderModal"
-    >
-      <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
-        
-        <div class="relative bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <!-- Modal Header -->
-          <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">
-              Détail de la commande #{{ selectedOrder.id.slice(-8).toUpperCase() }}
-            </h3>
-            <button
-              @click="closeOrderModal"
-              class="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Modal Content -->
-          <div class="p-6 space-y-6">
-            <!-- Customer Info -->
-            <div>
-              <h4 class="text-sm font-medium text-gray-900 mb-3">Informations client</h4>
-              <div class="bg-gray-50 rounded-lg p-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span class="text-sm text-gray-500">Nom :</span>
-                    <p class="font-medium">{{ selectedOrder.customer_name || 'Non renseigné' }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm text-gray-500">Email :</span>
-                    <p class="font-medium">{{ selectedOrder.customer_email || 'Non renseigné' }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm text-gray-500">Téléphone :</span>
-                    <p class="font-medium">{{ selectedOrder.customer_phone || 'Non renseigné' }}</p>
-                  </div>
-                  <div>
-                    <span class="text-sm text-gray-500">Adresse :</span>
-                    <p class="font-medium">{{ selectedOrder.customer_address || 'Non renseignée' }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Order Items -->
-            <div v-if="selectedOrder.product_items && selectedOrder.product_items.length > 0">
-              <h4 class="text-sm font-medium text-gray-900 mb-3">Articles commandés</h4>
-              <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produit</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantité</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prix unitaire</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200">
-                    <tr v-for="(item, index) in selectedOrder.product_items" :key="index">
-                      <td class="px-4 py-3 text-sm text-gray-900">{{ item.name || item.productName || 'Produit' }}</td>
-                      <td class="px-4 py-3 text-sm text-gray-900">{{ item.quantity || 1 }}</td>
-                      <td class="px-4 py-3 text-sm text-gray-900">{{ formatCurrency(item.price || 0, selectedOrder.currency) }}</td>
-                      <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ formatCurrency((item.price || 0) * (item.quantity || 1), selectedOrder.currency) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Upsell Items -->
-            <div v-if="selectedOrder.upsell_items && selectedOrder.upsell_items.length > 0">
-              <h4 class="text-sm font-medium text-gray-900 mb-3">Articles supplémentaires (Upsell)</h4>
-              <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-green-50">
-                    <tr>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase">Produit</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase">Quantité</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase">Prix unitaire</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200">
-                    <tr v-for="(item, index) in selectedOrder.upsell_items" :key="index">
-                      <td class="px-4 py-3 text-sm text-gray-900">{{ item.name || item.productName || 'Produit' }}</td>
-                      <td class="px-4 py-3 text-sm text-gray-900">{{ item.quantity || 1 }}</td>
-                      <td class="px-4 py-3 text-sm text-gray-900">{{ formatCurrency(item.price || 0, selectedOrder.currency) }}</td>
-                      <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ formatCurrency((item.price || 0) * (item.quantity || 1), selectedOrder.currency) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-              
-            <!-- Order Total -->
-            <div class="border-t pt-4">
-              <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                  <span>Sous-total produits :</span>
-                  <span>{{ formatCurrency(selectedOrder.total_amount || 0, selectedOrder.currency) }}</span>
-                </div>
-                <div v-if="selectedOrder.upsell_amount && selectedOrder.upsell_amount > 0" class="flex justify-between text-sm text-green-600">
-                  <span>Upsell :</span>
-                  <span>{{ formatCurrency(selectedOrder.upsell_amount, selectedOrder.currency) }}</span>
-                </div>
-                <div class="flex justify-between text-lg font-semibold border-t pt-2">
-                  <span>Total :</span>
-                  <span>{{ formatCurrency(getTotalOrderAmount(selectedOrder), selectedOrder.currency) }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Additional Info -->
-            <div v-if="selectedOrder.notes" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h4 class="text-sm font-medium text-yellow-800 mb-2">Notes :</h4>
-              <p class="text-sm text-yellow-700">{{ selectedOrder.notes }}</p>
-            </div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
-            <button
-              @click="closeOrderModal"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Fermer
-            </button>
-            <button
-              @click="updateOrderStatus(selectedOrder)"
-              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Modifier le statut
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Status Update Modal -->
-    <div
-      v-if="showStatusModal && orderToUpdate"
-      class="fixed inset-0 z-50 overflow-y-auto"
-      @click.self="closeStatusModal"
-    >
-      <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
-        
-        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full">
-          <!-- Modal Header -->
-          <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">
-              Modifier le statut
-            </h3>
-            <button
-              @click="closeStatusModal"
-              class="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Modal Content -->
-          <div class="p-6">
-            <p class="text-sm text-gray-600 mb-4">
-              Commande #{{ orderToUpdate.id.slice(-8).toUpperCase() }}
-            </p>
-            
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nouveau statut</label>
-                <select v-model="newStatus" class="input-modern w-full">
-                  <option value="pending">En attente</option>
-                  <option value="confirmed">Confirmée</option>
-                  <option value="shipped">Expédiée</option>
-                  <option value="delivered">Livrée</option>
-                  <option value="cancelled">Annulée</option>
-                </select>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Notes (optionnel)</label>
-                <textarea
-                  v-model="statusNotes"
-                  rows="3"
-                  class="input-modern w-full"
-                  placeholder="Ajoutez une note sur ce changement de statut..."
-                ></textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
-            <button
-              @click="closeStatusModal"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Annuler
-            </button>
-            <button
-              @click="saveStatusUpdate"
-              :disabled="updatingStatus"
-              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {{ updatingStatus ? 'Mise à jour...' : 'Mettre à jour' }}
             </button>
           </div>
         </div>
@@ -615,9 +351,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
-import { useSupabase } from '~/composables/useSupabase'
 
 // ✅ PAGE META
 definePageMeta({
@@ -625,64 +360,23 @@ definePageMeta({
   layout: 'default'
 })
 
-// ✅ TYPES - Adaptés à votre structure DB réelle
-interface Order {
-  id: string
-  shop_id: string
-  conversation_id: string | null
-  customer_name: string | null
-  customer_phone: string | null
-  customer_email: string | null
-  customer_address: string | null
-  product_items: any[] // JSONB
-  total_amount: number
-  currency: string
-  payment_method: string | null
-  upsell_items: any[] // JSONB
-  upsell_amount: number
-  status: string
-  notes: string | null
-  exported_at: string | null
-  external_order_id: string | null
-  webhook_sent_at: string | null
-  created_at: string
-  updated_at: string | null
-}
-
-interface Stats {
-  totalOrders: number
-  totalRevenue: number
-  averageOrderValue: number
-  pendingOrders: number
-  revenueGrowth: number
-}
-
 // ✅ COMPOSABLES
 const authStore = useAuthStore()
-const supabase = useSupabase()
+const api = useApi()
 
 // ✅ REACTIVE STATE
 const loading = ref(true)
 const exporting = ref(false)
-const updatingStatus = ref(false)
 const searchQuery = ref('')
-const showOrderModal = ref(false)
-const showStatusModal = ref(false)
-const selectedOrder = ref<Order | null>(null)
-const orderToUpdate = ref<Order | null>(null)
-const newStatus = ref('')
-const statusNotes = ref('')
-const activeActionMenu = ref<string | null>(null)
 const error = ref<string | null>(null)
 
 const filters = ref({
-  status: '',
-  period: ''
+  status: ''
 })
 
-const orders = ref<Order[]>([])
+const orders = ref<any[]>([])
 
-const stats = ref<Stats>({
+const stats = ref({
   totalOrders: 0,
   totalRevenue: 0,
   averageOrderValue: 0,
@@ -717,53 +411,29 @@ const filteredOrders = computed(() => {
     filtered = filtered.filter(order => order.status === filters.value.status)
   }
 
-  // Period filter
-  if (filters.value.period) {
-    const now = new Date()
-    
-    filtered = filtered.filter(order => {
-      const date = new Date(order.created_at)
-      switch (filters.value.period) {
-        case 'today':
-          return date.toDateString() === now.toDateString()
-        case 'week':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          return date >= weekAgo
-        case 'month':
-          return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
-        case 'quarter':
-          const quarter = Math.floor(now.getMonth() / 3)
-          const orderQuarter = Math.floor(date.getMonth() / 3)
-          return orderQuarter === quarter && date.getFullYear() === now.getFullYear()
-        default:
-          return true
-      }
-    })
-  }
-
   return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 })
 
 const hasActiveFilters = computed(() => {
-  return filters.value.status !== '' || filters.value.period !== '' || searchQuery.value !== ''
+  return filters.value.status !== '' || searchQuery.value !== ''
 })
 
 // ✅ UTILITY METHODS
-const getProductCount = (order: Order): number => {
+const getProductCount = (order: any): number => {
   if (!order.product_items || !Array.isArray(order.product_items)) return 0
-  return order.product_items.reduce((sum, item) => sum + (item.quantity || 1), 0)
+  return order.product_items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0)
 }
 
-const getUpsellCount = (order: Order): number => {
+const getUpsellCount = (order: any): number => {
   if (!order.upsell_items || !Array.isArray(order.upsell_items)) return 0
-  return order.upsell_items.reduce((sum, item) => sum + (item.quantity || 1), 0)
+  return order.upsell_items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0)
 }
 
-const hasUpsellItems = (order: Order): boolean => {
+const hasUpsellItems = (order: any): boolean => {
   return order.upsell_items && Array.isArray(order.upsell_items) && order.upsell_items.length > 0
 }
 
-const getProductSummary = (order: Order): string => {
+const getProductSummary = (order: any): string => {
   if (!order.product_items || !Array.isArray(order.product_items) || order.product_items.length === 0) {
     return 'Aucun produit'
   }
@@ -778,7 +448,7 @@ const getProductSummary = (order: Order): string => {
   return `${itemName} et ${order.product_items.length - 1} autre(s)`
 }
 
-const getTotalOrderAmount = (order: Order): number => {
+const getTotalOrderAmount = (order: any): number => {
   return (order.total_amount || 0) + (order.upsell_amount || 0)
 }
 
@@ -855,33 +525,25 @@ const showNotification = (message: string, type: 'success' | 'error' = 'success'
   }, 5000)
 }
 
-// ✅ API METHODS
+// ✅ API METHODS UTILISANT LE COMPOSABLE API
 const loadOrders = async () => {
-  if (!authStore.userShopId) {
-    error.value = 'ID utilisateur non trouvé'
-    loading.value = false
-    return
-  }
-
   loading.value = true
   error.value = null
 
   try {
-    const { data, error: supabaseError } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('shop_id', authStore.userShopId)
-      .order('created_at', { ascending: false })
-
-    if (supabaseError) {
-      throw new Error(supabaseError.message)
-    }
-
-    orders.value = data || []
-    console.log('✅ Commandes chargées:', orders.value.length)
+    console.log('🔄 Chargement commandes via API...')
     
-    // Charger les statistiques
-    await loadStats()
+    const response = await api.orders.list()
+    
+    if (response.success && response.data) {
+      orders.value = response.data
+      console.log('✅ Commandes chargées:', orders.value.length)
+      
+      // Charger les statistiques
+      await loadStats()
+    } else {
+      throw new Error(response.error || 'Erreur lors du chargement des commandes')
+    }
     
   } catch (err: any) {
     console.error('❌ Erreur chargement commandes:', err)
@@ -895,18 +557,18 @@ const loadStats = async () => {
   try {
     const ordersData = orders.value
     const today = new Date()
-    const thisMonth = ordersData.filter(o => {
+    const thisMonth = ordersData.filter((o: any) => {
       const orderDate = new Date(o.created_at)
       return orderDate.getMonth() === today.getMonth() && orderDate.getFullYear() === today.getFullYear()
     })
     
-    const totalRevenue = thisMonth.reduce((sum, order) => sum + getTotalOrderAmount(order), 0)
+    const totalRevenue = thisMonth.reduce((sum: number, order: any) => sum + getTotalOrderAmount(order), 0)
     
     stats.value = {
       totalOrders: thisMonth.length,
       totalRevenue,
       averageOrderValue: thisMonth.length > 0 ? totalRevenue / thisMonth.length : 0,
-      pendingOrders: ordersData.filter(o => o.status === 'pending').length,
+      pendingOrders: ordersData.filter((o: any) => o.status === 'pending').length,
       revenueGrowth: 23.5 // TODO: Calculer réellement vs mois précédent
     }
   } catch (err) {
@@ -945,7 +607,7 @@ const handleExportOrders = async () => {
     ]
     
     // Préparer les données
-    const csvData = filteredOrders.value.map(order => [
+    const csvData = filteredOrders.value.map((order: any) => [
       `#${order.id.slice(-8).toUpperCase()}`,
       order.external_order_id || '',
       order.customer_name || '',
@@ -967,7 +629,7 @@ const handleExportOrders = async () => {
     // Créer le contenu CSV
     const csvContent = [
       headers.join(','),
-      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...csvData.map((row: any[]) => row.map((cell: any) => `"${cell}"`).join(','))
     ].join('\n')
     
     // Créer et télécharger le fichier
@@ -993,173 +655,30 @@ const handleExportOrders = async () => {
 }
 
 // ✅ ACTION METHODS
-const viewOrder = (order: Order) => {
-  selectedOrder.value = order
-  showOrderModal.value = true
-  activeActionMenu.value = null
-}
-
-const closeOrderModal = () => {
-  showOrderModal.value = false
-  selectedOrder.value = null
-}
-
-const updateOrderStatus = (order: Order) => {
-  orderToUpdate.value = order
-  newStatus.value = order.status
-  statusNotes.value = ''
-  showStatusModal.value = true
-  activeActionMenu.value = null
-}
-
-const closeStatusModal = () => {
-  showStatusModal.value = false
-  orderToUpdate.value = null
-  newStatus.value = ''
-  statusNotes.value = ''
-}
-
-const saveStatusUpdate = async () => {
-  if (!orderToUpdate.value) return
-  
-  updatingStatus.value = true
-  
+const viewOrder = async (order: any) => {
   try {
-    const updateData: any = {
-      status: newStatus.value,
-      updated_at: new Date().toISOString()
-    }
+    const response = await api.orders.get(order.id)
     
-    // Ajouter notes si présentes
-    if (statusNotes.value.trim()) {
-      const existingNotes = orderToUpdate.value.notes || ''
-      const newNote = `[${new Date().toLocaleDateString('fr-FR')}] ${statusNotes.value.trim()}`
-      updateData.notes = existingNotes ? `${existingNotes}\n${newNote}` : newNote
+    if (response.success) {
+      console.log('Commande détaillée:', response.data)
+      // TODO: Ouvrir modal ou page de détail
+    } else {
+      showNotification('Erreur lors du chargement des détails', 'error')
     }
-    
-    const { error: supabaseError } = await supabase
-      .from('orders')
-      .update(updateData)
-      .eq('id', orderToUpdate.value.id)
-
-    if (supabaseError) {
-      throw new Error(supabaseError.message)
-    }
-
-    // Mise à jour locale
-    const orderIndex = orders.value.findIndex(o => o.id === orderToUpdate.value!.id)
-    if (orderIndex !== -1) {
-      orders.value[orderIndex] = { ...orders.value[orderIndex], ...updateData }
-    }
-    
-    // Mise à jour des sélections
-    if (selectedOrder.value?.id === orderToUpdate.value.id) {
-      selectedOrder.value = { ...selectedOrder.value, ...updateData }
-    }
-
-    showNotification('Statut de commande mis à jour avec succès!')
-    closeStatusModal()
-    await loadStats()
-    
-  } catch (err: any) {
-    console.error('❌ Erreur mise à jour statut:', err)
-    showNotification('Erreur lors de la mise à jour du statut', 'error')
-  } finally {
-    updatingStatus.value = false
+  } catch (err) {
+    console.error('Erreur vue commande:', err)
+    showNotification('Erreur lors du chargement des détails', 'error')
   }
-}
-
-const markAsExported = async (order: Order) => {
-  try {
-    const { error: supabaseError } = await supabase
-      .from('orders')
-      .update({ 
-        exported_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', order.id)
-
-    if (supabaseError) {
-      throw new Error(supabaseError.message)
-    }
-
-    // Mise à jour locale
-    order.exported_at = new Date().toISOString()
-    
-    showNotification('Commande marquée comme exportée!')
-  } catch (err: any) {
-    console.error('❌ Erreur mark as exported:', err)
-    showNotification('Erreur lors de la mise à jour', 'error')
-  } finally {
-    activeActionMenu.value = null
-  }
-}
-
-const addNotes = (order: Order) => {
-  const note = prompt('Ajouter une note à cette commande:')
-  if (!note || !note.trim()) {
-    activeActionMenu.value = null
-    return
-  }
-  
-  updateOrderNotes(order, note.trim())
-}
-
-const updateOrderNotes = async (order: Order, newNote: string) => {
-  try {
-    const existingNotes = order.notes || ''
-    const timestampedNote = `[${new Date().toLocaleDateString('fr-FR')}] ${newNote}`
-    const updatedNotes = existingNotes ? `${existingNotes}\n${timestampedNote}` : timestampedNote
-    
-    const { error: supabaseError } = await supabase
-      .from('orders')
-      .update({ 
-        notes: updatedNotes,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', order.id)
-
-    if (supabaseError) {
-      throw new Error(supabaseError.message)
-    }
-
-    // Mise à jour locale
-    order.notes = updatedNotes
-    
-    showNotification('Note ajoutée avec succès!')
-  } catch (err: any) {
-    console.error('❌ Erreur ajout note:', err)
-    showNotification('Erreur lors de l\'ajout de la note', 'error')
-  } finally {
-    activeActionMenu.value = null
-  }
-}
-
-const toggleActionMenu = (orderId: string) => {
-  activeActionMenu.value = activeActionMenu.value === orderId ? null : orderId
 }
 
 const clearFilters = () => {
   searchQuery.value = ''
   filters.value.status = ''
-  filters.value.period = ''
-}
-
-// Close action menu when clicking outside
-const closeActionMenu = (event: Event) => {
-  if (activeActionMenu.value && !(event.target as Element).closest('.order-actions')) {
-    activeActionMenu.value = null
-  }
 }
 
 // ✅ LIFECYCLE
 onMounted(() => {
   loadOrders()
-  document.addEventListener('click', closeActionMenu)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', closeActionMenu)
 })
 
 // ✅ SEO
@@ -1196,37 +715,6 @@ useHead({
 
 .action-button-primary {
   @apply text-blue-600 hover:text-blue-900 text-sm font-medium transition-colors;
-}
-
-.action-button-secondary {
-  @apply p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors;
-}
-
-.order-actions {
-  @apply relative;
-}
-
-.action-dropdown {
-  @apply absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10 py-1;
-}
-
-.action-dropdown-item {
-  @apply w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors;
-}
-
-/* ✅ RESPONSIVE */
-@media (max-width: 768px) {
-  .card-modern {
-    @apply p-4;
-  }
-  
-  .table-cell {
-    @apply px-4 py-3;
-  }
-  
-  .table-header {
-    @apply px-4 py-2;
-  }
 }
 
 /* ✅ ANIMATIONS */

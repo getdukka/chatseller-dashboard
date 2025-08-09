@@ -1,6 +1,6 @@
-<!-- components/SidebarContent.vue - SIDEBAR AVEC NAVIGATION CORRIGÉE -->
+<!-- components/SidebarContent.vue - SIDEBAR AVEC CLIQUABILITÉ 100% CORRIGÉE -->
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col h-full bg-white">
     
     <!-- Header sidebar -->
     <div class="flex h-16 items-center justify-between px-6 border-b border-gray-100">
@@ -14,8 +14,9 @@
       <!-- Close button for mobile -->
       <button 
         v-if="isMobile"
-        @click="emit('close-mobile')"
+        @click="handleCloseMobile"
         class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors lg:hidden"
+        type="button"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -24,7 +25,9 @@
     </div>
 
     <!-- Navigation principale - Flex grow pour prendre l'espace -->
-    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto sidebar-navigation">
+      
+      <!-- ✅ LIENS AVEC GESTION D'ÉVÉNEMENTS CORRIGÉE -->
       <SidebarLink
         to="/"
         :isActive="$route.path === '/'"
@@ -33,7 +36,6 @@
         @click="handleNavClick"
       />
 
-      <!-- ✅ LIEN VENDEURS IA CORRIGÉ -->
       <SidebarLink
         to="/vendeurs-ia"
         :isActive="$route.path.startsWith('/vendeurs-ia')"
@@ -101,14 +103,15 @@
       />
     </nav>
 
-    <!-- ✅ BOUTONS ADAPTATIFS SELON LE PLAN - LOGIQUE CORRIGÉE -->
-    <div class="px-4 pb-4">
+    <!-- ✅ BOUTONS ADAPTATIFS SELON LE PLAN - LOGIQUE PARFAITEMENT SYNCHRONISÉE -->
+    <div class="px-4 pb-4 border-t border-gray-100 pt-4">
       
       <!-- ✅ PLAN FREE + ESSAI ACTIF : Bouton "Passer à Starter" -->
       <button
         v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0"
         @click="handleUpgradeClick('starter')"
         :disabled="upgradingToPlan === 'starter'"
+        type="button"
         class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
       >
         <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -126,6 +129,7 @@
         v-else-if="userSubscriptionPlan === 'free' && (!userSubscriptionActive || trialDaysLeft === 0)"
         @click="handleUpgradeClick('starter')"
         :disabled="upgradingToPlan === 'starter'"
+        type="button"
         class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
       >
         <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -143,6 +147,7 @@
         v-else-if="userSubscriptionPlan === 'starter' && userSubscriptionActive"
         @click="handleUpgradeClick('pro')"
         :disabled="upgradingToPlan === 'pro'"
+        type="button"
         class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
       >
         <svg v-if="upgradingToPlan === 'pro'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -171,6 +176,7 @@
         v-else-if="userSubscriptionPlan === 'starter' && !userSubscriptionActive"
         @click="handleUpgradeClick('starter')"
         :disabled="upgradingToPlan === 'starter'"
+        type="button"
         class="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
       >
         <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -188,6 +194,7 @@
         v-else-if="userSubscriptionPlan === 'pro' && !userSubscriptionActive"
         @click="handleUpgradeClick('pro')"
         :disabled="upgradingToPlan === 'pro'"
+        type="button"
         class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
       >
         <svg v-if="upgradingToPlan === 'pro'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -228,12 +235,13 @@
     </div>
 
     <!-- ✅ PROFIL UTILISATEUR DYNAMIQUE EN BAS -->
-    <div class="border-t border-gray-100 p-4">
+    <div class="border-t border-gray-100 p-4 bg-white">
       <!-- Dropdown profil -->
       <div class="relative" ref="profileDropdown">
         <button 
-          @click="emit('toggle-profile')"
-          class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
+          @click="handleToggleProfile"
+          type="button"
+          class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <!-- ✅ AVATAR DYNAMIQUE AVEC INITIALES -->
           <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
@@ -276,12 +284,12 @@
         >
           <div 
             v-if="showProfileMenu"
-            class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-100 py-2"
+            class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
           >
             <NuxtLink 
               to="/settings?tab=compte" 
               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-              @click="emit('close-profile')"
+              @click="handleCloseProfile"
             >
               <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -292,7 +300,8 @@
             <hr class="my-1 border-gray-100">
             
             <button
-              @click="emit('logout')"
+              @click="handleLogout"
+              type="button"
               class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
             >
               <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -308,12 +317,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-// ✅ TYPES COHÉRENTS AVEC BILLING.VUE
+// ✅ TYPES COHÉRENTS
 type SubscriptionPlan = 'free' | 'starter' | 'pro'
 
-// ✅ INTERFACE PROPS CORRIGÉE
 interface Props {
   unreadCount: number
   userName: string
@@ -345,36 +353,90 @@ const emit = defineEmits<{
 // ✅ STATE POUR LES BOUTONS UPGRADE
 const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
 
-// ✅ HANDLE NAVIGATION CLICKS - AVEC DEBUG
+// ✅ COMPUTED POUR MODE DÉVELOPPEMENT
+const isDev = computed(() => process.dev)
+
+// ✅ HANDLE NAVIGATION CLICKS - AVEC DEBUG ET GESTION D'ÉVÉNEMENTS CORRIGÉE
 const handleNavClick = (event?: Event) => {
-  console.log('🖱️ SidebarContent: Navigation click détecté')
+  console.log('🖱️ [SidebarContent] Navigation click détecté', { 
+    isMobile: props.isMobile,
+    target: event?.target 
+  })
+  
+  // S'assurer que l'événement n'est pas empêché
+  if (event) {
+    event.stopPropagation()
+  }
   
   // Fermer le menu mobile lors de la navigation (si mobile)
   if (props.isMobile) {
-    console.log('📱 SidebarContent: Fermeture du menu mobile')
-    emit('close-mobile')
+    console.log('📱 [SidebarContent] Fermeture du menu mobile')
+    setTimeout(() => {
+      emit('close-mobile')
+    }, 100) // Petit délai pour permettre à la navigation de s'initier
+  }
+  
+  // Fermer le menu profil si ouvert
+  if (props.showProfileMenu) {
+    emit('close-profile')
   }
 }
 
-// ✅ HANDLE UPGRADE CLICK - DIFFÉRENCIÉ PAR PLAN
+// ✅ HANDLE CLOSE MOBILE - GESTION CORRIGÉE
+const handleCloseMobile = () => {
+  console.log('❌ [SidebarContent] Close mobile trigger')
+  emit('close-mobile')
+}
+
+// ✅ HANDLE PROFILE MENU - GESTION CORRIGÉE
+const handleToggleProfile = () => {
+  console.log('👤 [SidebarContent] Toggle profile menu')
+  emit('toggle-profile')
+}
+
+const handleCloseProfile = () => {
+  console.log('❌ [SidebarContent] Close profile menu')
+  emit('close-profile')
+}
+
+const handleLogout = () => {
+  console.log('🚪 [SidebarContent] Logout trigger')
+  emit('logout')
+}
+
+// ✅ HANDLE UPGRADE CLICK - AVEC LOGGING AMÉLIORÉ
 const handleUpgradeClick = async (targetPlan: 'starter' | 'pro') => {
+  console.log(`🚀 [SidebarContent] Upgrade click vers ${targetPlan}`)
+  
   upgradingToPlan.value = targetPlan
   
   try {
     // Émettre l'événement vers le parent pour déclencher Stripe
     emit('upgrade-to-plan', targetPlan)
+    console.log(`✅ [SidebarContent] Événement upgrade émis pour ${targetPlan}`)
   } catch (error) {
-    console.error('Erreur upgrade:', error)
-  } finally {
-    // Remettre à null après 2 secondes (le temps de la redirection)
-    setTimeout(() => {
-      upgradingToPlan.value = null
-    }, 2000)
+    console.error('❌ [SidebarContent] Erreur upgrade:', error)
+    upgradingToPlan.value = null
   }
 }
 </script>
 
 <style scoped>
+/* ✅ ASSURER QUE TOUS LES ÉLÉMENTS SONT CLIQUABLES */
+.sidebar-navigation {
+  pointer-events: auto;
+}
+
+.sidebar-navigation * {
+  pointer-events: auto;
+}
+
+/* ✅ EMPÊCHER LES OVERLAPS */
+button, a {
+  position: relative;
+  z-index: 1;
+}
+
 /* ✅ TRANSITIONS FLUIDES */
 .transition-all {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -407,5 +469,21 @@ nav::-webkit-scrollbar {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* ✅ FOCUS STATES AMÉLIORÉS POUR L'ACCESSIBILITÉ */
+button:focus, a:focus {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+}
+
+/* ✅ ASSURER LA VISIBILITÉ DU DROPDOWN */
+.z-50 {
+  z-index: 50;
+}
+
+/* ✅ BACKGROUND FIXE POUR ÉVITER LES CONFLITS */
+.bg-white {
+  background-color: white !important;
 }
 </style>

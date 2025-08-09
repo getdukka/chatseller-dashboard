@@ -1,7 +1,19 @@
-// stores/analytics.ts
+// stores/analytics.ts - VERSION CORRIGÉE POUR VRAIE API
 import { defineStore } from 'pinia'
-import type { AnalyticsData } from '~/composables/useApi'
 import { useAuthStore } from './auth'
+
+interface AnalyticsData {
+  totalConversations: number
+  activeConversations: number
+  completedConversations: number
+  completedOrders: number
+  totalRevenue: number
+  conversionRate: number
+  averageOrderValue: number
+  conversationsByDay: Array<{ date: string; count: number }>
+  revenueByDay: Array<{ date: string; revenue: number }>
+  topProducts: Array<{ name: string; orders: number; revenue: number }>
+}
 
 interface AnalyticsState {
   data: AnalyticsData | null
@@ -51,121 +63,16 @@ export const useAnalyticsStore = defineStore('analytics', {
       return `${(rate * 100).toFixed(1)}%`
     },
 
-    // Chart data for conversations
-    conversationsChartData: (state) => {
-      if (!state.data?.conversationsByDay) return []
-      
-      return state.data.conversationsByDay.map(item => ({
-        date: new Date(item.date).toLocaleDateString('fr-FR', { 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        value: item.count,
-        fullDate: item.date
-      }))
-    },
-
-    // Chart data for revenue
-    revenueChartData: (state) => {
-      if (!state.data?.revenueByDay) return []
-      
-      return state.data.revenueByDay.map(item => ({
-        date: new Date(item.date).toLocaleDateString('fr-FR', { 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        value: item.revenue,
-        fullDate: item.date
-      }))
-    },
-
-    // Top products for display
-    topProductsForDisplay: (state) => {
-      if (!state.data?.topProducts) return []
-      
-      return state.data.topProducts.slice(0, 5).map((product, index) => ({
-        ...product,
-        rank: index + 1,
-        formattedRevenue: new Intl.NumberFormat('fr-FR', {
-          style: 'currency',
-          currency: 'EUR'
-        }).format(product.revenue)
-      }))
-    },
-
-    // Performance indicators
-    performanceIndicators: (state) => {
-      if (!state.data) return []
-
-      const indicators = [
-        {
-          label: 'Conversations totales',
-          value: state.data.totalConversations,
-          type: 'number',
-          trend: null // Could be calculated with historical data
-        },
-        {
-          label: 'Conversations actives',
-          value: state.data.activeConversations,
-          type: 'number',
-          trend: null
-        },
-        {
-          label: 'Commandes',
-          value: state.data.completedOrders,
-          type: 'number',
-          trend: null
-        },
-        {
-          label: 'Taux de conversion',
-          value: state.data.conversionRate * 100,
-          type: 'percentage',
-          trend: null
-        },
-        {
-          label: 'Chiffre d\'affaires',
-          value: state.data.totalRevenue,
-          type: 'currency',
-          trend: null
-        },
-        {
-          label: 'Panier moyen',
-          value: state.data.averageOrderValue,
-          type: 'currency',
-          trend: null
-        }
-      ]
-
-      return indicators
-    },
-
     // Check if data needs refresh (5 minutes)
     needsRefresh: (state) => {
       if (!state.lastFetch) return true
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
       return state.lastFetch < fiveMinutesAgo
-    },
-
-    // Get period in days
-    periodInDays: (state) => {
-      switch (state.selectedPeriod) {
-        case '7d': return 7
-        case '30d': return 30
-        case '90d': return 90
-        case '1y': return 365
-        default: return 30
-      }
     }
   },
 
   actions: {
-    // =====================================
-    // FETCH ACTIONS
-    // =====================================
-    
-    /**
-     * Fetch analytics data for current shop
-     */
+    // ✅ FETCH ANALYTICS - VERSION CORRIGÉE
     async fetchAnalytics(forceRefresh = false): Promise<void> {
       // Skip if data is fresh and not forcing refresh
       if (!forceRefresh && !this.needsRefresh) {
@@ -173,9 +80,8 @@ export const useAnalyticsStore = defineStore('analytics', {
       }
 
       const authStore = useAuthStore()
-      const userShopId = computed(() => authStore.userShopId)
-      if (!userShopId.value) {
-        this.error = 'Shop ID manquant'
+      if (!authStore.isAuthenticated) {
+        this.error = 'Utilisateur non authentifié'
         return
       }
 
@@ -183,55 +89,32 @@ export const useAnalyticsStore = defineStore('analytics', {
       this.error = null
 
       try {
-        const { analytics } = useApi()
-        const response = await analytics.dashboard(userShopId.value)
+        console.log('📊 [Analytics] Chargement analytics via API...')
+        
+        // ✅ UTILISER LA VRAIE API - SANS PARAMÈTRE userShopId
+        const api = useApi()
+        const response = await api.analytics.dashboard()
+
+        console.log('📊 [Analytics] Réponse API:', response)
 
         if (response.success && response.data) {
           this.data = response.data
           this.lastFetch = new Date()
           this.error = null
+          console.log('✅ [Analytics] Analytics chargées avec succès')
         } else {
           this.error = response.error || 'Erreur lors du chargement des analytics'
+          console.error('❌ [Analytics] Erreur:', this.error)
         }
       } catch (error: any) {
         this.error = error.message || 'Erreur lors du chargement des analytics'
-        console.error('Fetch analytics error:', error)
+        console.error('❌ [Analytics] Exception:', error)
       } finally {
         this.isLoading = false
       }
     },
 
-    /**
-     * Track custom analytics event
-     */
-    async trackEvent(eventType: string, eventData: any = {}): Promise<void> {
-      const authStore = useAuthStore()
-    const userShopId = computed(() => authStore.userShopId)
-      if (!userShopId.value) return
-
-      try {
-        const { analytics } = useApi()
-        await analytics.trackEvent({
-          shopId: userShopId.value,
-          type: eventType,
-          data: {
-            timestamp: new Date().toISOString(),
-            period: this.selectedPeriod,
-            ...eventData
-          }
-        })
-      } catch (error) {
-        console.error('Failed to track event:', error)
-      }
-    },
-
-    // =====================================
-    // PERIOD MANAGEMENT
-    // =====================================
-    
-    /**
-     * Set selected time period
-     */
+    // ✅ SET PERIOD - VERSION CORRIGÉE
     setPeriod(period: AnalyticsState['selectedPeriod']): void {
       if (this.selectedPeriod !== period) {
         this.selectedPeriod = period
@@ -240,20 +123,12 @@ export const useAnalyticsStore = defineStore('analytics', {
       }
     },
 
-    // =====================================
-    // UTILITY ACTIONS
-    // =====================================
-    
-    /**
-     * Clear error
-     */
+    // ✅ CLEAR ERROR
     clearError(): void {
       this.error = null
     },
 
-    /**
-     * Clear all data (for logout)
-     */
+    // ✅ CLEAR DATA - Pour logout
     clearData(): void {
       this.data = null
       this.error = null
@@ -261,35 +136,7 @@ export const useAnalyticsStore = defineStore('analytics', {
       this.selectedPeriod = '30d'
     },
 
-    /**
-     * Calculate growth percentage
-     */
-    calculateGrowth(current: number, previous: number): {
-      percentage: number
-      isPositive: boolean
-      formatted: string
-    } {
-      if (previous === 0) {
-        return {
-          percentage: current > 0 ? 100 : 0,
-          isPositive: current > 0,
-          formatted: current > 0 ? '+100%' : '0%'
-        }
-      }
-
-      const percentage = ((current - previous) / previous) * 100
-      const isPositive = percentage > 0
-
-      return {
-        percentage: Math.abs(percentage),
-        isPositive,
-        formatted: `${isPositive ? '+' : '-'}${Math.abs(percentage).toFixed(1)}%`
-      }
-    },
-
-    /**
-     * Get period label for display
-     */
+    // ✅ GET PERIOD LABEL
     getPeriodLabel(): string {
       switch (this.selectedPeriod) {
         case '7d': return '7 derniers jours'
@@ -298,71 +145,11 @@ export const useAnalyticsStore = defineStore('analytics', {
         case '1y': return '12 derniers mois'
         default: return '30 derniers jours'
       }
-    },
-
-    /**
-     * Export analytics data to CSV
-     */
-    exportToCSV(): string {
-      if (!this.data) return ''
-
-      const headers = ['Métrique', 'Valeur', 'Période']
-      const rows = [
-        ['Conversations totales', this.data.totalConversations.toString(), this.getPeriodLabel()],
-        ['Conversations actives', this.data.activeConversations.toString(), this.getPeriodLabel()],
-        ['Commandes complétées', this.data.completedOrders.toString(), this.getPeriodLabel()],
-        ['Taux de conversion', this.formattedConversionRate, this.getPeriodLabel()],
-        ['Chiffre d\'affaires', this.formattedRevenue, this.getPeriodLabel()],
-        ['Panier moyen', this.formattedAOV, this.getPeriodLabel()]
-      ]
-
-      // Add top products
-      if (this.data.topProducts?.length > 0) {
-        rows.push(['--- Produits les plus vendus ---', '', ''])
-        this.data.topProducts.forEach((product, index) => {
-          rows.push([
-            `${index + 1}. ${product.name}`,
-            `${product.orders} commandes - ${new Intl.NumberFormat('fr-FR', {
-              style: 'currency',
-              currency: 'EUR'
-            }).format(product.revenue)}`,
-            this.getPeriodLabel()
-          ])
-        })
-      }
-
-      const csvContent = [headers, ...rows]
-        .map(row => row.map(cell => `"${cell}"`).join(','))
-        .join('\n')
-
-      return csvContent
-    },
-
-    /**
-     * Get real-time stats summary
-     */
-    getRealTimeStats(): {
-      activeNow: number
-      todayConversations: number
-      todayRevenue: number
-      responseTime: string
-    } {
-      // This would typically come from real-time data
-      // For now, using available data as approximation
-      return {
-        activeNow: this.data?.activeConversations || 0,
-        todayConversations: this.data?.conversationsByDay?.slice(-1)[0]?.count || 0,
-        todayRevenue: this.data?.revenueByDay?.slice(-1)[0]?.revenue || 0,
-        responseTime: '< 30s' // This would come from conversation analytics
-      }
     }
   }
 })
 
-// =====================================
-// COMPOSABLE FOR EASY ACCESS
-// =====================================
-
+// ✅ COMPOSABLE POUR ACCÈS FACILE
 export const useAnalytics = () => {
   const analyticsStore = useAnalyticsStore()
   
@@ -383,20 +170,12 @@ export const useAnalytics = () => {
     formattedRevenue: computed(() => analyticsStore.formattedRevenue),
     formattedAOV: computed(() => analyticsStore.formattedAOV),
     formattedConversionRate: computed(() => analyticsStore.formattedConversionRate),
-    conversationsChartData: computed(() => analyticsStore.conversationsChartData),
-    revenueChartData: computed(() => analyticsStore.revenueChartData),
-    topProductsForDisplay: computed(() => analyticsStore.topProductsForDisplay),
-    performanceIndicators: computed(() => analyticsStore.performanceIndicators),
     
     // Actions
     fetchAnalytics: analyticsStore.fetchAnalytics,
-    trackEvent: analyticsStore.trackEvent,
     setPeriod: analyticsStore.setPeriod,
     clearError: analyticsStore.clearError,
     clearData: analyticsStore.clearData,
-    calculateGrowth: analyticsStore.calculateGrowth,
-    getPeriodLabel: analyticsStore.getPeriodLabel,
-    exportToCSV: analyticsStore.exportToCSV,
-    getRealTimeStats: analyticsStore.getRealTimeStats
+    getPeriodLabel: analyticsStore.getPeriodLabel
   }
 }

@@ -1,4 +1,4 @@
-// middleware/auth.ts - VERSION CORRIGÉE SANS REDIRECTION FORCÉE ONBOARDING
+// middleware/auth.ts - VERSION CORRIGÉE AVEC SYNCHRONISATION FORCÉE
 
 import { useSupabase } from "~~/composables/useSupabase"
 import { useAuthStore } from "~~/stores/auth"
@@ -31,7 +31,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   if (isPublicRoute) {
     console.log('✅ [AUTH] Route publique, accès libre:', to.path)
     
-    // ✅ MISE À JOUR LÉGÈRE DU STORE SI NÉCESSAIRE
+    // ✅ MISE À JOUR LÉGÈRE DU STORE SI NÉCESSAIRE (SUPABASE AUTH SEULEMENT)
     try {
       const authStore = useAuthStore()
       const supabase = useSupabase()
@@ -39,7 +39,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (user && !authStore.isAuthenticated) {
-        console.log('🔄 [AUTH] Synchronisation silencieuse du store')
+        console.log('🔄 [AUTH] Synchronisation silencieuse du store (auth seulement)')
         await authStore.restoreSession()
       }
     } catch (error) {
@@ -56,7 +56,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const authStore = useAuthStore()
     const supabase = useSupabase()
     
-    // ✅ VÉRIFIER SESSION SUPABASE - OBLIGATOIRE
+    // ✅ ÉTAPE 1 : VÉRIFIER SESSION SUPABASE - OBLIGATOIRE
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error || !user) {
@@ -72,118 +72,121 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo('/login')
     }
 
-    // ✅ SESSION VALIDE
+    // ✅ ÉTAPE 2 : SESSION SUPABASE VALIDE
     console.log('✅ [AUTH] Session Supabase valide pour:', user.email)
     
-    // ✅ SYNCHRONISER STORE SI NÉCESSAIRE
+    // ✅ ÉTAPE 3 : SYNCHRONISER STORE SI NÉCESSAIRE (VIA API)
     if (!authStore.isAuthenticated || authStore.user?.id !== user.id) {
-      console.log('🔄 [AUTH] Mise à jour store depuis session Supabase')
+      console.log('🔄 [AUTH] Mise à jour store depuis session Supabase (via API)')
       await authStore.restoreSession()
     }
 
-    // ✅ POUR LA ROUTE ONBOARDING - PAS DE VÉRIFICATION SUPPLÉMENTAIRE
+    // ✅ AMÉLIORATION: GESTION INTELLIGENTE DES RETOURS DE PAIEMENT
+    const urlParams = new URLSearchParams(to.fullPath.split('?')[1] || '')
+    const isPaymentReturn = urlParams.get('success') === 'true' || urlParams.get('cancelled') === 'true'
+    
+    if (isPaymentReturn && to.path === '/billing') {
+      console.log('💳 [AUTH] Retour de paiement détecté, synchronisation forcée...')
+      
+      // ✅ FORCER UNE SYNCHRONISATION COMPLÈTE DES DONNÉES
+      setTimeout(async () => {
+        try {
+          await authStore.forceDataSync()
+          console.log('✅ [AUTH] Synchronisation forcée après paiement terminée')
+        } catch (syncError) {
+          console.warn('⚠️ [AUTH] Erreur synchronisation forcée:', syncError)
+        }
+      }, 1000) // Délai pour laisser le composant se monter
+    }
+
+    // ✅ ÉTAPE 4 : POUR LA ROUTE ONBOARDING - PAS DE VÉRIFICATION SUPPLÉMENTAIRE
     if (isSemiPublicRoute) {
       console.log('✅ [AUTH] Route onboarding, accès autorisé (connecté)')
       return
     }
 
-    // 🔍 POUR LE DASHBOARD ET PAGES PROTÉGÉES - VÉRIFICATION INTELLIGENTE DE L'ONBOARDING
-    console.log('🔍 [AUTH] Vérification intelligente du statut onboarding pour:', to.path)
+    // 🔍 ÉTAPE 5 : POUR LE DASHBOARD - VÉRIFICATION INTELLIGENTE DE L'ONBOARDING VIA API
+    console.log('🔍 [AUTH] Vérification intelligente du statut onboarding via API pour:', to.path)
     
-    const { data: userData, error: onboardingError } = await supabase
-      .from('users')
-      .select('onboarding_completed, company, first_name, last_name, email, created_at')
-      .eq('id', user.id)
-      .single()
-
-    console.log('📊 [AUTH] Données utilisateur:', userData)
-
-    // 🛑 GESTION DES ERREURS DB
-    if (onboardingError) {
-      console.error('❌ [AUTH] Erreur DB onboarding:', onboardingError.code, onboardingError.message)
+    try {
+      // ✅ UTILISER L'API POUR RÉCUPÉRER LES DONNÉES UTILISATEUR
+      const api = useApi()
+      const shopResponse = await api.shops.get(user.id)
       
-      if (onboardingError.code === 'PGRST116') {
-        console.log('🆕 [AUTH] Utilisateur inexistant en DB, création et redirection vers onboarding...')
+      if (!shopResponse.success) {
+        console.log('🆕 [AUTH] Shop inexistant, création nécessaire...')
         
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            id: user.id,
-            email: user.email,
-            first_name: user.user_metadata?.first_name || '',
-            last_name: user.user_metadata?.last_name || '',
-            onboarding_completed: false,
-            created_at: new Date().toISOString()
-          })
-        
-        if (!insertError) {
-          console.log('✅ [AUTH] Utilisateur créé en DB')
-        }
-        
-        console.log('🚀 [AUTH] Redirection vers onboarding (utilisateur créé)')
+        // Si le shop n'existe pas, rediriger vers onboarding
+        console.log('🚀 [AUTH] Redirection vers onboarding (shop manquant)')
         return navigateTo('/onboarding')
-      } else {
-        console.warn('⚠️ [AUTH] Erreur DB non critique, autorisation d\'accès')
-        return // ✅ AUTORISER L'ACCÈS EN CAS D'ERREUR DB
       }
-    }
 
-    // 🧠 LOGIQUE INTELLIGENTE DE VÉRIFICATION ONBOARDING
-    const hasCompletedOnboarding = userData?.onboarding_completed === true
-    const hasMinimalInfo = !!(userData?.company || userData?.first_name || userData?.last_name)
-    const accountAge = userData?.created_at ? 
-      (Date.now() - new Date(userData.created_at).getTime()) / (1000 * 60 * 60 * 24) : 0 // Age en jours
-    
-    console.log('🧠 [AUTH] Analyse intelligente onboarding:', {
-      completed: hasCompletedOnboarding,
-      hasInfo: hasMinimalInfo,
-      accountAge: Math.round(accountAge),
-      route: to.path,
-      company: userData?.company,
-      firstName: userData?.first_name,
-      lastName: userData?.last_name
-    })
+      const shopData = shopResponse.data
+      console.log('📊 [AUTH] Données shop récupérées via API:', {
+        id: shopData.id,
+        name: shopData.name,
+        subscription_plan: shopData.subscription_plan,
+        created_at: shopData.created_at
+      })
 
-    // ✅ LOGIQUE INTELLIGENTE : Pas de redirection forcée pour les comptes existants
-    if (!hasCompletedOnboarding) {
+      // 🧠 LOGIQUE INTELLIGENTE DE VÉRIFICATION ONBOARDING
+      const hasCompletedOnboarding = shopData.onboarding_completed === true
+      const hasShopInfo = !!(shopData.name && shopData.name !== `Shop de ${user.email?.split('@')[0]}`)
+      const accountAge = shopData.created_at ? 
+        (Date.now() - new Date(shopData.created_at).getTime()) / (1000 * 60 * 60 * 24) : 0 // Age en jours
       
-      // 🔄 SI L'UTILISATEUR A DES INFOS ET COMPTE > 1 JOUR = AUTO-COMPLETE ONBOARDING
-      if (hasMinimalInfo && accountAge > 1) {
-        console.log('🔄 [AUTH] Compte existant avec infos détecté, auto-completion onboarding...')
+      console.log('🧠 [AUTH] Analyse intelligente onboarding:', {
+        completed: hasCompletedOnboarding,
+        hasShopInfo: hasShopInfo,
+        accountAge: Math.round(accountAge),
+        route: to.path,
+        shopName: shopData.name
+      })
+
+      // ✅ LOGIQUE INTELLIGENTE : Pas de redirection forcée pour les comptes existants
+      if (!hasCompletedOnboarding) {
         
-        try {
-          const { error: updateError } = await supabase
-            .from('users')
-            .update({
-              onboarding_completed: true,
-              onboarding_completed_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id)
+        // 🔄 SI L'UTILISATEUR A DES INFOS ET COMPTE > 1 JOUR = AUTO-COMPLETE ONBOARDING
+        if (hasShopInfo && accountAge > 1) {
+          console.log('🔄 [AUTH] Compte existant avec infos détecté, auto-completion onboarding via API...')
           
-          if (!updateError) {
-            console.log('✅ [AUTH] Onboarding auto-complété pour compte existant')
-            return // ✅ AUTORISER L'ACCÈS
+          try {
+            const updateResponse = await api.shops.update(user.id, {
+              onboarding_completed: true,
+              onboarding_completed_at: new Date().toISOString()
+            })
+            
+            if (updateResponse.success) {
+              console.log('✅ [AUTH] Onboarding auto-complété pour compte existant via API')
+              return // ✅ AUTORISER L'ACCÈS
+            }
+          } catch (error) {
+            console.warn('⚠️ [AUTH] Erreur auto-completion onboarding, autorisation quand même')
           }
-        } catch (error) {
-          console.warn('⚠️ [AUTH] Erreur auto-completion onboarding, autorisation quand même')
+          
+          return // ✅ AUTORISER L'ACCÈS MÊME SI L'UPDATE A ÉCHOUÉ
         }
         
-        return // ✅ AUTORISER L'ACCÈS MÊME SI L'UPDATE A ÉCHOUÉ
+        // 🚨 SEULEMENT REDIRIGER VERS ONBOARDING SI COMPTE RÉCENT SANS INFOS
+        if (!hasShopInfo && accountAge <= 1) {
+          console.log('🚨 [AUTH] Compte récent sans infos, redirection vers onboarding')
+          return navigateTo('/onboarding')
+        }
+        
+        // ✅ POUR TOUS LES AUTRES CAS = ACCÈS AUTORISÉ
+        console.log('✅ [AUTH] Autorisation d\'accès malgré onboarding non complété')
       }
-      
-      // 🚨 SEULEMENT REDIRIGER VERS ONBOARDING SI COMPTE RÉCENT SANS INFOS
-      if (!hasMinimalInfo && accountAge <= 1) {
-        console.log('🚨 [AUTH] Compte récent sans infos, redirection vers onboarding')
-        return navigateTo('/onboarding')
-      }
-      
-      // ✅ POUR TOUS LES AUTRES CAS = ACCÈS AUTORISÉ
-      console.log('✅ [AUTH] Autorisation d\'accès malgré onboarding non complété')
-    }
 
-    // ✅ ACCÈS AUTORISÉ - ONBOARDING COMPLÉTÉ OU EXCEPTIONS
-    console.log('✅ [AUTH] Accès autorisé à:', to.path)
+      // ✅ ACCÈS AUTORISÉ - ONBOARDING COMPLÉTÉ OU EXCEPTIONS
+      console.log('✅ [AUTH] Accès autorisé à:', to.path)
+
+    } catch (apiError) {
+      console.warn('⚠️ [AUTH] Erreur API pour récupération données utilisateur:', apiError)
+      
+      // ✅ EN CAS D'ERREUR API, AUTORISER L'ACCÈS PLUTÔT QUE BLOQUER
+      console.log('⚠️ [AUTH] Erreur API, autorisation d\'accès par défaut')
+      return // ✅ ACCÈS AUTORISÉ PAR DÉFAUT
+    }
 
   } catch (error) {
     console.error('❌ [AUTH] Erreur critique lors de la vérification:', error)

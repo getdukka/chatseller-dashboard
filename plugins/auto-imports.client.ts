@@ -7,9 +7,7 @@ export default defineNuxtPlugin(() => {
       useAuthStore: () => import('~/stores/auth').then(m => m.useAuthStore),
       useAnalyticsStore: () => import('~/stores/analytics').then(m => m.useAnalyticsStore),
       useConversationsStore: () => import('~/stores/conversations').then(m => m.useConversationsStore),
-      useKnowledgeBaseStore: () => import('~/stores/knowledgeBase').then(m => m.useKnowledgeBaseStore),
       useOrdersStore: () => import('~/stores/orders').then(m => m.useOrdersStore),
-      useSettingsStore: () => import('~/stores/settings').then(m => m.useSettingsStore)
     }
 
     console.log('✅ Auto-imports plugin: Stores disponibles')

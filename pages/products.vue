@@ -1,4 +1,4 @@
-<!-- pages/products.vue - VERSION ENTIÈREMENT FONCTIONNELLE -->
+<!-- pages/products.vue - VERSION 100% FONCTIONNELLE CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -82,12 +82,12 @@
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">Shopify</h3>
                 <p class="text-sm text-gray-500">
-                  <span v-if="isShopifyConnected" class="text-green-600">Connecté</span>
+                  <span v-if="connectionStatus.shopify.connected" class="text-green-600">Connecté</span>
                   <span v-else class="text-gray-400">Non connecté</span>
                 </p>
               </div>
             </div>
-            <div v-if="isShopifyConnected" class="w-3 h-3 bg-green-500 rounded-full"></div>
+            <div v-if="connectionStatus.shopify.connected" class="w-3 h-3 bg-green-500 rounded-full"></div>
           </div>
           <div class="flex items-center justify-between">
             <div>
@@ -99,7 +99,7 @@
               :disabled="syncing"
               class="text-green-600 hover:text-green-700 text-sm font-medium disabled:opacity-50"
             >
-              {{ syncing ? 'Sync...' : (isShopifyConnected ? 'Synchroniser' : 'Connecter') }} →
+              {{ syncing ? 'Sync...' : (connectionStatus.shopify.connected ? 'Synchroniser' : 'Connecter') }} →
             </button>
           </div>
         </div>
@@ -116,12 +116,12 @@
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">WooCommerce</h3>
                 <p class="text-sm text-gray-500">
-                  <span v-if="isWooConnected" class="text-blue-600">Connecté</span>
+                  <span v-if="connectionStatus.woocommerce.connected" class="text-blue-600">Connecté</span>
                   <span v-else class="text-gray-400">Non connecté</span>
                 </p>
               </div>
             </div>
-            <div v-if="isWooConnected" class="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <div v-if="connectionStatus.woocommerce.connected" class="w-3 h-3 bg-blue-500 rounded-full"></div>
           </div>
           <div class="flex items-center justify-between">
             <div>
@@ -133,7 +133,7 @@
               :disabled="syncing"
               class="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
             >
-              {{ syncing ? 'Sync...' : (isWooConnected ? 'Synchroniser' : 'Connecter') }} →
+              {{ syncing ? 'Sync...' : (connectionStatus.woocommerce.connected ? 'Synchroniser' : 'Connecter') }} →
             </button>
           </div>
         </div>
@@ -262,8 +262,8 @@
               <!-- Product Image -->
               <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
                 <img
-                  v-if="product.featuredImage || product.images?.[0]"
-                  :src="product.featuredImage || product.images[0]"
+                  v-if="product.featured_image || product.images?.[0]"
+                  :src="product.featured_image || product.images[0]"
                   :alt="product.name"
                   class="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                   @error="handleImageError"
@@ -295,16 +295,16 @@
                     <span class="text-lg font-bold text-gray-900">
                       {{ formatPrice(product.price) }}
                     </span>
-                    <span v-if="product.compareAtPrice && product.compareAtPrice > product.price" class="text-xs text-gray-400 line-through">
-                      {{ formatPrice(product.compareAtPrice) }}
+                    <span v-if="product.compare_at_price && product.compare_at_price > product.price" class="text-xs text-gray-400 line-through">
+                      {{ formatPrice(product.compare_at_price) }}
                     </span>
                   </div>
                   <div class="text-right">
                     <span v-if="product.category" class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded block mb-1">
                       {{ product.category }}
                     </span>
-                    <span v-if="product.trackInventory" class="text-xs" :class="getStockClass(product.inventoryQuantity)">
-                      {{ getStockLabel(product.inventoryQuantity) }}
+                    <span v-if="product.track_inventory" class="text-xs" :class="getStockClass(product.inventory_quantity)">
+                      {{ getStockLabel(product.inventory_quantity) }}
                     </span>
                   </div>
                 </div>
@@ -312,10 +312,10 @@
                 <!-- Product Status -->
                 <div class="mb-3">
                   <span 
-                    :class="product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                    :class="product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
                     class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                   >
-                    {{ product.isActive ? 'Actif' : 'Inactif' }}
+                    {{ product.is_active ? 'Actif' : 'Inactif' }}
                   </span>
                 </div>
 
@@ -428,9 +428,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useProducts } from '~~/composables/useProducts'
 import { useDebounce } from '~~/composables/useDebounce'
+
+// ✅ IMPORTS DES COMPOSANTS
+import ProductFormModal from '~~/components/ProductFormModal.vue'
+import ConnectionModal from '~~/components/ConnectionModal.vue'
+import ShopifyConnectionModal from '~~/components/ShopifyConnectionModal.vue'
+import WooCommerceConnectionModal from '~~/components/WooCommerceConnectionModal.vue'
+import NotificationToast from '~~/components/NotificationToast.vue'
 
 // ✅ PAGE META
 definePageMeta({
@@ -478,9 +485,19 @@ const filters = ref({
   source: ''
 })
 
-// Connection states (stored in localStorage/Supabase)
-const isShopifyConnected = ref(false)
-const isWooConnected = ref(false)
+// ✅ CONNECTION STATUS - LIEN AVEC LES VRAIES DONNÉES
+const connectionStatus = ref({
+  shopify: {
+    connected: false,
+    credentials: null,
+    lastSync: null
+  },
+  woocommerce: {
+    connected: false,
+    credentials: null,
+    lastSync: null
+  }
+})
 
 // ✅ COMPUTED
 const hasFilters = computed(() => {
@@ -523,7 +540,7 @@ const openCreateModal = () => {
   showProductModal.value = true
 }
 
-const editProduct = (product) => {
+const editProduct = (product: any) => {
   editingProduct.value = product
   showProductModal.value = true
 }
@@ -540,7 +557,7 @@ const handleProductSuccess = (message: string) => {
   refreshProducts()
 }
 
-const handleDuplicate = async (product) => {
+const handleDuplicate = async (product: any) => {
   const result = await duplicateProduct(product.id)
   if (result.success) {
     showNotification.value = true
@@ -554,7 +571,7 @@ const handleDuplicate = async (product) => {
   }
 }
 
-const handleDelete = async (product) => {
+const handleDelete = async (product: any) => {
   if (product.source !== 'manual') {
     showNotification.value = true
     notificationMessage.value = 'Seuls les produits manuels peuvent être supprimés'
@@ -579,7 +596,7 @@ const handleDelete = async (product) => {
 
 // ✅ CONNECTION ACTIONS
 const handleShopifyAction = () => {
-  if (isShopifyConnected.value) {
+  if (connectionStatus.value.shopify.connected) {
     handleShopifySync()
   } else {
     openShopifyModal()
@@ -587,7 +604,7 @@ const handleShopifyAction = () => {
 }
 
 const handleWooCommerceAction = () => {
-  if (isWooConnected.value) {
+  if (connectionStatus.value.woocommerce.connected) {
     handleWooCommerceSync()
   } else {
     openWooCommerceModal()
@@ -604,8 +621,16 @@ const openWooCommerceModal = () => {
   showWooCommerceModal.value = true
 }
 
-const handleShopifyConnected = () => {
-  isShopifyConnected.value = true
+const handleShopifyConnected = async () => {
+  // ✅ RÉCUPÉRER LES DONNÉES DE CONNEXION DEPUIS LE STOCKAGE
+  const connectionData = JSON.parse(localStorage.getItem('shopify_connection') || '{}')
+  
+  connectionStatus.value.shopify = {
+    connected: true,
+    credentials: connectionData,
+    lastSync: null
+  }
+  
   showNotification.value = true
   notificationMessage.value = 'Boutique Shopify connectée avec succès!'
   notificationType.value = 'success'
@@ -616,8 +641,16 @@ const handleShopifyConnected = () => {
   }, 1000)
 }
 
-const handleWooCommerceConnected = () => {
-  isWooConnected.value = true
+const handleWooCommerceConnected = async () => {
+  // ✅ RÉCUPÉRER LES DONNÉES DE CONNEXION DEPUIS LE STOCKAGE
+  const connectionData = JSON.parse(localStorage.getItem('woocommerce_connection') || '{}')
+  
+  connectionStatus.value.woocommerce = {
+    connected: true,
+    credentials: connectionData,
+    lastSync: null
+  }
+  
   showNotification.value = true
   notificationMessage.value = 'Boutique WooCommerce connectée avec succès!'
   notificationType.value = 'success'
@@ -629,12 +662,17 @@ const handleWooCommerceConnected = () => {
 }
 
 const handleShopifySync = async () => {
-  // Implementation will depend on stored credentials
-  const result = await syncProducts('shopify', {
-    // Credentials from storage
-  })
+  if (!connectionStatus.value.shopify.credentials) {
+    showNotification.value = true
+    notificationMessage.value = 'Aucune configuration Shopify trouvée'
+    notificationType.value = 'error'
+    return
+  }
+
+  const result = await syncProducts('shopify', connectionStatus.value.shopify.credentials)
   
   if (result.success) {
+    connectionStatus.value.shopify.lastSync = new Date().toISOString()
     showNotification.value = true
     notificationMessage.value = 'Synchronisation Shopify terminée!'
     notificationType.value = 'success'
@@ -647,11 +685,17 @@ const handleShopifySync = async () => {
 }
 
 const handleWooCommerceSync = async () => {
-  const result = await syncProducts('woocommerce', {
-    // Credentials from storage
-  })
+  if (!connectionStatus.value.woocommerce.credentials) {
+    showNotification.value = true
+    notificationMessage.value = 'Aucune configuration WooCommerce trouvée'
+    notificationType.value = 'error'
+    return
+  }
+
+  const result = await syncProducts('woocommerce', connectionStatus.value.woocommerce.credentials)
   
   if (result.success) {
+    connectionStatus.value.woocommerce.lastSync = new Date().toISOString()
     showNotification.value = true
     notificationMessage.value = 'Synchronisation WooCommerce terminée!'
     notificationType.value = 'success'
@@ -664,8 +708,9 @@ const handleWooCommerceSync = async () => {
 }
 
 // ✅ UTILITY METHODS
-const handleImageError = (event) => {
-  event.target.style.display = 'none'
+const handleImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement
+  target.style.display = 'none'
 }
 
 const getStockClass = (quantity: number) => {
@@ -685,14 +730,14 @@ const handleExport = () => {
   
   // Create CSV content
   const headers = ['Nom', 'Prix', 'Catégorie', 'Source', 'SKU', 'Stock', 'Statut']
-  const csvData = products.value.map(p => [
+  const csvData = products.value.map((p: any) => [
     p.name,
     p.price,
     p.category || '',
     getSourceLabel(p.source),
     p.sku || '',
-    p.trackInventory ? p.inventoryQuantity : 'Non suivi',
-    p.isActive ? 'Actif' : 'Inactif'
+    p.track_inventory ? p.inventory_quantity : 'Non suivi',
+    p.is_active ? 'Actif' : 'Inactif'
   ])
   
   const csvContent = [
@@ -715,12 +760,39 @@ const handleExport = () => {
   notificationType.value = 'success'
 }
 
+// ✅ LOAD EXISTING CONNECTIONS
+const loadExistingConnections = () => {
+  try {
+    // ✅ CHARGER SHOPIFY
+    const shopifyConnection = localStorage.getItem('shopify_connection')
+    if (shopifyConnection) {
+      const data = JSON.parse(shopifyConnection)
+      connectionStatus.value.shopify = {
+        connected: true,
+        credentials: data,
+        lastSync: data.lastSync || null
+      }
+    }
+
+    // ✅ CHARGER WOOCOMMERCE
+    const wooConnection = localStorage.getItem('woocommerce_connection')
+    if (wooConnection) {
+      const data = JSON.parse(wooConnection)
+      connectionStatus.value.woocommerce = {
+        connected: true,
+        credentials: data,
+        lastSync: data.lastSync || null
+      }
+    }
+  } catch (error) {
+    console.warn('Erreur lors du chargement des connexions:', error)
+  }
+}
+
 // ✅ LIFECYCLE
 onMounted(async () => {
   await refreshProducts()
-  
-  // Load connection states from storage/Supabase
-  // TODO: Implement actual storage loading
+  loadExistingConnections()
 })
 
 // ✅ SEO

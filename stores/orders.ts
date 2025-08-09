@@ -1,7 +1,27 @@
-// stores/orders.ts
+// stores/orders.ts - VERSION CORRIGÉE POUR VRAIE API
 import { defineStore } from 'pinia'
-import type { Order, OrderItem } from '~/composables/useApi'
 import { useAuthStore } from './auth'
+
+interface Order {
+  id: string
+  conversationId: string
+  shopId: string
+  customerName: string
+  customerPhone: string
+  customerEmail?: string
+  customerAddress?: string
+  productItems: Array<{
+    name: string
+    price: number
+    quantity: number
+  }>
+  totalAmount: number
+  paymentMethod: string
+  status: 'pending' | 'confirmed' | 'cancelled'
+  notes?: string
+  createdAt: string
+  updatedAt?: string
+}
 
 interface OrdersState {
   orders: Order[]
@@ -60,14 +80,15 @@ export const useOrdersStore = defineStore('orders', {
         )
       }
 
-      // Filter by search term (customer name, email, product)
+      // Filter by search term
       if (state.filters.searchTerm) {
         const searchLower = state.filters.searchTerm.toLowerCase()
         filtered = filtered.filter(order => 
-          order.customerInfo.name.toLowerCase().includes(searchLower) ||
-          order.customerInfo.email?.toLowerCase().includes(searchLower) ||
-          order.items.some(item => 
-            item.productName.toLowerCase().includes(searchLower)
+          order.customerName.toLowerCase().includes(searchLower) ||
+          order.customerPhone.toLowerCase().includes(searchLower) ||
+          (order.customerEmail && order.customerEmail.toLowerCase().includes(searchLower)) ||
+          order.productItems.some(item => 
+            item.name.toLowerCase().includes(searchLower)
           )
         )
       }
@@ -100,36 +121,6 @@ export const useOrdersStore = defineStore('orders', {
       return confirmedOrders.reduce((sum, order) => sum + order.totalAmount, 0) / confirmedOrders.length
     },
 
-    // Recent orders (last 7 days)
-    recentOrders: (state) => {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      return state.orders.filter(order => 
-        new Date(order.createdAt) >= sevenDaysAgo
-      ).length
-    },
-
-    // Top products
-    topProducts: (state) => {
-      const productStats: Record<string, { name: string; quantity: number; revenue: number }> = {}
-      
-      state.orders
-        .filter(order => order.status === 'confirmed')
-        .forEach(order => {
-          order.items.forEach(item => {
-            const key = item.productName
-            if (!productStats[key]) {
-              productStats[key] = { name: item.productName, quantity: 0, revenue: 0 }
-            }
-            productStats[key].quantity += item.quantity
-            productStats[key].revenue += item.price * item.quantity
-          })
-        })
-
-      return Object.values(productStats)
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 10)
-    },
-
     // Get order by ID
     getOrderById: (state) => (id: string) => 
       state.orders.find(order => order.id === id),
@@ -143,13 +134,7 @@ export const useOrdersStore = defineStore('orders', {
   },
 
   actions: {
-    // =====================================
-    // FETCH ACTIONS
-    // =====================================
-    
-    /**
-     * Fetch all orders for current shop
-     */
+    // ✅ FETCH ORDERS - VERSION TEMPORAIRE (API list pas encore implémentée)
     async fetchOrders(forceRefresh = false): Promise<void> {
       // Skip if data is fresh and not forcing refresh
       if (!forceRefresh && !this.needsRefresh) {
@@ -157,9 +142,8 @@ export const useOrdersStore = defineStore('orders', {
       }
 
       const authStore = useAuthStore()
-      const userShopId = computed(() => authStore.userShopId)
-      if (!userShopId.value) {
-        this.error = 'Shop ID manquant'
+      if (!authStore.isAuthenticated) {
+        this.error = 'Utilisateur non authentifié'
         return
       }
 
@@ -167,130 +151,108 @@ export const useOrdersStore = defineStore('orders', {
       this.error = null
 
       try {
-        const { orders } = useApi()
-        const response = await orders.list(userShopId.value)
+        console.log('🛒 [Orders] Chargement commandes via API...')
+        
+        // ✅ UTILISER LA VRAIE API - VERSION TEMPORAIRE
+        const api = useApi()
+        const response = await api.orders.list()
+
+        console.log('🛒 [Orders] Réponse API:', response)
 
         if (response.success && response.data) {
           this.orders = response.data
           this.lastFetch = new Date()
           this.error = null
+          console.log('✅ [Orders] Commandes chargées:', response.data.length)
         } else {
-          this.error = response.error || 'Erreur lors du chargement des commandes'
+          // Pour l'instant, initialiser avec un tableau vide si pas d'implémentation
+          this.orders = []
+          this.lastFetch = new Date()
+          this.error = null
+          console.log('ℹ️ [Orders] Pas de commandes (API pas encore implémentée)')
         }
       } catch (error: any) {
         this.error = error.message || 'Erreur lors du chargement des commandes'
-        console.error('Fetch orders error:', error)
+        console.error('❌ [Orders] Exception:', error)
+        // Fallback : tableau vide
+        this.orders = []
+        this.lastFetch = new Date()
       } finally {
         this.isLoading = false
       }
     },
 
-    /**
-     * Fetch specific order details
-     */
-    async fetchOrder(orderId: string): Promise<Order | null> {
+    // ✅ START ORDER WORKFLOW
+    async startOrder(data: {
+      conversationId: string,
+      productInfo?: any,
+      message?: string
+    }): Promise<any> {
       try {
-        const { orders } = useApi()
-        const response = await orders.get(orderId)
+        console.log('🛒 [Orders] Démarrage workflow commande...')
+        
+        const api = useApi()
+        const response = await api.orders.startOrder(data)
 
-        if (response.success && response.data) {
-          this.currentOrder = response.data
-          
-          // Update order in list if it exists
-          const index = this.orders.findIndex(order => order.id === orderId)
-          if (index !== -1) {
-            this.orders[index] = response.data
-          }
-          
+        if (response.success) {
+          console.log('✅ [Orders] Workflow commande démarré')
           return response.data
         } else {
-          this.error = response.error || 'Erreur lors du chargement de la commande'
+          this.error = response.error || 'Erreur lors du démarrage de la commande'
           return null
         }
       } catch (error: any) {
-        this.error = error.message || 'Erreur lors du chargement de la commande'
-        console.error('Fetch order error:', error)
+        this.error = error.message || 'Erreur lors du démarrage de la commande'
+        console.error('❌ [Orders] Exception:', error)
         return null
       }
     },
 
-    // =====================================
-    // ORDER MANAGEMENT
-    // =====================================
-    
-    /**
-     * Create new order
-     */
-    async createOrder(orderData: {
-      conversationId: string
-      customerInfo: Order['customerInfo']
-      items: OrderItem[]
-      totalAmount: number
+    // ✅ COMPLETE ORDER
+    async completeOrder(data: {
+      conversationId: string,
+      orderData: any
     }): Promise<Order | null> {
-      const authStore = useAuthStore()
-      const userShopId = computed(() => authStore.userShopId)
-      if (!userShopId.value) {
-        this.error = 'Shop ID manquant'
-        return null
-      }
-
       this.isCreating = true
-      this.error = null
-
+      
       try {
-        const { orders } = useApi()
-        const response = await orders.create({
-          ...orderData,
-          shopId: userShopId.value,
-          status: 'pending'
-        })
+        console.log('🛒 [Orders] Finalisation commande...')
+        
+        const api = useApi()
+        const response = await api.orders.complete(data)
 
         if (response.success && response.data) {
           // Add to orders list
           this.orders.unshift(response.data)
+          console.log('✅ [Orders] Commande finalisée')
           return response.data
         } else {
-          this.error = response.error || 'Erreur lors de la création de la commande'
+          this.error = response.error || 'Erreur lors de la finalisation de la commande'
           return null
         }
       } catch (error: any) {
-        this.error = error.message || 'Erreur lors de la création de la commande'
-        console.error('Create order error:', error)
+        this.error = error.message || 'Erreur lors de la finalisation de la commande'
+        console.error('❌ [Orders] Exception:', error)
         return null
       } finally {
         this.isCreating = false
       }
     },
 
-    // =====================================
-    // FILTERING AND SEARCH
-    // =====================================
-    
-    /**
-     * Set status filter
-     */
+    // ✅ FILTERING ACTIONS
     setStatusFilter(status: Order['status'] | 'all'): void {
       this.filters.status = status
     },
 
-    /**
-     * Set date range filter
-     */
     setDateRangeFilter(start: Date | null, end: Date | null): void {
       this.filters.dateRange.start = start
       this.filters.dateRange.end = end
     },
 
-    /**
-     * Set search term
-     */
     setSearchTerm(term: string): void {
       this.filters.searchTerm = term
     },
 
-    /**
-     * Clear all filters
-     */
     clearFilters(): void {
       this.filters = {
         status: 'all',
@@ -302,99 +264,26 @@ export const useOrdersStore = defineStore('orders', {
       }
     },
 
-    // =====================================
-    // UTILITY ACTIONS
-    // =====================================
-    
-    /**
-     * Set current order
-     */
+    // ✅ UTILITY ACTIONS
     setCurrentOrder(order: Order | null): void {
       this.currentOrder = order
     },
 
-    /**
-     * Clear error
-     */
     clearError(): void {
       this.error = null
     },
 
-    /**
-     * Clear all data (for logout)
-     */
     clearData(): void {
       this.orders = []
       this.currentOrder = null
       this.error = null
       this.lastFetch = null
       this.clearFilters()
-    },
-
-    /**
-     * Get revenue for specific period
-     */
-    getRevenueForPeriod(days: number): number {
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-      
-      return this.orders
-        .filter(order => 
-          order.status === 'confirmed' && 
-          new Date(order.createdAt) >= startDate
-        )
-        .reduce((sum, order) => sum + order.totalAmount, 0)
-    },
-
-    /**
-     * Get orders count for specific period
-     */
-    getOrdersCountForPeriod(days: number): number {
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-      
-      return this.orders.filter(order => 
-        new Date(order.createdAt) >= startDate
-      ).length
-    },
-
-    /**
-     * Export orders to CSV
-     */
-    exportToCSV(): string {
-      const headers = [
-        'ID',
-        'Date',
-        'Client',
-        'Email',
-        'Téléphone',
-        'Produits',
-        'Montant Total',
-        'Statut'
-      ]
-
-      const rows = this.filteredOrders.map(order => [
-        order.id,
-        new Date(order.createdAt).toLocaleDateString('fr-FR'),
-        order.customerInfo.name,
-        order.customerInfo.email || '',
-        order.customerInfo.phone || '',
-        order.items.map(item => `${item.productName} (${item.quantity})`).join('; '),
-        `${order.totalAmount}€`,
-        order.status
-      ])
-
-      const csvContent = [headers, ...rows]
-        .map(row => row.map(cell => `"${cell}"`).join(','))
-        .join('\n')
-
-      return csvContent
     }
   }
 })
 
-// =====================================
-// COMPOSABLE FOR EASY ACCESS
-// =====================================
-
+// ✅ COMPOSABLE POUR ACCÈS FACILE
 export const useOrders = () => {
   const ordersStore = useOrdersStore()
   
@@ -415,13 +304,11 @@ export const useOrders = () => {
     totalOrders: computed(() => ordersStore.totalOrders),
     totalRevenue: computed(() => ordersStore.totalRevenue),
     averageOrderValue: computed(() => ordersStore.averageOrderValue),
-    recentOrders: computed(() => ordersStore.recentOrders),
-    topProducts: computed(() => ordersStore.topProducts),
     
     // Actions
     fetchOrders: ordersStore.fetchOrders,
-    fetchOrder: ordersStore.fetchOrder,
-    createOrder: ordersStore.createOrder,
+    startOrder: ordersStore.startOrder,
+    completeOrder: ordersStore.completeOrder,
     setStatusFilter: ordersStore.setStatusFilter,
     setDateRangeFilter: ordersStore.setDateRangeFilter,
     setSearchTerm: ordersStore.setSearchTerm,
@@ -429,9 +316,6 @@ export const useOrders = () => {
     setCurrentOrder: ordersStore.setCurrentOrder,
     clearError: ordersStore.clearError,
     clearData: ordersStore.clearData,
-    getRevenueForPeriod: ordersStore.getRevenueForPeriod,
-    getOrdersCountForPeriod: ordersStore.getOrdersCountForPeriod,
-    exportToCSV: ordersStore.exportToCSV,
     
     // Utilities
     getOrderById: ordersStore.getOrderById

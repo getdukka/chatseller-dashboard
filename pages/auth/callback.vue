@@ -1,4 +1,4 @@
-<!-- pages/auth/callback.vue - VERSION SIMPLIFIÉE SANS CONFLITS -->
+<!-- pages/auth/callback.vue - VERSION CORRIGÉE API PURE -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
@@ -87,37 +87,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { createClient } from '@supabase/supabase-js'
-import { useAuthStore } from '~/stores/auth'
+import { useSupabase } from '~~/composables/useSupabase'
+import { useAuthStore } from '~~/stores/auth'
+
+// ✅ IMPORTS CORRIGÉS - UTILISATION DU COMPOSABLE AUTH
+const auth = useAuth()
 
 // ✅ PAS DE LAYOUT
 definePageMeta({
   layout: false
 })
 
-// ✅ CLIENT SUPABASE
-const config = useRuntimeConfig()
-const supabase = createClient(
-  config.public.supabaseUrl,
-  config.public.supabaseAnonKey
-)
-
-// ✅ STORE AUTH
-const authStore = useAuthStore()
+// ✅ CLIENT SUPABASE POUR CONFIRMATION EMAIL UNIQUEMENT
+const supabase = useSupabase()
 
 // ✅ STATE
 const loading = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
-const countdown = ref(3) // ✅ RÉDUIT À 3 SECONDES
+const countdown = ref(3)
 const progressWidth = ref(0)
 
-// ✅ TRAITEMENT SIMPLIFIÉ DE LA CONFIRMATION
+// ✅ TRAITEMENT CONFIRMATION EMAIL CORRIGÉ
 onMounted(async () => {
   try {
-    console.log('🔗 Callback: Traitement confirmation email...')
+    console.log('🔗 [Callback] Début traitement confirmation email...')
     
     // ✅ RÉCUPÉRATION TOKENS (HASH OU QUERY)
     let accessToken = ''
@@ -137,7 +132,7 @@ onMounted(async () => {
       throw new Error('Token de confirmation manquant dans l\'URL')
     }
     
-    console.log('🔑 Tokens récupérés, création session Supabase...')
+    console.log('🔑 [Callback] Tokens récupérés, création session Supabase...')
     
     // ✅ CRÉER SESSION SUPABASE
     const { data, error: sessionError } = await supabase.auth.setSession({
@@ -146,15 +141,43 @@ onMounted(async () => {
     })
     
     if (sessionError || !data.session || !data.user) {
-      console.error('❌ Erreur session:', sessionError)
+      console.error('❌ [Callback] Erreur session:', sessionError)
       throw new Error('Impossible de créer la session')
     }
     
-    console.log('✅ Session créée pour:', data.user.email)
+    console.log('✅ [Callback] Session créée pour:', data.user.email)
     
-    // ✅ METTRE À JOUR LE STORE
-    const userData = await authStore.fetchCompleteUserData(data.user)
-    authStore.setUser(userData, data.session.access_token)
+    // ✅ METTRE À JOUR LE STORE VIA LE COMPOSABLE AUTH
+    console.log('🔄 [Callback] Mise à jour store via API...')
+    
+    try {
+      // Utiliser la fonction du store pour récupérer les données via API
+      const authStore = useAuthStore()
+      const userData = await authStore.fetchCompleteUserDataViaAPI(data.user, data.session.access_token)
+      authStore.setUser(userData, data.session.access_token)
+      
+      console.log('✅ [Callback] Store mis à jour avec succès')
+    } catch (storeError) {
+      console.warn('⚠️ [Callback] Erreur mise à jour store, fallback données auth:', storeError)
+      
+      // Fallback: utiliser seulement les données Supabase
+      const fallbackUser = {
+        id: data.user.id,
+        email: data.user.email!,
+        name: data.user.user_metadata?.name || data.user.email?.split('@')[0],
+        firstName: data.user.user_metadata?.first_name,
+        lastName: data.user.user_metadata?.last_name,
+        shopId: data.user.id,
+        shop_id: data.user.id,
+        avatar: data.user.user_metadata?.avatar_url,
+        role: 'user' as const,
+        createdAt: data.user.created_at,
+        shop: null
+      }
+      
+      const authStore = useAuthStore()
+      authStore.setUser(fallbackUser, data.session.access_token)
+    }
     
     // ✅ NETTOYER L'URL POUR ÉVITER LES LOOPS
     window.history.replaceState({}, '', window.location.pathname)
@@ -163,11 +186,11 @@ onMounted(async () => {
     loading.value = false
     success.value = true
     
-    console.log('✅ Confirmation réussie, démarrage countdown...')
+    console.log('✅ [Callback] Confirmation réussie, démarrage countdown...')
     startCountdown()
     
   } catch (err: any) {
-    console.error('❌ Erreur callback:', err)
+    console.error('❌ [Callback] Erreur confirmation:', err)
     
     loading.value = false
     error.value = true
@@ -196,10 +219,11 @@ const startCountdown = () => {
   }, 1000)
 }
 
-// ✅ REDIRECTION SIMPLE VERS LA RACINE
+// ✅ REDIRECTION INTELLIGENTE
 const redirectToApp = () => {
-  console.log('🚀 Redirection vers l\'application (middleware gérera onboarding)')
-  // ✅ REDIRECTION SIMPLE - Le middleware d'onboarding s'occupera du reste
+  console.log('🚀 [Callback] Redirection vers application...')
+  
+  // ✅ REDIRECTION SIMPLE - Le middleware gérera l'onboarding
   navigateTo('/', { replace: true })
 }
 

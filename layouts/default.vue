@@ -1,4 +1,4 @@
-<!-- layouts/default.vue - VERSION AVEC BADGE CONVERSATIONS RÉEL -->
+<!-- layouts/default.vue - VERSION API PURE AVEC SIDEBAR 100% FONCTIONNEL -->
 <template>
   <div class="min-h-screen bg-gray-50">
     
@@ -13,8 +13,8 @@
         :userSubscriptionPlan="subscriptionInfo.plan"
         :userSubscriptionActive="subscriptionInfo.isActive"
         :trialDaysLeft="subscriptionInfo.trialDaysLeft"
-        @toggle-profile="showProfileMenu = !showProfileMenu"
-        @close-profile="showProfileMenu = false"
+        @toggle-profile="toggleProfileMenu"
+        @close-profile="closeProfileMenu"
         @logout="handleLogout"
         @upgrade-to-plan="handleUpgradeToPlan"
       />
@@ -49,8 +49,8 @@
             :userSubscriptionActive="subscriptionInfo.isActive"
             :trialDaysLeft="subscriptionInfo.trialDaysLeft"
             :isMobile="true"
-            @toggle-profile="showProfileMenu = !showProfileMenu"
-            @close-profile="showProfileMenu = false"
+            @toggle-profile="toggleProfileMenu"
+            @close-profile="closeProfileMenu"
             @logout="handleLogout"
             @close-mobile="closeMobileMenu"
             @upgrade-to-plan="handleUpgradeToPlan"
@@ -122,7 +122,7 @@
 
           <!-- Mobile user avatar -->
           <button 
-            @click="showMobileProfileMenu = !showMobileProfileMenu"
+            @click="toggleMobileProfileMenu"
             class="relative"
           >
             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
@@ -152,7 +152,7 @@
                 <NuxtLink 
                   to="/settings?tab=compte" 
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  @click="showMobileProfileMenu = false"
+                  @click="closeMobileProfileMenu"
                 >
                   <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -163,7 +163,7 @@
                 <NuxtLink 
                   to="/billing" 
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  @click="showMobileProfileMenu = false"
+                  @click="closeMobileProfileMenu"
                 >
                   <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -172,7 +172,6 @@
                 </NuxtLink>
                 
                 <!-- ✅ BOUTONS UPGRADE MOBILE ADAPTATIFS -->
-                <!-- Plan Free -> Starter -->
                 <button
                   v-if="subscriptionInfo.plan === 'free'"
                   @click="handleUpgradeToPlan('starter')"
@@ -185,7 +184,6 @@
                   {{ upgradingToPlan === 'starter' ? 'Redirection...' : (subscriptionInfo.trialDaysLeft > 0 ? 'Passer à Starter' : 'Réactiver (Starter)') }}
                 </button>
 
-                <!-- Plan Starter -> Pro -->
                 <button
                   v-else-if="subscriptionInfo.plan === 'starter' && subscriptionInfo.isActive"
                   @click="handleUpgradeToPlan('pro')"
@@ -242,9 +240,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '~~/stores/auth'
-import { useSupabase } from '~~/composables/useSupabase'
 
-// ✅ TYPES COHÉRENTS AVEC BILLING.VUE ET SIDEBAR
+// ✅ TYPES COHÉRENTS
 type SubscriptionPlan = 'free' | 'starter' | 'pro'
 
 interface SubscriptionInfo {
@@ -253,10 +250,10 @@ interface SubscriptionInfo {
   trialDaysLeft: number
 }
 
-// ✅ UTILISER LE STORE AUTH POUR LES DONNÉES DYNAMIQUES
+// ✅ UTILISER L'API POUR TOUTES LES DONNÉES
 const authStore = useAuthStore()
 const config = useRuntimeConfig()
-const supabase = useSupabase()
+const api = useApi() // ✅ NOUVEAU : Utiliser l'API pour toutes les données
 
 // États locaux
 const mobileMenuOpen = ref(false)
@@ -264,11 +261,11 @@ const showProfileMenu = ref(false)
 const showMobileProfileMenu = ref(false)
 const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
 
-// ✅ NOUVEAU : ÉTAT POUR LES CONVERSATIONS NON LUES
+// ✅ NOUVEAU : ÉTAT POUR LES CONVERSATIONS NON LUES VIA API
 const unreadConversationsCount = ref(0)
 const loadingConversations = ref(false)
 
-// ✅ DONNÉES D'ABONNEMENT AVEC TYPES STRICTS
+// ✅ DONNÉES D'ABONNEMENT AVEC SYNCHRONISATION AUTHSTORE
 const subscriptionInfo = ref<SubscriptionInfo>({
   plan: 'free',
   isActive: false,
@@ -277,10 +274,10 @@ const subscriptionInfo = ref<SubscriptionInfo>({
 
 // ✅ COMPUTED PROPERTIES POUR LES DONNÉES UTILISATEUR
 const userName = computed(() => authStore.userName || 'Utilisateur')
-const userEmail = computed(() => authStore.userEmail || 'email@exemple.com')
+const userEmail = computed(() => authStore.userEmail || 'email@exemple.com')  
 const userInitials = computed(() => authStore.userInitials || 'U')
 
-// ✅ NOUVELLE MÉTHODE : CHARGER LES CONVERSATIONS NON LUES
+// ✅ NOUVELLE MÉTHODE : CHARGER LES CONVERSATIONS NON LUES VIA API
 const loadUnreadConversations = async () => {
   if (!authStore.userShopId || loadingConversations.value) {
     return
@@ -288,32 +285,34 @@ const loadUnreadConversations = async () => {
 
   try {
     loadingConversations.value = true
-    console.log('🔄 Chargement conversations non lues pour shop:', authStore.userShopId)
+    console.log('🔄 [Layout] Chargement conversations non lues via API pour shop:', authStore.userShopId)
 
-    const { data, error } = await supabase
-      .from('conversations')
-      .select('id, status')
-      .eq('shop_id', authStore.userShopId)
-      .in('status', ['new', 'active'])
-
-    if (error) {
-      console.error('❌ Erreur chargement conversations:', error)
-      return
-    }
-
-    const unreadCount = data?.length || 0
-    unreadConversationsCount.value = unreadCount
+    // ✅ UTILISER L'API AU LIEU DE SUPABASE DIRECT
+    const response = await api.conversations.list()
     
-    console.log('✅ Conversations non lues chargées:', unreadCount)
+    if (response.success && response.data) {
+      // Compter les conversations avec statut 'new' ou 'active'
+      const unreadCount = response.data.filter(conv => 
+        conv.status === 'new' || conv.status === 'active'
+      ).length
+      
+      unreadConversationsCount.value = unreadCount
+      console.log('✅ [Layout] Conversations non lues chargées via API:', unreadCount)
+    } else {
+      console.error('❌ [Layout] Erreur API conversations:', response.error)
+      unreadConversationsCount.value = 0
+    }
   } catch (error) {
-    console.error('❌ Erreur loading conversations:', error)
+    console.error('❌ [Layout] Erreur loading conversations via API:', error)
+    unreadConversationsCount.value = 0
   } finally {
     loadingConversations.value = false
   }
 }
 
-// ✅ MOBILE MENU METHODS
+// ✅ MOBILE MENU METHODS CORRIGÉS
 const toggleMobileMenu = () => {
+  console.log('🔄 [Layout] Toggle mobile menu:', !mobileMenuOpen.value)
   mobileMenuOpen.value = !mobileMenuOpen.value
   if (mobileMenuOpen.value) {
     showMobileProfileMenu.value = false
@@ -321,19 +320,40 @@ const toggleMobileMenu = () => {
 }
 
 const closeMobileMenu = () => {
+  console.log('✅ [Layout] Fermeture mobile menu')
   mobileMenuOpen.value = false
 }
 
-// ✅ HANDLE UPGRADE TO PLAN
+// ✅ PROFILE MENU METHODS CORRIGÉS
+const toggleProfileMenu = () => {
+  console.log('🔄 [Layout] Toggle profile menu:', !showProfileMenu.value)
+  showProfileMenu.value = !showProfileMenu.value
+}
+
+const closeProfileMenu = () => {
+  console.log('✅ [Layout] Fermeture profile menu')
+  showProfileMenu.value = false
+}
+
+const toggleMobileProfileMenu = () => {
+  console.log('🔄 [Layout] Toggle mobile profile menu:', !showMobileProfileMenu.value)
+  showMobileProfileMenu.value = !showMobileProfileMenu.value
+}
+
+const closeMobileProfileMenu = () => {
+  console.log('✅ [Layout] Fermeture mobile profile menu')
+  showMobileProfileMenu.value = false
+}
+
+// ✅ HANDLE UPGRADE TO PLAN CORRIGÉ
 const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
+  console.log(`🚀 [Layout] Initiation upgrade vers ${targetPlan}`)
+  
   upgradingToPlan.value = targetPlan
   showMobileProfileMenu.value = false
+  showProfileMenu.value = false
   
   try {
-    console.log(`🚀 Initiation upgrade vers ${targetPlan} depuis le layout`)
-    
-    const apiPlan = targetPlan
-    
     const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/create-checkout-session`, {
       method: 'POST',
       headers: {
@@ -341,88 +361,46 @@ const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
         'Content-Type': 'application/json'
       },
       body: {
-        plan: apiPlan,
+        plan: targetPlan,
         successUrl: `${window.location.origin}/billing?success=true&plan=${targetPlan}`,
         cancelUrl: `${window.location.origin}/billing?cancelled=true`
       }
     })
     
-    console.log('💳 Réponse API checkout:', response)
+    console.log('💳 [Layout] Réponse API checkout:', response)
     
     if (response.success && response.checkoutUrl) {
-      console.log('🔄 Redirection vers Stripe Checkout:', response.checkoutUrl)
+      console.log('🔄 [Layout] Redirection vers Stripe Checkout:', response.checkoutUrl)
       window.location.href = response.checkoutUrl
     } else {
       throw new Error(response.error || 'Impossible de créer la session de paiement')
     }
     
   } catch (error: any) {
-    console.error(`❌ Erreur lors de l'upgrade vers ${targetPlan}:`, error)
+    console.error(`❌ [Layout] Erreur lors de l'upgrade vers ${targetPlan}:`, error)
     upgradingToPlan.value = null
     alert(error.message || `Erreur lors de l'upgrade vers ${targetPlan}`)
   }
 }
 
-// ✅ CHARGER LES INFORMATIONS D'ABONNEMENT 
+// ✅ CHARGER LES INFORMATIONS D'ABONNEMENT VIA AUTHSTORE 
 const loadSubscriptionInfo = async () => {
   try {
-    console.log('🔄 Chargement des informations d\'abonnement...')
+    console.log('🔄 [Layout] Synchronisation subscription info depuis AuthStore...')
     
-    if (!authStore.token) {
-      console.log('⚠️ Mode développement - calcul de l\'essai gratuit')
-      
-      const accountCreationDate = new Date(authStore.user?.createdAt || Date.now())
-      const daysSinceCreation = Math.floor((Date.now() - accountCreationDate.getTime()) / (1000 * 60 * 60 * 24))
-      const trialDaysLeft = Math.max(0, 7 - daysSinceCreation)
-      
-      subscriptionInfo.value = {
-        plan: 'free',
-        isActive: trialDaysLeft > 0,
-        trialDaysLeft: trialDaysLeft
-      }
-      
-      console.log('✅ État d\'essai gratuit:', subscriptionInfo.value)
-      return
+    // ✅ UTILISER LES DONNÉES DU AUTHSTORE (qui utilise déjà l'API)
+    const planDetails = authStore.planDetails
+    
+    subscriptionInfo.value = {
+      plan: planDetails.code as SubscriptionPlan,
+      isActive: planDetails.isActive,
+      trialDaysLeft: planDetails.trialDaysLeft
     }
     
-    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/subscription-status`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      }
-    })
+    console.log('✅ [Layout] Subscription info synchronisée:', subscriptionInfo.value)
     
-    console.log('📊 Données d\'abonnement reçues:', response)
-    
-    if (response.success) {
-      const subscription = response.subscription
-      
-      let frontendPlan: SubscriptionPlan = 'free'
-      if (subscription.plan === 'starter') {
-        frontendPlan = 'starter'
-      } else if (subscription.plan === 'pro') {
-        frontendPlan = 'pro'
-      }
-      
-      let trialDaysLeft = 0
-      let isActive = subscription.isActive
-      
-      if (subscription.plan === 'free') {
-        const creationDate = new Date(authStore.user?.createdAt || Date.now())
-        const daysSinceCreation = Math.floor((Date.now() - creationDate.getTime()) / (1000 * 60 * 60 * 24))
-        trialDaysLeft = Math.max(0, 7 - daysSinceCreation)
-        isActive = trialDaysLeft > 0
-      }
-      
-      subscriptionInfo.value = {
-        plan: subscription.plan === 'free' ? 'free' : frontendPlan,
-        isActive: isActive,
-        trialDaysLeft: trialDaysLeft
-      }
-      
-      console.log('✅ Informations d\'abonnement mises à jour:', subscriptionInfo.value)
-    }
   } catch (error) {
-    console.error('❌ Erreur chargement subscription info:', error)
+    console.error('❌ [Layout] Erreur synchronisation subscription info:', error)
     subscriptionInfo.value = {
       plan: 'free',
       isActive: true,
@@ -433,6 +411,7 @@ const loadSubscriptionInfo = async () => {
 
 // ✅ FONCTION DE DÉCONNEXION
 const handleLogout = async () => {
+  console.log('🚪 [Layout] Déconnexion en cours...')
   showProfileMenu.value = false
   showMobileProfileMenu.value = false
   closeMobileMenu()
@@ -461,9 +440,10 @@ const updateBodyScroll = () => {
 // ✅ Watch pour gérer le scroll du body
 watch(mobileMenuOpen, updateBodyScroll)
 
-// ✅ WATCHER pour recharger les infos si le token change
-watch(() => authStore.token, async (newToken) => {
-  if (newToken) {
+// ✅ WATCHERS POUR RECHARGER LES INFOS SI AUTHSTORE CHANGE
+watch(() => authStore.isAuthenticated, async (isAuth) => {
+  console.log('🔄 [Layout] Auth state changed:', isAuth)
+  if (isAuth && authStore.token) {
     await loadSubscriptionInfo()
     await loadUnreadConversations()
   } else {
@@ -476,8 +456,19 @@ watch(() => authStore.token, async (newToken) => {
   }
 })
 
+// ✅ WATCHER pour synchroniser avec les changements du planDetails AuthStore
+watch(() => authStore.planDetails, (newPlanDetails) => {
+  console.log('🔄 [Layout] Plan details changed in AuthStore:', newPlanDetails)
+  subscriptionInfo.value = {
+    plan: newPlanDetails.code as SubscriptionPlan,
+    isActive: newPlanDetails.isActive,
+    trialDaysLeft: newPlanDetails.trialDaysLeft
+  }
+}, { deep: true })
+
 // ✅ WATCHER pour recharger conversations si userShopId change
 watch(() => authStore.userShopId, async (newShopId) => {
+  console.log('🔄 [Layout] Shop ID changed:', newShopId)
   if (newShopId) {
     await loadUnreadConversations()
   } else {
@@ -487,36 +478,39 @@ watch(() => authStore.userShopId, async (newShopId) => {
 
 // ✅ Fermer le menu mobile lors de la navigation
 const route = useRoute()
-watch(() => route.path, () => {
+watch(() => route.path, (newPath) => {
+  console.log('🔄 [Layout] Route changed:', newPath)
   closeMobileMenu()
-  showMobileProfileMenu.value = false
+  closeMobileProfileMenu()
+  closeProfileMenu()
 })
 
 onMounted(async () => {
+  console.log('🚀 [Layout] Montage du layout...')
+  
   document.addEventListener('click', handleClickOutside)
   
-  // Charger les données initiales
-  if (authStore.token) {
+  // Charger les données initiales si authentifié
+  if (authStore.isAuthenticated && authStore.token) {
+    console.log('✅ [Layout] Utilisateur authentifié, chargement des données...')
     await loadSubscriptionInfo()
     await loadUnreadConversations()
   }
 
   // ✅ POLLING PÉRIODIQUE DES CONVERSATIONS (toutes les 30 secondes)
   const conversationInterval = setInterval(async () => {
-    if (authStore.userShopId && !loadingConversations.value) {
+    if (authStore.userShopId && !loadingConversations.value && authStore.isAuthenticated) {
       await loadUnreadConversations()
     }
   }, 30000) // 30 secondes
 
   // Nettoyer l'intervalle au démontage
   onUnmounted(() => {
+    console.log('🧹 [Layout] Nettoyage du layout...')
     clearInterval(conversationInterval)
+    document.removeEventListener('click', handleClickOutside)
+    document.body.style.overflow = ''
   })
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-  document.body.style.overflow = ''
 })
 </script>
 
@@ -559,5 +553,16 @@ onUnmounted(() => {
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ✅ ENSURE CLICKABLE ELEMENTS */
+button, a {
+  position: relative;
+  z-index: 1;
+}
+
+/* ✅ PREVENT OVERLAPPING ISSUES */
+.sidebar-content {
+  pointer-events: auto;
 }
 </style>

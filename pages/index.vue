@@ -1,7 +1,7 @@
-<!-- pages/index.vue - DASHBOARD AVEC MODAL DE BIENVENUE INSPIRÉ WAZZAP.AI -->
+<!-- pages/index.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Modal de Bienvenue - Inspiré Wazzap.ai -->
+    <!-- Modal de Bienvenue -->
     <div 
       v-if="showWelcomeModal" 
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -17,7 +17,7 @@
               </div>
               <div>
                 <h2 class="text-2xl font-bold text-gray-900">
-                  Bienvenue sur ChatSeller ! 👋
+                  Bienvenue sur ChatSeller 👋
                 </h2>
                 <p class="text-gray-600">Créez votre Vendeur IA et automatisez vos ventes</p>
               </div>
@@ -51,7 +51,7 @@
                     <div class="flex-1">
                       <h4 class="font-medium text-gray-900">Créer votre Vendeur IA</h4>
                       <p class="text-sm text-gray-600 mt-1">
-                        Configurez un assistant intelligent qui répond automatiquement à vos clients et collecte leurs informations de commande.
+                        Configurez un Vendeur IA intelligent qui répond automatiquement à vos clients et collecte leurs commandes.
                       </p>
                       <button
                         @click="goToStep('/vendeurs-ia')"
@@ -76,11 +76,11 @@
                     <div class="flex-1">
                       <h4 class="font-medium text-gray-900">Former votre Vendeur IA</h4>
                       <p class="text-sm text-gray-600 mt-1">
-                        Ajoutez vos informations produits, FAQ et politiques pour que votre IA réponde avec précision.
+                        Ajoutez toutes les informations sur vos produits et votre activité pour que votre Vendeur IA réponde avec précision.
                       </p>
                       <button
                         @click="goToStep('/knowledge-base')"
-                        class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
+                        class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-centers"
                       >
                         {{ stepStatus.knowledgeBase ? 'Gérer' : 'Ajouter des connaissances' }}
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,10 +141,10 @@
                 <div class="chat-header">
                   <div class="flex items-center space-x-3">
                     <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">AI</span>
+                      <span class="text-white text-sm font-bold">IA</span>
                     </div>
                     <div>
-                      <p class="font-medium text-gray-900">Assistant Commercial</p>
+                      <p class="font-medium text-gray-900">Assistant d'Achat</p>
                       <p class="text-xs text-green-600 flex items-center">
                         <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
                         En ligne
@@ -157,25 +157,25 @@
                   <!-- Message d'accueil de l'IA -->
                   <div class="ai-message">
                     <div class="message-bubble ai">
-                      <p class="text-sm">Bonjour ! 👋 Je serais ravi de vous aider. Quel type de consultation recherchez-vous ?</p>
+                      <p class="text-sm">Bonjour 👋 Je vois que vous vous intéressez à {produit}. Comment puis-je vous aider ?</p>
                     </div>
                   </div>
 
                   <!-- Réponse utilisateur -->
                   <div class="user-message">
                     <div class="message-bubble user">
-                      <p class="text-sm">Je cherche des informations sur vos produits</p>
+                      <p class="text-sm">J'aimerais comprendre comment il peut résoudre mon problème.</p>
                     </div>
                   </div>
 
                   <!-- Réponse avec options -->
                   <div class="ai-message">
                     <div class="message-bubble ai">
-                      <p class="text-sm">Parfait ! Je peux vous aider à trouver le produit idéal. Voici nos catégories principales :</p>
+                      <p class="text-sm">Excellente question ! {produit} soulage les douleurs en agissant directement sur les zones à l'origine des douleurs.</p>
                       <div class="mt-3 space-y-2">
-                        <button class="quick-reply">🛍️ Découvrir nos produits</button>
-                        <button class="quick-reply">📞 Parler à un conseiller</button>
-                        <button class="quick-reply">💬 Poser une question</button>
+                        <button class="quick-reply">🛍️ Je veux l'acheter</button>
+                        <button class="quick-reply">💬 Je veux en savoir plus</button>
+                        <button class="quick-reply">📞 Je veux parler à un conseiller</button>
                       </div>
                     </div>
                   </div>
@@ -211,7 +211,7 @@
               @click="skipModal"
               class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
             >
-              Passer maintenant
+              Je le ferai plus tard
             </button>
             <button
               @click="goToStep('/vendeurs-ia')"
@@ -306,7 +306,7 @@
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
             Configurer
           </NuxtLink>
@@ -648,7 +648,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
-import { useSupabase } from '~/composables/useSupabase'
+import { useDatabase } from '~~/composables/useDatabase'
 
 // ✅ PAGE META
 definePageMeta({
@@ -703,9 +703,9 @@ interface StepStatus {
   widgetIntegration: boolean
 }
 
-// ✅ COMPOSABLES
+// ✅ COMPOSABLES - API PURE
 const authStore = useAuthStore()
-const supabase = useSupabase()
+const db = useDatabase()
 
 // ✅ REACTIVE STATE
 const refreshing = ref(false)
@@ -848,7 +848,7 @@ const hideWelcomeBanner = () => {
   localStorage.setItem('chatseller_welcome_seen', 'true')
 }
 
-// ✅ DATA LOADING
+// ✅ DATA LOADING - VERSION API PURE
 const loadDashboardData = async () => {
   if (!authStore.userShopId) {
     console.warn('Pas de shop ID disponible')
@@ -857,7 +857,7 @@ const loadDashboardData = async () => {
   }
 
   try {
-    console.log('🔄 Chargement des données dashboard pour shop:', authStore.userShopId)
+    console.log('🔄 Chargement des données dashboard via API pour shop:', authStore.userShopId)
     
     const [statsData, conversationsData, ordersData, setupData] = await Promise.allSettled([
       loadStats(),
@@ -888,47 +888,39 @@ const loadDashboardData = async () => {
       }
     }
 
-    console.log('✅ Données dashboard chargées avec succès')
+    console.log('✅ Données dashboard chargées avec succès via API')
   } catch (error) {
-    console.error('❌ Erreur lors du chargement des données dashboard:', error)
+    console.error('❌ Erreur lors du chargement des données dashboard via API:', error)
     showNotification('Erreur lors du chargement des données')
   } finally {
     loadingStats.value = false
   }
 }
 
+// ✅ VERSION API PURE
 const loadStats = async (): Promise<DashboardStats> => {
   try {
-    const { data: conversationsData } = await supabase
-      .from('conversations')
-      .select('id, status, created_at')
-      .eq('shop_id', authStore.userShopId)
-
-    const totalConversations = conversationsData?.length || 0
-    const activeConversations = conversationsData?.filter(c => c.status === 'active').length || 0
-
-    const { data: ordersData } = await supabase
-      .from('orders')
-      .select('id, amount, created_at')
-      .eq('shop_id', authStore.userShopId)
-
-    const totalOrders = ordersData?.length || 0
-    const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.amount || 0), 0) || 0
-    const averageRevenue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-    const conversionRate = totalConversations > 0 ? (totalOrders / totalConversations) * 100 : 0
-
+    console.log('📊 Chargement des statistiques via API...')
+    
+    const stats = await db.getAnalytics()
+    
+    if (!stats) {
+      console.error('❌ Erreur récupération analytics')
+      return dashboardStats.value
+    }
+    
     return {
       conversations: {
-        total: totalConversations,
-        active: activeConversations
+        total: stats.totalConversations || 0,
+        active: stats.activeConversations || 0
       },
       orders: {
-        total: totalOrders,
-        conversionRate: Math.round(conversionRate * 10) / 10
+        total: stats.totalOrders || 0,
+        conversionRate: stats.conversionRate || 0
       },
       revenue: {
-        total: totalRevenue,
-        average: averageRevenue
+        total: stats.totalRevenue || 0,
+        average: stats.averageOrderValue || 0
       },
       performance: {
         responseTime: '< 2s',
@@ -936,79 +928,88 @@ const loadStats = async (): Promise<DashboardStats> => {
       }
     }
   } catch (error) {
-    console.error('❌ Erreur chargement stats:', error)
+    console.error('❌ Erreur chargement stats via API:', error)
     return dashboardStats.value
   }
 }
 
+// ✅ VERSION API PURE
 const loadRecentConversations = async (): Promise<Conversation[]> => {
   try {
-    const { data } = await supabase
-      .from('conversations')
-      .select('id, visitor_name, last_message, updated_at, status')
-      .eq('shop_id', authStore.userShopId)
-      .order('updated_at', { ascending: false })
-      .limit(3)
+    console.log('💬 Chargement des conversations récentes via API...')
+    
+    const conversations = await db.getConversations()
+    
+    if (!conversations || conversations.length === 0) {
+      console.log('ℹ️ Aucune conversation trouvée')
+      return []
+    }
 
-    return data?.map(conv => ({
+    return conversations.slice(0, 3).map((conv: any) => ({
       id: conv.id,
-      visitor: conv.visitor_name || 'Visiteur anonyme',
+      visitor: conv.visitor_name || conv.visitor_id || 'Visiteur anonyme',
       lastMessage: conv.last_message || 'Nouvelle conversation',
-      time: new Date(conv.updated_at),
-      unread: conv.status === 'new'
-    })) || []
+      time: new Date(conv.last_activity || conv.started_at),
+      unread: conv.status === 'new' || conv.status === 'active'
+    }))
   } catch (error) {
-    console.error('❌ Erreur chargement conversations:', error)
+    console.error('❌ Erreur chargement conversations via API:', error)
     return []
   }
 }
 
+// ✅ VERSION API PURE
 const loadRecentOrders = async (): Promise<Order[]> => {
   try {
-    const { data } = await supabase
-      .from('orders')
-      .select('id, customer_name, amount, created_at')
-      .eq('shop_id', authStore.userShopId)
-      .order('created_at', { ascending: false })
-      .limit(3)
+    console.log('🛒 Chargement des commandes récentes via API...')
+    
+    const orders = await db.getOrders()
+    
+    if (!orders || orders.length === 0) {
+      console.log('ℹ️ Aucune commande trouvée')
+      return []
+    }
 
-    return data?.map(order => ({
+    return orders.slice(0, 3).map((order: any) => ({
       id: order.id,
-      customer: order.customer_name || 'Client',
-      amount: order.amount || 0,
+      customer: order.customer_name || order.customer_phone || order.customer_email || 'Client',
+      amount: order.total_amount || 0,
       time: new Date(order.created_at)
-    })) || []
+    }))
   } catch (error) {
-    console.error('❌ Erreur chargement commandes:', error)
+    console.error('❌ Erreur chargement commandes via API:', error)
     return []
   }
 }
 
+// ✅ VERSION API PURE
 const loadSetupStatus = async (): Promise<SetupStatus> => {
   try {
-    const { data: kbData } = await supabase
-      .from('knowledge_base')
-      .select('id')
-      .eq('shop_id', authStore.userShopId)
-      .limit(1)
+    console.log('⚙️ Chargement du statut de configuration via API...')
+    
+    const [kbDocuments, agents, shop] = await Promise.all([
+      db.getKnowledgeBase(),
+      db.getAgents(),
+      db.getShop()
+    ])
 
-    const { data: shopData } = await supabase
-      .from('shops')
-      .select('agent_config, widget_config, domain')
-      .eq('id', authStore.userShopId)
-      .single()
+    const hasKnowledgeBase = kbDocuments && kbDocuments.length > 0
+    const hasAgentConfig = agents && agents.length > 0
+    const hasWidgetIntegration = shop && shop.domain
 
-    const hasKnowledgeBase = (kbData?.length || 0) > 0
-    const hasAgentConfig = shopData?.agent_config && Object.keys(shopData.agent_config).length > 0
-    const hasWidgetIntegration = !!shopData?.domain
-
-    return {
+    console.log('✅ Statut de configuration:', {
       knowledgeBase: hasKnowledgeBase,
       agentConfig: hasAgentConfig,
       widgetIntegration: hasWidgetIntegration
+    })
+
+    return {
+      knowledgeBase: !!hasKnowledgeBase,
+      agentConfig: !!hasAgentConfig,
+      widgetIntegration: !!hasWidgetIntegration
     }
   } catch (error) {
-    console.error('❌ Erreur chargement setup status:', error)
+    console.error('❌ Erreur chargement setup status via API:', error)
     return {
       knowledgeBase: false,
       agentConfig: false,
@@ -1056,7 +1057,7 @@ useHead({
 </script>
 
 <style scoped>
-/* ✅ STYLES EXISTANTS */
+/* ✅ STYLES EXISTANTS INCHANGÉS */
 .card-modern {
   @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
 }

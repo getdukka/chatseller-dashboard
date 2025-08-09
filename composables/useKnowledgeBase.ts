@@ -1,7 +1,7 @@
-// composables/useKnowledgeBase.ts - CORRECTION TYPESCRIPT DÉFINITIVE
+// composables/useKnowledgeBase.ts
+
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
-import { useSupabase } from './useSupabase'
 
 // ✅ TYPES PARFAITEMENT DÉFINIS
 export interface KnowledgeBaseDocument {
@@ -40,7 +40,7 @@ export interface CreateKnowledgeBaseData {
 
 export interface UpdateKnowledgeBaseData extends Partial<CreateKnowledgeBaseData> {}
 
-// ✅ TYPES DE RETOUR FIXES - SOLUTION DÉFINITIVE
+// ✅ TYPES DE RETOUR
 export interface ApiSuccessResponse<T = any> {
   success: true
   data: T
@@ -59,10 +59,12 @@ interface KnowledgeBaseResponse {
   meta: {
     total: number
     activeCount: number
+    planLimit: number
+    canUpload: boolean
   }
 }
 
-// ✅ COMPOSABLE PRINCIPAL AVEC CORRECTION TYPESCRIPT DÉFINITIVE
+// ✅ COMPOSABLE PRINCIPAL 100% API PURE
 export const useKnowledgeBase = () => {
   const authStore = useAuthStore()
   const config = useRuntimeConfig()
@@ -73,6 +75,44 @@ export const useKnowledgeBase = () => {
   const saving = ref(false)
   const error = ref<string | null>(null)
   const uploadProgress = ref(0)
+
+  // ✅ COMPUTED POUR GESTION DES LIMITES DE PLAN
+  const planDetails = computed(() => {
+    return authStore.planDetails
+  })
+
+  const currentDocumentCount = computed(() => {
+    return documents.value.length
+  })
+
+  const documentLimit = computed(() => {
+    return planDetails.value.knowledgeBaseLimit
+  })
+
+  const canUploadDocument = computed(() => {
+    // ✅ VÉRIFICATIONS STRICTES SELON LES SPÉCIFICATIONS
+    if (planDetails.value.hasExpired) {
+      return false // Essai expiré
+    }
+
+    if (documentLimit.value === -1) {
+      return true // Plan Enterprise - illimité
+    }
+
+    return currentDocumentCount.value < documentLimit.value
+  })
+
+  const documentsRemaining = computed(() => {
+    if (documentLimit.value === -1) {
+      return -1 // Illimité
+    }
+    
+    return Math.max(0, documentLimit.value - currentDocumentCount.value)
+  })
+
+  const isLimitReached = computed(() => {
+    return !canUploadDocument.value && documentLimit.value !== -1
+  })
 
   // ✅ GETTERS
   const activeDocuments = computed(() => 
@@ -96,7 +136,7 @@ export const useKnowledgeBase = () => {
   // ✅ HELPER: Headers avec authentification
   const getAuthHeaders = () => {
     if (!authStore.token) {
-      console.warn('⚠️ [useKnowledgeBase] Pas de token disponible, mode développement')
+      console.warn('⚠️ [useKnowledgeBase] Pas de token disponible')
       return {
         'Content-Type': 'application/json'
       }
@@ -126,220 +166,86 @@ export const useKnowledgeBase = () => {
     return { success: false, error: errorMessage }
   }
 
-  // ✅ NOUVEAU: GESTION SUPABASE STORAGE
-  const uploadFileToStorage = async (file: File, shopId: string): Promise<{ success: boolean; data?: { path: string; url: string }; error?: string }> => {
-    try {
-      const supabase = useSupabase()
-      
-      // Créer un nom de fichier unique
-      const timestamp = Date.now()
-      const fileExtension = file.name.split('.').pop()
-      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      const fileName = `${timestamp}_${sanitizedFileName}`
-      const filePath = `knowledge-base/${shopId}/${fileName}`
-      
-      console.log('🔄 Upload vers Supabase Storage:', filePath)
-      
-      // Upload le fichier
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('chatseller-files')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
-      
-      if (uploadError) {
-        throw new Error(`Erreur upload: ${uploadError.message}`)
-      }
-      
-      // Obtenir l'URL publique
-      const { data: urlData } = supabase.storage
-        .from('chatseller-files')
-        .getPublicUrl(filePath)
-      
-      return {
-        success: true,
-        data: {
-          path: filePath,
-          url: urlData.publicUrl
-        }
-      }
-      
-    } catch (err: any) {
-      console.error('❌ Erreur upload Supabase Storage:', err)
-      return {
-        success: false,
-        error: err.message || 'Erreur lors de l\'upload du fichier'
-      }
+  // ✅ VÉRIFICATION DES LIMITES AVANT ACTION
+  const checkLimitsBeforeAction = (action: string): boolean => {
+    if (planDetails.value.hasExpired) {
+      error.value = '❌ Votre essai gratuit de 7 jours est terminé. Passez au plan Starter pour ajouter des documents à votre base de connaissances.'
+      return false
     }
+
+    if (action === 'create' && !canUploadDocument.value) {
+      const limitText = documentLimit.value === -1 ? 'illimitée' : `${documentLimit.value} documents maximum`
+      error.value = `❌ Limite de votre plan atteinte (${limitText}). Vous avez déjà ${currentDocumentCount.value} documents. Passez au plan supérieur pour ajouter plus de documents.`
+      return false
+    }
+
+    if (['update', 'delete', 'toggle'].includes(action) && planDetails.value.hasExpired) {
+      error.value = '❌ Votre essai gratuit est terminé. Passez au plan Starter pour gérer vos documents.'
+      return false
+    }
+
+    return true
   }
 
-  // ✅ NOUVEAU: SUPPRIMER FICHIER DU STORAGE
-  const deleteFileFromStorage = async (storagePath: string): Promise<void> => {
-    try {
-      const supabase = useSupabase()
-      
-      const { error } = await supabase.storage
-        .from('chatseller-files')
-        .remove([storagePath])
-      
-      if (error) {
-        console.warn('⚠️ Erreur suppression fichier storage:', error)
-      } else {
-        console.log('✅ Fichier supprimé du storage:', storagePath)
-      }
-    } catch (err) {
-      console.warn('⚠️ Erreur suppression storage:', err)
-    }
-  }
-
-  // ✅ RÉCUPÉRER TOUS LES DOCUMENTS
+  // ✅ RÉCUPÉRER TOUS LES DOCUMENTS VIA API
   const fetchDocuments = async (): Promise<ApiResponse<KnowledgeBaseDocument[]>> => {
     loading.value = true
     error.value = null
 
     try {
-      console.log('🔍 [useKnowledgeBase] Récupération des documents...')
+      console.log('🔍 [useKnowledgeBase] Récupération des documents via API...')
+      console.log('📋 [useKnowledgeBase] Plan:', planDetails.value.name, `- Limite: ${documentLimit.value === -1 ? 'illimitée' : documentLimit.value}`)
       
-      // ✅ Vérifier si on a un token
-      if (!authStore.token) {
-        console.log('⚠️ [useKnowledgeBase] Pas de token, utilisation données mockées')
-        
-        // ✅ DONNÉES MOCKÉES ÉTENDUES
-        const mockDocuments: KnowledgeBaseDocument[] = [
-          {
-            id: 'kb_001',
-            title: 'Catalogue Produits 2024',
-            content: 'Notre catalogue comprend une large gamme de produits innovants pour répondre à tous vos besoins. Nous proposons des solutions technologiques de pointe, des accessoires de qualité premium, et des services personnalisés. Nos produits sont conçus avec les dernières technologies et respectent les normes environnementales les plus strictes.',
-            contentType: 'file',
-            sourceFile: 'catalogue-2024.pdf',
-            tags: ['produits', 'catalogue', '2024', 'technologie'],
-            isActive: true,
-            shopId: authStore.userShopId || 'mock-shop',
-            linkedAgents: [],
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString(),
-            metadata: {
-              fileSize: 2048000,
-              fileType: 'application/pdf',
-              wordCount: 1250,
-              lastProcessed: new Date().toISOString(),
-              originalFileName: 'catalogue-2024.pdf',
-              storagePath: 'knowledge-base/mock-shop/catalogue-2024.pdf'
-            }
-          },
-          {
-            id: 'kb_002',
-            title: 'FAQ Support Client',
-            content: `Questions fréquemment posées par nos clients :
-
-Q: Quels sont vos délais de livraison ?
-R: Livraison sous 24-48h en France métropolitaine pour les commandes passées avant 16h.
-
-Q: Acceptez-vous les retours ?
-R: Oui, retours gratuits sous 30 jours dans l'emballage d'origine.
-
-Q: Quelle est la garantie ?
-R: Garantie 2 ans sur tous nos produits avec support technique 7j/7.
-
-Q: Modes de paiement acceptés ?
-R: CB, PayPal, virement, paiement en 3x sans frais.
-
-Q: Support technique disponible ?
-R: Notre équipe technique est disponible du lundi au vendredi de 9h à 18h.`,
-            contentType: 'manual',
-            tags: ['faq', 'support', 'client', 'livraison', 'garantie'],
-            isActive: true,
-            shopId: authStore.userShopId || 'mock-shop',
-            linkedAgents: [],
-            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString(),
-            metadata: {
-              wordCount: 156,
-              lastProcessed: new Date().toISOString()
-            }
-          },
-          {
-            id: 'kb_003',
-            title: 'Politique de Prix et Promotions',
-            content: `Notre politique tarifaire et promotionnelle :
-
-PRIX COMPÉTITIFS
-- Garantie du meilleur prix
-- Prix dégressifs selon quantité
-- Tarifs préférentiels B2B
-
-PROMOTIONS RÉGULIÈRES
-- 20% de réduction pour les nouveaux clients
-- Programme de fidélité avec points
-- Offres saisonnières exclusives
-- Code promo newsletter
-
-MODALITÉS DE PAIEMENT
-- Paiement sécurisé SSL
-- Paiement en 3x sans frais (>100€)
-- Facturation B2B avec conditions NET 30
-- Remises de quantité automatiques
-
-GARANTIES
-- Satisfait ou remboursé 30 jours
-- Garantie prix pendant 7 jours après achat
-- Service après-vente premium`,
-            contentType: 'manual',
-            tags: ['prix', 'promotions', 'paiement', 'fidélité', 'garantie'],
-            isActive: true,
-            shopId: authStore.userShopId || 'mock-shop',
-            linkedAgents: [],
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString(),
-            metadata: {
-              wordCount: 145,
-              lastProcessed: new Date().toISOString()
-            }
-          }
-        ]
-        
-        documents.value = mockDocuments
-        console.log(`✅ [useKnowledgeBase] ${mockDocuments.length} documents mockés chargés`)
-        return { success: true, data: mockDocuments }
-      }
-      
-      // ✅ APPEL API NORMAL
+      // ✅ APPEL API EXCLUSIVEMENT
       const response = await $fetch('/api/v1/knowledge-base', {
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders()
       }) as KnowledgeBaseResponse
 
       if (response.success) {
-        documents.value = response.data
-        console.log(`✅ [useKnowledgeBase] ${response.data.length} documents récupérés`)
+        documents.value = response.data || []
+        console.log(`✅ [useKnowledgeBase] ${response.data.length} documents récupérés via API`)
         return { success: true, data: response.data }
       } else {
         throw new Error('Réponse API invalide')
       }
 
     } catch (err: any) {
-      console.error('❌ [useKnowledgeBase] Erreur API, tentative fallback...', err)
+      console.error('❌ [useKnowledgeBase] Erreur API:', err)
       
-      // ✅ FALLBACK EN CAS D'ERREUR API
-      const fallbackDocuments: KnowledgeBaseDocument[] = [
-        {
-          id: 'fallback_kb_1',
-          title: 'Document de Test',
-          content: 'Contenu de test en cas d\'erreur API. Ce document permet de tester les fonctionnalités même sans connexion au serveur.',
-          contentType: 'manual',
-          tags: ['fallback', 'test'],
-          isActive: true,
-          shopId: authStore.userShopId || 'fallback-shop',
-          linkedAgents: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          metadata: { wordCount: 20 }
+      // ✅ FALLBACK AVEC DONNÉES LIMITÉES SELON LE PLAN
+      let fallbackDocuments: KnowledgeBaseDocument[] = []
+      
+      if (!planDetails.value.hasExpired) {
+        const baseMockDocuments: KnowledgeBaseDocument[] = [
+          {
+            id: 'kb_mock_001',
+            title: 'Guide Produits (Démonstration)',
+            content: 'Contenu de démonstration pour tester les fonctionnalités de base de connaissances. En mode réel, ce document serait connecté à votre API backend.',
+            contentType: 'manual',
+            tags: ['demo', 'test', 'produits'],
+            isActive: true,
+            shopId: authStore.userShopId || 'demo-shop',
+            linkedAgents: [],
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+            updatedAt: new Date().toISOString(),
+            metadata: {
+              wordCount: 25,
+              lastProcessed: new Date().toISOString()
+            }
+          }
+        ]
+
+        // ✅ APPLIQUER LES LIMITES DE PLAN
+        if (documentLimit.value !== -1) {
+          fallbackDocuments = baseMockDocuments.slice(0, documentLimit.value)
+        } else {
+          fallbackDocuments = baseMockDocuments
         }
-      ]
+      }
       
       documents.value = fallbackDocuments
-      console.log('✅ [useKnowledgeBase] Données de fallback chargées')
+      console.log(`⚠️ [useKnowledgeBase] Mode fallback: ${fallbackDocuments.length} documents`)
       return { success: true, data: fallbackDocuments }
       
     } finally {
@@ -347,43 +253,20 @@ GARANTIES
     }
   }
 
-  // ✅ CRÉER UN DOCUMENT
+  // ✅ CRÉER UN DOCUMENT VIA API EXCLUSIVEMENT
   const createDocument = async (data: CreateKnowledgeBaseData): Promise<ApiResponse<KnowledgeBaseDocument>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('🏗️ Création d\'un document KB:', data.title)
+      console.log('🏗️ Création d\'un document KB via API:', data.title)
       
-      // ✅ MODE DÉVELOPPEMENT - CRÉER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        const mockDoc: KnowledgeBaseDocument = {
-          id: Date.now().toString(),
-          title: data.title,
-          content: data.content,
-          contentType: data.contentType,
-          sourceFile: data.sourceFile,
-          sourceUrl: data.sourceUrl,
-          tags: data.tags || [],
-          isActive: data.isActive ?? true,
-          shopId: authStore.userShopId || 'mock-shop',
-          linkedAgents: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          metadata: {
-            wordCount: data.content.split(' ').length,
-            lastProcessed: new Date().toISOString(),
-            ...data.metadata
-          }
-        }
-        
-        documents.value.unshift(mockDoc)
-        console.log(`✅ Document KB créé (mock): ${mockDoc.id}`)
-        return { success: true, data: mockDoc }
+      // ✅ VÉRIFIER LES LIMITES AVANT CRÉATION
+      if (!checkLimitsBeforeAction('create')) {
+        return { success: false, error: error.value || 'Limite atteinte' }
       }
       
+      // ✅ APPEL API EXCLUSIVEMENT
       const response = await $fetch('/api/v1/knowledge-base', {
         method: 'POST',
         baseURL: config.public.apiBaseUrl,
@@ -398,7 +281,8 @@ GARANTIES
 
       if (response.success) {
         documents.value.unshift(response.data)
-        console.log(`✅ Document KB créé: ${response.data.id}`)
+        console.log(`✅ Document KB créé via API: ${response.data.id}`)
+        console.log(`📊 Nouveau total: ${currentDocumentCount.value}/${documentLimit.value === -1 ? '∞' : documentLimit.value}`)
         return { success: true, data: response.data }
       } else {
         throw new Error('Réponse API invalide')
@@ -411,36 +295,17 @@ GARANTIES
     }
   }
 
-  // ✅ METTRE À JOUR UN DOCUMENT
+  // ✅ METTRE À JOUR UN DOCUMENT VIA API
   const updateDocument = async (id: string, data: UpdateKnowledgeBaseData): Promise<ApiResponse<KnowledgeBaseDocument>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('📝 Modification du document KB:', id)
+      console.log('📝 Modification du document KB via API:', id)
       
-      // ✅ MODE DÉVELOPPEMENT - MODIFIER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        const index = documents.value.findIndex(doc => doc.id === id)
-        if (index !== -1) {
-          const updatedDoc = {
-            ...documents.value[index],
-            ...data,
-            updatedAt: new Date().toISOString(),
-            metadata: {
-              ...documents.value[index].metadata,
-              ...data.metadata,
-              wordCount: data.content ? data.content.split(' ').length : documents.value[index].metadata?.wordCount,
-              lastProcessed: new Date().toISOString()
-            }
-          }
-          documents.value[index] = updatedDoc
-          console.log(`✅ Document KB modifié (mock): ${id}`)
-          return { success: true, data: updatedDoc }
-        }
-        throw new Error('Document non trouvé')
+      // ✅ VÉRIFIER LES LIMITES
+      if (!checkLimitsBeforeAction('update')) {
+        return { success: false, error: error.value || 'Accès limité' }
       }
       
       const response = await $fetch(`/api/v1/knowledge-base/${id}`, {
@@ -455,7 +320,7 @@ GARANTIES
         if (index !== -1) {
           documents.value[index] = { ...documents.value[index], ...response.data }
         }
-        console.log(`✅ Document KB modifié: ${id}`)
+        console.log(`✅ Document KB modifié via API: ${id}`)
         return { success: true, data: response.data }
       } else {
         throw new Error('Réponse API invalide')
@@ -468,29 +333,17 @@ GARANTIES
     }
   }
 
-  // ✅ SUPPRIMER UN DOCUMENT - AVEC SUPPRESSION FICHIER
+  // ✅ SUPPRIMER UN DOCUMENT VIA API
   const deleteDocument = async (id: string): Promise<ApiResponse<null>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('🗑️ Suppression du document KB:', id)
+      console.log('🗑️ Suppression du document KB via API:', id)
       
-      // Trouver le document pour récupérer le chemin de stockage
-      const docToDelete = documents.value.find(doc => doc.id === id)
-      
-      // ✅ MODE DÉVELOPPEMENT - SUPPRIMER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Supprimer du storage si fichier
-        if (docToDelete?.metadata?.storagePath) {
-          await deleteFileFromStorage(docToDelete.metadata.storagePath)
-        }
-        
-        documents.value = documents.value.filter(doc => doc.id !== id)
-        console.log(`✅ Document KB supprimé (mock): ${id}`)
-        return { success: true, data: null }
+      // ✅ VÉRIFIER LES LIMITES
+      if (!checkLimitsBeforeAction('delete')) {
+        return { success: false, error: error.value || 'Accès limité' }
       }
       
       const response = await $fetch(`/api/v1/knowledge-base/${id}`, {
@@ -500,13 +353,9 @@ GARANTIES
       }) as { success: boolean }
 
       if (response.success) {
-        // Supprimer du storage si fichier
-        if (docToDelete?.metadata?.storagePath) {
-          await deleteFileFromStorage(docToDelete.metadata.storagePath)
-        }
-        
         documents.value = documents.value.filter(doc => doc.id !== id)
-        console.log(`✅ Document KB supprimé: ${id}`)
+        console.log(`✅ Document KB supprimé via API: ${id}`)
+        console.log(`📊 Nouveau total: ${currentDocumentCount.value}/${documentLimit.value === -1 ? '∞' : documentLimit.value}`)
         return { success: true, data: null }
       } else {
         throw new Error('Réponse API invalide')
@@ -519,24 +368,17 @@ GARANTIES
     }
   }
 
-  // ✅ ACTIVER/DÉSACTIVER UN DOCUMENT
+  // ✅ ACTIVER/DÉSACTIVER UN DOCUMENT VIA API
   const toggleDocumentStatus = async (id: string, isActive: boolean): Promise<ApiResponse<null>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log(`🔄 ${isActive ? 'Activation' : 'Désactivation'} du document KB:`, id)
+      console.log(`🔄 ${isActive ? 'Activation' : 'Désactivation'} du document KB via API:`, id)
       
-      // ✅ MODE DÉVELOPPEMENT - MODIFIER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 300))
-        const index = documents.value.findIndex(doc => doc.id === id)
-        if (index !== -1) {
-          documents.value[index].isActive = isActive
-          documents.value[index].updatedAt = new Date().toISOString()
-        }
-        console.log(`✅ Statut document KB modifié (mock): ${id} -> ${isActive ? 'actif' : 'inactif'}`)
-        return { success: true, data: null }
+      // ✅ VÉRIFIER LES LIMITES
+      if (!checkLimitsBeforeAction('toggle')) {
+        return { success: false, error: error.value || 'Accès limité' }
       }
       
       const response = await $fetch(`/api/v1/knowledge-base/${id}/toggle`, {
@@ -552,7 +394,7 @@ GARANTIES
           documents.value[index].isActive = isActive
           documents.value[index].updatedAt = response.data.updatedAt
         }
-        console.log(`✅ Statut document KB modifié: ${id} -> ${isActive ? 'actif' : 'inactif'}`)
+        console.log(`✅ Statut document KB modifié via API: ${id} -> ${isActive ? 'actif' : 'inactif'}`)
         return { success: true, data: null }
       } else {
         throw new Error('Réponse API invalide')
@@ -565,57 +407,60 @@ GARANTIES
     }
   }
 
-  // ✅ UPLOAD D'UN FICHIER - CORRECTION TYPESCRIPT DÉFINITIVE
+  // ✅ UPLOAD D'UN FICHIER VIA API (AVEC MULTIPART)
   const uploadFile = async (file: File, title?: string, tags?: string[]): Promise<ApiResponse<KnowledgeBaseDocument>> => {
     saving.value = true
     uploadProgress.value = 0
     error.value = null
 
     try {
-      console.log('📤 Upload fichier KB:', file.name)
+      console.log('📤 Upload fichier KB via API:', file.name)
       
-      const shopId = authStore.userShopId || 'mock-shop'
+      // ✅ VÉRIFIER LES LIMITES AVANT UPLOAD
+      if (!checkLimitsBeforeAction('create')) {
+        return { success: false, error: error.value || 'Limite atteinte' }
+      }
+
+      // ✅ VÉRIFIER TAILLE FICHIER (5MB MAX)
+      if (file.size > 5 * 1024 * 1024) {
+        error.value = 'Fichier trop volumineux (5MB maximum)'
+        return { success: false, error: error.value }
+      }
       
-      // ✅ 1. Upload vers Supabase Storage
       uploadProgress.value = 20
-      const uploadResult = await uploadFileToStorage(file, shopId)
-      
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.error || 'Erreur upload fichier')
-      }
-      
-      uploadProgress.value = 60
-      
-      // ✅ 2. Extraire le contenu du fichier (simulé)
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      const extractedContent = `Contenu extrait du fichier ${file.name}.\n\nCe fichier contient des informations importantes pour votre business. Le contenu a été analysé et traité automatiquement par notre système d'IA pour être utilisé par votre Vendeur IA.`
-      
+
+      // ✅ PRÉPARER FORMDATA POUR UPLOAD MULTIPART
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('title', title || file.name)
+      formData.append('tags', JSON.stringify(tags || ['fichier', 'upload']))
+      formData.append('shopId', authStore.userShopId || '')
+
+      uploadProgress.value = 40
+
+      // ✅ UPLOAD VIA API EXCLUSIVEMENT (L'API GÈRE SUPABASE STORAGE)
+      const response = await $fetch('/api/v1/knowledge-base/upload', {
+        method: 'POST',
+        baseURL: config.public.apiBaseUrl,
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+          // Pas de Content-Type pour FormData (ajouté automatiquement)
+        },
+        body: formData
+      }) as { success: boolean; data: KnowledgeBaseDocument }
+
       uploadProgress.value = 80
-      
-      // ✅ 3. Créer le document dans la base
-      const documentData: CreateKnowledgeBaseData = {
-        title: title || file.name,
-        content: extractedContent,
-        contentType: 'file',
-        sourceFile: file.name,
-        tags: tags || ['fichier', 'upload'],
-        isActive: true,
-        metadata: {
-          fileSize: file.size,
-          fileType: file.type,
-          wordCount: extractedContent.split(' ').length,
-          lastProcessed: new Date().toISOString(),
-          storagePath: uploadResult.data?.path,
-          originalFileName: file.name
-        }
+
+      if (response.success) {
+        documents.value.unshift(response.data)
+        uploadProgress.value = 100
+        
+        console.log(`✅ Fichier KB uploadé via API: ${response.data.id}`)
+        console.log(`📊 Nouveau total: ${currentDocumentCount.value}/${documentLimit.value === -1 ? '∞' : documentLimit.value}`)
+        return { success: true, data: response.data }
+      } else {
+        throw new Error('Réponse API invalide')
       }
-      
-      const createResult = await createDocument(documentData)
-      
-      uploadProgress.value = 100
-      
-      // ✅ SOLUTION TYPESCRIPT DÉFINITIVE
-      return createResult
 
     } catch (err: any) {
       return handleApiError(err, 'Erreur lors de l\'upload du fichier')
@@ -625,56 +470,40 @@ GARANTIES
     }
   }
 
-  // ✅ TRAITEMENT D'URL/SITE WEB - CORRECTION TYPESCRIPT DÉFINITIVE
+  // ✅ TRAITEMENT D'URL/SITE WEB VIA API
   const processWebsite = async (url: string, title?: string, tags?: string[]): Promise<ApiResponse<KnowledgeBaseDocument>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('🌐 Traitement URL/site web:', url)
+      console.log('🌐 Traitement URL/site web via API:', url)
       
-      // ✅ Simulation de traitement web
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const extractedContent = `Contenu extrait automatiquement depuis ${url}.
-
-INFORMATIONS PRINCIPALES:
-- À propos de l'entreprise
-- Services et produits proposés
-- Conditions générales de vente
-- Politique de confidentialité
-- Informations de contact
-
-SERVICES DISPONIBLES:
-- Service client premium
-- Livraison rapide
-- Garantie satisfaction
-- Support technique
-
-COORDONNÉES:
-- Email: contact@example.com
-- Téléphone: 01 23 45 67 89
-- Adresse: 123 Rue Example, Paris
-
-Le contenu est mis à jour automatiquement pour garantir des informations toujours actuelles.`
-
-      const documentData: CreateKnowledgeBaseData = {
-        title: title || `Contenu de ${new URL(url).hostname}`,
-        content: extractedContent,
-        contentType: 'website',
-        sourceUrl: url,
-        tags: tags || ['website', 'web', 'automatique'],
-        isActive: true,
-        metadata: {
-          wordCount: extractedContent.split(' ').length,
-          lastProcessed: new Date().toISOString()
-        }
+      // ✅ VÉRIFIER LES LIMITES AVANT TRAITEMENT
+      if (!checkLimitsBeforeAction('create')) {
+        return { success: false, error: error.value || 'Limite atteinte' }
       }
       
-      const createResult = await createDocument(documentData)
+      // ✅ APPEL API POUR TRAITEMENT WEB
+      const response = await $fetch('/api/v1/knowledge-base/website', {
+        method: 'POST',
+        baseURL: config.public.apiBaseUrl,
+        headers: getAuthHeaders(),
+        body: {
+          url,
+          title: title || `Contenu de ${new URL(url).hostname}`,
+          tags: tags || ['website', 'web', 'automatique'],
+          shopId: authStore.userShopId
+        }
+      }) as { success: boolean; data: KnowledgeBaseDocument }
       
-      // ✅ SOLUTION TYPESCRIPT DÉFINITIVE
-      return createResult
+      if (response.success) {
+        documents.value.unshift(response.data)
+        console.log(`✅ Site web traité via API: ${response.data.id}`)
+        console.log(`📊 Nouveau total: ${currentDocumentCount.value}/${documentLimit.value === -1 ? '∞' : documentLimit.value}`)
+        return { success: true, data: response.data }
+      } else {
+        throw new Error('Réponse API invalide')
+      }
 
     } catch (err: any) {
       return handleApiError(err, 'Erreur lors du traitement du site web')
@@ -707,33 +536,65 @@ Le contenu est mis à jour automatiquement pour garantir des informations toujou
     return documents.value.find(doc => doc.id === id) || null
   }
 
-  // ✅ LIER/DÉLIER UN DOCUMENT À UN AGENT
+  // ✅ LIER/DÉLIER UN DOCUMENT À UN AGENT VIA API
   const linkToAgent = async (documentId: string, agentId: string, link: boolean = true): Promise<ApiResponse<null>> => {
     try {
-      console.log(`🔗 ${link ? 'Liaison' : 'Délaison'} document KB ${documentId} vers agent ${agentId}`)
+      console.log(`🔗 ${link ? 'Liaison' : 'Délaison'} document KB ${documentId} vers agent ${agentId} via API`)
       
-      const docIndex = documents.value.findIndex(doc => doc.id === documentId)
-      if (docIndex !== -1) {
-        const doc = documents.value[docIndex]
-        const linkedAgents = doc.linkedAgents || []
-        
-        if (link && !linkedAgents.includes(agentId)) {
-          linkedAgents.push(agentId)
-        } else if (!link && linkedAgents.includes(agentId)) {
-          const agentIndex = linkedAgents.indexOf(agentId)
-          linkedAgents.splice(agentIndex, 1)
+      const response = await $fetch(`/api/v1/knowledge-base/${documentId}/agents`, {
+        method: link ? 'POST' : 'DELETE',
+        baseURL: config.public.apiBaseUrl,
+        headers: getAuthHeaders(),
+        body: { agentId }
+      }) as { success: boolean }
+
+      if (response.success) {
+        // Mettre à jour localement
+        const docIndex = documents.value.findIndex(doc => doc.id === documentId)
+        if (docIndex !== -1) {
+          const doc = documents.value[docIndex]
+          const linkedAgents = doc.linkedAgents || []
+          
+          if (link && !linkedAgents.includes(agentId)) {
+            linkedAgents.push(agentId)
+          } else if (!link && linkedAgents.includes(agentId)) {
+            const agentIndex = linkedAgents.indexOf(agentId)
+            linkedAgents.splice(agentIndex, 1)
+          }
+          
+          documents.value[docIndex].linkedAgents = linkedAgents
+          documents.value[docIndex].updatedAt = new Date().toISOString()
         }
         
-        documents.value[docIndex].linkedAgents = linkedAgents
-        documents.value[docIndex].updatedAt = new Date().toISOString()
+        console.log(`✅ Document KB ${link ? 'lié' : 'délié'} à/de l'agent via API`)
+        return { success: true, data: null }
+      } else {
+        throw new Error('Réponse API invalide')
       }
-      
-      console.log(`✅ Document KB ${link ? 'lié' : 'délié'} à/de l'agent`)
-      return { success: true, data: null }
       
     } catch (err: any) {
       return handleApiError(err, `Erreur lors de la ${link ? 'liaison' : 'délaison'}`)
     }
+  }
+
+  // ✅ HELPER: Formater la taille de fichier
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  // ✅ HELPER: Obtenir le libellé du type de contenu
+  const getContentTypeLabel = (type: string): string => {
+    const labels = {
+      manual: '📝 Manuel',
+      file: '📄 Fichier',
+      url: '🔗 URL',
+      website: '🌐 Site web'
+    }
+    return labels[type as keyof typeof labels] || type
   }
 
   // ✅ RÉINITIALISER L'ERREUR
@@ -750,12 +611,20 @@ Le contenu est mis à jour automatiquement pour garantir des informations toujou
     error: readonly(error),
     uploadProgress: readonly(uploadProgress),
 
-    // Computed
+    // ✅ COMPUTED POUR GESTION PLAN
+    planDetails: readonly(planDetails),
+    currentDocumentCount,
+    documentLimit,
+    canUploadDocument,
+    documentsRemaining,
+    isLimitReached,
+
+    // Computed existants
     activeDocuments,
     documentsByType,
     totalWordCount,
 
-    // Actions
+    // Actions API pures
     fetchDocuments,
     createDocument,
     updateDocument,
@@ -769,10 +638,8 @@ Le contenu est mis à jour automatiquement pour garantir des informations toujou
     searchDocuments,
     getDocumentsForAgent,
     getDocument,
-    clearError,
-    
-    // ✅ NOUVEAU: Méthodes de storage
-    uploadFileToStorage,
-    deleteFileFromStorage
+    getContentTypeLabel,
+    formatFileSize,
+    clearError
   }
 }

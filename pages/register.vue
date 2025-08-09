@@ -1,4 +1,4 @@
-<!-- pages/register.vue - VERSION CORRIGÉE FINALE -->
+<!-- pages/register.vue - VERSION CORRIGÉE COMPATIBLE USEAUTH -->
 <template>
   <div>
     <!-- Logo et titre -->
@@ -62,7 +62,7 @@
           </div>
         </div>
 
-        <!-- Instructions améliorées -->
+        <!-- Instructions -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div class="text-sm text-blue-800">
             <p class="font-medium mb-2">📧 Étapes suivantes :</p>
@@ -279,20 +279,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { createClient } from '@supabase/supabase-js'
+import { useSupabase } from '~~/composables/useSupabase'
+
+// ✅ UTILISATION DU COMPOSABLE AUTH CORRIGÉ
+const auth = useAuth()
 
 // Layout
 definePageMeta({
   layout: 'auth'
 })
-
-// ✅ CLIENT SUPABASE DIRECT
-const config = useRuntimeConfig()
-const supabase = createClient(
-  config.public.supabaseUrl,
-  config.public.supabaseAnonKey
-)
 
 // État du composant
 const loading = ref(false)
@@ -311,7 +306,7 @@ const form = reactive({
   acceptTerms: false
 })
 
-// ✅ INSCRIPTION CORRIGÉE AVEC REDIRECTION DYNAMIQUE
+// ✅ INSCRIPTION VIA COMPOSABLE AUTH
 const handleRegister = async () => {
   if (!validateForm()) return
   
@@ -319,66 +314,29 @@ const handleRegister = async () => {
   registerError.value = ''
   
   try {
-    console.log('📝 Inscription avec Supabase Auth...')
+    console.log('📝 [Register] Inscription via composable auth...')
     
-    // ✅ DÉTERMINER L'URL DE REDIRECTION DYNAMIQUEMENT
-    const redirectUrl = `${window.location.origin}/auth/callback`
-    console.log('🔗 URL de redirection:', redirectUrl)
+    const result = await auth.register({
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      company: '', // Sera configuré dans l'onboarding
+      platform: '', // Sera configuré dans l'onboarding
+      newsletter: true
+    })
     
-    const { data, error } = await supabase.auth.signUp({
-    email: form.email.trim().toLowerCase(),
-    password: form.password,
-    options: {
-      data: {
-        first_name: form.firstName.trim(),
-        last_name: form.lastName.trim(),
-        name: `${form.firstName.trim()} ${form.lastName.trim()}`
-      },
-      // ✅ CONFIGURATION CORRIGÉE
-      emailRedirectTo: `${window.location.origin}/auth/callback`
-    }
-  })
-    
-    if (error) {
-      console.error('❌ Erreur Supabase signup:', error)
-      throw new Error(getErrorMessage(error))
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur de création de compte')
     }
     
-    if (data.user) {
-      console.log('✅ Inscription réussie pour:', data.user.email)
-      console.log('📧 Email de confirmation envoyé')
-      
-      // ✅ CRÉER L'ENTRÉE DANS LA TABLE USERS
-      const { error: userError } = await supabase
-        .from('users')
-        .upsert({
-          id: data.user.id,
-          email: data.user.email,
-          name: `${form.firstName.trim()} ${form.lastName.trim()}`,
-          first_name: form.firstName.trim(),
-          last_name: form.lastName.trim(),
-          email_verified: false,
-          onboarding_completed: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'id'
-        })
-      
-      if (userError) {
-        console.warn('⚠️ Erreur création user:', userError)
-      }
-      
-      registrationSuccess.value = true
-      startResendCooldown()
-      
-    } else {
-      throw new Error('Aucune donnée utilisateur reçue')
-    }
+    console.log('✅ [Register] Inscription réussie')
+    registrationSuccess.value = true
+    startResendCooldown()
     
   } catch (error: any) {
-    console.error('❌ Erreur d\'inscription:', error)
-    registerError.value = error.message || 'Une erreur s\'est produite lors de la création du compte'
+    console.error('❌ [Register] Erreur inscription:', error)
+    registerError.value = getErrorMessage(error)
   } finally {
     loading.value = false
   }
@@ -386,28 +344,28 @@ const handleRegister = async () => {
 
 // ✅ MESSAGES D'ERREUR PERSONNALISÉS
 const getErrorMessage = (error: any): string => {
-  const message = error.message || ''
+  const message = error.message || error
   
-  if (message.includes('User already registered')) {
-    return 'Cette adresse email est déjà utilisée. Essayez de vous connecter ou utilisez une autre adresse.'
+  if (message.includes('User already registered') || message.includes('already registered')) {
+    return 'Cette adresse email est déjà utilisée. Essayez de vous connecter.'
   }
   
   if (message.includes('email')) {
-    return 'Cette adresse email est déjà utilisée'
+    return 'Problème avec l\'adresse email fournie'
   }
   
   if (message.includes('password')) {
-    return 'Le mot de passe ne respecte pas les critères de sécurité (minimum 8 caractères)'
+    return 'Le mot de passe ne respecte pas les critères (minimum 8 caractères)'
   }
   
   if (message.includes('rate limit')) {
-    return 'Trop de tentatives. Veuillez patienter quelques minutes avant de réessayer.'
+    return 'Trop de tentatives. Veuillez patienter quelques minutes.'
   }
   
   return message || 'Une erreur s\'est produite lors de la création du compte'
 }
 
-// ✅ VALIDATION AMÉLIORÉE
+// ✅ VALIDATION
 const validateForm = () => {
   registerError.value = ''
   
@@ -429,37 +387,34 @@ const validateForm = () => {
   return true
 }
 
-// ✅ RENVOYER EMAIL AVEC COOLDOWN
+// ✅ RENVOYER EMAIL
 const resendEmail = async () => {
   if (resendCooldown.value > 0) return
   
   resendLoading.value = true
   
   try {
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email: form.email.trim().toLowerCase(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
+    console.log('🔄 [Register] Renvoi email via composable auth...')
     
-    if (error) {
-      throw new Error(error.message)
+    // ✅ UTILISER LE COMPOSABLE AUTH AU LIEU DE SUPABASE DIRECT
+    const result = await auth.resetPassword(form.email.trim().toLowerCase())
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur lors du renvoi')
     }
     
-    console.log('✅ Email de confirmation renvoyé')
+    console.log('✅ [Register] Email de confirmation renvoyé via auth')
     startResendCooldown()
     
   } catch (error: any) {
-    console.error('❌ Erreur renvoi email:', error)
-    // Fail silencieux pour une meilleure UX
+    console.error('❌ [Register] Erreur renvoi email:', error)
+    // Afficher une notification d'erreur si nécessaire
   } finally {
     resendLoading.value = false
   }
 }
 
-// ✅ COOLDOWN POUR RENVOI EMAIL
+// ✅ COOLDOWN
 const startResendCooldown = () => {
   resendCooldown.value = 60
   const timer = setInterval(() => {
@@ -490,13 +445,8 @@ const getOutlookUrl = (email: string) => {
 
 // ✅ REDIRECTION SI DÉJÀ CONNECTÉ
 onMounted(async () => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user && user.email_confirmed_at) {
-      await navigateTo('/')
-    }
-  } catch (error) {
-    // Ignorer les erreurs
+  if (auth.isAuthenticated.value) {
+    await navigateTo('/')
   }
 })
 

@@ -1,4 +1,4 @@
-<!-- pages/billing.vue - VERSION FINALE CORRIGÉE -->
+<!-- pages/billing.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -13,7 +13,7 @@
           </div>
           
           <div class="flex items-center space-x-4">
-            <!-- Status Badge Corrigé -->
+            <!-- Status Badge -->
             <div v-if="subscriptionData.isActive && !isPlanFree(subscriptionData.plan)" class="flex items-center space-x-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
               <div class="w-2 h-2 bg-green-500 rounded-full"></div>
               <span class="text-sm font-medium text-green-700">Abonnement actif</span>
@@ -30,20 +30,20 @@
             </div>
             
             <button
-              @click="refreshBillingData"
-              :disabled="loading"
+              @click="refreshAllData"
+              :disabled="loading.main"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
               <svg 
                 class="w-4 h-4 mr-2" 
-                :class="{ 'animate-spin': loading }"
+                :class="{ 'animate-spin': loading.main }"
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
               >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              {{ loading ? 'Actualisation...' : 'Actualiser' }}
+              {{ loading.main ? 'Actualisation...' : 'Actualiser' }}
             </button>
           </div>
         </div>
@@ -202,9 +202,9 @@
                   <span class="plan-status-badge" :class="getStatusBadgeClass(subscriptionData.plan)">
                     {{ getStatusLabel(subscriptionData.plan) }}
                   </span>
-                    <span v-if="subscriptionData.nextBillingDate && subscriptionData.isActive && !isPlanFree(subscriptionData.plan)" class="text-sm text-gray-500 mt-2">
+                  <p v-if="subscriptionData.nextBillingDate && subscriptionData.isActive && !isPlanFree(subscriptionData.plan)" class="text-sm text-gray-500 mt-2">
                     Prochain paiement : {{ formatDate(subscriptionData.nextBillingDate) }}
-                  </span>
+                  </p>
                   <p v-else-if="subscriptionData.trialDaysLeft > 0" class="text-sm text-blue-600 mt-2 font-medium">
                     Fin d'essai : {{ formatDate(subscriptionData.trialEndDate) }}
                   </p>
@@ -246,7 +246,7 @@
                 </button>
                 
                 <button 
-                  v-else-if="subscriptionData.plan === 'pro' && subscriptionData.isActive"
+                  v-if="subscriptionData.isActive && !isPlanFree(subscriptionData.plan)"
                   @click="manageSubscription"
                   class="btn-secondary"
                 >
@@ -255,17 +255,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
                   Gérer l'abonnement
-                </button>
-                
-                <button 
-                  v-else-if="subscriptionData.isActive && !isPlanFree(subscriptionData.plan)"
-                  @click="showCancelModal = true"
-                  class="btn-danger"
-                >
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                  Annuler l'abonnement
                 </button>
               </div>
             </div>
@@ -298,7 +287,7 @@
                 </div>
                 
                 <div class="plan-features">
-                  <div v-for="feature in starterFeatures" :key="feature" class="feature-item">
+                  <div v-for="feature in availablePlans.starter?.features || starterFeatures" :key="feature" class="feature-item">
                     <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -309,10 +298,10 @@
                 <div class="plan-card-footer">
                   <button 
                     @click="handleSubscribeToPlan('starter')"
-                    :disabled="subscriptionLoading || subscriptionData.plan === 'starter'"
+                    :disabled="loading.subscription || subscriptionData.plan === 'starter'"
                     class="btn-plan-secondary"
                   >
-                    <span v-if="subscriptionLoading && selectedPlan === 'starter'">
+                    <span v-if="loading.subscription && selectedPlan === 'starter'">
                       <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -320,7 +309,7 @@
                       Traitement...
                     </span>
                     <span v-else-if="subscriptionData.plan === 'starter'">Plan actuel</span>
-                    <span v-else>Choisir Starter (14€/mois)</span>
+                    <span v-else>Choisir Starter</span>
                   </button>
                   
                   <div class="plan-guarantee">
@@ -355,7 +344,7 @@
                 </div>
                 
                 <div class="plan-features">
-                  <div v-for="feature in proFeatures" :key="feature" class="feature-item">
+                  <div v-for="feature in availablePlans.pro?.features || proFeatures" :key="feature" class="feature-item">
                     <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -366,10 +355,10 @@
                 <div class="plan-card-footer">
                   <button 
                     @click="handleSubscribeToPlan('pro')"
-                    :disabled="subscriptionLoading || subscriptionData.plan === 'pro'"
+                    :disabled="loading.subscription || subscriptionData.plan === 'pro'"
                     class="btn-plan-primary"
                   >
-                    <span v-if="subscriptionLoading && selectedPlan === 'pro'">
+                    <span v-if="loading.subscription && selectedPlan === 'pro'">
                       <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -399,7 +388,7 @@
             </div>
 
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div v-for="feature in proFeatures" :key="feature" class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
+              <div v-for="feature in availablePlans.pro?.features || proFeatures" :key="feature" class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
                 <div class="flex items-center space-x-3">
                   <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -469,43 +458,6 @@
             </button>
           </div>
 
-          <!-- Usage Stats - AVEC VRAIES DONNÉES -->
-          <div v-if="subscriptionData.isActive" class="card-modern">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Utilisation ce mois</h3>
-            
-            <div class="space-y-4">
-              <div class="usage-item">
-                <div class="flex justify-between items-center mb-2">
-                  <span class="text-sm font-medium text-gray-700">Conversations</span>
-                  <span class="text-sm text-gray-900">{{ usageStats.conversations || 0 }} / ∞</span>
-                </div>
-                <div class="usage-bar">
-                  <div class="usage-bar-fill bg-blue-500" :style="`width: ${Math.min((usageStats.conversations || 0) / 1000 * 100, 100)}%`"></div>
-                </div>
-              </div>
-
-              <div class="usage-item">
-                <div class="flex justify-between items-center mb-2">
-                  <span class="text-sm font-medium text-gray-700">Documents IA</span>
-                  <span class="text-sm text-gray-900">{{ usageStats.documents || 0 }} / {{ isPlanPro(subscriptionData.plan) ? '∞' : '50' }}</span>
-                </div>
-                <div class="usage-bar">
-                  <div class="usage-bar-fill bg-green-500" :style="`width: ${Math.min((usageStats.documents || 0) / (isPlanPro(subscriptionData.plan) ? 100 : 50) * 100, 100)}%`"></div>
-                </div>
-              </div>
-
-              <div class="usage-item">
-                <div class="flex justify-between items-center mb-2">
-                  <span class="text-sm font-medium text-gray-700">Agents IA</span>
-                  <span class="text-sm text-gray-900">{{ usageStats.agents || 0 }} / {{ isPlanPro(subscriptionData.plan) ? '3' : '1' }}</span>
-                </div>
-                <div class="usage-bar">
-                  <div class="usage-bar-fill bg-purple-500" :style="`width: ${(usageStats.agents || 0) / (isPlanPro(subscriptionData.plan) ? 3 : 1) * 100}%`"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- Support Card -->
           <div class="card-modern bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Besoin d'aide ?</h3>
@@ -552,8 +504,102 @@
       </div>
     </div>
 
-    <!-- MODALS (inchangés) -->
-    <!-- ... tous les modals existants ... -->
+    <!-- ✅ NOUVEAU: MODAL DE CONFIRMATION DE PAIEMENT -->
+    <div v-if="successModal.show" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+          <div>
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
+              <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-5">
+              <h3 class="text-2xl leading-6 font-bold text-gray-900">
+                🎉 Paiement confirmé !
+              </h3>
+              <div class="mt-4">
+                <p class="text-lg text-gray-600 mb-4">
+                  Félicitations ! Vous êtes maintenant abonné au plan <strong>{{ successModal.planName }}</strong>.
+                </p>
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <h4 class="font-semibold text-green-800 mb-2">✅ Votre Vendeur IA est maintenant actif !</h4>
+                  <ul class="text-sm text-green-700 space-y-1">
+                    <li>• Widget ChatSeller activé sur votre site</li>
+                    <li>• Conversations illimitées disponibles</li>
+                    <li>• Accès à toutes les fonctionnalités du plan</li>
+                    <li>• Analytics détaillées activées</li>
+                  </ul>
+                </div>
+                <p class="text-sm text-gray-500">
+                  Un email de confirmation a été envoyé à votre adresse.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="mt-6 sm:mt-8">
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button 
+                @click="goToAgents"
+                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                Configurer mon Vendeur IA
+              </button>
+              <button 
+                @click="closeSuccessModal"
+                class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+              >
+                Continuer sur le tableau de bord
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification -->
+    <div v-if="notification.show" 
+         class="fixed bottom-4 right-4 z-50 max-w-sm w-full bg-white border border-gray-200 rounded-lg shadow-lg p-4"
+         :class="{
+           'border-green-200 bg-green-50': notification.type === 'success',
+           'border-red-200 bg-red-50': notification.type === 'error'
+         }">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg v-if="notification.type === 'success'" class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <svg v-else class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm font-medium" 
+             :class="{
+               'text-green-800': notification.type === 'success',
+               'text-red-800': notification.type === 'error'
+             }">
+            {{ notification.message }}
+          </p>
+        </div>
+        <div class="ml-auto pl-3">
+          <button @click="notification.show = false" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -568,8 +614,9 @@ definePageMeta({
 
 const authStore = useAuthStore()
 const config = useRuntimeConfig()
+const router = useRouter()
 
-// ✅ TYPES CORRIGÉS - COHÉRENTS PARTOUT
+// ✅ TYPES STRICTS
 type SubscriptionPlan = 'free' | 'starter' | 'pro'
 
 interface SubscriptionData {
@@ -580,49 +627,41 @@ interface SubscriptionData {
   nextBillingDate: string
 }
 
-interface UsageStats {
-  conversations: number
-  documents: number
-  agents: number
-}
-
-// États locaux
-const loading = ref(false)
-const subscriptionLoading = ref(false)
-const selectedPlan = ref<SubscriptionPlan | ''>('')
-const showCancelModal = ref(false)
-const showCongratulationsModal = ref(false)
-const plansSection = ref<HTMLElement>()
-
-// ✅ DONNÉES AVEC TYPES STRICTS - ASSERTION DE TYPE
-const subscriptionData = ref<SubscriptionData>({
-  plan: 'free' as SubscriptionPlan,
-  isActive: true,
-  trialDaysLeft: 7,
-  trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-  nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+// ✅ ÉTATS REACTIFS
+const loading = ref({
+  main: false,
+  subscription: false
 })
 
-const congratulationsData = ref({
-  plan: '',
+const selectedPlan = ref<SubscriptionPlan | ''>('')
+const plansSection = ref<HTMLElement>()
+
+// ✅ NOUVEAU: MODAL DE SUCCÈS
+const successModal = ref({
+  show: false,
+  planName: '',
+  plan: ''
+})
+
+// ✅ DONNÉES RÉELLES UNIQUEMENT VIA API
+const subscriptionData = ref<SubscriptionData>({
+  plan: 'free',
+  isActive: true,
+  trialDaysLeft: 7,
+  trialEndDate: '',
   nextBillingDate: ''
 })
 
-// ✅ USAGE STATS AVEC VRAIES DONNÉES
-const usageStats = ref<UsageStats>({
-  conversations: 0,
-  documents: 0,
-  agents: 0
-})
+const availablePlans = ref<any>({})
 
 // Notification system
 const notification = ref({
   show: false,
-  type: 'success',
+  type: 'success' as 'success' | 'error',
   message: ''
 })
 
-// Features lists
+// ✅ FEATURES LISTS
 const starterFeatures = [
   '1 Vendeur IA spécialisé',
   '1000 conversations/mois',
@@ -640,32 +679,22 @@ const proFeatures = [
   'Upsell automatique intelligent',
   'Analytics avancées & ROI',
   'Support prioritaire',
-  'API & webhooks',
-  'White-label partiel'
+  'API & webhooks'
 ]
 
-// ✅ COMPUTED CORRIGÉS
+// ✅ COMPUTED PROPERTIES
 const getCurrentPlanFeatures = (): string[] => {
   const plan = subscriptionData.value.plan
   if (isPlanPro(plan)) {
-    return proFeatures.slice(0, 4)
+    return availablePlans.value.pro?.features || proFeatures.slice(0, 4)
   } else if (isPlanStarter(plan)) {
-    return starterFeatures.slice(0, 3)
+    return availablePlans.value.starter?.features || starterFeatures.slice(0, 3)
   } else {
     return ['Essai gratuit 7 jours', 'Toutes les fonctionnalités Starter', 'Support par email']
   }
 }
 
-const getCongratsFeatures = (): string[] => {
-  const plan = congratulationsData.value.plan as SubscriptionPlan
-  if (isPlanPro(plan)) {
-    return proFeatures.slice(0, 6)
-  } else {
-    return starterFeatures.slice(0, 4)
-  }
-}
-
-// ✅ UTILITY METHODS CORRIGÉS AVEC TYPES STRICTS
+// ✅ UTILITY METHODS
 const getPlanName = (plan: SubscriptionPlan): string => {
   const names: Record<SubscriptionPlan, string> = {
     free: 'Essai Gratuit',
@@ -689,7 +718,6 @@ const getPlanPrice = (plan: SubscriptionPlan): string => {
   return prices[plan] || ''
 }
 
-// ✅ HELPER FUNCTIONS POUR TypeScript
 const isPlanPro = (plan: SubscriptionPlan): boolean => plan === 'pro'
 const isPlanStarter = (plan: SubscriptionPlan): boolean => plan === 'starter'
 const isPlanFree = (plan: SubscriptionPlan): boolean => plan === 'free'
@@ -752,63 +780,78 @@ const showNotification = (type: 'success' | 'error', message: string) => {
   }, 5000)
 }
 
-// ✅ NOUVELLE FONCTION : CHARGER LES USAGE STATS
-const loadUsageStats = async () => {
+// ✅ API FUNCTIONS
+const loadSubscriptionData = async () => {
+  loading.value.main = true
   try {
-    console.log('📊 Chargement des statistiques d\'utilisation...')
+    console.log('🔄 Chargement données abonnement via API...')
     
     if (!authStore.token) {
-      console.log('⚠️ Pas de token - stats par défaut')
-      usageStats.value = {
-        conversations: 234,
-        documents: 12,
-        agents: 1
-      }
+      console.log('⚠️ Pas de token - mode démo')
       return
     }
 
-    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/analytics/usage-stats`, {
+    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/subscription-status`, {
       headers: {
         Authorization: `Bearer ${authStore.token}`
       }
-    })
+    }) as any
 
     if (response.success) {
-      usageStats.value = {
-        conversations: response.data.conversations || 0,
-        documents: response.data.documents || 0,
-        agents: response.data.agents || 0
+      subscriptionData.value = {
+        plan: response.subscription.plan as SubscriptionPlan,
+        isActive: response.subscription.isActive,
+        trialDaysLeft: response.subscription.trialDaysLeft || 0,
+        trialEndDate: response.subscription.trialEndDate || '',
+        nextBillingDate: response.subscription.nextBillingDate || ''
       }
-      console.log('✅ Usage stats chargées:', usageStats.value)
+      console.log('✅ Données abonnement chargées:', subscriptionData.value)
     }
   } catch (error) {
-    console.error('❌ Erreur chargement usage stats:', error)
-    // Garder les valeurs par défaut en cas d'erreur
-    usageStats.value = {
-      conversations: 234,
-      documents: 12,
-      agents: 1
-    }
+    console.error('❌ Erreur chargement abonnement:', error)
+    showNotification('error', 'Erreur lors du chargement des données d\'abonnement')
+  } finally {
+    loading.value.main = false
   }
 }
 
-// ✅ ACTION METHODS CORRIGÉS
+const loadAvailablePlans = async () => {
+  try {
+    console.log('📋 Chargement plans disponibles via API...')
+    
+    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/plans`) as any
+
+    if (response.success) {
+      availablePlans.value = response.plans.reduce((acc: any, plan: any) => {
+        acc[plan.id] = plan
+        return acc
+      }, {})
+      console.log('✅ Plans disponibles chargés:', availablePlans.value)
+    }
+  } catch (error) {
+    console.error('❌ Erreur chargement plans:', error)
+  }
+}
+
+const refreshAllData = async () => {
+  await Promise.all([
+    loadSubscriptionData(),
+    loadAvailablePlans()
+  ])
+  
+  // ✅ NOUVEAU: FORCER LA SYNCHRONISATION DU STORE AUTH
+  await authStore.restoreSession()
+  
+  showNotification('success', 'Données actualisées')
+}
+
+// ✅ ACTION METHODS
 const handleSubscribeToPlan = async (plan: SubscriptionPlan) => {
   selectedPlan.value = plan
-  subscriptionLoading.value = true
+  loading.value.subscription = true
   
   try {
     console.log('🚀 Initiation du paiement pour le plan:', plan)
-    
-    // ✅ MAPPING CORRECT FRONTEND → API
-    let apiPlan: string = plan
-    if (plan === 'starter') {
-      // Frontend starter = API starter (plus de mapping complexe)
-      apiPlan = 'starter'
-    } else if (plan === 'pro') {
-      // Frontend pro = API pro
-      apiPlan = 'pro'
-    }
     
     const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/create-checkout-session`, {
       method: 'POST',
@@ -817,11 +860,11 @@ const handleSubscribeToPlan = async (plan: SubscriptionPlan) => {
         'Content-Type': 'application/json'
       },
       body: {
-        plan: plan, // ✅ Pas de mapping complexe
+        plan: plan,
         successUrl: `${window.location.origin}/billing?success=true&plan=${plan}`,
         cancelUrl: `${window.location.origin}/billing?cancelled=true`
       }
-    })
+    }) as any
     
     console.log('💳 Réponse API checkout:', response)
     
@@ -836,99 +879,8 @@ const handleSubscribeToPlan = async (plan: SubscriptionPlan) => {
     console.error('❌ Erreur lors de la souscription:', error)
     showNotification('error', error.message || 'Erreur lors de la souscription au plan')
   } finally {
-    subscriptionLoading.value = false
+    loading.value.subscription = false
     selectedPlan.value = ''
-  }
-}
-
-// ✅ CHARGEMENT DES DONNÉES CORRIGÉ
-const loadBillingData = async () => {
-  loading.value = true
-  try {
-    console.log('🔄 Chargement des données de facturation...')
-    
-    if (!authStore.token) {
-      console.log('⚠️ Mode développement - calcul de l\'essai gratuit')
-      
-      const accountCreationDate = new Date(authStore.user?.createdAt || Date.now())
-      const daysSinceCreation = Math.floor((Date.now() - accountCreationDate.getTime()) / (1000 * 60 * 60 * 24))
-      const trialDaysLeft = Math.max(0, 7 - daysSinceCreation)
-      
-      subscriptionData.value = {
-        plan: 'free' as SubscriptionPlan,
-        isActive: trialDaysLeft > 0,
-        trialDaysLeft: trialDaysLeft,
-        trialEndDate: new Date(accountCreationDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      }
-      
-      console.log('✅ État d\'essai gratuit:', subscriptionData.value)
-      return
-    }
-    
-    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/subscription-status`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      }
-    })
-    
-    console.log('📊 Données reçues:', response)
-    
-    if (response.success) {
-  const subscription = response.subscription
-  
-  subscriptionData.value = {
-    plan: subscription.plan as SubscriptionPlan,
-    isActive: subscription.isActive,
-    trialDaysLeft: subscription.trialDaysLeft || 0,
-    trialEndDate: subscription.trialEndDate,
-    nextBillingDate: subscription.nextBillingDate
-  }
-  
-  console.log('✅ Données mises à jour:', subscriptionData.value)
-}
-  } catch (error) {
-    console.error('❌ Erreur chargement billing:', error)
-    subscriptionData.value = {
-      plan: 'free' as SubscriptionPlan,
-      isActive: true,
-      trialDaysLeft: 5,
-      trialEndDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-      nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
-const refreshBillingData = async () => {
-  await Promise.all([loadBillingData(), loadUsageStats()])
-  showNotification('success', 'Données de facturation actualisées')
-}
-
-// ✅ AUTRES MÉTHODES (inchangées)
-const cancelSubscription = async () => {
-  subscriptionLoading.value = true
-  
-  try {
-    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/cancel-subscription`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      }
-    })
-    
-    if (response.success) {
-      showCancelModal.value = false
-      showNotification('success', `Votre abonnement sera annulé le ${formatDate(subscriptionData.value.nextBillingDate)}`)
-    } else {
-      throw new Error(response.error || 'Erreur lors de l\'annulation')
-    }
-  } catch (error: any) {
-    console.error('Erreur annulation:', error)
-    showNotification('error', 'Erreur lors de l\'annulation')
-  } finally {
-    subscriptionLoading.value = false
   }
 }
 
@@ -952,45 +904,73 @@ const scrollToPlans = () => {
   plansSection.value?.scrollIntoView({ behavior: 'smooth' })
 }
 
-// ✅ LIFECYCLE CORRIGÉ
+// ✅ NOUVELLES FONCTIONS MODAL
+const closeSuccessModal = () => {
+  successModal.value.show = false
+}
+
+const goToAgents = () => {
+  successModal.value.show = false
+  router.push('/vendeurs-ia')
+}
+
+// ✅ LIFECYCLE AVEC AMÉLIORATION MAJEURE
 onMounted(async () => {
   console.log('🚀 Composant billing monté')
   
-  await Promise.all([loadBillingData(), loadUsageStats()])
+  await loadAvailablePlans()
+  await loadSubscriptionData()
   
+  // ✅ AMÉLIORATION MAJEURE: GESTION DU RETOUR DE PAIEMENT
   const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.get('success') === 'true') {
-    console.log('✅ Retour de paiement réussi détecté')
+  if (urlParams.get('success') === 'true') {
+    const planFromUrl = urlParams.get('plan')
+    console.log('✅ Retour de paiement réussi détecté pour le plan:', planFromUrl)
     
-    // Attendre un peu puis recharger les données
+    // Afficher immédiatement le modal de succès
+    successModal.value = {
+      show: true,
+      planName: getPlanName((planFromUrl as SubscriptionPlan) || 'starter'),
+      plan: planFromUrl || 'starter'
+    }
+    
+    // ✅ NOUVELLE LOGIQUE: RETRY INTELLIGENT AVEC FEEDBACK
     setTimeout(async () => {
-      console.log('🔄 Rechargement des données après paiement...')
+      console.log('🔄 Synchronisation données après paiement...')
       
-      // Recharger plusieurs fois pour être sûr
-      for (let i = 0; i < 3; i++) {
-        await loadBillingData()
-        if (subscriptionData.value.plan !== 'free') {
+      let retryCount = 0
+      const maxRetries = 5
+      const retryDelay = 3000 // 3 secondes
+      
+      while (retryCount < maxRetries) {
+        retryCount++
+        console.log(`🔄 Tentative ${retryCount}/${maxRetries}...`)
+        
+        // Charger les données d'abonnement
+        await loadSubscriptionData()
+        
+        // ✅ NOUVEAU: FORCER LA SYNCHRONISATION DU STORE AUTH
+        await authStore.restoreSession()
+        
+        // Vérifier si le plan a été mis à jour
+        if (subscriptionData.value.plan === planFromUrl && subscriptionData.value.plan !== 'free') {
+          console.log('✅ Mise à jour confirmée ! Plan actuel:', subscriptionData.value.plan)
           break
         }
-        await new Promise(resolve => setTimeout(resolve, 2000))
-      }
-      
-      // Si le plan a changé, afficher les félicitations
-      if (subscriptionData.value.plan !== 'free') {
-        congratulationsData.value = {
-          plan: subscriptionData.value.plan,
-          nextBillingDate: subscriptionData.value.nextBillingDate || ''
+        
+        if (retryCount < maxRetries) {
+          console.log(`⏳ Plan pas encore mis à jour, retry dans ${retryDelay/1000}s...`)
+          await new Promise(resolve => setTimeout(resolve, retryDelay))
         }
-        showCongratulationsModal.value = true
-        console.log('🎉 Modal félicitations affiché')
-      } else {
-        console.log('⚠️ Plan toujours gratuit après paiement')
-        showNotification('error', 'Le paiement semble ne pas être traité. Contactez le support.')
       }
       
-    }, 3000) // Attendre 3 secondes
+      // Si après tous les retries le plan n'est toujours pas à jour
+      if (subscriptionData.value.plan === 'free') {
+        console.warn('⚠️ Le plan n\'a pas pu être mis à jour automatiquement')
+        showNotification('error', 'La mise à jour prend plus de temps que prévu. Actualisez la page dans quelques minutes.')
+      }
+    }, 2000)
     
-    // Nettoyer l'URL
     window.history.replaceState({}, '', '/billing')
   } else if (urlParams.get('cancelled') === 'true') {
     showNotification('error', 'Le paiement a été annulé')
@@ -1004,7 +984,6 @@ useHead({
 </script>
 
 <style scoped>
-/* Styles identiques à la version précédente */
 .card-modern {
   @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
 }
@@ -1015,10 +994,6 @@ useHead({
 
 .btn-secondary {
   @apply inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors;
-}
-
-.btn-danger {
-  @apply inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors;
 }
 
 .plan-upgrade-badge {
@@ -1091,18 +1066,6 @@ useHead({
 
 .plan-guarantee {
   @apply flex items-center justify-center text-center;
-}
-
-.usage-item {
-  @apply space-y-2;
-}
-
-.usage-bar {
-  @apply w-full bg-gray-200 rounded-full h-2;
-}
-
-.usage-bar-fill {
-  @apply h-2 rounded-full transition-all duration-300;
 }
 
 .support-button {

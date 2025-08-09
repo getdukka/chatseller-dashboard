@@ -1,4 +1,4 @@
-<!-- pages/onboarding.vue - DESIGN DESKTOP FULL-WIDTH -->
+<!-- pages/onboarding.vue - VERSION ANTI-BOUCLE -->
 <template>
   <div class="min-h-screen bg-gray-900 text-white relative overflow-hidden">
     
@@ -36,12 +36,10 @@
 
     <!-- Contenu principal -->
     <div class="relative z-10 px-6 pb-6">
-      <!-- Layout responsive : centré sur mobile, plus large sur desktop -->
       <div class="max-w-7xl mx-auto">
         
         <!-- Étape 1: Informations entreprise -->
         <div v-if="currentStep === 1" class="transition-all duration-500 ease-in-out">
-          <!-- Layout Desktop : 2 colonnes -->
           <div class="grid lg:grid-cols-2 gap-12 items-center">
             
             <!-- Colonne gauche : Titre et description -->
@@ -126,7 +124,7 @@
                         class="w-full px-6 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white text-lg"
                       >
                         <option value="" class="bg-gray-800">Sélectionnez votre secteur</option>
-                        <option value="fashion" class="bg-gray-800">Produits Digitaux</option>
+                        <option value="digital" class="bg-gray-800">Produits Digitaux</option>
                         <option value="fashion" class="bg-gray-800">Mode et vêtements</option>
                         <option value="beauty" class="bg-gray-800">Beauté et cosmétiques</option>
                         <option value="electronics" class="bg-gray-800">Électronique et high-tech</option>
@@ -180,7 +178,6 @@
               <label class="block text-xl font-medium text-gray-200 mb-8 text-center">
                 Quelle plateforme utilisez-vous ? *
               </label>
-              <!-- Grid responsive : 2 colonnes sur mobile, 4 sur desktop -->
               <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 
                 <!-- Option Shopify -->
@@ -299,7 +296,6 @@
 
         <!-- Étape 3: Finalisation -->
         <div v-if="currentStep === 3" class="transition-all duration-500 ease-in-out">
-          <!-- Layout Desktop : 2 colonnes -->
           <div class="grid lg:grid-cols-2 gap-12 items-center">
             
             <!-- Colonne gauche : Titre et informations -->
@@ -434,17 +430,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { createClient } from '@supabase/supabase-js'
-import { useSupabaseSingleton } from '~~/composables/useSupabaseSingleton'
+import { useSupabase } from '~~/composables/useSupabase'
+import { useAuthStore } from '~~/stores/auth'
 
-// ✅ LAYOUT AUTH
+// ✅ LAYOUT SANS MIDDLEWARE
 definePageMeta({
-  layout: false // ✅ PAS DE LAYOUT - Page fullscreen
+  layout: false
 })
 
-// ✅ CLIENT SUPABASE SINGLETON (évite les conflits)
-const supabase = useSupabaseSingleton()
+// ✅ COMPOSABLES ET STORES
+const auth = useAuth()
+const authStore = useAuthStore()
+const supabase = useSupabase()
 
 // ✅ STATE
 const currentStep = ref(1)
@@ -475,121 +472,71 @@ const previousStep = () => {
   }
 }
 
-// ✅ COMPLETION ONBOARDING AVEC DEBUG DÉTAILLÉ
+// ✅ COMPLETION ONBOARDING VIA API
 const completeOnboarding = async () => {
   loading.value = true
   
   try {
-    console.log('🚀 [ONBOARDING] Début finalisation...')
+    console.log('🚀 [Onboarding] Début finalisation...')
     
+    // ✅ VÉRIFIER SESSION SUPABASE
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      throw new Error('Utilisateur non trouvé')
+      console.error('❌ [Onboarding] Pas d\'utilisateur connecté')
+      await navigateTo('/login')
+      return
     }
     
-    console.log('✅ [ONBOARDING] Utilisateur trouvé:', user.email)
-    console.log('📝 [ONBOARDING] Données formulaire:', {
-      company: form.company,
-      website: form.website,
+    console.log('✅ [Onboarding] Utilisateur connecté:', user.email)
+    
+    // ✅ METTRE À JOUR VIA API
+    const api = useApi()
+    
+    // Mettre à jour le shop avec onboarding_completed = true
+    const shopUpdateResponse = await api.shops.update(user.id, {
+      name: form.company || `Shop de ${user.email?.split('@')[0]}`,
+      domain: extractDomain(form.website),
       industry: form.industry,
       platform: form.platform,
-      acquisitionSource: form.acquisitionSource,
-      newsletter: form.newsletter
+      onboarding_completed: true, // ✅ MARQUER COMME TERMINÉ
+      onboarding_completed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     })
     
-    // ✅ METTRE À JOUR LA TABLE USERS AVEC GESTION D'ERREURS
-    console.log('💾 [ONBOARDING] Mise à jour table users...')
-    
-    const { error: updateUserError, data: updateData } = await supabase
-      .from('users')
-      .upsert({
-        id: user.id,
-        email: user.email,
-        company: form.company,
-        website: form.website,
-        industry: form.industry,
-        platform: form.platform,
-        acquisition_source: form.acquisitionSource,
-        newsletter: form.newsletter,
-        onboarding_completed: true,
-        onboarding_completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'id'
-      })
-    
-    if (updateUserError) {
-      console.error('❌ [ONBOARDING] Erreur mise à jour users:', updateUserError)
-      throw new Error('Erreur sauvegarde profil: ' + updateUserError.message)
+    if (!shopUpdateResponse.success) {
+      console.error('❌ [Onboarding] Erreur mise à jour shop:', shopUpdateResponse.error)
+      throw new Error('Erreur sauvegarde shop: ' + shopUpdateResponse.error)
     }
     
-    console.log('✅ [ONBOARDING] Table users mise à jour')
+    console.log('✅ [Onboarding] Shop mis à jour avec succès')
     
-    // ✅ CRÉER/METTRE À JOUR LE SHOP AVEC GESTION D'ERREURS
-    console.log('🏪 [ONBOARDING] Création/mise à jour shop...')
-    
-    const { error: shopError } = await supabase
-      .from('shops')
-      .upsert({
-        id: user.id,
-        name: form.company || `Shop de ${user.user_metadata?.first_name || user.email}`,
-        email: user.email,
-        domain: extractDomain(form.website),
-        industry: form.industry,
-        platform: form.platform,
-        subscription_plan: 'free',
-        is_active: true,
-        trial_started_at: new Date().toISOString(),
-        widget_config: {
-          theme: 'modern',
-          position: 'bottom-right',
-          color: '#3B82F6'
-        },
-        agent_config: {
-          name: 'Assistant Commercial',
-          type: 'vendeur_conversion',
-          tone: 'professionnel'
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'id'
-      })
-    
-    if (shopError) {
-      console.warn('⚠️ [ONBOARDING] Erreur shop (non bloquante):', shopError)
-      // Ne pas bloquer pour l'erreur shop
-    } else {
-      console.log('✅ [ONBOARDING] Shop créé/mis à jour')
+    // ✅ METTRE À JOUR LE STORE LOCAL
+    if (authStore.user?.shop) {
+      authStore.user.shop.onboarding_completed = true
+      authStore.user.shop.name = form.company || authStore.user.shop.name
+      authStore.user.shop.industry = form.industry
+      authStore.user.shop.platform = form.platform
     }
     
-    console.log('🎉 [ONBOARDING] Finalisation terminée avec succès!')
+    console.log('🎉 [Onboarding] Finalisation terminée avec succès!')
     
-    // ✅ ATTENDRE UN PEU POUR S'ASSURER QUE TOUT EST SAUVEGARDÉ
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // ✅ REDIRECTION SÉCURISÉE VERS DASHBOARD
-    console.log('🚀 [ONBOARDING] Redirection vers dashboard...')
-    
-    // Utiliser window.location pour une redirection forcée
-    window.location.href = '/?onboarding=completed&welcome=true'
+    // ✅ REDIRECTION VERS DASHBOARD AVEC PARAMÈTRE DE SUCCÈS
+    await navigateTo('/?onboarding=completed&welcome=true')
     
   } catch (error: any) {
-    console.error('❌ [ONBOARDING] Erreur finalisation:', error)
+    console.error('❌ [Onboarding] Erreur finalisation:', error)
     
-    // ✅ GESTION D'ERREUR AVEC MESSAGE UTILISATEUR CLAIR
+    // ✅ GESTION D'ERREUR UTILISATEUR
     let userMessage = 'Une erreur s\'est produite lors de la finalisation.'
     
-    if (error.message?.includes('406')) {
-      userMessage = 'Erreur de permissions. Veuillez réessayer ou contacter le support.'
-    } else if (error.message?.includes('network')) {
+    if (error.message?.includes('network')) {
       userMessage = 'Problème de connexion. Vérifiez votre internet et réessayez.'
     } else if (error.message?.includes('auth')) {
       userMessage = 'Session expirée. Veuillez vous reconnecter.'
     }
     
-    alert(userMessage + '\n\nDétails: ' + error.message)
+    alert(userMessage + '\n\nSi le problème persiste, contactez le support.')
     
   } finally {
     loading.value = false
@@ -607,42 +554,59 @@ const extractDomain = (url: string): string | null => {
   }
 }
 
-// ✅ INITIALISATION
+// ✅ INITIALISATION SÉCURISÉE
 onMounted(async () => {
   try {
+    console.log('🔄 [Onboarding] Vérification accès...')
+    
+    // ✅ VÉRIFIER QUE L'UTILISATEUR EST CONNECTÉ
+    if (!auth.isAuthenticated.value) {
+      console.log('❌ [Onboarding] Utilisateur non connecté, redirection login')
+      await navigateTo('/login')
+      return
+    }
+    
+    // ✅ VÉRIFIER SESSION SUPABASE
     const { data: { user } } = await supabase.auth.getUser()
     
-    if (!user) {
-      await navigateTo('/register', { replace: true })
+    if (!user || !user.email_confirmed_at) {
+      console.log('❌ [Onboarding] Email non confirmé, redirection register')
+      await navigateTo('/register')
       return
     }
     
-    if (!user.email_confirmed_at) {
-      await navigateTo('/register', { replace: true })
-      return
+    console.log('✅ [Onboarding] Accès autorisé pour:', user.email)
+    
+    // ✅ PRÉ-REMPLIR LE FORMULAIRE SI DONNÉES EXISTANTES
+    try {
+      const api = useApi()
+      const shopResponse = await api.shops.get(user.id)
+      
+      if (shopResponse.success && shopResponse.data) {
+        const shopData = shopResponse.data
+        
+        if (shopData.name && shopData.name !== `Shop de ${user.email?.split('@')[0]}`) {
+          form.company = shopData.name
+        }
+        if (shopData.industry) form.industry = shopData.industry
+        if (shopData.platform) form.platform = shopData.platform
+        
+        console.log('✅ [Onboarding] Formulaire pré-rempli depuis shop existant')
+      }
+    } catch (prefillError) {
+      console.warn('⚠️ [Onboarding] Erreur pré-remplissage (non bloquante):', prefillError)
     }
     
-    // Pré-remplir le formulaire si données existantes
-    const { data: userData } = await supabase
-      .from('users')
-      .select('company, industry, platform')
-      .eq('id', user.id)
-      .single()
-    
-    if (userData) {
-      if (userData.company) form.company = userData.company
-      if (userData.industry) form.industry = userData.industry
-      if (userData.platform) form.platform = userData.platform
-    }
-    
-    // Fallback sur métadonnées utilisateur
+    // ✅ FALLBACK SUR MÉTADONNÉES UTILISATEUR
     if (!form.company && user.user_metadata?.company) {
       form.company = user.user_metadata.company
     }
     
   } catch (error) {
-    console.error('❌ Erreur initialisation onboarding:', error)
-    await navigateTo('/register', { replace: true })
+    console.error('❌ [Onboarding] Erreur initialisation:', error)
+    
+    // ✅ REDIRECTION SÉCURITAIRE EN CAS D'ERREUR
+    await navigateTo('/login')
   }
 })
 
@@ -675,12 +639,5 @@ useHead({
 /* Effet glassmorphism */
 .backdrop-blur {
   backdrop-filter: blur(10px);
-}
-
-/* Responsive heights */
-@media (min-width: 1024px) {
-  .min-h-screen {
-    min-height: 100vh;
-  }
 }
 </style>
