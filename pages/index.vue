@@ -132,7 +132,7 @@
               </div>
             </div>
 
-            <!-- Aperçu du Chat - Inspiré Wazzap.ai -->
+            <!-- Aperçu du Chat -->
             <div>
               <h3 class="text-lg font-semibold text-gray-900 mb-6">Aperçu de votre Vendeur IA</h3>
               

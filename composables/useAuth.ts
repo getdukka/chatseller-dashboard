@@ -1,4 +1,4 @@
-// composables/useAuth.ts - VERSION CORRIGÉE API PURE
+// composables/useAuth.ts - VERSION FINALE CORRIGÉE
 
 import { useAuthStore } from '~/stores/auth'
 
@@ -35,35 +35,33 @@ export const useAuth = () => {
     return result
   }
 
+  // ✅ FONCTION REGISTER CORRIGÉE - PAS DE NAVIGATION AUTOMATIQUE
   const register = async (data: { 
-  email: string
-  password: string
-  firstName: string
-  lastName: string
-  company?: string
-  platform?: string
-  newsletter?: boolean
-}) => {
-  // ✅ ADAPTER LES DONNÉES POUR LE STORE
-  const storeData = {
-    email: data.email,
-    password: data.password,
-    name: `${data.firstName} ${data.lastName}`,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    company: data.company,
-    platform: data.platform,
-    newsletter: data.newsletter
+    email: string
+    password: string
+    firstName: string
+    lastName: string
+    company?: string
+    platform?: string
+    newsletter?: boolean
+  }) => {
+    // ✅ ADAPTER LES DONNÉES POUR LE STORE
+    const storeData = {
+      email: data.email,
+      password: data.password,
+      name: `${data.firstName} ${data.lastName}`,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      company: data.company,
+      platform: data.platform,
+      newsletter: data.newsletter
+    }
+    
+    const result = await authStore.register(storeData)
+    
+    // ✅ PAS DE NAVIGATION AUTOMATIQUE - LAISSE LA PAGE REGISTER GÉRER
+    return result
   }
-  
-  const result = await authStore.register(storeData)
-  
-  // ✅ CORRECTION CRITIQUE : PAS DE NAVIGATION AUTOMATIQUE
-  // La navigation sera gérée manuellement dans la page register
-  // selon que l'utilisateur ait une session immédiate ou non
-  
-  return result
-}
 
   const logout = async () => {
     await authStore.logout()

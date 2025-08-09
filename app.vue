@@ -5,7 +5,7 @@
     <div v-if="pending" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p class="mt-4 text-gray-600">Un instant, nous préparons la magie......</p>
+        <p class="mt-4 text-gray-600">Un instant, nous préparons votre Dashboard...</p>
       </div>
     </div>
 
