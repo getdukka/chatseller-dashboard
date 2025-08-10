@@ -1,4 +1,4 @@
-// nuxt.config.ts - VERSION PRODUCTION-READY
+// nuxt.config.ts - VERSION PRODUCTION-READY AVEC URLS DYNAMIQUES
 export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_ENV === 'development' },
   
@@ -26,27 +26,38 @@ export default defineNuxtConfig({
     typeCheck: false
   },
 
-  // ✅ CONFIGURATION RUNTIME DYNAMIQUE DEV/PROD
+  // ✅ CONFIGURATION RUNTIME DYNAMIQUE AVEC URLS CORRECTES
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-chatseller-dashboard',
     
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
-      // ✅ URLs DYNAMIQUES SELON L'ENVIRONNEMENT
+      
+      // ✅ URLS DYNAMIQUES SELON L'ENVIRONNEMENT AVEC FALLBACKS INTELLIGENTS
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 
         (process.env.NODE_ENV === 'production' 
           ? 'https://chatseller-api-production.up.railway.app'
           : 'http://localhost:3001'),
+          
+      widgetUrl: process.env.NUXT_PUBLIC_WIDGET_URL || 
+        (process.env.NODE_ENV === 'production'
+          ? 'https://widget.chatseller.app'
+          : 'https://widget.chatseller.app'), // ✅ Utilise production même en dev pour l'instant
+          
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 
         (process.env.NODE_ENV === 'production'
           ? 'https://dashboard.chatseller.app'
           : 'http://localhost:3002'),
-      environment: process.env.NODE_ENV || 'development'
+          
+      environment: process.env.NODE_ENV || 'development',
+      
+      // ✅ NOUVELLE CONFIG POUR DEBUG
+      debug: process.env.DEBUG === 'true' || process.env.NODE_ENV === 'development'
     }
   },
 
-  // ✅ RÈGLES DE ROUTAGE OPTIMISÉES POUR PRODUCTION
+  // ✅ RÈGLES DE ROUTAGE OPTIMISÉES
   routeRules: {
     // Pages statiques - prerender en production
     '/': { 
@@ -112,7 +123,9 @@ export default defineNuxtConfig({
     '/api/**': { 
       cors: true,
       headers: { 
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Cache-Control': process.env.NODE_ENV === 'production' 
+          ? 'public, max-age=300' 
+          : 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       }
@@ -141,7 +154,7 @@ export default defineNuxtConfig({
   // ✅ CONFIGURATION NITRO POUR PRODUCTION
   nitro: {
     preset: process.env.NODE_ENV === 'production' ? 'vercel' : 'node-server',
-    compressPublicAssets: true,
+    compressPublicAssets: process.env.NODE_ENV === 'production',
     routeRules: {
       '/auth/callback': { 
         headers: { 
@@ -158,7 +171,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // ✅ HEADERS DE SÉCURITÉ PRODUCTION
+  // ✅ HEADERS DE SÉCURITÉ EN PRODUCTION UNIQUEMENT
   headers: process.env.NODE_ENV === 'production' ? {
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
@@ -197,6 +210,12 @@ export default defineNuxtConfig({
     },
     'app:created': () => {
       console.log('🚀 [Nuxt] App créée avec succès')
+      console.log('🔧 [Nuxt] Config URLs:', {
+        api: process.env.NUXT_PUBLIC_API_BASE_URL,
+        widget: process.env.NUXT_PUBLIC_WIDGET_URL,
+        app: process.env.NUXT_PUBLIC_APP_URL,
+        env: process.env.NODE_ENV
+      })
     }
   } : {},
 
@@ -205,10 +224,11 @@ export default defineNuxtConfig({
     transpile: ['@headlessui/vue']
   },
 
-  // ✅ CONFIGURATION VITE POUR PRODUCTION
+  // ✅ CONFIGURATION VITE POUR PERFORMANCE
   vite: {
     define: {
-      __VUE_PROD_DEVTOOLS__: process.env.NODE_ENV === 'development'
+      __VUE_PROD_DEVTOOLS__: process.env.NODE_ENV === 'development',
+      __NUXT_ENV__: JSON.stringify(process.env.NODE_ENV || 'development')
     },
     optimizeDeps: {
       include: ['@supabase/supabase-js']

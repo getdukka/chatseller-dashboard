@@ -1371,6 +1371,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const agentConfigStore = useAgentConfigStore()
+const config = useRuntimeConfig() 
 
 const { 
   loading, 
@@ -1564,10 +1565,12 @@ const loadAgentData = async () => {
   try {
     loading.value = true
     
+    // ✅ ÉTAPE 1: Essayer de récupérer depuis le store en premier
     const storeAgent = agentConfigStore.getAgentForConfig()
     if (storeAgent && agentConfigStore.isDataFresh) {
       console.log('✅ [loadAgentData] Données récupérées depuis store:', storeAgent.name)
       
+      // ✅ COPIER LES DONNÉES DU STORE VERS localConfig POUR AFFICHAGE IMMÉDIAT
       localConfig.value.agent = {
         id: storeAgent.id,
         name: storeAgent.name,
@@ -1593,30 +1596,51 @@ const loadAgentData = async () => {
       }
       
       hasValidAgentData.value = true
+      
+      // ✅ CONTINUER À CHARGER LES DONNÉES API EN ARRIÈRE-PLAN
+      if (agentId.value && agentId.value !== 'unknown') {
+        console.log('🔄 [loadAgentData] Mise à jour depuis API en arrière-plan...')
+        
+        fetchAgentConfig(agentId.value).then((result) => {
+          if (result.success) {
+            console.log('✅ [loadAgentData] Données API mises à jour en arrière-plan')
+          }
+        }).catch((error) => {
+          console.warn('⚠️ [loadAgentData] Erreur mise à jour API (non critique):', error)
+        })
+      }
+      
       return
     }
     
+    // ✅ ÉTAPE 2: Si pas de données store, essayer l'API directement
     if (agentId.value && agentId.value !== 'unknown') {
       console.log('🌐 [loadAgentData] Récupération depuis API pour ID:', agentId.value)
       
       try {
-        await fetchAgentConfig(agentId.value)
-        if (agentConfig.value) {
+        const result = await fetchAgentConfig(agentId.value)
+        if (result.success) {
           console.log('✅ [loadAgentData] Données récupérées depuis API')
           hasValidAgentData.value = true
           return
+        } else {
+          throw new Error(result.error || 'Erreur API')
         }
       } catch (apiError) {
         console.warn('⚠️ [loadAgentData] Erreur API:', apiError)
+        throw apiError
       }
     }
     
+    // ✅ ÉTAPE 3: Si rien ne fonctionne, afficher une erreur
     console.error('❌ [loadAgentData] Aucune donnée agent disponible')
     hasValidAgentData.value = false
+    error.value = 'Impossible de charger les données de l\'agent. Veuillez réessayer.'
     
   } catch (globalError) {
     console.error('❌ [loadAgentData] Erreur globale:', globalError)
     hasValidAgentData.value = false
+    error.value = 'Erreur lors du chargement des données de l\'agent'
   } finally {
     loading.value = false
   }
@@ -1979,7 +2003,9 @@ const scrollChatToBottom = () => {
 
 // ✅ WATCH
 watch(() => agentConfig.value, (newConfig) => {
-  if (newConfig) {
+  if (newConfig && newConfig.agent && newConfig.agent.id) {
+    console.log('🔄 [watcher] Mise à jour localConfig avec données API')
+    
     localConfig.value = {
       agent: { 
         ...newConfig.agent,
@@ -1998,6 +2024,17 @@ watch(() => agentConfig.value, (newConfig) => {
     }
     
     hasValidAgentData.value = true
+    console.log('✅ [watcher] localConfig mis à jour, code d\'intégration disponible')
+  }
+}, { immediate: true, deep: true })
+
+// ✅ WATCHER POUR DÉTECTER LES CHANGEMENTS DU CODE D'INTÉGRATION
+watch(() => integrationCode.value, (newCode, oldCode) => {
+  console.log('🔄 [WATCH] Code d\'intégration changé:')
+  console.log('   - Contient "Chargement"?:', newCode?.includes('Chargement'))
+  console.log('   - Longueur:', newCode?.length || 0)
+  if (newCode && !newCode.includes('Chargement')) {
+    console.log('✅ [WATCH] Code d\'intégration prêt !')
   }
 }, { immediate: true })
 
@@ -2008,6 +2045,14 @@ watch(() => localConfig.value.widget, (newWidget) => {
 
 // ✅ LIFECYCLE
 onMounted(async () => {
+  // ✅ DEBUG TEMPORAIRE - Variables d'environnement
+  console.log('🔧 [DEBUG] Variables d\'environnement:')
+  console.log('  - NODE_ENV:', process.env.NODE_ENV)
+  console.log('  - API URL:', config.public.apiBaseUrl)
+  console.log('  - Widget URL:', config.public.widgetUrl)
+  console.log('  - App URL:', config.public.appUrl)
+  console.log('  - Environment:', config.public.environment)
+
   console.log('🚀 [agent-config] Page montée, chargement config agent...')
   
   // Initialiser le chat de test
