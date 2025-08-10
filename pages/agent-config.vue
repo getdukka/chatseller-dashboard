@@ -1,4 +1,4 @@
-<!-- pages/agent-config.vue -->
+<!-- pages/agent-config.vue - VERSION CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -17,7 +17,7 @@
               </h1>
               <p class="mt-1 text-xs sm:text-sm text-gray-600">
                 Agent IA • Widget • Test • Intégration
-                <!-- ✅ NOUVEL INDICATEUR DE SYNC -->
+                <!-- ✅ INDICATEUR DE SYNC CORRIGÉ -->
                 <span v-if="widgetSyncStatus === 'syncing'" class="ml-2 inline-flex items-center text-blue-600">
                   <svg class="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -121,7 +121,7 @@
     </div>
 
     <!-- Content avec onglets -->
-    <div v-else-if="config || hasValidAgentData" class="p-4 sm:p-6 lg:p-8">
+    <div v-else-if="agentConfig || hasValidAgentData" class="p-4 sm:p-6 lg:p-8">
       
       <!-- ✅ ONGLET 1: CONFIGURATION AGENT -->
       <div v-if="activeTab === 'agent'" class="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
@@ -1110,7 +1110,7 @@
             </div>
           </div>
 
-          <!-- ✅ CODE D'INTÉGRATION CORRIGÉ -->
+          <!-- ✅ CODE D'INTÉGRATION -->
           <div class="space-y-6 lg:space-y-8">
             
             <!-- Code JavaScript -->
@@ -1232,121 +1232,121 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ✅ MODAL KNOWLEDGE BASE -->
-    <div
-      v-if="showKnowledgeBaseModal"
-      class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      @click.self="closeKnowledgeBaseModal"
-    >
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
-        <div class="p-6 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">📚 Gérer la Base de Connaissances</h3>
-            <button @click="closeKnowledgeBaseModal" class="text-gray-400 hover:text-gray-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-          <p class="text-sm text-gray-600 mt-2">
-            Sélectionnez les documents que votre agent doit utiliser pour répondre aux questions.
-          </p>
-        </div>
-        
-        <div class="flex-1 p-6 overflow-y-auto">
-          <div v-if="knowledgeBaseLoading" class="text-center py-8">
-            <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            <p class="text-gray-600">Chargement des documents...</p>
-          </div>
-          
-          <div v-else-if="availableKnowledgeBase.length === 0" class="text-center py-8">
-            <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <p class="text-gray-600 mb-2">Aucun document disponible</p>
-            <p class="text-gray-500 text-sm">
-              <a href="/knowledge-base" class="text-blue-600 hover:text-blue-800 underline">
-                Créez d'abord des documents
-              </a>
-              dans votre base de connaissances
+      <!-- ✅ MODAL KNOWLEDGE BASE -->
+      <div
+        v-if="showKnowledgeBaseModal"
+        class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+        @click.self="closeKnowledgeBaseModal"
+      >
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-900">📚 Gérer la Base de Connaissances</h3>
+              <button @click="closeKnowledgeBaseModal" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <p class="text-sm text-gray-600 mt-2">
+              Sélectionnez les documents que votre agent doit utiliser pour répondre aux questions.
             </p>
           </div>
           
-          <div v-else class="space-y-3">
-            <div 
-              v-for="doc in availableKnowledgeBase" 
-              :key="doc.id"
-              class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              <input
-                v-model="selectedKnowledgeBase"
-                :value="doc.id"
-                type="checkbox"
-                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          <div class="flex-1 p-6 overflow-y-auto">
+            <div v-if="knowledgeBaseLoading" class="text-center py-8">
+              <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <p class="text-gray-600">Chargement des documents...</p>
+            </div>
+            
+            <div v-else-if="availableKnowledgeBase.length === 0" class="text-center py-8">
+              <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <p class="text-gray-600 mb-2">Aucun document disponible</p>
+              <p class="text-gray-500 text-sm">
+                <a href="/knowledge-base" class="text-blue-600 hover:text-blue-800 underline">
+                  Créez d'abord des documents
+                </a>
+                dans votre base de connaissances
+              </p>
+            </div>
+            
+            <div v-else class="space-y-3">
+              <div 
+                v-for="doc in availableKnowledgeBase" 
+                :key="doc.id"
+                class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ doc.title }}</p>
-                <p class="text-xs text-gray-500">{{ getContentTypeLabel(doc.contentType) }}</p>
-                <div class="flex items-center mt-1 space-x-2">
-                  <span v-for="tag in doc.tags.slice(0, 3)" :key="tag" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ tag }}
-                  </span>
-                  <span v-if="doc.tags.length > 3" class="text-xs text-gray-500">+{{ doc.tags.length - 3 }}</span>
+                <input
+                  v-model="selectedKnowledgeBase"
+                  :value="doc.id"
+                  type="checkbox"
+                  class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                >
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 truncate">{{ doc.title }}</p>
+                  <p class="text-xs text-gray-500">{{ getContentTypeLabel(doc.contentType) }}</p>
+                  <div class="flex items-center mt-1 space-x-2">
+                    <span v-for="tag in doc.tags.slice(0, 3)" :key="tag" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      {{ tag }}
+                    </span>
+                    <span v-if="doc.tags.length > 3" class="text-xs text-gray-500">+{{ doc.tags.length - 3 }}</span>
+                  </div>
                 </div>
+                <span :class="[
+                  'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                  doc.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                ]">
+                  {{ doc.isActive ? 'Actif' : 'Inactif' }}
+                </span>
               </div>
-              <span :class="[
-                'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-                doc.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-              ]">
-                {{ doc.isActive ? 'Actif' : 'Inactif' }}
-              </span>
             </div>
           </div>
-        </div>
-        
-        <div class="p-6 border-t border-gray-200">
-          <div class="flex justify-between">
-            <p class="text-sm text-gray-600">
-              {{ selectedKnowledgeBase.length }} document(s) sélectionné(s)
-            </p>
-            <div class="flex space-x-3">
-              <button
-                @click="closeKnowledgeBaseModal"
-                class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Annuler
-              </button>
-              <button
-                @click="saveKnowledgeBaseSelection"
-                :disabled="savingKnowledgeBase"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-              >
-                {{ savingKnowledgeBase ? 'Sauvegarde...' : 'Sauvegarder' }}
-              </button>
+          
+          <div class="p-6 border-t border-gray-200">
+            <div class="flex justify-between">
+              <p class="text-sm text-gray-600">
+                {{ selectedKnowledgeBase.length }} document(s) sélectionné(s)
+              </p>
+              <div class="flex space-x-3">
+                <button
+                  @click="closeKnowledgeBaseModal"
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  @click="saveKnowledgeBaseSelection"
+                  :disabled="savingKnowledgeBase"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {{ savingKnowledgeBase ? 'Sauvegarde...' : 'Sauvegarder' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Message de succès pour copie -->
-    <div v-if="codeCopied" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg shadow-lg z-50">
-      <div class="flex items-center">
-        <svg class="w-4 lg:w-5 h-4 lg:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
-        <span class="text-sm lg:text-base">Code d'intégration copié !</span>
+      <!-- Message de succès pour copie -->
+      <div v-if="codeCopied" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg shadow-lg z-50">
+        <div class="flex items-center">
+          <svg class="w-4 lg:w-5 h-4 lg:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span class="text-sm lg:text-base">Code d'intégration copié !</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, nextTick, watch, readonly } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
@@ -1376,7 +1376,7 @@ const {
   loading, 
   saving, 
   error, 
-  agentConfig: config, 
+  agentConfig, 
   isConfigValid,
   integrationCode,
   widgetSyncStatus,
@@ -1439,12 +1439,10 @@ const localConfig = ref({
       upsellEnabled: false,
       urgencyEnabled: false,
       specificInstructions: [] as string[],
-      // ✅ NOUVELLES PROPRIÉTÉS
       linkedKnowledgeBase: [] as string[],
       aiProvider: 'openai' as 'openai' | 'claude',
       temperature: 0.7,
       maxTokens: 1000,
-      // ✅ AJOUTER CES PROPRIÉTÉS MANQUANTES
       systemPrompt: '' as string,
       tone: 'friendly' as string
     },
@@ -1504,30 +1502,6 @@ const averageResponseTime = computed(() => {
   if (responseTimes.value.length === 0) return 0
   return Math.round(responseTimes.value.reduce((a, b) => a + b, 0) / responseTimes.value.length)
 })
-
-// ✅ COMPUTED POUR WIDGET
-const widgetConfig = computed(() => ({
-  shopId: agentId.value,
-  apiUrl: 'https://chatseller-api-production.up.railway.app',
-  theme: localConfig.value.widget.theme,
-  primaryColor: localConfig.value.widget.primaryColor,
-  position: localConfig.value.widget.position,
-  buttonText: localConfig.value.widget.buttonText,
-  language: localConfig.value.widget.language || 'fr',
-  autoDetectProduct: true,
-  agentConfig: {
-    id: localConfig.value.agent.id,
-    name: localConfig.value.agent.name,
-    title: getTypeLabel(localConfig.value.agent.type),
-    avatar: localConfig.value.agent.avatar,
-    welcomeMessage: localConfig.value.agent.welcomeMessage,
-    fallbackMessage: localConfig.value.agent.fallbackMessage,
-    systemPrompt: localConfig.value.agent.config?.systemPrompt,
-    personality: localConfig.value.agent.personality,
-    tone: localConfig.value.agent.config?.tone || 'friendly'
-  },
-  debug: process.env.NODE_ENV === 'development'
-}))
 
 // ✅ DATA
 const tabs = [
@@ -1611,7 +1585,6 @@ const loadAgentData = async () => {
           aiProvider: storeAgent.config?.aiProvider || 'openai',
           temperature: storeAgent.config?.temperature || 0.7,
           maxTokens: storeAgent.config?.maxTokens || 1000,
-          // ✅ AJOUTER CES LIGNES
           systemPrompt: storeAgent.config?.systemPrompt || '',
           tone: storeAgent.config?.tone || 'friendly'
         },
@@ -1628,7 +1601,7 @@ const loadAgentData = async () => {
       
       try {
         await fetchAgentConfig(agentId.value)
-        if (config.value) {
+        if (agentConfig.value) {
           console.log('✅ [loadAgentData] Données récupérées depuis API')
           hasValidAgentData.value = true
           return
@@ -1928,12 +1901,28 @@ const saveAllConfig = async () => {
   }
 }
 
+// ✅ MÉTHODE POUR COPIER LE CODE D'INTÉGRATION
 const copyIntegrationCodeAction = async () => {
-  const result = await copyIntegrationCode()
-  if (result.success) {
+  try {
+    if (!integrationCode.value) {
+      throw new Error('Code d\'intégration non disponible')
+    }
+
+    await navigator.clipboard.writeText(integrationCode.value)
     codeCopied.value = true
+    
+    successMessage.value = '✅ Code d\'intégration copié dans le presse-papiers !'
+    
     setTimeout(() => {
       codeCopied.value = false
+      successMessage.value = null
+    }, 3000)
+    
+  } catch (err: any) {
+    console.error('❌ Erreur copie:', err)
+    error.value = 'Impossible de copier le code d\'intégration'
+    setTimeout(() => {
+      clearError()
     }, 3000)
   }
 }
@@ -1989,7 +1978,7 @@ const scrollChatToBottom = () => {
 }
 
 // ✅ WATCH
-watch(() => config.value, (newConfig) => {
+watch(() => agentConfig.value, (newConfig) => {
   if (newConfig) {
     localConfig.value = {
       agent: { 
@@ -2001,7 +1990,6 @@ watch(() => config.value, (newConfig) => {
           aiProvider: newConfig.agent.config.aiProvider || 'openai',
           temperature: newConfig.agent.config.temperature || 0.7,
           maxTokens: newConfig.agent.config.maxTokens || 1000,
-          // ✅ AJOUTER CES LIGNES
           systemPrompt: newConfig.agent.config.systemPrompt || '',
           tone: newConfig.agent.config.tone || 'friendly'
         }

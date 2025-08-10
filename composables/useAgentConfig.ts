@@ -1,4 +1,4 @@
-// composables/useAgentConfig.ts - VERSION CORRIGÉE AVEC SYNCHRONISATION WIDGET
+// composables/useAgentConfig.ts - VERSION CORRIGÉE AVEC CODE D'INTÉGRATION FONCTIONNEL
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
@@ -28,17 +28,17 @@ export interface AgentConfig {
       escalationKeywords?: string[]
       customPrompt?: string
       specificInstructions?: string[]
-      // ✅ NOUVELLE : Liaison base de connaissances
       linkedKnowledgeBase?: string[]
-      aiProvider?: 'openai' | 'claude' // ✅ NOUVEAU : Choix du LLM
+      aiProvider?: 'openai' | 'claude'
       temperature?: number
       maxTokens?: number
+      systemPrompt?: string
+      tone?: string
     }
     stats: {
       conversations: number
       conversions: number
     }
-    // ✅ NOUVEAU : Documents liés
     knowledgeBase?: Array<{
       id: string
       title: string
@@ -61,6 +61,7 @@ export interface AgentConfig {
     mobileOptimized: boolean
     offlineMessage?: string
     isActive: boolean
+    language: 'fr' | 'en' | 'wo'
   }
   knowledgeBase: Array<{
     id: string
@@ -87,59 +88,96 @@ export const useAgentConfig = () => {
   const saving = ref(false)
   const error = ref<string | null>(null)
   const agentConfig = ref<AgentConfig | null>(null)
-  // ✅ NOUVEAU : State pour la sync widget
   const widgetSyncStatus = ref<'idle' | 'syncing' | 'synced' | 'error'>('idle')
 
-  // ✅ COMPUTED
+  // ✅ COMPUTED POUR VALIDATION
   const isConfigValid = computed(() => {
     return agentConfig.value?.agent?.name && 
            agentConfig.value?.agent?.welcomeMessage &&
            agentConfig.value?.widget?.buttonText
   })
 
+  // ✅ NOUVEAU COMPUTED POUR CODE D'INTÉGRATION - VERSION ROBUSTE
   const integrationCode = computed(() => {
-    if (!agentConfig.value) return ''
-    
-    const shopId = authStore.userShopId || agentConfig.value.integration.shopId
-    const agentId = agentConfig.value.agent.id
-    const baseUrl = config.public.widgetUrl || 'https://widget.chatseller.app'
-    
-    // ✅ CODE D'INTÉGRATION CORRIGÉ ET OPTIMISÉ
-    return `<!-- ChatSeller Widget - Agent: ${agentConfig.value.agent.name} -->
+    // Vérifier si les données minimales sont disponibles
+    if (!agentConfig.value?.agent?.id || !agentConfig.value?.agent?.name) {
+      return '<!-- Chargement de la configuration... -->'
+    }
+
+    try {
+      const shopId = authStore.user?.id || authStore.userShopId || 'demo-shop'
+      const agentId = agentConfig.value.agent.id
+      const agentName = agentConfig.value.agent.name
+      const buttonText = agentConfig.value.widget?.buttonText || 'Parler à un conseiller'
+      const primaryColor = agentConfig.value.widget?.primaryColor || '#3B82F6'
+      const position = agentConfig.value.widget?.position || 'above-cta'
+      const theme = agentConfig.value.widget?.theme || 'modern'
+      const language = agentConfig.value.widget?.language || 'fr'
+      
+      const baseUrl = config.public.widgetUrl || 'https://widget.chatseller.app'
+      const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
+
+      return `<!-- ChatSeller Widget - Agent: ${agentName} -->
 <script>
 (function() {
-  // Configuration du widget
+  // Configuration du widget ChatSeller
   window.ChatSellerConfig = {
     shopId: '${shopId}',
     agentId: '${agentId}',
-    apiUrl: '${config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'}',
-    buttonText: '${agentConfig.value.widget.buttonText}',
-    primaryColor: '${agentConfig.value.widget.primaryColor}',
-    position: '${agentConfig.value.widget.position}',
-    theme: '${agentConfig.value.widget.theme}',
-    language: 'fr',
+    apiUrl: '${apiUrl}',
+    buttonText: '${buttonText}',
+    primaryColor: '${primaryColor}',
+    position: '${position}',
+    theme: '${theme}',
+    language: '${language}',
     autoDetectProduct: true,
-    debug: false
+    debug: false,
+    agentConfig: {
+      id: '${agentId}',
+      name: '${agentName}',
+      title: '${getTypeLabel(agentConfig.value.agent.type)}',
+      welcomeMessage: '${agentConfig.value.agent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?'}',
+      fallbackMessage: '${agentConfig.value.agent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.'}',
+      personality: '${agentConfig.value.agent.personality || 'friendly'}'
+    }
   };
   
-  // Chargement du widget
+  // Chargement asynchrone du widget
   var script = document.createElement('script');
   script.src = '${baseUrl}/embed.js';
   script.async = true;
   script.onload = function() {
-    console.log('✅ ChatSeller widget chargé');
-    if (window.ChatSeller) {
+    console.log('✅ ChatSeller widget chargé avec succès');
+    if (window.ChatSeller && window.ChatSeller.init) {
       window.ChatSeller.init(window.ChatSellerConfig);
     }
   };
   script.onerror = function() {
-    console.error('❌ Erreur chargement ChatSeller widget');
+    console.error('❌ Erreur lors du chargement du widget ChatSeller');
   };
+  
+  // Injecter le script dans le head
   document.head.appendChild(script);
 })();
 </script>
-<!-- Fin ChatSeller Widget -->`
+<!-- Fin du code ChatSeller -->`
+
+    } catch (error) {
+      console.error('❌ Erreur génération code intégration:', error)
+      return `<!-- Erreur lors de la génération du code d'intégration -->`
+    }
   })
+
+  // ✅ HELPER POUR LES LABELS DE TYPE
+  const getTypeLabel = (type: string): string => {
+    const labels = {
+      general: 'Vendeur généraliste',
+      product_specialist: 'Spécialiste produit',
+      support: 'Support & SAV',
+      upsell: 'Upsell & Cross-sell'
+    }
+    return labels[type as keyof typeof labels] || 'Assistant commercial'
+  }
 
   // ✅ HELPER: Headers avec authentification
   const getAuthHeaders = () => {
@@ -178,7 +216,7 @@ export const useAgentConfig = () => {
         $fetch(`/api/v1/agents/${agentId}/knowledge`, {
           baseURL: config.public.apiBaseUrl,
           headers: getAuthHeaders()
-        }).catch(() => ({ success: true, data: [] })) // Fallback si pas de KB
+        }).catch(() => ({ success: true, data: [] }))
       ])
 
       if (!agentResponse.success) {
@@ -186,17 +224,24 @@ export const useAgentConfig = () => {
       }
 
       // ✅ RÉCUPÉRER CONFIG SHOP/WIDGET
-      const shopId = authStore.userShopId
+      const shopId = authStore.user?.id || authStore.userShopId
       if (!shopId) {
-        throw new Error('Shop ID manquant. Configuration utilisateur incomplète.')
+        console.warn('⚠️ Shop ID manquant, utilisation config par défaut')
       }
 
-      const shopResponse = await $fetch(`/api/v1/shops/${shopId}`, {
-        baseURL: config.public.apiBaseUrl,
-        headers: getAuthHeaders()
-      })
+      let shopResponse = null
+      if (shopId) {
+        try {
+          shopResponse = await $fetch(`/api/v1/shops/${shopId}`, {
+            baseURL: config.public.apiBaseUrl,
+            headers: getAuthHeaders()
+          })
+        } catch (shopError) {
+          console.warn('⚠️ Erreur récupération shop, utilisation config par défaut:', shopError)
+        }
+      }
 
-      // ✅ CONSTRUIRE CONFIG COMPLÈTE AVEC KB
+      // ✅ CONSTRUIRE CONFIG COMPLÈTE AVEC FALLBACKS
       const completeConfig: AgentConfig = {
         agent: {
           id: agentResponse.data.agent.id,
@@ -210,38 +255,39 @@ export const useAgentConfig = () => {
           isActive: agentResponse.data.agent.isActive,
           config: {
             ...agentResponse.data.agent.config,
-            // ✅ NOUVELLES PROPRIÉTÉS
             linkedKnowledgeBase: kbResponse.data?.map((kb: any) => kb.id) || [],
             aiProvider: agentResponse.data.agent.config?.aiProvider || 'openai',
             temperature: agentResponse.data.agent.config?.temperature || 0.7,
-            maxTokens: agentResponse.data.agent.config?.maxTokens || 1000
+            maxTokens: agentResponse.data.agent.config?.maxTokens || 1000,
+            systemPrompt: agentResponse.data.agent.config?.systemPrompt || '',
+            tone: agentResponse.data.agent.config?.tone || 'friendly'
           },
           stats: {
             conversations: agentResponse.data.agent.totalConversations || 0,
             conversions: agentResponse.data.agent.totalConversions || 0
           },
-          // ✅ DOCUMENTS DE BASE DE CONNAISSANCES LIÉS
           knowledgeBase: kbResponse.data || []
         },
         widget: {
-          buttonText: shopResponse.widget_config?.buttonText || 'Parler à un conseiller',
-          primaryColor: shopResponse.widget_config?.primaryColor || '#007AFF',
-          position: shopResponse.widget_config?.position || 'above-cta',
-          widgetSize: shopResponse.widget_config?.widgetSize || 'medium',
-          theme: shopResponse.widget_config?.theme || 'modern',
-          borderRadius: shopResponse.widget_config?.borderRadius || 'md',
-          animation: shopResponse.widget_config?.animation || 'fade',
-          autoOpen: shopResponse.widget_config?.autoOpen || false,
-          showAvatar: shopResponse.widget_config?.showAvatar || true,
-          soundEnabled: shopResponse.widget_config?.soundEnabled || true,
-          mobileOptimized: shopResponse.widget_config?.mobileOptimized || true,
-          offlineMessage: shopResponse.widget_config?.offlineMessage,
-          isActive: shopResponse.widget_config?.isActive || true
+          buttonText: shopResponse?.widget_config?.buttonText || 'Parler à un conseiller',
+          primaryColor: shopResponse?.widget_config?.primaryColor || '#3B82F6',
+          position: shopResponse?.widget_config?.position || 'above-cta',
+          widgetSize: shopResponse?.widget_config?.widgetSize || 'medium',
+          theme: shopResponse?.widget_config?.theme || 'modern',
+          borderRadius: shopResponse?.widget_config?.borderRadius || 'md',
+          animation: shopResponse?.widget_config?.animation || 'fade',
+          autoOpen: shopResponse?.widget_config?.autoOpen || false,
+          showAvatar: shopResponse?.widget_config?.showAvatar !== false,
+          soundEnabled: shopResponse?.widget_config?.soundEnabled !== false,
+          mobileOptimized: shopResponse?.widget_config?.mobileOptimized !== false,
+          offlineMessage: shopResponse?.widget_config?.offlineMessage,
+          isActive: shopResponse?.widget_config?.isActive !== false,
+          language: shopResponse?.widget_config?.language || 'fr'
         },
         knowledgeBase: agentResponse.data.knowledgeBase || [],
         integration: {
-          shopId: shopId,
-          domain: shopResponse.domain,
+          shopId: shopId || 'demo-shop',
+          domain: shopResponse?.domain,
           widgetUrl: config.public.widgetUrl || 'https://widget.chatseller.app',
           apiUrl: config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app',
           jsCode: ''
@@ -326,7 +372,6 @@ export const useAgentConfig = () => {
             ...updates.agent,
             config: {
               ...updates.agent.config,
-              // ✅ S'assurer que les nouvelles propriétés sont incluses
               aiProvider: updates.agent.config?.aiProvider || 'openai',
               temperature: updates.agent.config?.temperature || 0.7,
               maxTokens: updates.agent.config?.maxTokens || 1000
@@ -344,21 +389,21 @@ export const useAgentConfig = () => {
       // ✅ SAUVEGARDER WIDGET SI FOURNI
       if (updates.widget) {
         console.log('🎨 Sauvegarde configuration widget...')
-        const shopId = authStore.userShopId
+        const shopId = authStore.user?.id || authStore.userShopId
         if (!shopId) {
-          throw new Error('Shop ID manquant pour sauvegarder le widget')
+          console.warn('⚠️ Shop ID manquant pour sauvegarder le widget, on continue')
+        } else {
+          const widgetResult = await $fetch(`/api/v1/shops/${shopId}`, {
+            method: 'PUT',
+            baseURL: config.public.apiBaseUrl,
+            headers: getAuthHeaders(),
+            body: {
+              widget_config: updates.widget
+            }
+          })
+
+          results.push({ success: true, data: widgetResult })
         }
-
-        const widgetResult = await $fetch(`/api/v1/shops/${shopId}`, {
-          method: 'PUT',
-          baseURL: config.public.apiBaseUrl,
-          headers: getAuthHeaders(),
-          body: {
-            widget_config: updates.widget
-          }
-        })
-
-        results.push({ success: true, data: widgetResult })
       }
 
       // ✅ LIER DOCUMENTS KB SI FOURNI
@@ -366,12 +411,16 @@ export const useAgentConfig = () => {
         await linkKnowledgeBaseDocuments(agentId, updates.agent.config.linkedKnowledgeBase)
       }
 
-      // ✅ SYNCHRONISER AVEC LE WIDGET (NOUVEAU)
-      await syncWithWidget(agentId)
+      // ✅ METTRE À JOUR LA CONFIG LOCALE POUR RAFRAÎCHIR LE CODE D'INTÉGRATION
+      if (agentConfig.value) {
+        if (updates.agent) {
+          agentConfig.value.agent = { ...agentConfig.value.agent, ...updates.agent }
+        }
+        if (updates.widget) {
+          agentConfig.value.widget = { ...agentConfig.value.widget, ...updates.widget }
+        }
+      }
 
-      // ✅ RECHARGER LA CONFIG APRÈS SAUVEGARDE
-      await fetchAgentConfig(agentId)
-      
       widgetSyncStatus.value = 'synced'
       console.log('✅ Configuration complète sauvegardée et synchronisée')
       return { success: true, message: 'Configuration sauvegardée avec succès' }
@@ -392,37 +441,6 @@ export const useAgentConfig = () => {
     }
   }
 
-  // ✅ NOUVEAU : SYNCHRONISER AVEC LE WIDGET
-  const syncWithWidget = async (agentId: string) => {
-    try {
-      // ✅ NOTIFIER LE WIDGET DE LA MISE À JOUR VIA POSTMESSAGE
-      if (typeof window !== 'undefined') {
-        // Envoyer un message à tous les iframes du widget
-        const widgetFrames = document.querySelectorAll('iframe[src*="widget.chatseller.app"]')
-        widgetFrames.forEach(frame => {
-          try {
-            (frame as HTMLIFrameElement).contentWindow?.postMessage({
-              type: 'CHATSELLER_CONFIG_UPDATE',
-              agentId: agentId,
-              timestamp: Date.now()
-            }, '*')
-          } catch (e) {
-            console.warn('Impossible d\'envoyer le message au widget:', e)
-          }
-        })
-
-        // ✅ DÉCLENCHER UN REFRESH DE LA CONFIG WIDGET VIA EVENT
-        window.dispatchEvent(new CustomEvent('chatseller:config-updated', {
-          detail: { agentId, timestamp: Date.now() }
-        }))
-
-        console.log('🔄 Synchronisation widget déclenchée')
-      }
-    } catch (error) {
-      console.warn('⚠️ Erreur synchronisation widget:', error)
-    }
-  }
-
   // ✅ NOUVEAU : TESTER L'IA EN TEMPS RÉEL
   const testAIMessage = async (message: string, agentId: string) => {
     try {
@@ -433,7 +451,7 @@ export const useAgentConfig = () => {
         body: {
           message,
           agentId,
-          shopId: authStore.userShopId,
+          shopId: authStore.user?.id || authStore.userShopId,
           testMode: true
         }
       })
@@ -461,7 +479,7 @@ export const useAgentConfig = () => {
   const copyIntegrationCode = async () => {
     try {
       if (!integrationCode.value) {
-        throw new Error('Configuration incomplète pour générer le code')
+        throw new Error('Code d\'intégration non disponible')
       }
 
       await navigator.clipboard.writeText(integrationCode.value)
@@ -496,7 +514,6 @@ export const useAgentConfig = () => {
     fetchAgentConfig,
     saveCompleteConfig,
     linkKnowledgeBaseDocuments,
-    syncWithWidget,
     testAIMessage,
     copyIntegrationCode,
     clearError
