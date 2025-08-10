@@ -60,7 +60,7 @@
                       <div class="flex-1">
                         <h4 class="font-medium text-gray-900">🤖 Créer votre Vendeur IA</h4>
                         <p class="text-sm text-gray-600 mt-1">
-                          Configurez un agent intelligent qui répond automatiquement à vos clients et collecte leurs commandes 24h/24.
+                          Configurez un Agent IA intelligent qui répond automatiquement à vos clients et collecte leurs commandes 24h/24.
                         </p>
                         <button
                           @click="goToStep('/agent-config')"
@@ -85,7 +85,7 @@
                       <div class="flex-1">
                         <h4 class="font-medium text-gray-900">📚 Former votre Vendeur IA</h4>
                         <p class="text-sm text-gray-600 mt-1">
-                          Ajoutez des informations sur vos produits, FAQ, et politiques pour que votre agent réponde avec précision.
+                          Ajoutez des informations sur vos produits et votre entreprise pour que votre Vendeur IA réponde avec précision.
                         </p>
                         <button
                           @click="goToStep('/knowledge-base')"
@@ -110,7 +110,7 @@
                       <div class="flex-1">
                         <h4 class="font-medium text-gray-900">🔗 Intégrer sur votre site</h4>
                         <p class="text-sm text-gray-600 mt-1">
-                          Copiez le code d'intégration et ajoutez-le sur votre site pour activer votre Vendeur IA.
+                          Copiez le code d'intégration de votre Widget Chatseller et ajoutez-le sur votre site pour activer votre Vendeur IA.
                         </p>
                         <button
                           @click="goToStep('/agent-config?tab=integration')"
@@ -159,7 +159,7 @@
                         <p class="font-semibold text-gray-900">Vendeur IA ChatSeller</p>
                         <p class="text-xs text-green-600 flex items-center">
                           <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
-                          En ligne • Répond en < 2s
+                          En ligne • Répond en < 10s
                         </p>
                       </div>
                     </div>
@@ -172,29 +172,26 @@
                     <!-- Message d'accueil de l'IA -->
                     <div class="ai-message">
                       <div class="message-bubble ai">
-                        <p class="text-sm">👋 Bonjour ! Je vois que vous regardez <strong>[Produit]</strong>. Puis-je vous aider à faire le bon choix ?</p>
+                        <p class="text-sm">👋 Bonjour ! Je vois que vous vous intéressez à <strong>[Produit]</strong>. Comment puis-je vous aider ?</p>
                       </div>
                     </div>
 
                     <!-- Réponse utilisateur -->
                     <div class="user-message">
                       <div class="message-bubble user">
-                        <p class="text-sm">Oui, j'aimerais savoir si c'est adapté à mes besoins</p>
+                        <p class="text-sm">J'aimerais savoir comment il soulage les douleurs</p>
                       </div>
                     </div>
 
                     <!-- Réponse avec options -->
                     <div class="ai-message">
                       <div class="message-bubble ai">
-                        <p class="text-sm">Parfait ! 🎯 Pour vous conseiller au mieux, pouvez-vous me dire :</p>
-                        <ul class="text-xs mt-2 space-y-1">
-                          <li>• Dans quel contexte l'utiliserez-vous ?</li>
-                          <li>• Avez-vous des contraintes particulières ?</li>
-                        </ul>
+                        <p class="text-sm">Excellente question ! <strong>[Produit]</strong> soulage les douleurs en s'attaquant à leur source. La chaleur liquéfie le sang et facilite son écoulement, et le massage détend les muscles. Souhaitez-vous le commander à présent ?</p>
+      
                         <div class="mt-3 space-y-2">
-                          <button class="quick-reply">💬 Usage domestique</button>
-                          <button class="quick-reply">🏢 Usage professionnel</button>
-                          <button class="quick-reply">🛒 Je veux acheter directement</button>
+                          <button class="quick-reply">Oui, je veux l'acheter</button>
+                          <button class="quick-reply">J'ai d'autres questions</button>
+                          <button class="quick-reply">Je veux parler à un humain</button>
                         </div>
                       </div>
                     </div>
@@ -246,20 +243,20 @@
         <div class="px-8 py-6 bg-gray-50 border-t border-gray-200 flex-shrink-0">
           <div class="flex items-center justify-between">
             <div class="text-sm text-gray-600">
-              <span class="font-medium">💡 Conseil :</span> Commencez par configurer votre Vendeur IA pour de meilleurs résultats
+              <span class="font-medium">💡 Conseil :</span> Configurez votre Vendeur IA pour de meilleurs résultats
             </div>
             <div class="flex items-center space-x-3">
               <button
                 @click="skipModal"
                 class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
               >
-                Je découvrirai plus tard
+                Je le ferai plus tard
               </button>
               <button
-                @click="goToStep('/agent-config')"
+                @click="goToStep('/vendeurs-ia')"
                 class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
               >
-                🚀 Commencer la configuration
+                🚀 Créer mon Vendeur IA
               </button>
             </div>
           </div>
