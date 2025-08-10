@@ -1,8 +1,8 @@
-// nuxt.config.ts - VERSION COMPLÈTE AVEC CORRECTIONS ONBOARDING ET SIDEBAR
+// nuxt.config.ts - VERSION PRODUCTION-READY
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV === 'development' },
   
-  compatibilityDate: '2025-07-24',
+  compatibilityDate: '2025-01-15',
 
   modules: [
     '@nuxtjs/tailwindcss',
@@ -16,7 +16,9 @@ export default defineNuxtConfig({
   googleFonts: {
     families: {
       Inter: [400, 500, 600, 700]
-    }
+    },
+    display: 'swap',
+    preload: true
   },
 
   typescript: {
@@ -24,37 +26,97 @@ export default defineNuxtConfig({
     typeCheck: false
   },
 
+  // ✅ CONFIGURATION RUNTIME DYNAMIQUE DEV/PROD
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-chatseller-dashboard',
     
     public: {
-      apiBaseUrl: process.env.API_URL || 'https://chatseller-api-production.up.railway.app',
-      supabaseUrl: process.env.SUPABASE_URL || 'https://hdprfqmufuydpgwvhxvd.supabase.co',
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkcHJmcW11ZnV5ZHBnd3ZoeHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyNzcxNjYsImV4cCI6MjA2Nzg1MzE2Nn0.VQMtvKJVflpRb7tjjQHPR6iSX0eThsGRjr6KIgIDGkc',
-      appUrl: process.env.APP_URL || 'http://localhost:3000',
-      widgetUrl: process.env.WIDGET_URL || 'https://widget.chatseller.app'
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      // ✅ URLs DYNAMIQUES SELON L'ENVIRONNEMENT
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 
+        (process.env.NODE_ENV === 'production' 
+          ? 'https://chatseller-api-production.up.railway.app'
+          : 'http://localhost:3001'),
+      appUrl: process.env.NUXT_PUBLIC_APP_URL || 
+        (process.env.NODE_ENV === 'production'
+          ? 'https://dashboard.chatseller.app'
+          : 'http://localhost:3002'),
+      environment: process.env.NODE_ENV || 'development'
     }
   },
 
-  // ✅ RÈGLES DE ROUTAGE OPTIMISÉES POUR LES CORRECTIONS
+  // ✅ RÈGLES DE ROUTAGE OPTIMISÉES POUR PRODUCTION
   routeRules: {
-    // Pages publiques - pas de middleware
-    '/': { prerender: false }, // ✅ Désactiver prerender pour le dashboard dynamique
-    '/login': { prerender: true },
-    '/register': { prerender: true },
-    '/auth/callback': { prerender: false, ssr: false }, // ✅ Callback côté client uniquement
-    '/onboarding': { prerender: false, ssr: false }, // ✅ Onboarding côté client
+    // Pages statiques - prerender en production
+    '/': { 
+      prerender: false, 
+      ssr: true 
+    },
+    '/login': { 
+      prerender: process.env.NODE_ENV === 'production',
+      ssr: true
+    },
+    '/register': { 
+      prerender: process.env.NODE_ENV === 'production',
+      ssr: true
+    },
     
-    // Pages protégées - avec middlewares
-    '/vendeurs-ia': { prerender: false, ssr: false }, // ✅ Côté client pour éviter conflits
-    '/conversations/**': { prerender: false },
-    '/orders/**': { prerender: false },
-    '/settings/**': { prerender: false },
-    '/billing': { prerender: false },
-    '/analytics': { prerender: false },
-    '/knowledge-base/**': { prerender: false },
-    '/products/**': { prerender: false },
-    '/agent-config': { prerender: false, ssr: false } // ✅ Configuration agent côté client
+    // Pages callback - toujours côté client
+    '/auth/callback': { 
+      prerender: false, 
+      ssr: false,
+      headers: { 'X-Robots-Tag': 'noindex' }
+    },
+    '/onboarding': { 
+      prerender: false, 
+      ssr: false,
+      headers: { 'X-Robots-Tag': 'noindex' }
+    },
+    
+    // Pages protégées - SSR conditionnel
+    '/vendeurs-ia/**': { 
+      prerender: false, 
+      ssr: process.env.NODE_ENV === 'production'
+    },
+    '/conversations/**': { 
+      prerender: false, 
+      ssr: false 
+    },
+    '/orders/**': { 
+      prerender: false, 
+      ssr: false 
+    },
+    '/settings/**': { 
+      prerender: false, 
+      ssr: process.env.NODE_ENV === 'production'
+    },
+    '/billing': { 
+      prerender: false, 
+      ssr: process.env.NODE_ENV === 'production'
+    },
+    '/analytics': { 
+      prerender: false, 
+      ssr: false 
+    },
+    '/knowledge-base/**': { 
+      prerender: false, 
+      ssr: false 
+    },
+    '/products/**': { 
+      prerender: false, 
+      ssr: false 
+    },
+    
+    // API routes - headers de cache
+    '/api/**': { 
+      cors: true,
+      headers: { 
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    }
   },
 
   imports: {
@@ -73,75 +135,106 @@ export default defineNuxtConfig({
     }
   ],
 
-  // ✅ SSR HYBRIDE - Server pour public, Client pour protégé
+  // ✅ SSR INTELLIGENT
   ssr: true,
 
-  // ✅ CONFIGURATION ROUTER POUR CORRIGER LA NAVIGATION
-  router: {
-    options: {
-      strict: false,
-      // ✅ Configuration pour éviter les conflits de navigation
-      scrollBehaviorType: 'smooth'
-    }
-  },
-
-  // ✅ CONFIGURATION NITRO POUR LES REDIRECTIONS
+  // ✅ CONFIGURATION NITRO POUR PRODUCTION
   nitro: {
+    preset: process.env.NODE_ENV === 'production' ? 'vercel' : 'node-server',
+    compressPublicAssets: true,
     routeRules: {
-      '/auth/callback': { headers: { 'X-Robots-Tag': 'noindex' } },
-      '/onboarding': { headers: { 'X-Robots-Tag': 'noindex' } }
+      '/auth/callback': { 
+        headers: { 
+          'X-Robots-Tag': 'noindex',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        } 
+      },
+      '/onboarding': { 
+        headers: { 
+          'X-Robots-Tag': 'noindex',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        } 
+      }
     }
   },
 
-  // ✅ PLUGINS POUR INITIALISATION
+  // ✅ HEADERS DE SÉCURITÉ PRODUCTION
+  headers: process.env.NODE_ENV === 'production' ? {
+    'X-Frame-Options': 'DENY',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+  } : {},
+
+  // ✅ PLUGINS CONDITIONNELS
   plugins: [
-    '~/plugins/auth.client.ts' // ✅ Plugin auth côté client
+    '~/plugins/auth.client.ts'
   ],
 
-  // ✅ CONFIGURATION APP
+  // ✅ CONFIGURATION APP AVEC META DYNAMIQUES
   app: {
     head: {
       title: 'ChatSeller Dashboard',
+      titleTemplate: '%s | ChatSeller',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Dashboard ChatSeller - Agent IA Commercial' }
+        { name: 'description', content: 'Dashboard ChatSeller - Créez des Vendeurs IA pour votre e-commerce' },
+        { name: 'robots', content: process.env.NODE_ENV === 'production' ? 'index, follow' : 'noindex, nofollow' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'canonical', href: process.env.NUXT_PUBLIC_APP_URL || 'https://dashboard.chatseller.app' }
       ]
     }
   },
 
-  // ✅ LOGGING AMÉLIORÉ POUR DEBUG
-  hooks: {
-    'render:route': (url, result, context) => {
-      if (process.dev) {
-        console.log('🛣️ [Nuxt] Route rendue:', url)
-      }
+  // ✅ HOOKS CONDITIONNELS POUR DEBUG
+  hooks: process.env.NODE_ENV === 'development' ? {
+    'render:route': (url: string) => {
+      console.log('🛣️ [Nuxt] Route rendue:', url)
     },
-    'app:created': (app) => {
-      if (process.dev) {
-        console.log('🚀 [Nuxt] App créée avec succès')
-      }
+    'app:created': () => {
+      console.log('🚀 [Nuxt] App créée avec succès')
     }
-  },
+  } : {},
 
-  // ✅ CONFIGURATION DE BUILD
+  // ✅ CONFIGURATION BUILD OPTIMISÉE
   build: {
     transpile: ['@headlessui/vue']
   },
 
-  // ✅ CONFIGURATION VITE
+  // ✅ CONFIGURATION VITE POUR PRODUCTION
   vite: {
     define: {
-      __VUE_PROD_DEVTOOLS__: false
+      __VUE_PROD_DEVTOOLS__: process.env.NODE_ENV === 'development'
     },
     optimizeDeps: {
       include: ['@supabase/supabase-js']
+    },
+    build: {
+      target: 'es2020',
+      rollupOptions: {
+        output: {
+          manualChunks: process.env.NODE_ENV === 'production' ? {
+            'supabase': ['@supabase/supabase-js'],
+            'vendor': ['vue', 'pinia']
+          } : undefined
+        }
+      }
     }
   },
 
-  // ✅ CONFIGURATION EXPERIMENTAL
+  // ✅ CONFIGURATION EXPÉRIMENTALE OPTIMISÉE
   experimental: {
-    payloadExtraction: false, // ✅ Éviter les conflits avec les middlewares
-    inlineSSRStyles: false
-  }
+    payloadExtraction: process.env.NODE_ENV === 'production',
+    inlineSSRStyles: process.env.NODE_ENV === 'production'
+  },
+
+  // ✅ CONFIGURATION DE CACHE
+  spaLoadingTemplate: process.env.NODE_ENV === 'production',
+
+  // ✅ GESTION D'ERREURS GLOBALES
+  errorHandler: '~/error.vue'
 })

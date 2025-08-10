@@ -1,4 +1,4 @@
-// composables/useApi.ts
+// composables/useApi.ts - VERSION CORRIGÉE DEV/PROD
 
 import { useAuthStore } from "~~/stores/auth"
 
@@ -12,10 +12,25 @@ export interface ApiResponse<T = any> {
 export const useApi = () => {
   const config = useRuntimeConfig()
   
-  // ✅ URL API CORRECTE
-  const baseURL = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
+  // ✅ CONFIGURATION DYNAMIQUE DEV/PROD
+  const getBaseURL = () => {
+    // En développement
+    if (process.dev || process.env.NODE_ENV === 'development') {
+      return 'http://localhost:3001' // ✅ CORRIGÉ : Port 3001 comme dans ton serveur
+    }
+    
+    // En production
+    return config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
+  }
   
-  console.log('🔧 API Configuration:', { baseURL })
+  const baseURL = getBaseURL()
+  
+  console.log('🔧 API Configuration:', { 
+    baseURL, 
+    env: process.env.NODE_ENV,
+    isDev: process.dev,
+    configApiUrl: config.public.apiBaseUrl 
+  })
 
   // ✅ GET SUPABASE TOKEN FROM AUTH STORE
   const getAuthToken = (): string | null => {
@@ -107,21 +122,18 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ CONVERSATIONS - ROUTES RÉELLES SELON SERVER.TS
+  // ✅ CONVERSATIONS
   // =====================================
   
   const conversations = {
-    // ✅ ROUTE RÉELLE : GET /api/v1/conversations 
     list: async (): Promise<ApiResponse<any[]>> => {
       return apiCall('/api/v1/conversations')
     },
 
-    // ✅ ROUTE RÉELLE : GET /api/v1/conversations/:conversationId
     get: async (conversationId: string): Promise<ApiResponse<any>> => {
       return apiCall(`/api/v1/conversations/${conversationId}`)
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/conversations
     create: async (data: { 
       shopId: string, 
       visitorId: string, 
@@ -138,17 +150,14 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ ORDERS - ROUTES RÉELLES SELON ORDERS.TS  
+  // ✅ ORDERS  
   // =====================================
   
   const orders = {
-    // ✅ Pas de route list simple dans orders.ts, utiliser conversations pour l'instant
     list: async (): Promise<ApiResponse<any[]>> => {
-      // Temporaire : retourner un tableau vide jusqu'à ce que la route soit créée
       return { success: true, data: [] }
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/orders/start-order
     startOrder: async (data: {
       conversationId: string,
       productInfo?: any,
@@ -160,7 +169,6 @@ export const useApi = () => {
       })
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/orders/process-step
     processStep: async (data: {
       conversationId: string,
       step: string,
@@ -172,7 +180,6 @@ export const useApi = () => {
       })
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/orders/complete
     complete: async (data: {
       conversationId: string,
       orderData: any
@@ -183,7 +190,6 @@ export const useApi = () => {
       })
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/orders/analyze-intent
     analyzeIntent: async (data: {
       message: string,
       conversationId: string,
@@ -197,16 +203,14 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ AGENTS - ROUTES RÉELLES SELON SERVER.TS
+  // ✅ AGENTS
   // =====================================
   
   const agents = {
-    // ✅ ROUTE RÉELLE : GET /api/v1/agents
     list: async (): Promise<ApiResponse<any[]>> => {
       return apiCall('/api/v1/agents')
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/agents
     create: async (data: {
       name: string,
       type: string,
@@ -224,7 +228,6 @@ export const useApi = () => {
       })
     },
 
-    // ✅ ROUTES AGENTS (à vérifier dans le fichier agents.ts)
     update: async (agentId: string, data: any): Promise<ApiResponse<any>> => {
       return apiCall(`/api/v1/agents/${agentId}`, {
         method: 'PUT',
@@ -240,11 +243,10 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ PRODUCTS - ROUTES RÉELLES SELON SERVER.TS
+  // ✅ PRODUCTS
   // =====================================
   
   const products = {
-    // ✅ ROUTE RÉELLE : GET /api/v1/products
     list: async (params: {
       search?: string,
       category?: string,
@@ -258,12 +260,10 @@ export const useApi = () => {
       return apiCall(endpoint)
     },
 
-    // ✅ ROUTE RÉELLE : GET /api/v1/products/:productId
     get: async (productId: string): Promise<ApiResponse<any>> => {
       return apiCall(`/api/v1/products/${productId}`)
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/products
     create: async (data: any): Promise<ApiResponse<any>> => {
       return apiCall('/api/v1/products', {
         method: 'POST',
@@ -286,46 +286,40 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ ANALYTICS - ROUTES RÉELLES SELON SERVER.TS
+  // ✅ ANALYTICS
   // =====================================
   
   const analytics = {
-  // ✅ ROUTE RÉELLE : GET /api/v1/analytics/dashboard
-  dashboard: async (): Promise<ApiResponse<any>> => {
-    return apiCall('/api/v1/analytics/dashboard')
-  },
+    dashboard: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/analytics/dashboard')
+    },
 
-  // ✅ NOUVELLE ROUTE : GET /api/v1/analytics/detailed
-  detailed: async (params: {
-    period?: string
-  } = {}): Promise<ApiResponse<any>> => {
-    const queryString = new URLSearchParams(params).toString()
-    const endpoint = queryString ? `/api/v1/analytics/detailed?${queryString}` : '/api/v1/analytics/detailed'
-    return apiCall(endpoint)
-  },
+    detailed: async (params: {
+      period?: string
+    } = {}): Promise<ApiResponse<any>> => {
+      const queryString = new URLSearchParams(params).toString()
+      const endpoint = queryString ? `/api/v1/analytics/detailed?${queryString}` : '/api/v1/analytics/detailed'
+      return apiCall(endpoint)
+    },
 
-  // ✅ NOUVELLE ROUTE : GET /api/v1/analytics/usage-stats
-  usageStats: async (): Promise<ApiResponse<any>> => {
-    return apiCall('/api/v1/analytics/usage-stats')
-  },
+    usageStats: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/analytics/usage-stats')
+    },
 
-  // ✅ NOUVELLE ROUTE : GET /api/v1/analytics/billing
-  billing: async (): Promise<ApiResponse<any>> => {
-    return apiCall('/api/v1/analytics/billing')
+    billing: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/analytics/billing')
+    }
   }
-}
 
   // =====================================
-  // ✅ KNOWLEDGE BASE - ROUTES RÉELLES SELON SERVER.TS
+  // ✅ KNOWLEDGE BASE
   // =====================================
   
   const knowledgeBase = {
-    // ✅ ROUTE RÉELLE : GET /api/v1/knowledge-base
     list: async (): Promise<ApiResponse<any[]>> => {
       return apiCall('/api/v1/knowledge-base')
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/knowledge-base/upload
     upload: async (file: File): Promise<ApiResponse<any>> => {
       const formData = new FormData()
       formData.append('file', file)
@@ -337,7 +331,6 @@ export const useApi = () => {
       })
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/knowledge-base
     addManual: async (data: {
       title: string
       content: string
@@ -356,21 +349,18 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ BILLING - ROUTES RÉELLES SELON SERVER.TS
+  // ✅ BILLING
   // =====================================
 
-    const billing = {
-    // ✅ NOUVELLE ROUTE : GET /api/v1/billing/subscription-status
+  const billing = {
     subscriptionStatus: async (): Promise<ApiResponse<any>> => {
       return apiCall('/api/v1/billing/subscription-status')
     },
 
-    // ✅ NOUVELLE ROUTE : GET /api/v1/billing/plans
     plans: async (): Promise<ApiResponse<any>> => {
       return apiCall('/api/v1/billing/plans')
     },
 
-    // ✅ NOUVELLE ROUTE : POST /api/v1/billing/create-checkout-session
     createCheckoutSession: async (data: {
       plan: string
       successUrl: string
@@ -382,12 +372,10 @@ export const useApi = () => {
       })
     },
 
-    // ✅ NOUVELLE ROUTE : GET /api/v1/billing/payment-history
     paymentHistory: async (): Promise<ApiResponse<any>> => {
       return apiCall('/api/v1/billing/payment-history')
     },
 
-    // ✅ NOUVELLE ROUTE : POST /api/v1/billing/cancel-subscription
     cancelSubscription: async (): Promise<ApiResponse<any>> => {
       return apiCall('/api/v1/billing/cancel-subscription', {
         method: 'POST'
@@ -396,43 +384,41 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ SHOPS - ROUTES RÉELLES SELON SHOPS.TS
+  // ✅ SHOPS
   // =====================================
   
   const shops = {
-  get: async (shopId?: string): Promise<ApiResponse<any>> => {
-    const authStore = useAuthStore()
-    const targetShopId = shopId || authStore.userShopId
-    
-    if (!targetShopId) {
-      return { success: false, error: 'Shop ID manquant' }
+    get: async (shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}`)
+    },
+
+    create: async (data: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/shops', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/shops/${shopId}`, {
+        method: 'PUT',
+        body: data
+      })
     }
-    
-    return apiCall(`/api/v1/shops/${targetShopId}`)
-  },
-
-  // ✅ AJOUTER CETTE FONCTION MANQUANTE :
-  create: async (data: any): Promise<ApiResponse<any>> => {
-    return apiCall('/api/v1/shops', {
-      method: 'POST',
-      body: data
-    })
-  },
-
-  update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
-    return apiCall(`/api/v1/shops/${shopId}`, {
-      method: 'PUT',
-      body: data
-    })
   }
-}
 
   // =====================================
-  // ✅ CHAT - ROUTES RÉELLES SELON CHAT.TS
+  // ✅ CHAT
   // =====================================
   
   const chat = {
-    // ✅ ROUTE RÉELLE : POST /api/v1/chat/test
     test: async (data: {
       message: string,
       agentId: string,
@@ -445,7 +431,6 @@ export const useApi = () => {
       })
     },
 
-    // ✅ ROUTE RÉELLE : POST /api/v1/chat/message
     message: async (data: {
       message: string,
       conversationId?: string,
@@ -461,16 +446,14 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ UTILS - ROUTES RÉELLES
+  // ✅ UTILS
   // =====================================
   
   const utils = {
-    // ✅ ROUTE RÉELLE : GET /health
     healthCheck: async (): Promise<ApiResponse<any>> => {
       return apiCall('/health')
     },
 
-    // ✅ ROUTE RÉELLE : GET /
     info: async (): Promise<ApiResponse<any>> => {
       return apiCall('/')
     }

@@ -1,15 +1,23 @@
-<!-- pages/index.vue -->
+<!-- pages/index.vue - VERSION COMPLÈTE AVEC MODAL AMÉLIORÉ -->
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Modal de Bienvenue -->
+    <!-- Modal de Bienvenue AMÉLIORÉ -->
     <div 
       v-if="showWelcomeModal" 
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 overflow-hidden"
       @click.self="closeWelcomeModal"
     >
-      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <!-- Canvas pour les confettis -->
+      <canvas
+        ref="confettiCanvas"
+        class="absolute inset-0 pointer-events-none z-40"
+        :width="canvasWidth"
+        :height="canvasHeight"
+      ></canvas>
+      
+      <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col overflow-hidden">
         <!-- Header du Modal -->
-        <div class="px-8 py-6 border-b border-gray-200">
+        <div class="px-8 py-6 border-b border-gray-200 flex-shrink-0">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
               <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
@@ -17,7 +25,7 @@
               </div>
               <div>
                 <h2 class="text-2xl font-bold text-gray-900">
-                  Bienvenue sur ChatSeller 👋
+                  🎉 Bienvenue sur ChatSeller, {{ userFirstName }} !
                 </h2>
                 <p class="text-gray-600">Créez votre Vendeur IA et automatisez vos ventes</p>
               </div>
@@ -33,167 +41,200 @@
           </div>
         </div>
 
-        <!-- Contenu du Modal -->
-        <div class="p-8">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Étapes de Configuration -->
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-6">Prochaines étapes pour optimiser vos ventes</h3>
-              
-              <div class="space-y-4">
-                <!-- Étape 1: Créer le Vendeur IA -->
-                <div class="welcome-step" :class="{ 'completed': stepStatus.vendeurIA }">
-                  <div class="flex items-start space-x-4">
-                    <div class="step-number">
-                      <span v-if="stepStatus.vendeurIA" class="text-green-600">✓</span>
-                      <span v-else class="text-blue-600 font-semibold">1</span>
-                    </div>
-                    <div class="flex-1">
-                      <h4 class="font-medium text-gray-900">Créer votre Vendeur IA</h4>
-                      <p class="text-sm text-gray-600 mt-1">
-                        Configurez un Vendeur IA intelligent qui répond automatiquement à vos clients et collecte leurs commandes.
-                      </p>
-                      <button
-                        @click="goToStep('/vendeurs-ia')"
-                        class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
-                      >
-                        {{ stepStatus.vendeurIA ? 'Modifier' : 'Configurer maintenant' }}
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Étape 2: Former la Base de Connaissance -->
-                <div class="welcome-step" :class="{ 'completed': stepStatus.knowledgeBase }">
-                  <div class="flex items-start space-x-4">
-                    <div class="step-number">
-                      <span v-if="stepStatus.knowledgeBase" class="text-green-600">✓</span>
-                      <span v-else class="text-blue-600 font-semibold">2</span>
-                    </div>
-                    <div class="flex-1">
-                      <h4 class="font-medium text-gray-900">Former votre Vendeur IA</h4>
-                      <p class="text-sm text-gray-600 mt-1">
-                        Ajoutez toutes les informations sur vos produits et votre activité pour que votre Vendeur IA réponde avec précision.
-                      </p>
-                      <button
-                        @click="goToStep('/knowledge-base')"
-                        class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-centers"
-                      >
-                        {{ stepStatus.knowledgeBase ? 'Gérer' : 'Ajouter des connaissances' }}
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Étape 3: Intégrer le Widget -->
-                <div class="welcome-step" :class="{ 'completed': stepStatus.widgetIntegration }">
-                  <div class="flex items-start space-x-4">
-                    <div class="step-number">
-                      <span v-if="stepStatus.widgetIntegration" class="text-green-600">✓</span>
-                      <span v-else class="text-blue-600 font-semibold">3</span>
-                    </div>
-                    <div class="flex-1">
-                      <h4 class="font-medium text-gray-900">Intégrer sur votre site</h4>
-                      <p class="text-sm text-gray-600 mt-1">
-                        Copiez le code d'intégration et ajoutez-le sur votre site pour activer votre Vendeur IA.
-                      </p>
-                      <button
-                        @click="goToStep('/settings?tab=integration')"
-                        class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
-                      >
-                        {{ stepStatus.widgetIntegration ? 'Voir l\'intégration' : 'Obtenir le code' }}
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Progression -->
-              <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-blue-900">Configuration</span>
-                  <span class="text-sm font-medium text-blue-600">{{ configurationProgress }}%</span>
-                </div>
-                <div class="w-full bg-blue-200 rounded-full h-2">
-                  <div 
-                    class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
-                    :style="{ width: `${configurationProgress}%` }"
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Aperçu du Chat -->
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-6">Aperçu de votre Vendeur IA</h3>
-              
-              <!-- Mockup du Chat -->
-              <div class="chat-preview">
-                <div class="chat-header">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">IA</span>
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-900">Assistant d'Achat</p>
-                      <p class="text-xs text-green-600 flex items-center">
-                        <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-                        En ligne
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="chat-messages">
-                  <!-- Message d'accueil de l'IA -->
-                  <div class="ai-message">
-                    <div class="message-bubble ai">
-                      <p class="text-sm">Bonjour 👋 Je vois que vous vous intéressez à {produit}. Comment puis-je vous aider ?</p>
+        <!-- Contenu du Modal - SCROLLABLE -->
+        <div class="flex-1 overflow-y-auto">
+          <div class="p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <!-- Étapes de Configuration -->
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-6">✨ Prochaines étapes pour démarrer</h3>
+                
+                <div class="space-y-4">
+                  <!-- Étape 1: Créer le Vendeur IA -->
+                  <div class="welcome-step" :class="{ 'completed': stepStatus.vendeurIA }">
+                    <div class="flex items-start space-x-4">
+                      <div class="step-number">
+                        <span v-if="stepStatus.vendeurIA" class="text-green-600">✓</span>
+                        <span v-else class="text-blue-600 font-semibold">1</span>
+                      </div>
+                      <div class="flex-1">
+                        <h4 class="font-medium text-gray-900">🤖 Créer votre Vendeur IA</h4>
+                        <p class="text-sm text-gray-600 mt-1">
+                          Configurez un agent intelligent qui répond automatiquement à vos clients et collecte leurs commandes 24h/24.
+                        </p>
+                        <button
+                          @click="goToStep('/agent-config')"
+                          class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
+                        >
+                          {{ stepStatus.vendeurIA ? '⚙️ Modifier mon agent' : '🚀 Configurer maintenant' }}
+                          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Réponse utilisateur -->
-                  <div class="user-message">
-                    <div class="message-bubble user">
-                      <p class="text-sm">J'aimerais comprendre comment il peut résoudre mon problème.</p>
+                  <!-- Étape 2: Former la Base de Connaissance -->
+                  <div class="welcome-step" :class="{ 'completed': stepStatus.knowledgeBase }">
+                    <div class="flex items-start space-x-4">
+                      <div class="step-number">
+                        <span v-if="stepStatus.knowledgeBase" class="text-green-600">✓</span>
+                        <span v-else class="text-blue-600 font-semibold">2</span>
+                      </div>
+                      <div class="flex-1">
+                        <h4 class="font-medium text-gray-900">📚 Former votre Vendeur IA</h4>
+                        <p class="text-sm text-gray-600 mt-1">
+                          Ajoutez des informations sur vos produits, FAQ, et politiques pour que votre agent réponde avec précision.
+                        </p>
+                        <button
+                          @click="goToStep('/knowledge-base')"
+                          class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
+                        >
+                          {{ stepStatus.knowledgeBase ? '📖 Gérer mes documents' : '📝 Ajouter des connaissances' }}
+                          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Réponse avec options -->
-                  <div class="ai-message">
-                    <div class="message-bubble ai">
-                      <p class="text-sm">Excellente question ! {produit} soulage les douleurs en agissant directement sur les zones à l'origine des douleurs.</p>
-                      <div class="mt-3 space-y-2">
-                        <button class="quick-reply">🛍️ Je veux l'acheter</button>
-                        <button class="quick-reply">💬 Je veux en savoir plus</button>
-                        <button class="quick-reply">📞 Je veux parler à un conseiller</button>
+                  <!-- Étape 3: Intégrer le Widget -->
+                  <div class="welcome-step" :class="{ 'completed': stepStatus.widgetIntegration }">
+                    <div class="flex items-start space-x-4">
+                      <div class="step-number">
+                        <span v-if="stepStatus.widgetIntegration" class="text-green-600">✓</span>
+                        <span v-else class="text-blue-600 font-semibold">3</span>
+                      </div>
+                      <div class="flex-1">
+                        <h4 class="font-medium text-gray-900">🔗 Intégrer sur votre site</h4>
+                        <p class="text-sm text-gray-600 mt-1">
+                          Copiez le code d'intégration et ajoutez-le sur votre site pour activer votre Vendeur IA.
+                        </p>
+                        <button
+                          @click="goToStep('/agent-config?tab=integration')"
+                          class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center"
+                        >
+                          {{ stepStatus.widgetIntegration ? '🔧 Voir l\'intégration' : '💻 Obtenir le code' }}
+                          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div class="chat-input">
-                  <div class="flex items-center space-x-2">
-                    <input 
-                      type="text" 
-                      placeholder="Tapez votre message..."
-                      class="flex-1 px-3 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      disabled
-                    />
-                    <button class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                      </svg>
-                    </button>
+                <!-- Progression -->
+                <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-xl border border-blue-200">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm font-semibold text-blue-900">🎯 Progression de votre configuration</span>
+                    <span class="text-lg font-bold text-blue-600">{{ configurationProgress }}%</span>
+                  </div>
+                  <div class="w-full bg-blue-200 rounded-full h-3">
+                    <div 
+                      class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500 shadow-lg"
+                      :style="{ width: `${configurationProgress}%` }"
+                    ></div>
+                  </div>
+                  <p class="text-xs text-blue-700 mt-2">
+                    {{ configurationProgress === 100 ? '🎉 Configuration terminée !' : 'Quelques étapes pour un Vendeur IA optimal' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Aperçu du Chat -->
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-6">👀 Aperçu de votre futur Vendeur IA</h3>
+                
+                <!-- Mockup du Chat amélioré -->
+                <div class="chat-preview shadow-xl border-2 border-gray-200">
+                  <div class="chat-header">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center animate-pulse">
+                        <span class="text-white text-sm font-bold">🤖</span>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-gray-900">Vendeur IA ChatSeller</p>
+                        <p class="text-xs text-green-600 flex items-center">
+                          <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                          En ligne • Répond en < 2s
+                        </p>
+                      </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      ⚡ Powered by ChatSeller
+                    </div>
+                  </div>
+
+                  <div class="chat-messages">
+                    <!-- Message d'accueil de l'IA -->
+                    <div class="ai-message">
+                      <div class="message-bubble ai">
+                        <p class="text-sm">👋 Bonjour ! Je vois que vous regardez <strong>[Produit]</strong>. Puis-je vous aider à faire le bon choix ?</p>
+                      </div>
+                    </div>
+
+                    <!-- Réponse utilisateur -->
+                    <div class="user-message">
+                      <div class="message-bubble user">
+                        <p class="text-sm">Oui, j'aimerais savoir si c'est adapté à mes besoins</p>
+                      </div>
+                    </div>
+
+                    <!-- Réponse avec options -->
+                    <div class="ai-message">
+                      <div class="message-bubble ai">
+                        <p class="text-sm">Parfait ! 🎯 Pour vous conseiller au mieux, pouvez-vous me dire :</p>
+                        <ul class="text-xs mt-2 space-y-1">
+                          <li>• Dans quel contexte l'utiliserez-vous ?</li>
+                          <li>• Avez-vous des contraintes particulières ?</li>
+                        </ul>
+                        <div class="mt-3 space-y-2">
+                          <button class="quick-reply">💬 Usage domestique</button>
+                          <button class="quick-reply">🏢 Usage professionnel</button>
+                          <button class="quick-reply">🛒 Je veux acheter directement</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Indication de frappe -->
+                    <div class="ai-message">
+                      <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="chat-input">
+                    <div class="flex items-center space-x-2">
+                      <input 
+                        type="text" 
+                        placeholder="💬 Posez votre question..."
+                        class="flex-1 px-4 py-3 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled
+                      />
+                      <button class="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-lg">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Stats simulées -->
+                <div class="mt-6 grid grid-cols-2 gap-4">
+                  <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-green-600">+35%</div>
+                    <div class="text-xs text-green-700">Conversions moyennes</div>
+                  </div>
+                  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-blue-600">24/7</div>
+                    <div class="text-xs text-blue-700">Disponibilité</div>
                   </div>
                 </div>
               </div>
@@ -202,23 +243,25 @@
         </div>
 
         <!-- Footer du Modal -->
-        <div class="px-8 py-4 bg-gray-50 rounded-b-2xl flex items-center justify-between">
-          <div class="text-sm text-gray-600">
-            <span class="font-medium">Conseil :</span> Commencez par configurer votre Vendeur IA pour de meilleurs résultats
-          </div>
-          <div class="flex items-center space-x-3">
-            <button
-              @click="skipModal"
-              class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
-            >
-              Je le ferai plus tard
-            </button>
-            <button
-              @click="goToStep('/vendeurs-ia')"
-              class="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
-            >
-              Commencer la configuration
-            </button>
+        <div class="px-8 py-6 bg-gray-50 border-t border-gray-200 flex-shrink-0">
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+              <span class="font-medium">💡 Conseil :</span> Commencez par configurer votre Vendeur IA pour de meilleurs résultats
+            </div>
+            <div class="flex items-center space-x-3">
+              <button
+                @click="skipModal"
+                class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
+              >
+                Je découvrirai plus tard
+              </button>
+              <button
+                @click="goToStep('/agent-config')"
+                class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+              >
+                🚀 Commencer la configuration
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -236,7 +279,7 @@
               </p>
               <div class="mt-4 flex flex-wrap gap-3">
                 <NuxtLink 
-                  to="/vendeurs-ia" 
+                  to="/agent-config" 
                   class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-lg text-white font-medium hover:bg-opacity-30 transition-all"
                 >
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -582,7 +625,7 @@
             </div>
 
             <div class="setup-item" :class="{ 'completed': setupStatus.agentConfig }">
-              <NuxtLink to="/vendeurs-ia" class="flex items-center justify-between w-full">
+              <NuxtLink to="/agent-config" class="flex items-center justify-between w-full">
                 <div class="flex items-center space-x-3">
                   <div class="setup-icon" :class="setupStatus.agentConfig ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -605,7 +648,7 @@
             </div>
 
             <div class="setup-item" :class="{ 'completed': setupStatus.widgetIntegration }">
-              <NuxtLink to="/settings?tab=integration" class="flex items-center justify-between w-full">
+              <NuxtLink to="/agent-config?tab=integration" class="flex items-center justify-between w-full">
                 <div class="flex items-center space-x-3">
                   <div class="setup-icon" :class="setupStatus.widgetIntegration ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -646,7 +689,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useDatabase } from '~~/composables/useDatabase'
 
@@ -716,6 +759,11 @@ const successMessage = ref('')
 // ✅ NOUVEAUX ÉTATS POUR MODAL DE BIENVENUE
 const showWelcomeModal = ref(false)
 const showWelcomeBanner = ref(false)
+
+// ✅ CONFETTIS VARIABLES
+const confettiCanvas = ref(null)
+const canvasWidth = ref(0)
+const canvasHeight = ref(0)
 
 // ✅ DONNÉES DYNAMIQUES
 const dashboardStats = ref<DashboardStats>({
@@ -812,14 +860,81 @@ const showNotification = (message: string) => {
   }, 3000)
 }
 
+// ✅ SYSTÈME DE CONFETTIS LÉGER
+const createConfetti = () => {
+  if (!confettiCanvas.value) return
+  
+  const canvas = confettiCanvas.value
+  const ctx = canvas.getContext('2d')
+  
+  // Ajuster la taille du canvas
+  canvasWidth.value = window.innerWidth
+  canvasHeight.value = window.innerHeight
+  
+  const confettiCount = 50
+  const confettiArray = []
+  
+  const colors = ['#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FFB6C1']
+  
+  // Créer les confettis
+  for (let i = 0; i < confettiCount; i++) {
+    confettiArray.push({
+      x: Math.random() * canvasWidth.value,
+      y: -10,
+      size: Math.random() * 8 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speed: Math.random() * 3 + 2,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 10
+    })
+  }
+  
+  // Animation
+  const animate = () => {
+    ctx.clearRect(0, 0, canvasWidth.value, canvasHeight.value)
+    
+    confettiArray.forEach((confetti, index) => {
+      ctx.save()
+      ctx.translate(confetti.x, confetti.y)
+      ctx.rotate((confetti.rotation * Math.PI) / 180)
+      ctx.fillStyle = confetti.color
+      ctx.fillRect(-confetti.size / 2, -confetti.size / 2, confetti.size, confetti.size)
+      ctx.restore()
+      
+      // Mise à jour position
+      confetti.y += confetti.speed
+      confetti.x += Math.sin(confetti.y / 50) * 0.5
+      confetti.rotation += confetti.rotationSpeed
+      
+      // Supprimer si hors écran
+      if (confetti.y > canvasHeight.value + 10) {
+        confettiArray.splice(index, 1)
+      }
+    })
+    
+    if (confettiArray.length > 0) {
+      requestAnimationFrame(animate)
+    }
+  }
+  
+  animate()
+}
+
 // ✅ GESTION MODAL DE BIENVENUE
 const checkWelcomeModal = () => {
   const urlParams = new URLSearchParams(window.location.search)
   const showWelcome = urlParams.get('welcome') === 'true'
   const onboardingCompleted = urlParams.get('onboarding') === 'completed'
+  const isNewUser = urlParams.get('newuser') === 'true'
   
   if (showWelcome && onboardingCompleted) {
     showWelcomeModal.value = true
+    
+    // ✅ LANCER LES CONFETTIS APRÈS UN COURT DÉLAI
+    setTimeout(() => {
+      createConfetti()
+    }, 500)
+    
     // Nettoyer l'URL
     window.history.replaceState({}, '', window.location.pathname)
   } else if (showWelcome) {
@@ -1041,13 +1156,27 @@ const goToOrder = (id: string) => {
   navigateTo(`/orders/${id}`)
 }
 
+// ✅ GESTION RESPONSIVE CANVAS
+const handleResize = () => {
+  canvasWidth.value = window.innerWidth
+  canvasHeight.value = window.innerHeight
+}
+
 // ✅ LIFECYCLE
 onMounted(async () => {
   // Vérifier si modal de bienvenue à afficher
   checkWelcomeModal()
   
+  // Gérer le resize pour le canvas
+  handleResize()
+  window.addEventListener('resize', handleResize)
+  
   // Charger les données
   await loadDashboardData()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 
 // ✅ SEO
@@ -1100,7 +1229,7 @@ useHead({
 
 /* ✅ NOUVEAUX STYLES POUR MODAL BIENVENUE */
 .welcome-step {
-  @apply p-4 border border-gray-200 rounded-lg transition-all hover:border-blue-300;
+  @apply p-4 border border-gray-200 rounded-lg transition-all hover:border-blue-300 hover:bg-blue-50;
 }
 
 .welcome-step.completed {
@@ -1108,24 +1237,24 @@ useHead({
 }
 
 .step-number {
-  @apply w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium;
+  @apply w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium flex-shrink-0;
 }
 
 .welcome-step.completed .step-number {
   @apply bg-green-100;
 }
 
-/* ✅ STYLES CHAT PREVIEW */
+/* ✅ CHAT PREVIEW AMÉLIORÉ */
 .chat-preview {
-  @apply bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm;
+  @apply bg-white rounded-2xl overflow-hidden;
 }
 
 .chat-header {
-  @apply px-4 py-3 bg-gray-50 border-b border-gray-200;
+  @apply px-4 py-3 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200 flex items-center justify-between;
 }
 
 .chat-messages {
-  @apply p-4 space-y-3 max-h-64 overflow-y-auto bg-gray-50;
+  @apply p-4 space-y-3 h-80 overflow-y-auto bg-gradient-to-b from-gray-50 to-white;
 }
 
 .ai-message {
@@ -1137,26 +1266,69 @@ useHead({
 }
 
 .message-bubble {
-  @apply px-3 py-2 rounded-2xl max-w-xs text-sm;
+  @apply px-4 py-3 rounded-2xl max-w-xs text-sm shadow-sm;
 }
 
 .message-bubble.ai {
-  @apply bg-blue-100 text-blue-900;
+  @apply bg-white border border-gray-200 text-gray-800;
 }
 
 .message-bubble.user {
-  @apply bg-green-100 text-green-900;
+  @apply bg-blue-600 text-white;
 }
 
 .quick-reply {
-  @apply w-full text-left px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs hover:bg-gray-50 transition-colors;
+  @apply w-full text-left px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs hover:bg-blue-100 transition-colors font-medium;
 }
 
 .chat-input {
-  @apply p-3 bg-gray-50 border-t border-gray-200;
+  @apply p-4 bg-white border-t border-gray-200;
+}
+
+/* ✅ TYPING INDICATOR */
+.typing-indicator {
+  @apply flex space-x-1 px-4 py-3 bg-gray-100 rounded-2xl max-w-xs;
+}
+
+.typing-indicator span {
+  @apply w-2 h-2 bg-gray-400 rounded-full animate-bounce;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.2s;
 }
 
 /* ✅ ANIMATIONS */
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -1166,17 +1338,9 @@ useHead({
   animation: spin 1s linear infinite;
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .5;
-  }
+/* ✅ EMPÊCHER LE SCROLL DANS LE MODAL BACKDROP */
+.overflow-hidden {
+  overflow: hidden !important;
 }
 
 /* ✅ RESPONSIVE */
@@ -1191,6 +1355,18 @@ useHead({
   
   .chat-preview {
     @apply mx-2;
+  }
+  
+  .chat-messages {
+    height: 250px;
+  }
+  
+  .max-w-5xl {
+    max-width: 95vw;
+  }
+  
+  .grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
   }
 }
 </style>

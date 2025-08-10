@@ -1,4 +1,4 @@
-<!-- pages/auth/callback.vue - VERSION FINALE AVEC AFFICHAGE FORCÉ -->
+<!-- pages/auth/callback.vue - VERSION AMÉLIORÉE UX -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
@@ -17,18 +17,30 @@
           Confirmation en cours...
         </h2>
         <p class="text-gray-600 mb-4">
-          Veuillez patienter pendant que nous validons votre compte.
+          Vérification de votre adresse email
         </p>
         
-        <!-- Progress steps -->
+        <!-- Progress steps avec délais -->
         <div class="text-sm text-gray-500 space-y-1">
-          <p v-if="step === 'tokens'">🔑 Récupération des tokens...</p>
-          <p v-else-if="step === 'session'">🔐 Création de la session...</p>
-          <p v-else-if="step === 'store'">💾 Mise à jour des données...</p>
-          <p v-else-if="step === 'creating-shop'">🏪 Création de votre espace...</p>
-          <p v-else-if="step === 'redirect'">🚀 Finalisation...</p>
+          <p v-if="step === 'parsing'">🔍 Analyse du lien de confirmation...</p>
+          <p v-else-if="step === 'tokens'">🔑 Récupération des informations...</p>
+          <p v-else-if="step === 'verification'">✅ Vérification de votre email...</p>
+          <p v-else-if="step === 'session'">🔐 Création de votre session...</p>
+          <p v-else-if="step === 'store'">💾 Préparation de vos données...</p>
+          <p v-else-if="step === 'creating-shop'">🏪 Configuration de votre espace...</p>
+          <p v-else-if="step === 'finalizing'">✨ Finalisation...</p>
+          <p v-else-if="step === 'redirect'">🚀 Préparation de votre onboarding...</p>
           <p v-else>⏳ Initialisation...</p>
         </div>
+        
+        <!-- Progress bar -->
+        <div class="mt-4 w-full bg-gray-200 rounded-full h-2">
+          <div 
+            class="bg-blue-600 h-2 rounded-full transition-all duration-500"
+            :style="{ width: `${progressPercent}%` }"
+          ></div>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">{{ progressPercent }}% terminé</p>
       </div>
 
       <!-- Success State -->
@@ -41,36 +53,36 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          🎉 Votre e-mail est confirmé !
+          🎉 Email confirmé avec succès !
         </h2>
         <p class="text-gray-600 mb-4">
-          Votre compte ChatSeller a été activé avec succès.
+          Votre compte ChatSeller est maintenant activé
         </p>
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <p class="text-blue-800 text-sm">
-            <strong>Prochaine étape :</strong> Configuration de votre compte Chatseller
+            <strong>Prochaine étape :</strong> Configurons ensemble votre espace de vente IA
           </p>
         </div>
         
-        <!-- Progress bar -->
+        <!-- Countdown Progress -->
         <div class="mb-6">
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div 
-              class="bg-blue-600 h-2 rounded-full transition-all duration-100 ease-linear"
-              :style="{ width: `${progressWidth}%` }"
+              class="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all duration-100 ease-linear"
+              :style="{ width: `${countdownProgress}%` }"
             ></div>
           </div>
           <p class="text-sm text-gray-500 mt-2">
-            Redirection dans {{ countdown }} secondes...
+            Configuration automatique dans {{ countdown }} secondes...
           </p>
         </div>
         
         <!-- Action button -->
         <button
-          @click="redirectToApp"
-          class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          @click="redirectToOnboarding"
+          class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-green-700 transition-all shadow-lg transform hover:scale-105"
         >
-          Continuer maintenant
+          Configurer mon espace maintenant
         </button>
       </div>
 
@@ -119,117 +131,206 @@ definePageMeta({
 })
 
 const supabase = useSupabase()
+const config = useRuntimeConfig()
 
 // State
 const loading = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
-const countdown = ref(5) // ✅ AUGMENTÉ À 5 SECONDES
-const progressWidth = ref(0)
+const countdown = ref(5) // ✅ 5 SECONDES MINIMUM POUR LA CONFIRMATION
+const countdownProgress = ref(0)
 const step = ref('init')
+const progressPercent = ref(0)
 
-// ✅ NOUVELLES VARIABLES POUR FORCER L'AFFICHAGE
-const processingComplete = ref(false)
-const redirecting = ref(false)
+// Variables pour forcer l'affichage minimum
+const minDisplayTime = 3000 // ✅ 3 SECONDES MINIMUM POUR VOIR LA CONFIRMATION
 
-// Traitement principal
-onMounted(async () => {
-  try {
-    console.log('🔗 [Callback] Début traitement confirmation email...')
+// ✅ FONCTION POUR CALCULER LE PROGRÈS
+const updateProgress = (currentStep: string) => {
+  const steps = ['init', 'parsing', 'tokens', 'verification', 'session', 'store', 'creating-shop', 'finalizing', 'redirect']
+  const currentIndex = steps.indexOf(currentStep)
+  progressPercent.value = Math.round((currentIndex / (steps.length - 1)) * 100)
+}
+
+// ✅ ANALYSER URL AVEC GESTION ROBUSTE
+const parseCallbackUrl = () => {
+  const url = window.location.href
+  const hash = window.location.hash
+  const search = window.location.search
+  
+  console.log('🔍 [Callback] Analyse URL:', url)
+  
+  let tokens = {
+    access_token: '',
+    refresh_token: '',
+    token_hash: '',
+    type: '',
+    error: '',
+    error_description: ''
+  }
+  
+  // Hash fragments (#) 
+  if (hash && hash.length > 1) {
+    const hashContent = hash.substring(1)
+    const hashParams = new URLSearchParams(hashContent)
     
-    step.value = 'tokens'
+    tokens.access_token = hashParams.get('access_token') || ''
+    tokens.refresh_token = hashParams.get('refresh_token') || ''
+    tokens.token_hash = hashParams.get('token_hash') || ''
+    tokens.type = hashParams.get('type') || ''
+    tokens.error = hashParams.get('error') || ''
+    tokens.error_description = hashParams.get('error_description') || ''
+  }
+  
+  // Query parameters (?)
+  if (search) {
+    const urlParams = new URLSearchParams(search)
     
-    // ✅ DÉLAI MINIMUM POUR VOIR LE LOADING
-    await new Promise(resolve => setTimeout(resolve, 800))
+    if (!tokens.access_token) tokens.access_token = urlParams.get('access_token') || ''
+    if (!tokens.refresh_token) tokens.refresh_token = urlParams.get('refresh_token') || ''
+    if (!tokens.token_hash) tokens.token_hash = urlParams.get('token_hash') || ''
+    if (!tokens.type) tokens.type = urlParams.get('type') || ''
+    if (!tokens.error) tokens.error = urlParams.get('error') || ''
+    if (!tokens.error_description) tokens.error_description = urlParams.get('error_description') || ''
+  }
+  
+  return tokens
+}
+
+// ✅ CRÉER SESSION SUPABASE
+const establishSupabaseSession = async (tokens: any) => {
+  console.log('🔐 [Callback] Création session Supabase')
+  
+  if (tokens.error) {
+    throw new Error(tokens.error_description || tokens.error)
+  }
+  
+  let sessionData = null
+  
+  // Méthode moderne avec token_hash
+  if (tokens.token_hash) {
+    console.log('🔑 [Callback] Utilisation token_hash')
     
-    // ✅ MÉTHODE AMÉLIORÉE : Gérer tous les types d'URLs de callback Supabase
-    let accessToken = ''
-    let refreshToken = ''
-    let tokenHash = ''
-    let type = ''
-    
-    // Vérifier les fragments d'URL (#)
-    if (window.location.hash && window.location.hash.includes('access_token')) {
-      console.log('🔑 [Callback] Tokens détectés dans hash')
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      accessToken = hashParams.get('access_token') || ''
-      refreshToken = hashParams.get('refresh_token') || ''
-      type = hashParams.get('type') || ''
-    }
-    // Vérifier les paramètres de query (?)
-    else if (window.location.search) {
-      console.log('🔑 [Callback] Tokens détectés dans query')
-      const urlParams = new URLSearchParams(window.location.search)
-      accessToken = urlParams.get('access_token') || ''
-      refreshToken = urlParams.get('refresh_token') || ''
-      tokenHash = urlParams.get('token_hash') || ''
-      type = urlParams.get('type') || ''
-    }
-    
-    // ✅ NOUVELLE GESTION : Support token_hash (format moderne Supabase)
-    if (!accessToken && tokenHash) {
-      console.log('🔑 [Callback] Token hash détecté, échange en cours...')
-      
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type: 'email'
-      })
-      
-      if (error || !data.session) {
-        throw new Error(error?.message || 'Impossible de vérifier le token')
-      }
-      
-      accessToken = data.session.access_token
-      refreshToken = data.session.refresh_token
-      type = 'signup'
-    }
-    
-    if (!accessToken && !tokenHash) {
-      throw new Error('Aucun token de confirmation trouvé dans l\'URL')
-    }
-    
-    console.log('✅ [Callback] Tokens récupérés:', { 
-      hasAccess: !!accessToken, 
-      hasRefresh: !!refreshToken, 
-      type 
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokens.token_hash,
+      type: tokens.type || 'email'
     })
     
-    step.value = 'session'
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // ✅ CRÉER/RÉCUPÉRER LA SESSION
-    let sessionData
-    
-    if (accessToken && refreshToken) {
-      // Tokens complets disponibles
-      const { data, error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      })
-      
-      if (sessionError || !data.session) {
-        throw new Error(sessionError?.message || 'Impossible de créer la session')
-      }
-      
-      sessionData = data
-    } else {
-      // Récupérer la session actuelle (cas token_hash)
-      const { data, error } = await supabase.auth.getSession()
-      
-      if (error || !data.session) {
-        throw new Error('Aucune session active après vérification')
-      }
-      
-      sessionData = data
+    if (error) {
+      throw new Error(`Erreur vérification: ${error.message}`)
     }
     
-    console.log('✅ [Callback] Session créée pour:', sessionData.user?.email)
+    sessionData = data
+  }
+  // Méthode classique
+  else if (tokens.access_token && tokens.refresh_token) {
+    const { data, error } = await supabase.auth.setSession({
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token
+    })
+    
+    if (error) {
+      throw new Error(`Erreur session: ${error.message}`)
+    }
+    
+    sessionData = data
+  }
+  else {
+    throw new Error('Aucun token valide trouvé')
+  }
+  
+  return sessionData
+}
+
+// ✅ ASSURER L'EXISTENCE DU SHOP
+const ensureShopExists = async (user: any, token: string) => {
+  console.log('🏪 [Callback] Vérification/création shop')
+  
+  const api = useApi()
+  
+  try {
+    // Vérifier si le shop existe
+    const shopResponse = await api.shops.get(user.id)
+    
+    if (shopResponse.success && shopResponse.data) {
+      console.log('✅ [Callback] Shop existant trouvé')
+      return shopResponse.data
+    }
+  } catch (checkError) {
+    console.log('ℹ️ [Callback] Shop non trouvé, création...')
+  }
+  
+  // Créer le shop
+  const createData = {
+    id: user.id,
+    name: user.user_metadata?.company || `Shop de ${user.user_metadata?.first_name || user.email?.split('@')[0]}`,
+    email: user.email,
+    subscription_plan: 'free',
+    is_active: true,
+    onboarding_completed: false,
+    widget_config: {
+      theme: 'modern',
+      primaryColor: '#E91E63',
+      position: 'bottom-right',
+      buttonText: 'Parler au vendeur',
+      language: 'fr'
+    },
+    agent_config: {
+      name: 'Rose',
+      avatar: 'https://ui-avatars.com/api/?name=Rose&background=E91E63&color=fff',
+      welcomeMessage: 'Bonjour ! Je suis votre assistante d\'achat. Comment puis-je vous aider ?',
+      fallbackMessage: 'Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt.',
+      collectPaymentMethod: true,
+      upsellEnabled: false
+    }
+  }
+  
+  const createResponse = await api.shops.create(createData)
+  
+  if (!createResponse.success) {
+    throw new Error(createResponse.error || 'Erreur création shop')
+  }
+  
+  console.log('✅ [Callback] Shop créé avec succès')
+  return createResponse.data
+}
+
+// ✅ TRAITEMENT PRINCIPAL AVEC DÉLAIS OBLIGATOIRES
+onMounted(async () => {
+  const startTime = Date.now()
+  
+  try {
+    console.log('🔗 [Callback] Début traitement confirmation email')
+    
+    step.value = 'parsing'
+    updateProgress('parsing')
+    await new Promise(resolve => setTimeout(resolve, 800))
+    
+    const tokens = parseCallbackUrl()
+    
+    step.value = 'tokens'
+    updateProgress('tokens')
+    await new Promise(resolve => setTimeout(resolve, 600))
+    
+    step.value = 'verification'
+    updateProgress('verification')
+    const sessionData = await establishSupabaseSession(tokens)
+    
+    if (!sessionData?.user) {
+      throw new Error('Données utilisateur manquantes')
+    }
+    
+    console.log('✅ [Callback] Email confirmé pour:', sessionData.user.email)
+    
+    step.value = 'session'
+    updateProgress('session')
+    await new Promise(resolve => setTimeout(resolve, 600))
     
     step.value = 'store'
-    await new Promise(resolve => setTimeout(resolve, 500))
+    updateProgress('store')
     
-    // ✅ METTRE À JOUR LE STORE
+    // Mise à jour du store
     try {
       const authStore = useAuthStore()
       const userData = await authStore.fetchCompleteUserDataViaAPI(
@@ -237,168 +338,96 @@ onMounted(async () => {
         sessionData.session.access_token
       )
       authStore.setUser(userData, sessionData.session.access_token)
-      
-      console.log('✅ [Callback] Store mis à jour avec succès')
+      console.log('✅ [Callback] Store synchronisé')
     } catch (storeError) {
-      console.warn('⚠️ [Callback] Erreur store, utilisation données auth:', storeError)
-      
-      // Fallback simple
-      const authStore = useAuthStore()
-      const fallbackUser = {
-        id: sessionData.user.id,
-        email: sessionData.user.email!,
-        name: sessionData.user.user_metadata?.name || sessionData.user.email?.split('@')[0],
-        firstName: sessionData.user.user_metadata?.first_name,
-        lastName: sessionData.user.user_metadata?.last_name,
-        shopId: sessionData.user.id,
-        shop_id: sessionData.user.id,
-        avatar: sessionData.user.user_metadata?.avatar_url,
-        role: 'user' as const,
-        createdAt: sessionData.user.created_at,
-        shop: null
-      }
-      
-      authStore.setUser(fallbackUser, sessionData.session.access_token)
+      console.warn('⚠️ [Callback] Erreur store (non critique):', storeError)
     }
     
-    // ✅ NOUVEAU : CRÉER LE SHOP SI NÉCESSAIRE
+    await new Promise(resolve => setTimeout(resolve, 600))
+    
     step.value = 'creating-shop'
-    await new Promise(resolve => setTimeout(resolve, 500))
+    updateProgress('creating-shop')
     
+    // Assurer l'existence du shop
     try {
-      await ensureShopExists(sessionData.user, sessionData.session.access_token)
-      console.log('✅ [Callback] Shop vérifié/créé avec succès')
-    } catch (shopError) {
-      console.warn('⚠️ [Callback] Erreur shop (non bloquante):', shopError)
-      // Ne pas bloquer pour un problème de shop
+      const shopData = await ensureShopExists(sessionData.user, sessionData.session.access_token)
+      console.log('✅ [Callback] Shop configuré')
+    } catch (shopError: any) {
+      console.error('❌ [Callback] Erreur shop:', shopError)
+      throw new Error(`Configuration espace échouée: ${shopError.message}`)
     }
     
-    // ✅ NETTOYER L'URL
-    window.history.replaceState({}, '', window.location.pathname)
+    await new Promise(resolve => setTimeout(resolve, 800))
+    
+    step.value = 'finalizing'
+    updateProgress('finalizing')
+    await new Promise(resolve => setTimeout(resolve, 800))
     
     step.value = 'redirect'
+    updateProgress('redirect')
     
-    // ✅ MARQUER COMME COMPLÉTÉ ET AFFICHER L'INTERFACE DE SUCCÈS
+    // ✅ ASSURER L'AFFICHAGE MINIMUM MÊME SI TRAITEMENT RAPIDE
+    const elapsedTime = Date.now() - startTime
+    const remainingTime = Math.max(0, minDisplayTime - elapsedTime)
+    
+    if (remainingTime > 0) {
+      console.log(`⏳ [Callback] Attente ${remainingTime}ms pour affichage minimum`)
+      await new Promise(resolve => setTimeout(resolve, remainingTime))
+    }
+    
+    // Nettoyer l'URL
+    window.history.replaceState({}, '', window.location.pathname)
+    
     loading.value = false
     success.value = true
-    processingComplete.value = true
     
-    console.log('✅ [Callback] Confirmation réussie - Affichage interface succès')
+    console.log('✅ [Callback] Confirmation terminée avec succès')
     startCountdown()
     
   } catch (err: any) {
     console.error('❌ [Callback] Erreur:', err)
     
+    // ✅ ASSURER L'AFFICHAGE MINIMUM MÊME EN CAS D'ERREUR
+    const elapsedTime = Date.now() - startTime
+    const remainingTime = Math.max(0, minDisplayTime - elapsedTime)
+    
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime))
+    }
+    
     loading.value = false
     error.value = true
     
-    // Messages d'erreur user-friendly
+    // Messages d'erreur appropriés
     if (err.message?.includes('expired')) {
-      errorMessage.value = 'Le lien de confirmation a expiré. Veuillez créer un nouveau compte.'
+      errorMessage.value = 'Le lien de confirmation a expiré. Créez un nouveau compte.'
     } else if (err.message?.includes('invalid') || err.message?.includes('token')) {
-      errorMessage.value = 'Le lien de confirmation est invalide. Vérifiez votre email ou réessayez.'
-    } else if (err.message?.includes('already') || err.message?.includes('confirmed')) {
-      errorMessage.value = 'Ce compte a déjà été confirmé. Vous pouvez vous connecter.'
+      errorMessage.value = 'Lien de confirmation invalide. Vérifiez votre email.'
+    } else if (err.message?.includes('shop') || err.message?.includes('espace')) {
+      errorMessage.value = 'Email confirmé mais configuration échouée. Contactez le support.'
     } else {
-      errorMessage.value = 'Erreur lors de la confirmation. Contactez le support si le problème persiste.'
+      errorMessage.value = 'Erreur de confirmation. Contactez le support si cela persiste.'
     }
   }
 })
 
-// ✅ FONCTION POUR CRÉER LE SHOP SI NÉCESSAIRE
-const ensureShopExists = async (user: any, token: string) => {
-  try {
-    console.log('🏪 [Callback] Vérification existence shop...')
-    
-    const config = useRuntimeConfig()
-    const baseURL = config.public.apiBaseUrl
-    
-    // Essayer de récupérer le shop
-    try {
-      const shopResponse = await $fetch(`/api/v1/shops/${user.id}`, {
-        baseURL,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      if (shopResponse && shopResponse.data) {
-        console.log('✅ [Callback] Shop existe déjà')
-        return shopResponse.data
-      }
-    } catch (fetchError: any) {
-      if (!fetchError.message?.includes('404')) {
-        throw fetchError // Relancer si ce n'est pas une 404
-      }
-      console.log('🆕 [Callback] Shop manquant (404), création nécessaire...')
-    }
-    
-    // Créer le shop
-    console.log('🆕 [Callback] Création du shop...')
-    const createResponse = await $fetch('/api/v1/shops', {
-      method: 'POST',
-      baseURL,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: {
-        id: user.id,
-        name: `Shop de ${user.user_metadata?.first_name || user.email?.split('@')[0]}`,
-        email: user.email,
-        subscription_plan: 'free',
-        is_active: true,
-        onboarding_completed: false, // ✅ IMPORTANT
-        widget_config: {
-          theme: 'modern',
-          primaryColor: '#E91E63',
-          position: 'bottom-right',
-          buttonText: 'Parler au vendeur',
-          language: 'fr'
-        },
-        agent_config: {
-          name: 'Rose',
-          avatar: 'https://ui-avatars.com/api/?name=Rose&background=E91E63&color=fff',
-          welcomeMessage: 'Bonjour ! Je suis votre assistante d\'achat. Comment puis-je vous aider ?',
-          fallbackMessage: 'Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt.',
-          collectPaymentMethod: true,
-          upsellEnabled: false
-        }
-      }
-    })
-    
-    console.log('✅ [Callback] Shop créé avec succès')
-    return createResponse.data
-    
-  } catch (error: any) {
-    console.error('❌ [Callback] Erreur ensure shop:', error)
-    throw error
-  }
-}
-
-// Countdown et redirection
+// ✅ COUNTDOWN AVEC PROGRESS
 const startCountdown = () => {
   const interval = setInterval(() => {
     countdown.value--
-    progressWidth.value = ((5 - countdown.value) / 5) * 100
+    countdownProgress.value = ((5 - countdown.value) / 5) * 100
     
     if (countdown.value <= 0) {
       clearInterval(interval)
-      redirectToApp()
+      redirectToOnboarding()
     }
   }, 1000)
 }
 
-// Redirection intelligente
-const redirectToApp = async () => {
-  if (redirecting.value) return // Éviter double redirection
-  redirecting.value = true
-  
-  console.log('🚀 [Callback] Redirection vers onboarding...')
-  
-  // ✅ TOUJOURS REDIRIGER VERS ONBOARDING APRÈS CONFIRMATION EMAIL
-  await navigateTo('/onboarding?from=email-confirmation', { replace: true })
+// ✅ REDIRECTION VERS ONBOARDING
+const redirectToOnboarding = async () => {
+  console.log('🚀 [Callback] Redirection vers onboarding')
+  await navigateTo('/onboarding?from=email-confirmation&welcome=true')
 }
 
 useHead({

@@ -298,82 +298,100 @@ export const useAuthStore = defineStore('auth', {
 
     // ✅ FONCTION CORRIGÉE : RÉCUPÉRATION DONNÉES VIA API AVEC RETRY
     async fetchCompleteUserDataViaAPI(authUser: any, token: string, forceRefresh: boolean = false): Promise<User> {
-      try {
-        console.log('📡 [Store] Récupération données utilisateur via API...', forceRefresh ? '(FORCE REFRESH)' : '')
-        
-        const config = useRuntimeConfig()
-        const baseURL = config.public.apiBaseUrl
-        
-        // ✅ NOUVEAU: AJOUTER UN CACHE BUST POUR FORCER LE REFRESH
-        const cacheBuster = forceRefresh ? `?_t=${Date.now()}` : ''
-        
-        const shopResponse = await $fetch(`/api/v1/shops/${authUser.id}${cacheBuster}`, {
-          baseURL,
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            // ✅ NOUVEAU: HEADERS POUR ÉVITER LE CACHE
-            ...(forceRefresh && {
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            })
-          }
-        }) as any
+  try {
+    console.log('📡 [Store] Récupération données utilisateur via API...', forceRefresh ? '(FORCE REFRESH)' : '')
+    
+    const config = useRuntimeConfig()
+    const baseURL = config.public.apiBaseUrl
+    
+    // ✅ TIMEOUT ET RETRY POUR ÉVITER LES BLOCAGES
+    const timeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout API')), 10000)
+    )
+    
+    // ✅ CACHE BUST POUR FORCER LE REFRESH
+    const cacheBuster = forceRefresh ? `?_t=${Date.now()}` : ''
+    
+    const apiCall = $fetch(`/api/v1/shops/${authUser.id}${cacheBuster}`, {
+      baseURL,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        // ✅ HEADERS POUR ÉVITER LE CACHE
+        ...(forceRefresh && {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        })
+      },
+      // ✅ RETRY AUTOMATIQUE
+      retry: 2,
+      retryDelay: 1000
+    }) as Promise<any>
 
-        let shopData = null
-        if (shopResponse && !shopResponse.error) {
-          shopData = shopResponse.data || shopResponse
-          console.log('✅ [Store] Données shop récupérées via API:', {
-            id: shopData.id,
-            email: shopData.email,
-            plan: shopData.subscription_plan,
-            isActive: shopData.is_active,
-            updatedAt: shopData.updatedAt
-          })
-        } else {
-          console.warn('⚠️ [Store] Shop non trouvé via API, utilisation métadonnées auth')
-        }
+    const shopResponse = await Promise.race([apiCall, timeout])
 
-        const user: User = {
-          id: authUser.id,
-          email: authUser.email!,
-          firstName: authUser.user_metadata?.first_name || null,
-          lastName: authUser.user_metadata?.last_name || null,
-          name: authUser.user_metadata?.name || 
-                (authUser.user_metadata?.first_name && authUser.user_metadata?.last_name 
-                  ? `${authUser.user_metadata.first_name} ${authUser.user_metadata.last_name}` 
-                  : null) ||
-                authUser.email?.split('@')[0],
-          shopId: authUser.id,
-          shop_id: authUser.id,
-          avatar: authUser.user_metadata?.avatar_url,
-          role: 'user',
-          createdAt: authUser.created_at,
-          shop: shopData
-        }
+    let shopData = null
+    if (shopResponse && shopResponse.success !== false) {
+      shopData = shopResponse.data || shopResponse
+      console.log('✅ [Store] Données shop récupérées via API:', {
+        id: shopData.id,
+        email: shopData.email,
+        plan: shopData.subscription_plan,
+        isActive: shopData.is_active,
+        updatedAt: shopData.updatedAt,
+        onboarding_completed: shopData.onboarding_completed
+      })
+    } else {
+      console.warn('⚠️ [Store] Shop non trouvé ou erreur API, utilisation métadonnées auth')
+    }
 
-        console.log('✅ [Store] Données utilisateur complètes assemblées')
-        console.log('📋 [Store] Plan détecté:', shopData?.subscription_plan || 'free')
-        return user
+    // ✅ ASSEMBLAGE UTILISATEUR AVEC DONNÉES COMPLÈTES
+    const user: User = {
+      id: authUser.id,
+      email: authUser.email!,
+      firstName: authUser.user_metadata?.first_name || null,
+      lastName: authUser.user_metadata?.last_name || null,
+      name: authUser.user_metadata?.name || 
+            (authUser.user_metadata?.first_name && authUser.user_metadata?.last_name 
+              ? `${authUser.user_metadata.first_name} ${authUser.user_metadata.last_name}` 
+              : null) ||
+            authUser.email?.split('@')[0],
+      shopId: authUser.id,
+      shop_id: authUser.id,
+      avatar: authUser.user_metadata?.avatar_url,
+      role: 'user',
+      createdAt: authUser.created_at,
+      shop: shopData
+    }
 
-      } catch (error) {
-        console.warn('⚠️ [Store] Erreur récupération données utilisateur via API:', error)
-        
-        return {
-          id: authUser.id,
-          email: authUser.email!,
-          name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
-          firstName: authUser.user_metadata?.first_name || null,
-          lastName: authUser.user_metadata?.last_name || null,
-          shopId: authUser.id,
-          shop_id: authUser.id,
-          avatar: authUser.user_metadata?.avatar_url,
-          role: 'user',
-          createdAt: authUser.created_at,
-          shop: null
-        }
-      }
-    },
+    console.log('✅ [Store] Données utilisateur complètes assemblées')
+    console.log('📋 [Store] Plan détecté:', shopData?.subscription_plan || 'free')
+    console.log('🎯 [Store] Onboarding complété:', shopData?.onboarding_completed || false)
+    
+    return user
+
+  } catch (error: any) {
+    console.warn('⚠️ [Store] Erreur récupération données utilisateur via API:', error.message || error)
+    
+    // ✅ FALLBACK ROBUSTE EN CAS D'ERREUR API
+    const fallbackUser: User = {
+      id: authUser.id,
+      email: authUser.email!,
+      name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
+      firstName: authUser.user_metadata?.first_name || null,
+      lastName: authUser.user_metadata?.last_name || null,
+      shopId: authUser.id,
+      shop_id: authUser.id,
+      avatar: authUser.user_metadata?.avatar_url,
+      role: 'user',
+      createdAt: authUser.created_at,
+      shop: null // ✅ IMPORTANT: null pour forcer la création si nécessaire
+    }
+    
+    console.log('⚠️ [Store] Utilisation des données fallback')
+    return fallbackUser
+  }
+},
 
     // ✅ ACTION REGISTER INCHANGÉE
     async register(data: RegisterData) {

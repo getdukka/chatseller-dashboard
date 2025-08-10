@@ -1,4 +1,4 @@
-// middleware/auth.ts - VERSION CORRIGÉE AVEC MEILLEURE GESTION CALLBACK
+// middleware/auth.ts - VERSION PRODUCTION READY
 
 import { useSupabase } from "~~/composables/useSupabase"
 import { useAuthStore } from "~~/stores/auth"
@@ -16,7 +16,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const publicRoutes = [
     '/login', 
     '/register', 
-    '/auth/callback',  
+    '/auth/callback',  // ✅ CRITIQUE : Laisser callback libre
+    '/auth/reset-password',
     '/reset-password'
   ]
   
@@ -30,8 +31,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   
   // ✅ SI ROUTE CALLBACK - LAISSER PASSER COMPLÈTEMENT SANS VÉRIFICATION
   if (to.path.startsWith('/auth/callback')) {
-    console.log('🔗 [AUTH] Route callback détectée - Passage libre pour traitement confirmation')
-    return // ✅ LAISSER PASSER SANS AUCUNE VÉRIFICATION
+    console.log('🔗 [AUTH] Route callback détectée - Passage libre total pour traitement confirmation')
+    return // ✅ LAISSER PASSER SANS AUCUNE VÉRIFICATION NI REDIRECTION
   }
   
   if (isPublicRoute) {
@@ -117,7 +118,28 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     try {
       // ✅ UTILISER L'API POUR RÉCUPÉRER LES DONNÉES UTILISATEUR
       const api = useApi()
-      const shopResponse = await api.shops.get(user.id)
+      
+      let shopResponse
+      let retryCount = 0
+      const maxRetries = 3
+      
+      // ✅ RETRY LOGIC POUR GÉRER LES ERREURS TRANSITOIRES
+      while (retryCount < maxRetries) {
+        try {
+          shopResponse = await api.shops.get(user.id)
+          break // Si succès, sortir de la boucle
+        } catch (apiError: any) {
+          retryCount++
+          console.warn(`⚠️ [AUTH] Tentative ${retryCount}/${maxRetries} échouée:`, apiError.message)
+          
+          if (retryCount === maxRetries) {
+            throw apiError // Relancer l'erreur si toutes les tentatives ont échoué
+          }
+          
+          // Attendre avant retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount))
+        }
+      }
       
       if (!shopResponse.success) {
         console.log('🆕 [AUTH] Shop inexistant, création nécessaire...')
@@ -132,7 +154,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         id: shopData.id,
         name: shopData.name,
         subscription_plan: shopData.subscription_plan,
-        created_at: shopData.created_at
+        created_at: shopData.created_at,
+        onboarding_completed: shopData.onboarding_completed
       })
 
       // 🧠 LOGIQUE INTELLIGENTE DE VÉRIFICATION ONBOARDING
@@ -186,7 +209,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       // ✅ ACCÈS AUTORISÉ - ONBOARDING COMPLÉTÉ OU EXCEPTIONS
       console.log('✅ [AUTH] Accès autorisé à:', to.path)
 
-    } catch (apiError) {
+    } catch (apiError: any) {
       console.warn('⚠️ [AUTH] Erreur API pour récupération données utilisateur:', apiError)
       
       // ✅ EN CAS D'ERREUR API, AUTORISER L'ACCÈS PLUTÔT QUE BLOQUER
