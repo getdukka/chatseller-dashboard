@@ -1,4 +1,4 @@
-<!-- pages/agent-config.vue - VERSION CORRIGÉE AVEC TOUTES LES AMÉLIORATIONS -->
+<!-- pages/agent-config.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -123,7 +123,7 @@
     <!-- Content avec onglets -->
     <div v-else-if="config || hasValidAgentData" class="p-4 sm:p-6 lg:p-8">
       
-      <!-- ✅ ONGLET 1: CONFIGURATION AGENT AMÉLIORÉ -->
+      <!-- ✅ ONGLET 1: CONFIGURATION AGENT -->
       <div v-if="activeTab === 'agent'" class="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
         
         <!-- Configuration Panel -->
@@ -276,7 +276,7 @@
             </div>
           </div>
 
-          <!-- Configuration commerciale AMÉLIORÉE -->
+          <!-- Configuration commerciale -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
             <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">💼 Configuration Commerciale</h3>
             
@@ -304,13 +304,12 @@
                 </div>
               </div>
 
-              <!-- Fonctionnalités commerciales CORRIGÉES -->
+              <!-- Fonctionnalités commerciales -->
               <div class="space-y-4">
                 <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                   <div class="flex-1">
                     <div class="flex items-center">
                       <h4 class="text-sm font-medium text-gray-900">💎 Propositions d'upsell</h4>
-                      <!-- ✅ INDICATION CLAIRE PLAN PRO -->
                       <span v-if="!isPaidUser" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                         Plan Pro
                       </span>
@@ -342,7 +341,6 @@
                   <div class="flex-1">
                     <div class="flex items-center">
                       <h4 class="text-sm font-medium text-gray-900">⚡ Création d'urgence (FOMO)</h4>
-                      <!-- ✅ INDICATION CLAIRE PLAN PRO -->
                       <span v-if="!isPaidUser" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                         Plan Pro
                       </span>
@@ -403,7 +401,7 @@
           </div>
         </div>
 
-        <!-- Info Panel AMÉLIORÉ -->
+        <!-- Info Panel -->
         <div class="space-y-6">
           <!-- Agent Status -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
@@ -504,6 +502,412 @@
                 class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm lg:text-base"
               >
                 🔗 Code d'Intégration
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ ONGLET 2: CONFIGURATION WIDGET -->
+      <div v-if="activeTab === 'widget'" class="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+        
+        <!-- Configuration Panel -->
+        <div class="xl:col-span-2 space-y-6 lg:space-y-8">
+          
+          <!-- Apparence du Widget -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🎨 Apparence du Widget</h3>
+            
+            <div class="space-y-4 lg:space-y-6">
+              <!-- Texte du bouton -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Texte du bouton *</label>
+                <input
+                  v-model="localConfig.widget.buttonText"
+                  @input="updateWidgetPreview"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm lg:text-base"
+                  placeholder="Ex: Parler à un conseiller"
+                />
+              </div>
+
+              <!-- Couleur principale -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Couleur principale</label>
+                <div class="flex items-center space-x-3">
+                  <input
+                    v-model="localConfig.widget.primaryColor"
+                    @input="updateWidgetPreview"
+                    type="color"
+                    class="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                  />
+                  <input
+                    v-model="localConfig.widget.primaryColor"
+                    @input="updateWidgetPreview"
+                    type="text"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="#3B82F6"
+                  />
+                  <!-- Couleurs prédéfinies -->
+                  <div class="flex space-x-2">
+                    <button
+                      v-for="color in presetColors"
+                      :key="color"
+                      @click="selectPresetColor(color)"
+                      :style="{ backgroundColor: color }"
+                      class="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-transform"
+                      :class="localConfig.widget.primaryColor === color ? 'border-gray-900' : 'border-gray-300'"
+                      :title="color"
+                    ></button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Position et thème -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Position du widget</label>
+                  <select 
+                    v-model="localConfig.widget.position" 
+                    @change="updateWidgetPreview"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                  >
+                    <option value="above-cta">Au-dessus du bouton d'achat</option>
+                    <option value="below-cta">En-dessous du bouton d'achat</option>
+                    <option value="beside-cta">À côté du bouton d'achat</option>
+                    <option value="bottom-right">Coin en bas à droite</option>
+                    <option value="bottom-left">Coin en bas à gauche</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Thème</label>
+                  <select 
+                    v-model="localConfig.widget.theme" 
+                    @change="updateWidgetPreview"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                  >
+                    <option value="modern">Moderne</option>
+                    <option value="minimal">Minimaliste</option>
+                    <option value="brand_adaptive">Adaptatif à la marque</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Taille et bordures -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Taille du widget</label>
+                  <select 
+                    v-model="localConfig.widget.widgetSize" 
+                    @change="updateWidgetPreview"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                  >
+                    <option value="small">Petit</option>
+                    <option value="medium">Moyen</option>
+                    <option value="large">Grand</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Bordures</label>
+                  <select 
+                    v-model="localConfig.widget.borderRadius" 
+                    @change="updateWidgetPreview"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                  >
+                    <option value="none">Aucune</option>
+                    <option value="sm">Légères</option>
+                    <option value="md">Moyennes</option>
+                    <option value="lg">Arrondies</option>
+                    <option value="xl">Très arrondies</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comportement du Widget -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">⚙️ Comportement</h3>
+            
+            <div class="space-y-4">
+              <!-- Ouverture automatique -->
+              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
+                <div class="flex-1">
+                  <h4 class="text-sm font-medium text-gray-900">Ouverture automatique</h4>
+                  <p class="text-xs text-gray-500 mt-1">Le chat s'ouvre automatiquement après quelques secondes</p>
+                </div>
+                <button
+                  @click="toggleAutoOpen"
+                  :class="[
+                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                    localConfig.widget.autoOpen ? 'bg-blue-600' : 'bg-gray-200'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                      localConfig.widget.autoOpen ? 'translate-x-5' : 'translate-x-0'
+                    ]"
+                  ></span>
+                </button>
+              </div>
+
+              <!-- Affichage avatar -->
+              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
+                <div class="flex-1">
+                  <h4 class="text-sm font-medium text-gray-900">Afficher l'avatar</h4>
+                  <p class="text-xs text-gray-500 mt-1">Avatar de l'agent dans les conversations</p>
+                </div>
+                <button
+                  @click="toggleShowAvatar"
+                  :class="[
+                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                    localConfig.widget.showAvatar ? 'bg-blue-600' : 'bg-gray-200'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                      localConfig.widget.showAvatar ? 'translate-x-5' : 'translate-x-0'
+                    ]"
+                  ></span>
+                </button>
+              </div>
+
+              <!-- Sons activés -->
+              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
+                <div class="flex-1">
+                  <h4 class="text-sm font-medium text-gray-900">Sons de notification</h4>
+                  <p class="text-xs text-gray-500 mt-1">Sons pour les nouveaux messages</p>
+                </div>
+                <button
+                  @click="toggleSoundEnabled"
+                  :class="[
+                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                    localConfig.widget.soundEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                      localConfig.widget.soundEnabled ? 'translate-x-5' : 'translate-x-0'
+                    ]"
+                  ></span>
+                </button>
+              </div>
+
+              <!-- Optimisation mobile -->
+              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
+                <div class="flex-1">
+                  <h4 class="text-sm font-medium text-gray-900">Optimisation mobile</h4>
+                  <p class="text-xs text-gray-500 mt-1">Interface adaptée aux smartphones</p>
+                </div>
+                <button
+                  @click="toggleMobileOptimized"
+                  :class="[
+                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                    localConfig.widget.mobileOptimized ? 'bg-blue-600' : 'bg-gray-200'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                      localConfig.widget.mobileOptimized ? 'translate-x-5' : 'translate-x-0'
+                    ]"
+                  ></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Langues et personnalisation -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🌍 Localisation</h3>
+            
+            <div class="space-y-4">
+              <!-- Langue -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Langue du widget</label>
+                <select 
+                  v-model="localConfig.widget.language" 
+                  @change="updateWidgetPreview"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                >
+                  <option value="fr">🇫🇷 Français</option>
+                  <option value="en">🇺🇸 English</option>
+                  <option value="wo">🇸🇳 Wolof</option>
+                </select>
+              </div>
+
+              <!-- Animation -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Animation d'apparition</label>
+                <select 
+                  v-model="localConfig.widget.animation" 
+                  @change="updateWidgetPreview"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                >
+                  <option value="fade">Fondu</option>
+                  <option value="slide">Glissement</option>
+                  <option value="bounce">Rebond</option>
+                  <option value="none">Aucune</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="space-y-6">
+          <!-- Prévisualisation en temps réel -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">👁️ Prévisualisation</h3>
+            
+            <div class="space-y-4">
+              <!-- Preview du bouton -->
+              <div>
+                <p class="text-sm text-gray-600 mb-2">Bouton sur votre site :</p>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                  <button
+                    :style="{ 
+                      backgroundColor: localConfig.widget.primaryColor,
+                      borderRadius: getBorderRadiusValue(localConfig.widget.borderRadius),
+                      padding: getWidgetPadding(localConfig.widget.widgetSize),
+                      fontSize: getWidgetFontSize(localConfig.widget.widgetSize)
+                    }"
+                    class="w-full text-white font-semibold transition-all hover:opacity-90 flex items-center justify-center space-x-2"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-4.906-1.479L3 21l2.521-5.094A8.955 8.955 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+                    </svg>
+                    <span>{{ localConfig.widget.buttonText }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Preview des couleurs -->
+              <div>
+                <p class="text-sm text-gray-600 mb-2">Palette de couleurs :</p>
+                <div class="flex space-x-2">
+                  <div 
+                    class="w-8 h-8 rounded-lg border border-gray-300"
+                    :style="{ backgroundColor: localConfig.widget.primaryColor }"
+                    :title="`Principal: ${localConfig.widget.primaryColor}`"
+                  ></div>
+                  <div 
+                    class="w-8 h-8 rounded-lg border border-gray-300"
+                    :style="{ backgroundColor: adjustColor(localConfig.widget.primaryColor, -20) }"
+                    :title="`Foncé: ${adjustColor(localConfig.widget.primaryColor, -20)}`"
+                  ></div>
+                  <div 
+                    class="w-8 h-8 rounded-lg border border-gray-300"
+                    :style="{ backgroundColor: adjustColor(localConfig.widget.primaryColor, 80) }"
+                    :title="`Clair: ${adjustColor(localConfig.widget.primaryColor, 80)}`"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Preview mobile/desktop -->
+              <div>
+                <p class="text-sm text-gray-600 mb-2">Responsive :</p>
+                <div class="flex items-center space-x-2 text-xs">
+                  <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>Desktop</span>
+                  </div>
+                  <div class="flex items-center">
+                    <svg 
+                      class="w-4 h-4 mr-1" 
+                      :class="localConfig.widget.mobileOptimized ? 'text-green-600' : 'text-gray-400'"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>Mobile</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Informations techniques -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">🔧 Informations</h3>
+            
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="font-medium">Thème:</span>
+                <span class="capitalize">{{ localConfig.widget.theme }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium">Position:</span>
+                <span class="capitalize">{{ getPositionLabel(localConfig.widget.position) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium">Taille:</span>
+                <span class="capitalize">{{ getWidgetSizeLabel(localConfig.widget.widgetSize) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium">Agent lié:</span>
+                <span class="text-blue-600">{{ localConfig.agent.name }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium">Statut:</span>
+                <span :class="localConfig.widget.isActive ? 'text-green-600' : 'text-red-600'">
+                  {{ localConfig.widget.isActive ? '🟢 Actif' : '🔴 Inactif' }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Toggle statut -->
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium">Widget actif</span>
+                <button
+                  @click="localConfig.widget.isActive = !localConfig.widget.isActive"
+                  :class="[
+                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                    localConfig.widget.isActive ? 'bg-blue-600' : 'bg-gray-200'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                      localConfig.widget.isActive ? 'translate-x-5' : 'translate-x-0'
+                    ]"
+                  ></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions rapides -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">⚡ Actions</h3>
+            <div class="space-y-3">
+              <button
+                @click="activeTab = 'playground'"
+                class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm lg:text-base"
+              >
+                🧪 Tester le Widget
+              </button>
+              <button
+                @click="resetWidgetToDefaults"
+                class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm lg:text-base"
+              >
+                🔄 Réinitialiser
+              </button>
+              <button
+                @click="activeTab = 'integration'"
+                class="w-full px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm lg:text-base"
+              >
+                🔗 Obtenir le code
               </button>
             </div>
           </div>
@@ -1002,6 +1406,12 @@ const showKnowledgeBaseModal = ref(false)
 const selectedKnowledgeBase = ref<string[]>([])
 const savingKnowledgeBase = ref(false)
 
+// ✅ NOUVEAU STATE POUR WIDGET
+const presetColors = ref([
+  '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
+  '#8B5CF6', '#06B6D4', '#F97316', '#84CC16'
+])
+
 // ✅ ÉTAT POUR PLAN UTILISATEUR
 const isPaidUser = computed(() => {
   return authStore.user?.subscription_plan === 'professional' || 
@@ -1033,7 +1443,10 @@ const localConfig = ref({
       linkedKnowledgeBase: [] as string[],
       aiProvider: 'openai' as 'openai' | 'claude',
       temperature: 0.7,
-      maxTokens: 1000
+      maxTokens: 1000,
+      // ✅ AJOUTER CES PROPRIÉTÉS MANQUANTES
+      systemPrompt: '' as string,
+      tone: 'friendly' as string
     },
     stats: { conversations: 0, conversions: 0 },
     knowledgeBase: [] as any[]
@@ -1050,7 +1463,8 @@ const localConfig = ref({
     showAvatar: true,
     soundEnabled: true,
     mobileOptimized: true,
-    isActive: true
+    isActive: true,
+    language: 'fr' as 'fr' | 'en' | 'wo'
   }
 })
 
@@ -1090,6 +1504,30 @@ const averageResponseTime = computed(() => {
   if (responseTimes.value.length === 0) return 0
   return Math.round(responseTimes.value.reduce((a, b) => a + b, 0) / responseTimes.value.length)
 })
+
+// ✅ COMPUTED POUR WIDGET
+const widgetConfig = computed(() => ({
+  shopId: agentId.value,
+  apiUrl: 'https://chatseller-api-production.up.railway.app',
+  theme: localConfig.value.widget.theme,
+  primaryColor: localConfig.value.widget.primaryColor,
+  position: localConfig.value.widget.position,
+  buttonText: localConfig.value.widget.buttonText,
+  language: localConfig.value.widget.language || 'fr',
+  autoDetectProduct: true,
+  agentConfig: {
+    id: localConfig.value.agent.id,
+    name: localConfig.value.agent.name,
+    title: getTypeLabel(localConfig.value.agent.type),
+    avatar: localConfig.value.agent.avatar,
+    welcomeMessage: localConfig.value.agent.welcomeMessage,
+    fallbackMessage: localConfig.value.agent.fallbackMessage,
+    systemPrompt: localConfig.value.agent.config?.systemPrompt,
+    personality: localConfig.value.agent.personality,
+    tone: localConfig.value.agent.config?.tone || 'friendly'
+  },
+  debug: process.env.NODE_ENV === 'development'
+}))
 
 // ✅ DATA
 const tabs = [
@@ -1172,7 +1610,10 @@ const loadAgentData = async () => {
           linkedKnowledgeBase: storeAgent.config?.linkedKnowledgeBase || [],
           aiProvider: storeAgent.config?.aiProvider || 'openai',
           temperature: storeAgent.config?.temperature || 0.7,
-          maxTokens: storeAgent.config?.maxTokens || 1000
+          maxTokens: storeAgent.config?.maxTokens || 1000,
+          // ✅ AJOUTER CES LIGNES
+          systemPrompt: storeAgent.config?.systemPrompt || '',
+          tone: storeAgent.config?.tone || 'friendly'
         },
         stats: storeAgent.stats || { conversations: 0, conversions: 0 },
         knowledgeBase: storeAgent.knowledgeBase || []
@@ -1206,6 +1647,111 @@ const loadAgentData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// ✅ MÉTHODES WIDGET
+const selectPresetColor = (color: string) => {
+  localConfig.value.widget.primaryColor = color
+  updateWidgetPreview()
+}
+
+const toggleAutoOpen = () => {
+  localConfig.value.widget.autoOpen = !localConfig.value.widget.autoOpen
+  updateWidgetPreview()
+}
+
+const toggleShowAvatar = () => {
+  localConfig.value.widget.showAvatar = !localConfig.value.widget.showAvatar
+  updateWidgetPreview()
+}
+
+const toggleSoundEnabled = () => {
+  localConfig.value.widget.soundEnabled = !localConfig.value.widget.soundEnabled
+  updateWidgetPreview()
+}
+
+const toggleMobileOptimized = () => {
+  localConfig.value.widget.mobileOptimized = !localConfig.value.widget.mobileOptimized
+  updateWidgetPreview()
+}
+
+const updateWidgetPreview = () => {
+  console.log('🎨 Widget configuration updated:', localConfig.value.widget)
+  
+  if (widgetSyncStatus.value !== 'syncing') {
+    widgetSyncStatus.value = 'syncing'
+    
+    setTimeout(() => {
+      widgetSyncStatus.value = 'synced'
+      setTimeout(() => {
+        widgetSyncStatus.value = 'idle'
+      }, 2000)
+    }, 500)
+  }
+}
+
+const resetWidgetToDefaults = () => {
+  if (confirm('Êtes-vous sûr de vouloir réinitialiser la configuration du widget ?')) {
+    localConfig.value.widget = {
+      buttonText: 'Parler à un conseiller',
+      primaryColor: '#3B82F6',
+      position: 'above-cta',
+      widgetSize: 'medium',
+      theme: 'modern',
+      borderRadius: 'md',
+      animation: 'fade',
+      autoOpen: false,
+      showAvatar: true,
+      soundEnabled: true,
+      mobileOptimized: true,
+      isActive: true,
+      language: 'fr'
+    }
+    updateWidgetPreview()
+    
+    successMessage.value = '✅ Configuration du widget réinitialisée !'
+    setTimeout(() => {
+      successMessage.value = null
+    }, 3000)
+  }
+}
+
+// ✅ HELPER METHODS POUR WIDGET
+const getBorderRadiusValue = (radius: string): string => {
+  const radiusMap = {
+    none: '0px', sm: '4px', md: '8px', lg: '12px', xl: '16px'
+  }
+  return radiusMap[radius as keyof typeof radiusMap] || '8px'
+}
+
+const getWidgetPadding = (size: string): string => {
+  const paddingMap = {
+    small: '8px 16px', medium: '12px 24px', large: '16px 32px'
+  }
+  return paddingMap[size as keyof typeof paddingMap] || '12px 24px'
+}
+
+const getWidgetFontSize = (size: string): string => {
+  const fontSizeMap = {
+    small: '13px', medium: '15px', large: '17px'
+  }
+  return fontSizeMap[size as keyof typeof fontSizeMap] || '15px'
+}
+
+const getPositionLabel = (position: string): string => {
+  const positionLabels = {
+    'above-cta': 'Au-dessus du CTA',
+    'below-cta': 'En-dessous du CTA',
+    'beside-cta': 'À côté du CTA',
+    'bottom-right': 'Coin bas droite',
+    'bottom-left': 'Coin bas gauche'
+  }
+  return positionLabels[position as keyof typeof positionLabels] || position
+}
+
+const getWidgetSizeLabel = (size: string): string => {
+  const sizeLabels = { small: 'Petit', medium: 'Moyen', large: 'Grand' }
+  return sizeLabels[size as keyof typeof sizeLabels] || size
 }
 
 // ✅ NOUVELLE MÉTHODE : Gérer les toggles avec restrictions plan
@@ -1454,7 +2000,10 @@ watch(() => config.value, (newConfig) => {
           linkedKnowledgeBase: newConfig.agent.config.linkedKnowledgeBase || [],
           aiProvider: newConfig.agent.config.aiProvider || 'openai',
           temperature: newConfig.agent.config.temperature || 0.7,
-          maxTokens: newConfig.agent.config.maxTokens || 1000
+          maxTokens: newConfig.agent.config.maxTokens || 1000,
+          // ✅ AJOUTER CES LIGNES
+          systemPrompt: newConfig.agent.config.systemPrompt || '',
+          tone: newConfig.agent.config.tone || 'friendly'
         }
       },
       widget: { ...newConfig.widget }
@@ -1463,6 +2012,11 @@ watch(() => config.value, (newConfig) => {
     hasValidAgentData.value = true
   }
 }, { immediate: true })
+
+// ✅ NOUVEAU WATCHER POUR WIDGET
+watch(() => localConfig.value.widget, (newWidget) => {
+  updateWidgetPreview()
+}, { deep: true })
 
 // ✅ LIFECYCLE
 onMounted(async () => {
