@@ -1,4 +1,4 @@
-// composables/useAgentConfig.ts - VERSION COMPLÈTE CORRIGÉE
+// composables/useAgentConfig.ts - VERSION CORRIGÉE AVEC PERSISTANCE WIDGET
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
@@ -88,7 +88,7 @@ export const useAgentConfig = () => {
     return hasAgentData || hasStoreData || hasWidgetData
   })
 
-  // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION CORRIGÉE
+  // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION CORRIGÉE SHOPIFY
   const integrationCode = computed(() => {
     console.log('🔧 [integrationCode] Génération du code d\'intégration...')
     
@@ -96,12 +96,14 @@ export const useAgentConfig = () => {
     let agentData = null
     let agentId = ''
     let agentName = ''
+    let widgetData = null
     
     // Source 1: agentConfig (API)
     if (agentConfig.value?.agent?.id && agentConfig.value?.agent?.name) {
-      agentData = agentConfig.value
-      agentId = agentData.agent.id
-      agentName = agentData.agent.name
+      agentData = agentConfig.value.agent
+      widgetData = agentConfig.value.widget
+      agentId = agentData.id
+      agentName = agentData.name
       console.log('✅ [integrationCode] Données depuis agentConfig API')
     }
     // Source 2: agentConfigStore (store temporaire)
@@ -112,24 +114,22 @@ export const useAgentConfig = () => {
         agentName = storeAgent.name
         console.log('✅ [integrationCode] Données depuis agentConfigStore')
         
-        // Construire un objet agentData minimal
+        // Construire un objet minimal
         agentData = {
-          agent: {
-            id: storeAgent.id,
-            name: storeAgent.name,
-            type: storeAgent.type,
-            personality: storeAgent.personality || 'friendly',
-            welcomeMessage: storeAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
-            fallbackMessage: storeAgent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.',
-            config: storeAgent.config || {}
-          },
-          widget: {
-            buttonText: 'Parler à un conseiller',
-            primaryColor: '#3B82F6',
-            position: 'above-cta',
-            theme: 'modern',
-            language: 'fr'
-          }
+          id: storeAgent.id,
+          name: storeAgent.name,
+          type: storeAgent.type,
+          personality: storeAgent.personality || 'friendly',
+          welcomeMessage: storeAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
+          fallbackMessage: storeAgent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.'
+        }
+        
+        widgetData = {
+          buttonText: 'Parler à un conseiller',
+          primaryColor: '#3B82F6',
+          position: 'above-cta',
+          theme: 'modern',
+          language: 'fr'
         }
       }
     }
@@ -143,14 +143,14 @@ export const useAgentConfig = () => {
     try {
       // ✅ CONFIGURATION AVEC FALLBACKS ROBUSTES
       const shopId = authStore.user?.id || authStore.userShopId || 'demo-shop'
-      const buttonText = agentData.widget?.buttonText || 'Parler à un conseiller'
-      const primaryColor = agentData.widget?.primaryColor || '#3B82F6'
-      const position = agentData.widget?.position || 'above-cta'
-      const theme = agentData.widget?.theme || 'modern'
-      const language = agentData.widget?.language || 'fr'
+      const buttonText = widgetData?.buttonText || 'Parler à un conseiller'
+      const primaryColor = widgetData?.primaryColor || '#3B82F6'
+      const position = widgetData?.position || 'above-cta'
+      const theme = widgetData?.theme || 'modern'
+      const language = widgetData?.language || 'fr'
       
-      // ✅ URLS SELON L'ENVIRONNEMENT
-      const baseUrl = config.public.widgetUrl
+      // ✅ URLS SELON L'ENVIRONNEMENT - CORRIGÉES POUR SHOPIFY
+      const baseUrl = config.public.widgetUrl || 'https://widget.chatseller.app'
       const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
       console.log('✅ [integrationCode] Configuration finale:', {
@@ -158,10 +158,12 @@ export const useAgentConfig = () => {
         agentId,
         agentName,
         buttonText,
-        primaryColor
+        primaryColor,
+        baseUrl,
+        apiUrl
       })
 
-      // ✅ CODE D'INTÉGRATION FINAL OPTIMISÉ
+      // ✅ CODE D'INTÉGRATION OPTIMISÉ SHOPIFY
       return `<!-- 🤖 ChatSeller Widget - Agent: ${agentName} -->
 <script>
 (function() {
@@ -170,7 +172,7 @@ export const useAgentConfig = () => {
     shopId: '${shopId}',
     agentId: '${agentId}',
     apiUrl: '${apiUrl}',
-    buttonText: '${buttonText}',
+    buttonText: '${buttonText.replace(/'/g, "\\'")}',
     primaryColor: '${primaryColor}',
     position: '${position}',
     theme: '${theme}',
@@ -179,44 +181,96 @@ export const useAgentConfig = () => {
     debug: false,
     agentConfig: {
       id: '${agentId}',
-      name: '${agentName}',
-      title: '${getTypeLabel(agentData.agent.type)}',
-      welcomeMessage: '${(agentData.agent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
-      fallbackMessage: '${(agentData.agent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
-      personality: '${agentData.agent.personality || 'friendly'}'
+      name: '${agentName.replace(/'/g, "\\'")}',
+      title: '${getTypeLabel(agentData.type)}',
+      welcomeMessage: '${(agentData.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
+      fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
+      personality: '${agentData.personality || 'friendly'}'
     }
   };
   
-  // Chargement asynchrone du widget avec retry
+  // Fonction de chargement du widget avec retry automatique
   function loadChatSellerWidget() {
+    console.log('🚀 ChatSeller: Début chargement widget...');
+    
     var script = document.createElement('script');
     script.src = '${baseUrl}/embed.js';
     script.async = true;
+    script.crossOrigin = 'anonymous';
+    
     script.onload = function() {
-      console.log('✅ ChatSeller widget chargé avec succès');
-      if (window.ChatSeller && window.ChatSeller.init) {
-        window.ChatSeller.init(window.ChatSellerConfig);
-      } else {
-        console.warn('⚠️ ChatSeller SDK non disponible, retry dans 2s...');
-        setTimeout(loadChatSellerWidget, 2000);
+      console.log('✅ ChatSeller: Script chargé avec succès');
+      
+      // Attendre que ChatSeller soit disponible
+      var maxAttempts = 20;
+      var attempts = 0;
+      
+      function initChatSeller() {
+        attempts++;
+        
+        if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
+          console.log('✅ ChatSeller: Initialisation du widget...');
+          
+          try {
+            window.ChatSeller.init(window.ChatSellerConfig);
+            console.log('✅ ChatSeller: Widget initialisé avec succès');
+          } catch (error) {
+            console.error('❌ ChatSeller: Erreur lors de l\'initialisation:', error);
+          }
+          
+        } else if (attempts < maxAttempts) {
+          console.log('⏳ ChatSeller: En attente du SDK... (' + attempts + '/' + maxAttempts + ')');
+          setTimeout(initChatSeller, 100);
+          
+        } else {
+          console.error('❌ ChatSeller: Timeout - SDK non disponible après ' + (maxAttempts * 100) + 'ms');
+        }
       }
-    };
-    script.onerror = function() {
-      console.error('❌ Erreur lors du chargement du widget ChatSeller');
-      console.log('🔄 Tentative de rechargement dans 5s...');
-      setTimeout(loadChatSellerWidget, 5000);
+      
+      // Démarrer l'initialisation
+      initChatSeller();
     };
     
-    // Injecter le script dans le head
-    document.head.appendChild(script);
+    script.onerror = function(error) {
+      console.error('❌ ChatSeller: Erreur lors du chargement du script:', error);
+      console.log('🔄 ChatSeller: Tentative de rechargement dans 3 secondes...');
+      
+      setTimeout(function() {
+        console.log('🔄 ChatSeller: Nouvelle tentative de chargement...');
+        loadChatSellerWidget();
+      }, 3000);
+    };
+    
+    // Injecter le script dans le document
+    var firstScript = document.getElementsByTagName('script')[0];
+    if (firstScript && firstScript.parentNode) {
+      firstScript.parentNode.insertBefore(script, firstScript);
+    } else {
+      document.head.appendChild(script);
+    }
   }
   
   // Démarrer le chargement quand le DOM est prêt
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', loadChatSellerWidget);
   } else {
-    loadChatSellerWidget();
+    // DOM déjà prêt
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+      // Petite pause pour s'assurer que Shopify est bien initialisé
+      setTimeout(loadChatSellerWidget, 500);
+    } else {
+      loadChatSellerWidget();
+    }
   }
+  
+  // Fallback de sécurité
+  setTimeout(function() {
+    if (!window.ChatSeller) {
+      console.log('🔄 ChatSeller: Fallback - Force loading after 5s');
+      loadChatSellerWidget();
+    }
+  }, 5000);
+  
 })();
 </script>
 <!-- 🚀 Fin du code ChatSeller - Support: support@chatseller.app -->`
@@ -250,7 +304,7 @@ export const useAgentConfig = () => {
     }
   }
 
-  // ✅ RÉCUPÉRER LA CONFIGURATION
+  // ✅ RÉCUPÉRER LA CONFIGURATION - VERSION CORRIGÉE
   const fetchAgentConfig = async (agentId: string) => {
     loading.value = true
     error.value = null
@@ -266,12 +320,21 @@ export const useAgentConfig = () => {
         throw new Error('Session expirée. Veuillez vous reconnecter.')
       }
 
-      // ✅ RÉCUPÉRATION CONFIG AGENT + KNOWLEDGE BASE
-      const [agentResponse, kbResponse] = await Promise.all([
+      // ✅ RÉCUPÉRATION CONFIG AGENT + SHOP WIDGET EN PARALLÈLE
+      const shopId = authStore.user?.id || authStore.userShopId
+      
+      const [agentResponse, shopResponse, kbResponse] = await Promise.all([
         $fetch(`/api/v1/agents/${agentId}/config`, {
           baseURL: config.public.apiBaseUrl,
           headers: getAuthHeaders()
         }),
+        shopId ? $fetch(`/api/v1/shops/${shopId}`, {
+          baseURL: config.public.apiBaseUrl,
+          headers: getAuthHeaders()
+        }).catch(err => {
+          console.warn('⚠️ Erreur récupération shop:', err)
+          return null
+        }) : Promise.resolve(null),
         $fetch(`/api/v1/agents/${agentId}/knowledge`, {
           baseURL: config.public.apiBaseUrl,
           headers: getAuthHeaders()
@@ -282,21 +345,9 @@ export const useAgentConfig = () => {
         throw new Error(agentResponse.error || 'Erreur lors de la récupération de la configuration agent')
       }
 
-      // ✅ RÉCUPÉRER CONFIG SHOP/WIDGET
-      const shopId = authStore.user?.id || authStore.userShopId
-      let shopResponse = null
-      if (shopId) {
-        try {
-          shopResponse = await $fetch(`/api/v1/shops/${shopId}`, {
-            baseURL: config.public.apiBaseUrl,
-            headers: getAuthHeaders()
-          })
-        } catch (shopError) {
-          console.warn('⚠️ Erreur récupération shop, utilisation config par défaut:', shopError)
-        }
-      }
+      console.log('📦 [useAgentConfig] Réponse API shop:', shopResponse?.data?.widget_config)
 
-      // ✅ CONSTRUIRE CONFIG COMPLÈTE
+      // ✅ CONSTRUIRE CONFIG COMPLÈTE AVEC WIDGET PERSISTÉ
       const completeConfig: AgentConfig = {
         agent: {
           id: agentResponse.data.agent.id,
@@ -323,27 +374,32 @@ export const useAgentConfig = () => {
           },
           knowledgeBase: kbResponse.data || []
         },
+        // ✅ WIDGET CONFIG DEPUIS L'API SHOP (PERSISTÉE) - CORRIGÉ
         widget: {
-          buttonText: shopResponse?.widget_config?.buttonText || 'Parler à un conseiller',
-          primaryColor: shopResponse?.widget_config?.primaryColor || '#3B82F6',
-          position: shopResponse?.widget_config?.position || 'above-cta',
-          widgetSize: shopResponse?.widget_config?.widgetSize || 'medium',
-          theme: shopResponse?.widget_config?.theme || 'modern',
-          borderRadius: shopResponse?.widget_config?.borderRadius || 'md',
-          animation: shopResponse?.widget_config?.animation || 'fade',
-          autoOpen: shopResponse?.widget_config?.autoOpen || false,
-          showAvatar: shopResponse?.widget_config?.showAvatar !== false,
-          soundEnabled: shopResponse?.widget_config?.soundEnabled !== false,
-          mobileOptimized: shopResponse?.widget_config?.mobileOptimized !== false,
-          offlineMessage: shopResponse?.widget_config?.offlineMessage,
-          isActive: shopResponse?.widget_config?.isActive !== false,
-          language: shopResponse?.widget_config?.language || 'fr'
+          buttonText: shopResponse?.data?.widget_config?.buttonText || 'Parler à un conseiller',
+          primaryColor: shopResponse?.data?.widget_config?.primaryColor || '#3B82F6',
+          position: shopResponse?.data?.widget_config?.position || 'above-cta',
+          widgetSize: shopResponse?.data?.widget_config?.widgetSize || 'medium',
+          theme: shopResponse?.data?.widget_config?.theme || 'modern',
+          borderRadius: shopResponse?.data?.widget_config?.borderRadius || 'md',
+          animation: shopResponse?.data?.widget_config?.animation || 'fade',
+          autoOpen: shopResponse?.data?.widget_config?.autoOpen || false,
+          showAvatar: shopResponse?.data?.widget_config?.showAvatar !== false,
+          soundEnabled: shopResponse?.data?.widget_config?.soundEnabled !== false,
+          mobileOptimized: shopResponse?.data?.widget_config?.mobileOptimized !== false,
+          offlineMessage: shopResponse?.data?.widget_config?.offlineMessage,
+          isActive: shopResponse?.data?.widget_config?.isActive !== false,
+          language: shopResponse?.data?.widget_config?.language || 'fr'
         },
         knowledgeBase: agentResponse.data.knowledgeBase || []
       }
 
       agentConfig.value = completeConfig
-      console.log('✅ [useAgentConfig] Configuration chargée avec succès')
+      console.log('✅ [useAgentConfig] Configuration chargée avec widget persisté:', {
+        agent: completeConfig.agent.name,
+        widget: completeConfig.widget.buttonText,
+        widgetPersisted: !!shopResponse?.data?.widget_config
+      })
       return { success: true, data: completeConfig }
 
     } catch (err: any) {
@@ -390,7 +446,7 @@ export const useAgentConfig = () => {
     }
   }
 
-  // ✅ SAUVEGARDER CONFIGURATION COMPLÈTE
+  // ✅ SAUVEGARDER CONFIGURATION COMPLÈTE - VERSION CORRIGÉE WIDGET
   const saveCompleteConfig = async (agentId: string, updates: Partial<AgentConfig>) => {
     saving.value = true
     widgetSyncStatus.value = 'syncing'
@@ -404,6 +460,18 @@ export const useAgentConfig = () => {
       if (!agentId) {
         throw new Error('ID agent manquant')
       }
+
+      const shopId = authStore.user?.id || authStore.userShopId
+      if (!shopId) {
+        throw new Error('Shop ID manquant')
+      }
+
+      console.log('💾 [saveCompleteConfig] Début sauvegarde:', {
+        agentId,
+        shopId,
+        hasAgentUpdates: !!updates.agent,
+        hasWidgetUpdates: !!updates.widget
+      })
 
       // ✅ SAUVEGARDER AGENT SI FOURNI
       if (updates.agent) {
@@ -427,22 +495,49 @@ export const useAgentConfig = () => {
         if (!agentResult.success) {
           throw new Error(`Erreur agent: ${agentResult.error}`)
         }
+
+        console.log('✅ Agent sauvegardé')
       }
 
-      // ✅ SAUVEGARDER WIDGET SI FOURNI
+      // ✅ SAUVEGARDER WIDGET - VERSION CORRIGÉE
       if (updates.widget) {
-        console.log('🎨 Sauvegarde configuration widget...')
-        const shopId = authStore.user?.id || authStore.userShopId
-        if (shopId) {
-          await $fetch(`/api/v1/shops/${shopId}`, {
-            method: 'PUT',
-            baseURL: config.public.apiBaseUrl,
-            headers: getAuthHeaders(),
-            body: {
-              widget_config: updates.widget
-            }
-          })
+        console.log('🎨 Sauvegarde configuration widget...', updates.widget)
+        
+        const widgetPayload = {
+          widget_config: {
+            // ✅ S'assurer que TOUTES les propriétés sont incluses
+            buttonText: updates.widget.buttonText || 'Parler à un conseiller',
+            primaryColor: updates.widget.primaryColor || '#3B82F6',
+            position: updates.widget.position || 'above-cta',
+            theme: updates.widget.theme || 'modern',
+            language: updates.widget.language || 'fr',
+            widgetSize: updates.widget.widgetSize || 'medium',
+            borderRadius: updates.widget.borderRadius || 'md',
+            animation: updates.widget.animation || 'fade',
+            autoOpen: updates.widget.autoOpen || false,
+            showAvatar: updates.widget.showAvatar !== false,
+            soundEnabled: updates.widget.soundEnabled !== false,
+            mobileOptimized: updates.widget.mobileOptimized !== false,
+            isActive: updates.widget.isActive !== false,
+            offlineMessage: updates.widget.offlineMessage || null
+          }
         }
+
+        console.log('📤 [saveCompleteConfig] Payload widget à envoyer:', widgetPayload)
+        
+        const widgetResult = await $fetch(`/api/v1/shops/${shopId}`, {
+          method: 'PUT',
+          baseURL: config.public.apiBaseUrl,
+          headers: getAuthHeaders(),
+          body: widgetPayload
+        })
+
+        if (!widgetResult.success) {
+          console.error('❌ Erreur API widget:', widgetResult)
+          throw new Error(`Erreur widget: ${widgetResult.error}`)
+        }
+
+        console.log('✅ Widget config sauvegardée avec succès:', widgetResult.data?.widget_config)
       }
 
       // ✅ LIER DOCUMENTS KB SI FOURNI
@@ -457,6 +552,7 @@ export const useAgentConfig = () => {
         }
         if (updates.widget) {
           agentConfig.value.widget = { ...agentConfig.value.widget, ...updates.widget }
+          console.log('✅ Widget config locale mise à jour:', agentConfig.value.widget)
         }
       }
 

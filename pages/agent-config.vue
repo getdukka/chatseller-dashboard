@@ -16,7 +16,7 @@
                 {{ agentName }} - Configuration
               </h1>
               <p class="mt-1 text-xs sm:text-sm text-gray-600">
-                Agent IA • Widget • Test • Intégration
+                Vendeur IA • Widget • Test • Intégration
                 <!-- ✅ INDICATEUR DE SYNC CORRIGÉ -->
                 <span v-if="widgetSyncStatus === 'syncing'" class="ml-2 inline-flex items-center text-blue-600">
                   <svg class="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,12 +131,12 @@
           
           <!-- Informations de base -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
-            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🤖 Informations de l'Agent</h3>
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🤖 Informations du Vendeur IA</h3>
             
             <div class="space-y-4 lg:space-y-6">
               <!-- Nom -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nom de l'agent *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nom du Vendeur IA *</label>
                 <input
                   v-model="localConfig.agent.name"
                   type="text"
@@ -183,7 +183,7 @@
                       :disabled="!isPaidUser"
                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
                     >
-                      <option value="openai">🤖 OpenAI GPT-4o-mini (Gratuit)</option>
+                      <option value="openai">🤖 GPT-4o-mini (Gratuit)</option>
                       <option value="claude" :disabled="!isPaidUser">🧠 Claude Sonnet (Pro)</option>
                     </select>
                   </div>
@@ -405,7 +405,7 @@
         <div class="space-y-6">
           <!-- Agent Status -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
-            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">📊 Statut Agent</h3>
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4">📊 Statut du Vendeur IA</h3>
             
             <div class="space-y-3 text-sm">
               <div class="flex justify-between">
@@ -417,11 +417,11 @@
                 <span class="capitalize">{{ getTypeLabel(localConfig.agent.type) }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="font-medium">IA Provider:</span>
+                <span class="font-medium">Fournisseur d'IA:</span>
                 <span class="capitalize">{{ localConfig.agent.config.aiProvider || 'OpenAI' }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="font-medium">Base KB:</span>
+                <span class="font-medium">Base de connaissances:</span>
                 <span class="text-blue-600">{{ linkedKnowledgeBase.length }} docs</span>
               </div>
               <div class="flex justify-between">
@@ -441,7 +441,7 @@
             <!-- Toggle statut -->
             <div class="mt-4 pt-4 border-t border-gray-200">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium">Agent actif</span>
+                <span class="text-sm font-medium">Vendeur IA actif</span>
                 <button
                   @click="localConfig.agent.isActive = !localConfig.agent.isActive"
                   :class="[
@@ -489,7 +489,7 @@
                 @click="activeTab = 'playground'"
                 class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm lg:text-base"
               >
-                🧪 Tester l'Agent
+                🧪 Tester le Vendeur IA
               </button>
               <button
                 @click="activeTab = 'widget'"
@@ -658,7 +658,7 @@
               <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div class="flex-1">
                   <h4 class="text-sm font-medium text-gray-900">Afficher l'avatar</h4>
-                  <p class="text-xs text-gray-500 mt-1">Avatar de l'agent dans les conversations</p>
+                  <p class="text-xs text-gray-500 mt-1">Avatar du Vendeur IA dans les conversations</p>
                 </div>
                 <button
                   @click="toggleShowAvatar"
@@ -1090,6 +1090,22 @@
         
         <!-- Guide d'intégration -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+        <!-- ✅ DEBUG TEMPORAIRE - À SUPPRIMER PLUS TARD -->
+          <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h4 class="text-sm font-medium text-red-800 mb-2">🔧 Debug Temporaire</h4>
+            <button
+              @click="debugIntegrationCode"
+              class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 mr-4"
+            >
+              🔍 Debug Code d'Intégration
+            </button>
+            <div class="mt-2 text-xs text-red-600">
+              <p>Statut: {{ integrationCode.includes('Chargement') ? '⏳ En cours de chargement' : '✅ Code prêt' }}</p>
+              <p>Agent ID: {{ agentId }}</p>
+              <p>Agent Config: {{ !!agentConfig ? '✅' : '❌' }}</p>
+              <p>Store Valid: {{ agentConfigStore.hasValidAgent ? '✅' : '❌' }}</p>
+            </div>
+          </div>
           <h3 class="text-xl lg:text-2xl font-semibold text-gray-900 mb-4 lg:mb-6">🔗 Guide d'Intégration</h3>
           
           <!-- Informations de base -->
@@ -1103,7 +1119,7 @@
               <div class="ml-3">
                 <h3 class="text-sm font-medium text-blue-800">Instructions d'installation</h3>
                 <div class="mt-2 text-sm text-blue-700">
-                  <p>Agent: <strong>{{ localConfig.agent.name }}</strong> • Widget: <strong>{{ localConfig.widget.buttonText }}</strong></p>
+                  <p>Vendeur IA: <strong>{{ localConfig.agent.name }}</strong> • Widget: <strong>{{ localConfig.widget.buttonText }}</strong></p>
                   <p>Copiez le code ci-dessous et collez-le juste avant la balise <code>&lt;/body&gt;</code> de votre site web.</p>
                 </div>
               </div>
@@ -1949,6 +1965,43 @@ const copyIntegrationCodeAction = async () => {
       clearError()
     }, 3000)
   }
+}
+
+// ✅ FONCTION DEBUG TEMPORAIRE
+const debugIntegrationCode = () => {
+  console.log('🔍 [DEBUG] Analyse de l\'état des données pour le code d\'intégration:')
+  console.log('════════════════════════════════════════════════════════════════')
+  
+  // Vérifier agentConfig depuis le composable
+  console.log('1. agentConfig.value:', agentConfig.value)
+  console.log('   - Existe:', !!agentConfig.value)
+  console.log('   - Agent ID:', agentConfig.value?.agent?.id)
+  console.log('   - Agent Name:', agentConfig.value?.agent?.name)
+  
+  // Vérifier localConfig
+  console.log('2. localConfig.value:', localConfig.value)
+  console.log('   - Agent ID:', localConfig.value.agent.id)
+  console.log('   - Agent Name:', localConfig.value.agent.name)
+  
+  // Vérifier agentConfigStore
+  console.log('3. agentConfigStore:')
+  console.log('   - hasValidAgent:', agentConfigStore.hasValidAgent)
+  console.log('   - isDataFresh:', agentConfigStore.isDataFresh)
+  const storeAgent = agentConfigStore.getAgentForConfig()
+  console.log('   - Store Agent:', storeAgent)
+  
+  // Vérifier authStore
+  console.log('4. authStore:')
+  console.log('   - User ID:', authStore.user?.id)
+  console.log('   - User Shop ID:', authStore.userShopId)
+  console.log('   - Token exists:', !!authStore.token)
+  
+  // Vérifier l'état du computed integrationCode
+  console.log('5. integrationCode:')
+  console.log('   - Value preview:', integrationCode.value.substring(0, 100) + '...')
+  console.log('   - Is loading?:', integrationCode.value.includes('Chargement'))
+  
+  console.log('════════════════════════════════════════════════════════════════')
 }
 
 // ✅ HELPER METHODS
