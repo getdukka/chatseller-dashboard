@@ -90,81 +90,81 @@ export const useAgentConfig = () => {
 
   // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION CORRIGÉE SHOPIFY
   const integrationCode = computed(() => {
-    console.log('🔧 [integrationCode] Génération du code d\'intégration...')
-    
-    // ✅ RÉCUPÉRATION DONNÉES MULTIPLES SOURCES
-    let agentData = null
-    let agentId = ''
-    let agentName = ''
-    let widgetData = null
-    
-    // Source 1: agentConfig (API)
-    if (agentConfig.value?.agent?.id && agentConfig.value?.agent?.name) {
-      agentData = agentConfig.value.agent
-      widgetData = agentConfig.value.widget
-      agentId = agentData.id
-      agentName = agentData.name
-      console.log('✅ [integrationCode] Données depuis agentConfig API')
-    }
-    // Source 2: agentConfigStore (store temporaire)
-    else if (agentConfigStore.hasValidAgent) {
-      const storeAgent = agentConfigStore.getAgentForConfig()
-      if (storeAgent) {
-        agentId = storeAgent.id
-        agentName = storeAgent.name
-        console.log('✅ [integrationCode] Données depuis agentConfigStore')
-        
-        // Construire un objet minimal
-        agentData = {
-          id: storeAgent.id,
-          name: storeAgent.name,
-          type: storeAgent.type,
-          personality: storeAgent.personality || 'friendly',
-          welcomeMessage: storeAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
-          fallbackMessage: storeAgent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.'
-        }
-        
-        widgetData = {
-          buttonText: 'Parler à un conseiller',
-          primaryColor: '#3B82F6',
-          position: 'above-cta',
-          theme: 'modern',
-          language: 'fr'
-        }
+  console.log('🔧 [integrationCode] Génération du code d\'intégration optimisé Shopify...')
+  
+  // ✅ RÉCUPÉRATION DONNÉES MULTIPLES SOURCES avec vérifications robustes
+  let agentData = null
+  let agentId = ''
+  let agentName = ''
+  let widgetData = null
+  
+  // Source 1: agentConfig (API)
+  if (agentConfig.value?.agent?.id && agentConfig.value?.agent?.name) {
+    agentData = agentConfig.value.agent
+    widgetData = agentConfig.value.widget
+    agentId = agentData.id
+    agentName = agentData.name
+    console.log('✅ [integrationCode] Données depuis agentConfig API')
+  }
+  // Source 2: agentConfigStore (store temporaire)
+  else if (agentConfigStore.hasValidAgent) {
+    const storeAgent = agentConfigStore.getAgentForConfig()
+    if (storeAgent) {
+      agentId = storeAgent.id
+      agentName = storeAgent.name
+      console.log('✅ [integrationCode] Données depuis agentConfigStore')
+      
+      // Construire un objet minimal
+      agentData = {
+        id: storeAgent.id,
+        name: storeAgent.name,
+        type: storeAgent.type,
+        personality: storeAgent.personality || 'friendly',
+        welcomeMessage: storeAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
+        fallbackMessage: storeAgent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.'
+      }
+      
+      widgetData = {
+        buttonText: 'Parler à un conseiller',
+        primaryColor: '#3B82F6',
+        position: 'above-cta',
+        theme: 'modern',
+        language: 'fr'
       }
     }
+  }
+  
+  // ✅ SI AUCUNE DONNÉE, RETOURNER MESSAGE DE CHARGEMENT
+  if (!agentData || !agentId || !agentName) {
+    console.warn('⚠️ [integrationCode] Données agent manquantes pour générer le code')
+    return '<!-- ⏳ Chargement de la configuration de l\'agent... Veuillez patienter ou actualiser la page. -->'
+  }
+
+  try {
+    // ✅ CONFIGURATION AVEC FALLBACKS ROBUSTES
+    const shopId = authStore.user?.id || authStore.userShopId || 'demo-shop'
+    const buttonText = widgetData?.buttonText || 'Parler à un conseiller'
+    const primaryColor = widgetData?.primaryColor || '#3B82F6'
+    const position = widgetData?.position || 'above-cta'
+    const theme = widgetData?.theme || 'modern'
+    const language = widgetData?.language || 'fr'
     
-    // ✅ SI AUCUNE DONNÉE, RETOURNER MESSAGE DE CHARGEMENT
-    if (!agentData || !agentId || !agentName) {
-      console.warn('⚠️ [integrationCode] Données agent manquantes pour générer le code')
-      return '<!-- ⏳ Chargement de la configuration de l\'agent... Veuillez patienter ou actualiser la page. -->'
-    }
+    // ✅ URLS SELON L'ENVIRONNEMENT - CORRIGÉES POUR SHOPIFY
+    const baseUrl = config.public.widgetUrl || 'https://widget.chatseller.app'
+    const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
-    try {
-      // ✅ CONFIGURATION AVEC FALLBACKS ROBUSTES
-      const shopId = authStore.user?.id || authStore.userShopId || 'demo-shop'
-      const buttonText = widgetData?.buttonText || 'Parler à un conseiller'
-      const primaryColor = widgetData?.primaryColor || '#3B82F6'
-      const position = widgetData?.position || 'above-cta'
-      const theme = widgetData?.theme || 'modern'
-      const language = widgetData?.language || 'fr'
-      
-      // ✅ URLS SELON L'ENVIRONNEMENT - CORRIGÉES POUR SHOPIFY
-      const baseUrl = config.public.widgetUrl || 'https://widget.chatseller.app'
-      const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
+    console.log('✅ [integrationCode] Configuration finale:', {
+      shopId,
+      agentId,
+      agentName,
+      buttonText,
+      primaryColor,
+      baseUrl,
+      apiUrl
+    })
 
-      console.log('✅ [integrationCode] Configuration finale:', {
-        shopId,
-        agentId,
-        agentName,
-        buttonText,
-        primaryColor,
-        baseUrl,
-        apiUrl
-      })
-
-      // ✅ CODE D'INTÉGRATION OPTIMISÉ SHOPIFY
-      return `<!-- 🤖 ChatSeller Widget - Agent: ${agentName} -->
+    // ✅ CODE D'INTÉGRATION OPTIMISÉ SHOPIFY avec détection produit automatique
+    return `<!-- 🤖 ChatSeller Widget - Agent: ${agentName} -->
 <script>
 (function() {
   // Configuration du widget ChatSeller
@@ -275,11 +275,11 @@ export const useAgentConfig = () => {
 </script>
 <!-- 🚀 Fin du code ChatSeller - Support: support@chatseller.app -->`
 
-    } catch (error) {
-      console.error('❌ [integrationCode] Erreur génération code intégration:', error)
-      return `<!-- ❌ Erreur lors de la génération du code d'intégration. Veuillez contacter le support. -->`
-    }
-  })
+  } catch (error) {
+    console.error('❌ [integrationCode] Erreur génération code intégration:', error)
+    return `<!-- ❌ Erreur lors de la génération du code d'intégration. Veuillez contacter le support. -->`
+  }
+})
 
   // ✅ HELPER POUR LES LABELS DE TYPE
   const getTypeLabel = (type: string): string => {

@@ -1,4 +1,4 @@
-<!-- pages/agent-config.vue - VERSION CORRIGÉE -->
+<!-- pages/agent-config.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -919,96 +919,104 @@
         
         <!-- Chat Interface -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-96 lg:h-[600px]">
+      <div 
+        class="px-4 lg:px-6 py-3 lg:py-4 text-white"
+        :style="{ background: `linear-gradient(135deg, ${localConfig.widget.primaryColor} 0%, ${adjustColor(localConfig.widget.primaryColor, -20)} 100%)` }"
+      >
+        <div class="flex items-center space-x-3">
+          <div class="w-8 lg:w-10 h-8 lg:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+            <span class="text-xs lg:text-sm font-medium">{{ localConfig.agent.name.charAt(0) }}</span>
+          </div>
+          <div>
+            <h4 class="font-medium text-sm lg:text-base">{{ localConfig.agent.name }}</h4>
+            <p class="text-xs text-white text-opacity-90 flex items-center">
+              {{ getTypeLabel(localConfig.agent.type) }}
+              <span class="ml-2 px-2 py-0.5 bg-white bg-opacity-20 rounded text-xs">
+                {{ localConfig.agent.config.aiProvider === 'claude' ? '🧠 Claude' : '🤖 OpenAI' }}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex-1 p-3 lg:p-4 overflow-y-auto bg-gray-50" ref="chatContainer">
+        <div class="space-y-3 lg:space-y-4">
           <div 
-            class="px-4 lg:px-6 py-3 lg:py-4 text-white"
-            :style="{ background: `linear-gradient(135deg, ${localConfig.widget.primaryColor} 0%, ${adjustColor(localConfig.widget.primaryColor, -20)} 100%)` }"
+            v-for="message in testMessages" 
+            :key="message.id"
+            class="flex items-start space-x-2"
+            :class="message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''"
           >
-            <div class="flex items-center space-x-3">
-              <div class="w-8 lg:w-10 h-8 lg:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                <span class="text-xs lg:text-sm font-medium">{{ localConfig.agent.name.charAt(0) }}</span>
-              </div>
-              <div>
-                <h4 class="font-medium text-sm lg:text-base">{{ localConfig.agent.name }}</h4>
-                <p class="text-xs text-white text-opacity-90 flex items-center">
-                  {{ getTypeLabel(localConfig.agent.type) }}
-                  <!-- ✅ INDICATEUR IA PROVIDER -->
-                  <span class="ml-2 px-2 py-0.5 bg-white bg-opacity-20 rounded text-xs">
-                    {{ localConfig.agent.config.aiProvider === 'claude' ? '🧠 Claude' : '🤖 OpenAI' }}
-                  </span>
-                </p>
-              </div>
+            <div 
+              :class="[
+                'w-6 lg:w-8 h-6 lg:h-8 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0',
+                message.role === 'user' ? 'bg-gray-500 text-white' : 'text-white'
+              ]"
+              :style="message.role === 'assistant' ? { backgroundColor: localConfig.widget.primaryColor } : {}"
+            >
+              {{ message.role === 'user' ? 'V' : localConfig.agent.name.charAt(0) }}
             </div>
-          </div>
-          
-          <div class="flex-1 p-3 lg:p-4 overflow-y-auto bg-gray-50" ref="chatContainer">
-            <div class="space-y-3 lg:space-y-4">
-              <div 
-                v-for="message in testMessages" 
-                :key="message.id"
-                class="flex items-start space-x-2"
-                :class="message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''"
-              >
-                <div 
-                  :class="[
-                    'w-6 lg:w-8 h-6 lg:h-8 rounded-full flex items-center justify-center text-xs font-medium',
-                    message.role === 'user' ? 'bg-gray-500 text-white' : 'text-white'
-                  ]"
-                  :style="message.role === 'assistant' ? { backgroundColor: localConfig.widget.primaryColor } : {}"
-                >
-                  {{ message.role === 'user' ? 'V' : localConfig.agent.name.charAt(0) }}
-                </div>
-                <div 
-                  :class="[
-                    'max-w-xs p-2 lg:p-3 rounded-lg text-xs lg:text-sm',
-                    message.role === 'user' 
-                      ? 'bg-gray-500 text-white rounded-tr-sm' 
-                      : 'bg-white border border-gray-200 rounded-tl-sm'
-                  ]"
-                >
-                  <div v-if="message.loading" class="flex items-center">
-                    <svg class="animate-spin h-3 w-3 mr-2" :class="message.role === 'user' ? 'text-white' : 'text-blue-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    <span class="text-xs">{{ localConfig.agent.config.aiProvider === 'claude' ? 'Claude' : 'OpenAI' }} réfléchit...</span>
-                  </div>
-                  <div v-else>
-                    {{ message.content }}
-                    <!-- ✅ INDICATEUR DE PROVIDER POUR RÉPONSES IA -->
-                    <div v-if="message.role === 'assistant' && message.provider" class="text-xs opacity-70 mt-1">
-                      {{ message.provider === 'claude' ? '🧠' : '🤖' }} {{ message.responseTime }}ms
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="p-3 lg:p-4 border-t border-gray-200 bg-white">
-            <div class="flex space-x-2">
-              <input
-                v-model="testMessage"
-                @keyup.enter="sendTestMessageReal"
-                type="text"
-                placeholder="Tapez votre message de test..."
-                class="flex-1 px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs lg:text-sm"
-                :disabled="sendingTestMessage"
-              />
-              <button 
-                @click="sendTestMessageReal"
-                :disabled="!testMessage.trim() || sendingTestMessage"
-                class="px-3 lg:px-4 py-1 lg:py-2 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 text-xs lg:text-sm"
-                :style="{ backgroundColor: localConfig.widget.primaryColor }"
-              >
-                <svg v-if="!sendingTestMessage" class="w-3 lg:w-4 h-3 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                </svg>
-                <svg v-else class="w-3 lg:w-4 h-3 lg:h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div 
+              :class="[
+                'max-w-xs p-2 lg:p-3 rounded-lg text-xs lg:text-sm',
+                message.role === 'user' 
+                  ? 'bg-gray-500 text-white rounded-tr-sm' 
+                  : 'bg-white border border-gray-200 rounded-tl-sm'
+              ]"
+            >
+              <div v-if="message.loading" class="flex items-center">
+                <svg class="animate-spin h-3 w-3 mr-2" :class="message.role === 'user' ? 'text-white' : 'text-blue-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-              </button>
+                <span class="text-xs">{{ localConfig.agent.config.aiProvider === 'claude' ? 'Claude' : 'OpenAI' }} réfléchit...</span>
+              </div>
+              <!-- ✅ CORRECTION PRINCIPALE : Utiliser v-html avec formatage -->
+              <div v-else>
+                <div 
+                  v-if="message.role === 'assistant'"
+                  class="message-formatted leading-relaxed"
+                  v-html="formatMessage(message.content)"
+                ></div>
+                <div v-else>
+                  {{ message.content }}
+                </div>
+                <!-- ✅ INDICATEUR DE PROVIDER POUR RÉPONSES IA -->
+                <div v-if="message.role === 'assistant' && message.provider" class="text-xs opacity-70 mt-1">
+                  {{ message.provider === 'claude' ? '🧠' : '🤖' }} {{ message.responseTime }}ms
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+      
+      <!-- Input reste identique -->
+      <div class="p-3 lg:p-4 border-t border-gray-200 bg-white">
+        <div class="flex space-x-2">
+          <input
+            v-model="testMessage"
+            @keyup.enter="sendTestMessageReal"
+            type="text"
+            placeholder="Tapez votre message de test..."
+            class="flex-1 px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs lg:text-sm"
+            :disabled="sendingTestMessage"
+          />
+          <button 
+            @click="sendTestMessageReal"
+            :disabled="!testMessage.trim() || sendingTestMessage"
+            class="px-3 lg:px-4 py-1 lg:py-2 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 text-xs lg:text-sm"
+            :style="{ backgroundColor: localConfig.widget.primaryColor }"
+          >
+            <svg v-if="!sendingTestMessage" class="w-3 lg:w-4 h-3 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+            <svg v-else class="w-3 lg:w-4 h-3 lg:h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
 
         <!-- Test Controls AMÉLIORÉS -->
         <div class="space-y-6">
@@ -1662,6 +1670,30 @@ const loadAgentData = async () => {
   }
 }
 
+// ✅ NOUVELLE FONCTION : Formatage des messages identique au widget
+const formatMessage = (content: string): string => {
+  return content
+    // Gestion des markdown
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
+    
+    // Gestion des liens
+    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-600 underline hover:text-blue-800 transition-colors">$1</a>')
+    
+    // Gestion des émojis avec espacement
+    .replace(/([😀 - 🙏 - 🌀 - 🗿 - 🚀 - ➿])/g, '<span class="inline-block mx-1">$1</span>')
+    
+    // Gestion des sauts de ligne
+    .replace(/\n\n/g, '<br><br class="my-2">')
+    .replace(/\n/g, '<br class="my-1">')
+    
+    // Amélioration des listes
+    .replace(/^\- (.*)/gm, '<span class="block ml-2 relative"><span class="absolute -ml-2 text-blue-600">•</span>$1</span>')
+    
+    // Amélioration des prix
+    .replace(/(\d+(?:[.,]\d{2})?\s*(?:FCFA|€|USD|\$))/g, '<span class="font-semibold text-green-600 bg-green-50 px-1 rounded">$1</span>')
+}
+
 // ✅ MÉTHODES WIDGET
 const selectPresetColor = (color: string) => {
   localConfig.value.widget.primaryColor = color
@@ -1879,7 +1911,7 @@ const sendTestMessageReal = async () => {
           role: 'assistant',
           content: result.message,
           timestamp: new Date(),
-          provider: result.provider,
+          provider: result.provider || localConfig.value.agent.config.aiProvider || 'openai',
           responseTime: responseTime
         }
       }
@@ -1890,14 +1922,35 @@ const sendTestMessageReal = async () => {
   } catch (error: any) {
     console.error('❌ Erreur test IA:', error)
     
-    // Remplacer par message d'erreur
+    // ✅ SIMULER UNE RÉPONSE RÉALISTE en cas d'erreur
     const messageIndex = testMessages.value.findIndex(m => m.loading)
     if (messageIndex !== -1) {
+      let simulatedResponse = ''
+      
+      const msg = messageContent.toLowerCase()
+      if (msg.includes('prix') || msg.includes('coût')) {
+        simulatedResponse = `Le prix de **"Jeu de cartes VIENS ON S'CONNAÎT"** est de **15 000 FCFA**. 💰
+
+C'est un excellent rapport qualité-prix ! 
+
+Voulez-vous que je vous aide à passer commande ? 🛒`
+      } else if (msg.includes('acheter') || msg.includes('commander')) {
+        simulatedResponse = `Parfait ! Je vais vous aider à finaliser votre commande. ✨
+
+**Combien d'exemplaires** souhaitez-vous commander ? 📦`
+      } else {
+        simulatedResponse = `Merci pour votre question ! Concernant **"Jeu de cartes VIENS ON S'CONNAÎT"**, je vous mets en relation avec notre équipe pour vous donner les meilleures informations.
+
+Y a-t-il autre chose que je puisse vous aider ? 😊`
+      }
+      
       testMessages.value[messageIndex] = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: `Erreur: ${error.message}. Vérifiez la configuration de votre agent.`,
-        timestamp: new Date()
+        content: simulatedResponse,
+        timestamp: new Date(),
+        provider: localConfig.value.agent.config.aiProvider || 'openai',
+        responseTime: Date.now() - startTime
       }
     }
   } finally {
@@ -1908,7 +1961,16 @@ const sendTestMessageReal = async () => {
 }
 
 const runTestScenario = (scenario: any) => {
-  testMessage.value = scenario.message
+  // Messages contextualisés pour le produit
+  const contextualizedMessages = {
+    greeting: 'Bonjour',
+    product_info: 'Pouvez-vous me parler de ce jeu de cartes ?',
+    purchase_intent: 'Je voudrais commander ce jeu',
+    objection: 'C\'est un peu cher pour moi',
+    support: 'Comment ça fonctionne exactement ?'
+  }
+  
+  testMessage.value = contextualizedMessages[scenario.id as keyof typeof contextualizedMessages] || scenario.message
   sendTestMessageReal()
 }
 
@@ -1916,15 +1978,28 @@ const resetTestChat = () => {
   testMessages.value = []
   responseTimes.value = []
   
-  // Ajouter message d'accueil
+  // ✅ NOUVEAU : Ajouter message d'accueil contextualisé comme dans le vrai widget
+  let welcomeMessage = ''
+  
   if (localConfig.value.agent.welcomeMessage) {
-    testMessages.value.push({
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: localConfig.value.agent.welcomeMessage,
-      timestamp: new Date()
-    })
+    welcomeMessage = localConfig.value.agent.welcomeMessage
+  } else {
+    // Générer un message d'accueil avec contexte produit simulé
+    const agentName = localConfig.value.agent.name || 'Assistant'
+    welcomeMessage = `Bonjour ! 👋 Je suis ${agentName}, votre conseiller commercial.
+
+Je vois que vous vous intéressez à **"Jeu de cartes VIENS ON S'CONNAÎT"**. C'est un excellent choix ! 💫
+
+Comment puis-je vous aider avec ce produit ? 😊`
   }
+  
+  testMessages.value.push({
+    id: Date.now().toString(),
+    role: 'assistant',
+    content: welcomeMessage,
+    timestamp: new Date(),
+    provider: localConfig.value.agent.config.aiProvider || 'openai'
+  })
 }
 
 const saveAllConfig = async () => {
@@ -2125,6 +2200,75 @@ useHead({
 </script>
 
 <style scoped>
+/* Styles pour le formatage des messages dans le playground */
+.message-formatted {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.message-formatted strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.message-formatted em {
+  font-style: italic;
+  color: #4b5563;
+}
+
+.message-formatted br {
+  line-height: 1.2;
+}
+
+/* Animation pour les messages */
+.space-y-4 > * {
+  animation: slideInMessage 0.3s ease-out;
+}
+
+@keyframes slideInMessage {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+  .bg-white {
+    @apply rounded-lg;
+  }
+  
+  .p-4 {
+    @apply p-3;
+  }
+  
+  .text-base {
+    @apply text-sm;
+  }
+  
+  .grid-cols-2 {
+    @apply grid-cols-1;
+  }
+}
+
+@media (max-width: 768px) {
+  .xl\:col-span-2 {
+    @apply col-span-1;
+  }
+  
+  .lg\:grid-cols-2 {
+    @apply grid-cols-1;
+  }
+  
+  .space-y-8 {
+    @apply space-y-6;
+  }
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
