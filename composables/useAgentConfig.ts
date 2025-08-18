@@ -169,7 +169,7 @@ export const useAgentConfig = () => {
         position: '${position}',
         theme: '${theme}',
         language: '${language}',
-        borderRadius: '${widgetData?.borderRadius || 'md'}',
+        borderRadius: '${widgetData?.borderRadius || 'md'}', // ✅ CORRECTION CRITIQUE
         autoDetectProduct: true,
         debug: false,
         disableFallback: true,
@@ -232,7 +232,7 @@ export const useAgentConfig = () => {
           console.log('✅ ChatSeller: Script chargé');
           
           // Attendre que le SDK soit disponible
-          var maxAttempts = 25; // ✅ AUGMENTÉ
+          var maxAttempts = 25;
           var attempts = 0;
           
           function tryInit() {
@@ -251,13 +251,11 @@ export const useAgentConfig = () => {
                 }
               } catch (error) {
                 console.error('❌ ChatSeller: Erreur init:', error);
-                // ✅ PAS DE FALLBACK automatique - pour déboguer
               }
             } else if (attempts < maxAttempts) {
-              setTimeout(tryInit, 300); // ✅ DÉLAI PLUS LONG
+              setTimeout(tryInit, 300);
             } else {
               console.warn('⏰ ChatSeller: Timeout init - max tentatives atteint');
-              // ✅ Fallback seulement si pas disableFallback
               if (!window.ChatSellerConfig.disableFallback) {
                 createFallbackWidget();
               }
@@ -270,13 +268,12 @@ export const useAgentConfig = () => {
         // Gestion des erreurs
         script.onerror = function(error) {
           console.error('❌ ChatSeller: Erreur chargement:', error);
-          // ✅ Fallback seulement si autorisé
           if (!window.ChatSellerConfig.disableFallback) {
             createFallbackWidget();
           }
         };
         
-        // ✅ TIMEOUT DE SÉCURITÉ PLUS LONG
+        // ✅ TIMEOUT DE SÉCURITÉ
         setTimeout(function() {
           if (!window.ChatSeller || !window.ChatSeller.isReady) {
             console.warn('⏰ ChatSeller: Timeout général');
@@ -284,7 +281,7 @@ export const useAgentConfig = () => {
               createFallbackWidget();
             }
           }
-        }, 20000); // ✅ 20 secondes au lieu de 15
+        }, 20000);
         
         // Injection sécurisée du script
         var firstScript = document.getElementsByTagName('script')[0];
@@ -295,7 +292,7 @@ export const useAgentConfig = () => {
         }
       }
       
-      // Widget de fallback Shopify-optimisé (seulement si autorisé)
+      // Widget de fallback Shopify-optimisé
       function createFallbackWidget() {
         if (document.getElementById('chatseller-fallback')) return;
         
@@ -303,7 +300,7 @@ export const useAgentConfig = () => {
         
         // Styles CSS
         var style = document.createElement('style');
-        style.textContent = ` + '`' + `
+        style.textContent = \`
           #chatseller-fallback {
             position: fixed !important;
             bottom: 20px !important;
@@ -326,7 +323,7 @@ export const useAgentConfig = () => {
             transform: translateY(-2px) !important;
             box-shadow: 0 6px 25px rgba(0,0,0,0.4) !important;
           }
-        ` + '`' + `;
+        \`;
         document.head.appendChild(style);
         
         // Bouton de fallback
@@ -354,11 +351,10 @@ export const useAgentConfig = () => {
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', startWidget);
       } else {
-        // DOM déjà chargé, démarrer avec délai pour Shopify
-        setTimeout(startWidget, 200); // ✅ DÉLAI AUGMENTÉ
+        setTimeout(startWidget, 200);
       }
       
-      // Support Shopify sections dynamiques AMÉLIORÉ
+      // Support Shopify sections dynamiques
       if (window.Shopify || document.querySelector('[data-shopify]')) {
         console.log('🛍️ ChatSeller: Mode Shopify activé');
         
@@ -378,7 +374,7 @@ export const useAgentConfig = () => {
           }
         });
         
-        // ✅ ÉCOUTER CHANGEMENTS URL POUR SPA SHOPIFY
+        // Écouter changements URL pour SPA SHOPIFY
         let currentUrl = window.location.href;
         setInterval(function() {
           if (window.location.href !== currentUrl) {
