@@ -155,177 +155,196 @@ export const useAgentConfig = () => {
 
       // ✅ CODE D'INTÉGRATION ROBUSTE POUR SHOPIFY
       return `<!-- 🤖 ChatSeller Widget - Agent: ${agentName} -->
-  <script>
-  (function() {
-    'use strict';
+<script>
+(function() {
+  'use strict';
+  
+  // Configuration du widget ChatSeller
+  window.ChatSellerConfig = {
+    shopId: '${shopId}',
+    agentId: '${agentId}',
+    apiUrl: '${apiUrl}',
+    buttonText: '${buttonText.replace(/'/g, "\\'")}',
+    primaryColor: '${primaryColor}',
+    position: '${position}',
+    theme: '${theme}',
+    language: '${language}',
+    autoDetectProduct: true,
+    debug: false,
+    agentConfig: {
+      id: '${agentId}',
+      name: '${agentName.replace(/'/g, "\\'")}',
+      title: '${getTypeLabel(agentData.type)}',
+      welcomeMessage: '${(agentData.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
+      fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
+      personality: '${agentData.personality || 'friendly'}'
+    }
+  };
+  
+  // Fonction de chargement robuste pour Shopify
+  function loadChatSellerWidget() {
+    console.log('🚀 ChatSeller: Initialisation widget...');
     
-    // Configuration du widget ChatSeller
-    window.ChatSellerConfig = {
-      shopId: '${shopId}',
-      agentId: '${agentId}',
-      apiUrl: '${apiUrl}',
-      buttonText: '${buttonText.replace(/'/g, "\\'")}',
-      primaryColor: '${primaryColor}',
-      position: '${position}',
-      theme: '${theme}',
-      language: '${language}',
-      autoDetectProduct: true,
-      debug: false,
-      agentConfig: {
-        id: '${agentId}',
-        name: '${agentName.replace(/'/g, "\\'")}',
-        title: '${getTypeLabel(agentData.type)}',
-        welcomeMessage: '${(agentData.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
-        fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
-        personality: '${agentData.personality || 'friendly'}'
-      }
-    };
+    // Vérification anti-double chargement
+    if (window.ChatSellerLoaded) {
+      console.log('⚠️ ChatSeller: Déjà chargé, ignore');
+      return;
+    }
+    window.ChatSellerLoaded = true;
     
-    // Fonction de chargement sécurisée du widget
-    function loadChatSellerWidget() {
-      console.log('🚀 ChatSeller: Début chargement widget v1.0.0');
+    // Création et configuration du script
+    var script = document.createElement('script');
+    script.src = '${widgetUrl}/embed.js?v=' + Date.now();
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.setAttribute('data-chatseller', 'widget');
+    
+    // Gestion du succès
+    script.onload = function() {
+      console.log('✅ ChatSeller: Script chargé');
       
-      // Créer et configurer le script
-      var script = document.createElement('script');
-      script.src = '${widgetUrl}/embed.js?v=' + Date.now();
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      script.setAttribute('data-chatseller', 'true');
+      // Attendre que le SDK soit disponible
+      var maxAttempts = 20;
+      var attempts = 0;
       
-      // Gestion du succès
-      script.onload = function() {
-        console.log('✅ ChatSeller: Script embed.js chargé avec succès');
-        
-        // Vérifier disponibilité du SDK
+      function tryInit() {
+        attempts++;
         if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
           try {
             window.ChatSeller.init(window.ChatSellerConfig);
-            console.log('✅ ChatSeller: Widget initialisé - Agent: ${agentName}');
+            console.log('✅ ChatSeller: Widget initialisé');
             
-            // Analytics
+            // Analytics optionnel
             if (typeof gtag !== 'undefined') {
-              gtag('event', 'chatseller_widget_loaded', {
+              gtag('event', 'chatseller_loaded', {
                 'agent_id': '${agentId}',
                 'shop_id': '${shopId}'
               });
             }
-          } catch (initError) {
-            console.error('❌ ChatSeller: Erreur initialisation:', initError);
-            fallbackWidget();
+          } catch (error) {
+            console.error('❌ ChatSeller: Erreur init:', error);
+            createFallbackWidget();
           }
+        } else if (attempts < maxAttempts) {
+          setTimeout(tryInit, 200);
         } else {
-          console.warn('⚠️ ChatSeller: SDK non disponible, tentative de récupération...');
-          
-          // Réessayer après 2 secondes
-          setTimeout(function() {
-            if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
-              try {
-                window.ChatSeller.init(window.ChatSellerConfig);
-                console.log('✅ ChatSeller: Widget initialisé (fallback)');
-              } catch (error) {
-                console.error('❌ ChatSeller: Échec fallback:', error);
-                fallbackWidget();
-              }
-            } else {
-              fallbackWidget();
-            }
-          }, 2000);
+          console.warn('⏰ ChatSeller: Timeout init');
+          createFallbackWidget();
         }
-      };
-      
-      // Gestion des erreurs
-      script.onerror = function(error) {
-        console.error('❌ ChatSeller: Erreur chargement script:', error);
-        fallbackWidget();
-      };
-      
-      // Timeout de sécurité
-      setTimeout(function() {
-        if (!window.ChatSeller || !window.ChatSeller.isReady) {
-          console.warn('⏰ ChatSeller: Timeout chargement, activation fallback');
-          fallbackWidget();
-        }
-      }, 10000);
-      
-      // Injecter le script
-      var firstScript = document.getElementsByTagName('script')[0];
-      if (firstScript && firstScript.parentNode) {
-        firstScript.parentNode.insertBefore(script, firstScript);
-      } else {
-        (document.head || document.body || document.documentElement).appendChild(script);
       }
       
-      console.log('📡 ChatSeller: Script embed.js injecté depuis ${widgetUrl}');
-    }
+      tryInit();
+    };
     
-    // Widget de fallback en cas d'échec
-    function fallbackWidget() {
-      console.log('🔧 ChatSeller: Activation widget fallback');
-      
-      var style = document.createElement('style');
-      style.textContent = \`
-        .chatseller-fallback {
-          position: fixed !important;
-          bottom: 20px !important;
-          right: 20px !important;
-          z-index: 999999 !important;
-          background: ${primaryColor} !important;
-          color: white !important;
-          padding: 12px 20px !important;
-          border-radius: 25px !important;
-          border: none !important;
-          cursor: pointer !important;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-          font-size: 14px !important;
-          font-weight: 600 !important;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-          transition: all 0.3s ease !important;
-        }
-        .chatseller-fallback:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
-        }
-      \`;
-      document.head.appendChild(style);
-      
-      var fallbackButton = document.createElement('button');
-      fallbackButton.className = 'chatseller-fallback';
-      fallbackButton.innerHTML = '💬 ${buttonText}';
-      fallbackButton.onclick = function() {
-        window.open('https://dashboard.chatseller.app/contact', '_blank');
-      };
-      
-      document.body.appendChild(fallbackButton);
-    }
+    // Gestion des erreurs
+    script.onerror = function(error) {
+      console.error('❌ ChatSeller: Erreur chargement:', error);
+      createFallbackWidget();
+    };
     
-    // Démarrage intelligent selon l'état du DOM
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadChatSellerWidget);
+    // Timeout de sécurité
+    setTimeout(function() {
+      if (!window.ChatSeller || !window.ChatSeller.isReady) {
+        console.warn('⏰ ChatSeller: Timeout général');
+        createFallbackWidget();
+      }
+    }, 15000);
+    
+    // Injection sécurisée du script
+    var firstScript = document.getElementsByTagName('script')[0];
+    if (firstScript && firstScript.parentNode) {
+      firstScript.parentNode.insertBefore(script, firstScript);
     } else {
-      // DOM déjà chargé
-      if (document.readyState === 'interactive') {
-        // Attendre que tout soit prêt
-        setTimeout(loadChatSellerWidget, 100);
-      } else {
-        // DOM complètement chargé
-        loadChatSellerWidget();
+      document.head.appendChild(script);
+    }
+  }
+  
+  // Widget de fallback Shopify-optimisé
+  function createFallbackWidget() {
+    if (document.getElementById('chatseller-fallback')) return;
+    
+    console.log('🔧 ChatSeller: Activation fallback');
+    
+    // Styles CSS
+    var style = document.createElement('style');
+    style.textContent = ` + '`' + `
+      #chatseller-fallback {
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        z-index: 999999 !important;
+        background: ${primaryColor} !important;
+        color: white !important;
+        padding: 12px 20px !important;
+        border-radius: 25px !important;
+        border: none !important;
+        cursor: pointer !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
       }
+      #chatseller-fallback:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.4) !important;
+      }
+    ` + '`' + `;
+    document.head.appendChild(style);
+    
+    // Bouton de fallback
+    var fallbackButton = document.createElement('a');
+    fallbackButton.id = 'chatseller-fallback';
+    fallbackButton.href = 'https://dashboard.chatseller.app/contact';
+    fallbackButton.target = '_blank';
+    fallbackButton.innerHTML = '💬 ${buttonText}';
+    
+    document.body.appendChild(fallbackButton);
+  }
+  
+  // Démarrage intelligent pour Shopify
+  function startWidget() {
+    // Vérifier que nous ne sommes pas dans l'admin Shopify
+    if (window.location.href.includes('/admin/')) {
+      console.log('🛑 ChatSeller: Admin Shopify détecté, widget désactivé');
+      return;
     }
     
-    // Support Shopify : écouter les changements de section
-    if (window.Shopify || document.querySelector('[data-shopify]')) {
-      console.log('🛍️ ChatSeller: Environnement Shopify détecté');
-      
-      document.addEventListener('shopify:section:load', function(event) {
-        console.log('🔄 ChatSeller: Section Shopify rechargée');
-        if (!window.ChatSeller || !window.ChatSeller.isReady) {
-          setTimeout(loadChatSellerWidget, 500);
-        }
-      });
-    }
-  })();
-  </script>
-  <!-- 🚀 Fin ChatSeller Widget -->`
+    loadChatSellerWidget();
+  }
+  
+  // Démarrage selon l'état du DOM
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startWidget);
+  } else {
+    // DOM déjà chargé, démarrer avec délai pour Shopify
+    setTimeout(startWidget, 100);
+  }
+  
+  // Support Shopify sections dynamiques
+  if (window.Shopify || document.querySelector('[data-shopify]')) {
+    console.log('🛍️ ChatSeller: Mode Shopify activé');
+    
+    // Écouter les changements de section Shopify
+    document.addEventListener('shopify:section:load', function(event) {
+      console.log('🔄 ChatSeller: Section Shopify rechargée');
+      if (!window.ChatSeller || !window.ChatSeller.isReady) {
+        setTimeout(startWidget, 500);
+      }
+    });
+    
+    // Écouter les changements de produit (thèmes avec AJAX)
+    document.addEventListener('variant:change', function() {
+      if (window.ChatSeller && window.ChatSeller.refreshProduct) {
+        window.ChatSeller.refreshProduct();
+      }
+    });
+  }
+  
+})();
+<\/script>
+<!-- 🚀 Fin ChatSeller Widget -->`
 
     } catch (error) {
       console.error('❌ Erreur génération code intégration:', error)
