@@ -169,7 +169,7 @@ export const useAgentConfig = () => {
         position: '${position}',
         theme: '${theme}',
         language: '${language}',
-        borderRadius: '${getTypeLabel(widgetData?.borderRadius || 'md')}', // ✅ AJOUT borderRadius
+        borderRadius: '${widgetData?.borderRadius || 'md'}',
         autoDetectProduct: true,
         debug: false,
         disableFallback: true,
