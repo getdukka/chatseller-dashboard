@@ -1,4 +1,4 @@
-// composables/useAgentConfig.ts - VERSION CORRIGÉE AVEC PERSISTANCE WIDGET
+// composables/useAgentConfig.ts 
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
@@ -88,198 +88,250 @@ export const useAgentConfig = () => {
     return hasAgentData || hasStoreData || hasWidgetData
   })
 
-  // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION CORRIGÉE SHOPIFY
-  const integrationCode = computed(() => {
-  console.log('🔧 [integrationCode] Génération du code d\'intégration optimisé Shopify...')
-  
-  // ✅ RÉCUPÉRATION DONNÉES MULTIPLES SOURCES avec vérifications robustes
-  let agentData = null
-  let agentId = ''
-  let agentName = ''
-  let widgetData = null
-  
-  // Source 1: agentConfig (API)
-  if (agentConfig.value?.agent?.id && agentConfig.value?.agent?.name) {
-    agentData = agentConfig.value.agent
-    widgetData = agentConfig.value.widget
-    agentId = agentData.id
-    agentName = agentData.name
-    console.log('✅ [integrationCode] Données depuis agentConfig API')
-  }
-  // Source 2: agentConfigStore (store temporaire)
-  else if (agentConfigStore.hasValidAgent) {
-    const storeAgent = agentConfigStore.getAgentForConfig()
-    if (storeAgent) {
-      agentId = storeAgent.id
-      agentName = storeAgent.name
-      console.log('✅ [integrationCode] Données depuis agentConfigStore')
-      
-      // Construire un objet minimal
-      agentData = {
-        id: storeAgent.id,
-        name: storeAgent.name,
-        type: storeAgent.type,
-        personality: storeAgent.personality || 'friendly',
-        welcomeMessage: storeAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
-        fallbackMessage: storeAgent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.'
-      }
-      
-      widgetData = {
-        buttonText: 'Parler à un conseiller',
-        primaryColor: '#3B82F6',
-        position: 'above-cta',
-        theme: 'modern',
-        language: 'fr'
-      }
+    // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION CORRIGÉE
+    const integrationCode = computed(() => {
+    console.log('🔧 [integrationCode] Génération du code d\'intégration...')
+    
+    // ✅ RÉCUPÉRATION DONNÉES AVEC GESTION D'ERREURS ROBUSTE
+    let agentData = null
+    let agentId = ''
+    let agentName = ''
+    let widgetData = null
+    
+    // Source 1: agentConfig (API)
+    if (agentConfig.value?.agent?.id && agentConfig.value?.agent?.name) {
+      agentData = agentConfig.value.agent
+      widgetData = agentConfig.value.widget
+      agentId = agentData.id
+      agentName = agentData.name
+      console.log('✅ [integrationCode] Données depuis agentConfig API')
     }
-  }
-  
-  // ✅ SI AUCUNE DONNÉE, RETOURNER MESSAGE DE CHARGEMENT
-  if (!agentData || !agentId || !agentName) {
-    console.warn('⚠️ [integrationCode] Données agent manquantes pour générer le code')
-    return '<!-- ⏳ Chargement de la configuration de l\'agent... Veuillez patienter ou actualiser la page. -->'
-  }
-
-  try {
-    // ✅ CONFIGURATION AVEC FALLBACKS ROBUSTES
-    const shopId = authStore.user?.id || authStore.userShopId || 'demo-shop'
-    const buttonText = widgetData?.buttonText || 'Parler à un conseiller'
-    const primaryColor = widgetData?.primaryColor || '#3B82F6'
-    const position = widgetData?.position || 'above-cta'
-    const theme = widgetData?.theme || 'modern'
-    const language = widgetData?.language || 'fr'
-    
-    // ✅ URLS SELON L'ENVIRONNEMENT - CORRIGÉES POUR SHOPIFY
-    const baseUrl = config.public.widgetUrl || 'https://widget.chatseller.app'
-    const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
-
-    console.log('✅ [integrationCode] Configuration finale:', {
-      shopId,
-      agentId,
-      agentName,
-      buttonText,
-      primaryColor,
-      baseUrl,
-      apiUrl
-    })
-
-    // ✅ CODE D'INTÉGRATION OPTIMISÉ SHOPIFY avec détection produit automatique
-    return `<!-- 🤖 ChatSeller Widget - Agent: ${agentName} -->
-<script>
-(function() {
-  // Configuration du widget ChatSeller
-  window.ChatSellerConfig = {
-    shopId: '${shopId}',
-    agentId: '${agentId}',
-    apiUrl: '${apiUrl}',
-    buttonText: '${buttonText.replace(/'/g, "\\'")}',
-    primaryColor: '${primaryColor}',
-    position: '${position}',
-    theme: '${theme}',
-    language: '${language}',
-    autoDetectProduct: true,
-    debug: false,
-    agentConfig: {
-      id: '${agentId}',
-      name: '${agentName.replace(/'/g, "\\'")}',
-      title: '${getTypeLabel(agentData.type)}',
-      welcomeMessage: '${(agentData.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
-      fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
-      personality: '${agentData.personality || 'friendly'}'
-    }
-  };
-  
-  // Fonction de chargement du widget avec retry automatique
-  function loadChatSellerWidget() {
-    console.log('🚀 ChatSeller: Début chargement widget...');
-    
-    var script = document.createElement('script');
-    script.src = '${baseUrl}/embed.js';
-    script.async = true;
-    script.crossOrigin = 'anonymous';
-    
-    script.onload = function() {
-      console.log('✅ ChatSeller: Script chargé avec succès');
-      
-      // Attendre que ChatSeller soit disponible
-      var maxAttempts = 20;
-      var attempts = 0;
-      
-      function initChatSeller() {
-        attempts++;
+    // Source 2: agentConfigStore (store temporaire)
+    else if (agentConfigStore.hasValidAgent) {
+      const storeAgent = agentConfigStore.getAgentForConfig()
+      if (storeAgent) {
+        agentId = storeAgent.id
+        agentName = storeAgent.name
+        console.log('✅ [integrationCode] Données depuis agentConfigStore')
         
-        if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
-          console.log('✅ ChatSeller: Initialisation du widget...');
-          
-          try {
-            window.ChatSeller.init(window.ChatSellerConfig);
-            console.log('✅ ChatSeller: Widget initialisé avec succès');
-          } catch (error) {
-            console.error('❌ ChatSeller: Erreur lors de l\'initialisation:', error);
-          }
-          
-        } else if (attempts < maxAttempts) {
-          console.log('⏳ ChatSeller: En attente du SDK... (' + attempts + '/' + maxAttempts + ')');
-          setTimeout(initChatSeller, 100);
-          
-        } else {
-          console.error('❌ ChatSeller: Timeout - SDK non disponible après ' + (maxAttempts * 100) + 'ms');
+        // Construire un objet minimal
+        agentData = {
+          id: storeAgent.id,
+          name: storeAgent.name,
+          type: storeAgent.type,
+          personality: storeAgent.personality || 'friendly',
+          welcomeMessage: storeAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
+          fallbackMessage: storeAgent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.'
+        }
+        
+        widgetData = {
+          buttonText: 'Parler à un conseiller',
+          primaryColor: '#3B82F6',
+          position: 'above-cta',
+          theme: 'modern',
+          language: 'fr'
         }
       }
-      
-      // Démarrer l'initialisation
-      initChatSeller();
-    };
+    }
     
-    script.onerror = function(error) {
-      console.error('❌ ChatSeller: Erreur lors du chargement du script:', error);
-      console.log('🔄 ChatSeller: Tentative de rechargement dans 3 secondes...');
-      
-      setTimeout(function() {
-        console.log('🔄 ChatSeller: Nouvelle tentative de chargement...');
-        loadChatSellerWidget();
-      }, 3000);
-    };
-    
-    // Injecter le script dans le document
-    var firstScript = document.getElementsByTagName('script')[0];
-    if (firstScript && firstScript.parentNode) {
-      firstScript.parentNode.insertBefore(script, firstScript);
-    } else {
-      document.head.appendChild(script);
+    // ✅ SI AUCUNE DONNÉE, RETOURNER MESSAGE DE CHARGEMENT
+    if (!agentData || !agentId || !agentName) {
+      console.warn('⚠️ [integrationCode] Données agent manquantes pour générer le code')
+      return '<!-- ⏳ Chargement de la configuration de l\'agent... Veuillez patienter ou actualiser la page. -->'
     }
-  }
-  
-  // Démarrer le chargement quand le DOM est prêt
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadChatSellerWidget);
-  } else {
-    // DOM déjà prêt
-    if (document.readyState === 'interactive' || document.readyState === 'complete') {
-      // Petite pause pour s'assurer que Shopify est bien initialisé
-      setTimeout(loadChatSellerWidget, 500);
-    } else {
-      loadChatSellerWidget();
-    }
-  }
-  
-  // Fallback de sécurité
-  setTimeout(function() {
-    if (!window.ChatSeller) {
-      console.log('🔄 ChatSeller: Fallback - Force loading after 5s');
-      loadChatSellerWidget();
-    }
-  }, 5000);
-  
-})();
-</script>
-<!-- 🚀 Fin du code ChatSeller - Support: support@chatseller.app -->`
 
-  } catch (error) {
-    console.error('❌ [integrationCode] Erreur génération code intégration:', error)
-    return `<!-- ❌ Erreur lors de la génération du code d'intégration. Veuillez contacter le support. -->`
-  }
-})
+    try {
+      // ✅ CONFIGURATION AVEC FALLBACKS ROBUSTES
+      const shopId = authStore.user?.id || authStore.userShopId || 'demo-shop'
+      const buttonText = widgetData?.buttonText || 'Parler à un conseiller'
+      const primaryColor = widgetData?.primaryColor || '#3B82F6'
+      const position = widgetData?.position || 'above-cta'
+      const theme = widgetData?.theme || 'modern'
+      const language = widgetData?.language || 'fr'
+      
+      // ✅ URL WIDGET CORRIGÉE - POINT CRUCIAL
+      const widgetUrl = 'https://widget.chatseller.app'
+      const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
+
+      // ✅ CODE D'INTÉGRATION ROBUSTE POUR SHOPIFY
+      return `<!-- 🤖 ChatSeller Widget - Agent: ${agentName} -->
+  <script>
+  (function() {
+    'use strict';
+    
+    // Configuration du widget ChatSeller
+    window.ChatSellerConfig = {
+      shopId: '${shopId}',
+      agentId: '${agentId}',
+      apiUrl: '${apiUrl}',
+      buttonText: '${buttonText.replace(/'/g, "\\'")}',
+      primaryColor: '${primaryColor}',
+      position: '${position}',
+      theme: '${theme}',
+      language: '${language}',
+      autoDetectProduct: true,
+      debug: false,
+      agentConfig: {
+        id: '${agentId}',
+        name: '${agentName.replace(/'/g, "\\'")}',
+        title: '${getTypeLabel(agentData.type)}',
+        welcomeMessage: '${(agentData.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
+        fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
+        personality: '${agentData.personality || 'friendly'}'
+      }
+    };
+    
+    // Fonction de chargement sécurisée du widget
+    function loadChatSellerWidget() {
+      console.log('🚀 ChatSeller: Début chargement widget v1.0.0');
+      
+      // Créer et configurer le script
+      var script = document.createElement('script');
+      script.src = '${widgetUrl}/embed.js?v=' + Date.now();
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.setAttribute('data-chatseller', 'true');
+      
+      // Gestion du succès
+      script.onload = function() {
+        console.log('✅ ChatSeller: Script embed.js chargé avec succès');
+        
+        // Vérifier disponibilité du SDK
+        if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
+          try {
+            window.ChatSeller.init(window.ChatSellerConfig);
+            console.log('✅ ChatSeller: Widget initialisé - Agent: ${agentName}');
+            
+            // Analytics
+            if (typeof gtag !== 'undefined') {
+              gtag('event', 'chatseller_widget_loaded', {
+                'agent_id': '${agentId}',
+                'shop_id': '${shopId}'
+              });
+            }
+          } catch (initError) {
+            console.error('❌ ChatSeller: Erreur initialisation:', initError);
+            fallbackWidget();
+          }
+        } else {
+          console.warn('⚠️ ChatSeller: SDK non disponible, tentative de récupération...');
+          
+          // Réessayer après 2 secondes
+          setTimeout(function() {
+            if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
+              try {
+                window.ChatSeller.init(window.ChatSellerConfig);
+                console.log('✅ ChatSeller: Widget initialisé (fallback)');
+              } catch (error) {
+                console.error('❌ ChatSeller: Échec fallback:', error);
+                fallbackWidget();
+              }
+            } else {
+              fallbackWidget();
+            }
+          }, 2000);
+        }
+      };
+      
+      // Gestion des erreurs
+      script.onerror = function(error) {
+        console.error('❌ ChatSeller: Erreur chargement script:', error);
+        fallbackWidget();
+      };
+      
+      // Timeout de sécurité
+      setTimeout(function() {
+        if (!window.ChatSeller || !window.ChatSeller.isReady) {
+          console.warn('⏰ ChatSeller: Timeout chargement, activation fallback');
+          fallbackWidget();
+        }
+      }, 10000);
+      
+      // Injecter le script
+      var firstScript = document.getElementsByTagName('script')[0];
+      if (firstScript && firstScript.parentNode) {
+        firstScript.parentNode.insertBefore(script, firstScript);
+      } else {
+        (document.head || document.body || document.documentElement).appendChild(script);
+      }
+      
+      console.log('📡 ChatSeller: Script embed.js injecté depuis ${widgetUrl}');
+    }
+    
+    // Widget de fallback en cas d'échec
+    function fallbackWidget() {
+      console.log('🔧 ChatSeller: Activation widget fallback');
+      
+      var style = document.createElement('style');
+      style.textContent = \`
+        .chatseller-fallback {
+          position: fixed !important;
+          bottom: 20px !important;
+          right: 20px !important;
+          z-index: 999999 !important;
+          background: ${primaryColor} !important;
+          color: white !important;
+          padding: 12px 20px !important;
+          border-radius: 25px !important;
+          border: none !important;
+          cursor: pointer !important;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+          transition: all 0.3s ease !important;
+        }
+        .chatseller-fallback:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+        }
+      \`;
+      document.head.appendChild(style);
+      
+      var fallbackButton = document.createElement('button');
+      fallbackButton.className = 'chatseller-fallback';
+      fallbackButton.innerHTML = '💬 ${buttonText}';
+      fallbackButton.onclick = function() {
+        window.open('https://dashboard.chatseller.app/contact', '_blank');
+      };
+      
+      document.body.appendChild(fallbackButton);
+    }
+    
+    // Démarrage intelligent selon l'état du DOM
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadChatSellerWidget);
+    } else {
+      // DOM déjà chargé
+      if (document.readyState === 'interactive') {
+        // Attendre que tout soit prêt
+        setTimeout(loadChatSellerWidget, 100);
+      } else {
+        // DOM complètement chargé
+        loadChatSellerWidget();
+      }
+    }
+    
+    // Support Shopify : écouter les changements de section
+    if (window.Shopify || document.querySelector('[data-shopify]')) {
+      console.log('🛍️ ChatSeller: Environnement Shopify détecté');
+      
+      document.addEventListener('shopify:section:load', function(event) {
+        console.log('🔄 ChatSeller: Section Shopify rechargée');
+        if (!window.ChatSeller || !window.ChatSeller.isReady) {
+          setTimeout(loadChatSellerWidget, 500);
+        }
+      });
+    }
+  })();
+  </script>
+  <!-- 🚀 Fin ChatSeller Widget -->`
+
+    } catch (error) {
+      console.error('❌ Erreur génération code intégration:', error)
+      return `<!-- ❌ Erreur lors de la génération du code d'intégration. Veuillez contacter le support. -->`
+    }
+  })
 
   // ✅ HELPER POUR LES LABELS DE TYPE
   const getTypeLabel = (type: string): string => {
@@ -292,7 +344,7 @@ export const useAgentConfig = () => {
     return labels[type as keyof typeof labels] || 'Assistant commercial'
   }
 
-  // ✅ HELPER: Headers avec authentification
+  // ✅ HELPER: Headers avec authentification ROBUSTE
   const getAuthHeaders = () => {
     if (!authStore.token) {
       throw new Error('Token d\'authentification manquant. Veuillez vous reconnecter.')
@@ -304,7 +356,7 @@ export const useAgentConfig = () => {
     }
   }
 
-  // ✅ RÉCUPÉRER LA CONFIGURATION - VERSION CORRIGÉE
+  // ✅ RÉCUPÉRER LA CONFIGURATION - VERSION CORRIGÉE AVEC GESTION D'ERREURS
   const fetchAgentConfig = async (agentId: string) => {
     loading.value = true
     error.value = null
@@ -320,10 +372,10 @@ export const useAgentConfig = () => {
         throw new Error('Session expirée. Veuillez vous reconnecter.')
       }
 
-      // ✅ RÉCUPÉRATION CONFIG AGENT + SHOP WIDGET EN PARALLÈLE
+      // ✅ RÉCUPÉRATION CONFIG AGENT + SHOP WIDGET EN PARALLÈLE AVEC GESTION D'ERREURS
       const shopId = authStore.user?.id || authStore.userShopId
       
-      const [agentResponse, shopResponse, kbResponse] = await Promise.all([
+      const [agentResponse, shopResponse, kbResponse] = await Promise.allSettled([
         $fetch(`/api/v1/agents/${agentId}/config`, {
           baseURL: config.public.apiBaseUrl,
           headers: getAuthHeaders()
@@ -331,9 +383,6 @@ export const useAgentConfig = () => {
         shopId ? $fetch(`/api/v1/shops/${shopId}`, {
           baseURL: config.public.apiBaseUrl,
           headers: getAuthHeaders()
-        }).catch(err => {
-          console.warn('⚠️ Erreur récupération shop:', err)
-          return null
         }) : Promise.resolve(null),
         $fetch(`/api/v1/agents/${agentId}/knowledge`, {
           baseURL: config.public.apiBaseUrl,
@@ -341,112 +390,132 @@ export const useAgentConfig = () => {
         }).catch(() => ({ success: true, data: [] }))
       ])
 
-      if (!agentResponse.success) {
-        throw new Error(agentResponse.error || 'Erreur lors de la récupération de la configuration agent')
+      // ✅ GESTION DES ERREURS AVEC DETAILS
+      if (agentResponse.status === 'rejected') {
+        console.error('❌ Erreur récupération agent:', agentResponse.reason)
+        throw new Error('Erreur lors de la récupération de l\'agent: ' + agentResponse.reason.message)
       }
 
-      console.log('📦 [useAgentConfig] Réponse API shop:', shopResponse?.data?.widget_config)
+      const agentData = agentResponse.value
+      if (!agentData.success) {
+        throw new Error(agentData.error || 'Erreur lors de la récupération de la configuration agent')
+      }
+
+      const shopData = shopResponse.status === 'fulfilled' ? shopResponse.value : null
+      const kbData = kbResponse.status === 'fulfilled' ? kbResponse.value : { success: true, data: [] }
+
+      console.log('📦 [useAgentConfig] Réponse API shop:', shopData?.data?.widget_config)
 
       // ✅ CONSTRUIRE CONFIG COMPLÈTE AVEC WIDGET PERSISTÉ
       const completeConfig: AgentConfig = {
         agent: {
-          id: agentResponse.data.agent.id,
-          name: agentResponse.data.agent.name,
-          type: agentResponse.data.agent.type,
-          personality: agentResponse.data.agent.personality,
-          description: agentResponse.data.agent.description,
-          welcomeMessage: agentResponse.data.agent.welcomeMessage,
-          fallbackMessage: agentResponse.data.agent.fallbackMessage,
-          avatar: agentResponse.data.agent.avatar,
-          isActive: agentResponse.data.agent.isActive,
+          id: agentData.data.agent.id,
+          name: agentData.data.agent.name,
+          type: agentData.data.agent.type,
+          personality: agentData.data.agent.personality,
+          description: agentData.data.agent.description,
+          welcomeMessage: agentData.data.agent.welcomeMessage,
+          fallbackMessage: agentData.data.agent.fallbackMessage,
+          avatar: agentData.data.agent.avatar,
+          isActive: agentData.data.agent.isActive,
           config: {
-            ...agentResponse.data.agent.config,
-            linkedKnowledgeBase: kbResponse.data?.map((kb: any) => kb.id) || [],
-            aiProvider: agentResponse.data.agent.config?.aiProvider || 'openai',
-            temperature: agentResponse.data.agent.config?.temperature || 0.7,
-            maxTokens: agentResponse.data.agent.config?.maxTokens || 1000,
-            systemPrompt: agentResponse.data.agent.config?.systemPrompt || '',
-            tone: agentResponse.data.agent.config?.tone || 'friendly'
+            ...agentData.data.agent.config,
+            linkedKnowledgeBase: kbData.data?.map((kb: any) => kb.id) || [],
+            aiProvider: agentData.data.agent.config?.aiProvider || 'openai',
+            temperature: agentData.data.agent.config?.temperature || 0.7,
+            maxTokens: agentData.data.agent.config?.maxTokens || 1000,
+            systemPrompt: agentData.data.agent.config?.systemPrompt || '',
+            tone: agentData.data.agent.config?.tone || 'friendly'
           },
           stats: {
-            conversations: agentResponse.data.agent.totalConversations || 0,
-            conversions: agentResponse.data.agent.totalConversions || 0
+            conversations: agentData.data.agent.totalConversations || 0,
+            conversions: agentData.data.agent.totalConversions || 0
           },
-          knowledgeBase: kbResponse.data || []
+          knowledgeBase: kbData.data || []
         },
-        // ✅ WIDGET CONFIG DEPUIS L'API SHOP (PERSISTÉE) - CORRIGÉ
+        // ✅ WIDGET CONFIG AVEC FALLBACKS ROBUSTES
         widget: {
-          buttonText: shopResponse?.data?.widget_config?.buttonText || 'Parler à un conseiller',
-          primaryColor: shopResponse?.data?.widget_config?.primaryColor || '#3B82F6',
-          position: shopResponse?.data?.widget_config?.position || 'above-cta',
-          widgetSize: shopResponse?.data?.widget_config?.widgetSize || 'medium',
-          theme: shopResponse?.data?.widget_config?.theme || 'modern',
-          borderRadius: shopResponse?.data?.widget_config?.borderRadius || 'md',
-          animation: shopResponse?.data?.widget_config?.animation || 'fade',
-          autoOpen: shopResponse?.data?.widget_config?.autoOpen || false,
-          showAvatar: shopResponse?.data?.widget_config?.showAvatar !== false,
-          soundEnabled: shopResponse?.data?.widget_config?.soundEnabled !== false,
-          mobileOptimized: shopResponse?.data?.widget_config?.mobileOptimized !== false,
-          offlineMessage: shopResponse?.data?.widget_config?.offlineMessage,
-          isActive: shopResponse?.data?.widget_config?.isActive !== false,
-          language: shopResponse?.data?.widget_config?.language || 'fr'
+          buttonText: shopData?.data?.widget_config?.buttonText || 'Parler à un conseiller',
+          primaryColor: shopData?.data?.widget_config?.primaryColor || '#3B82F6',
+          position: shopData?.data?.widget_config?.position || 'above-cta',
+          widgetSize: shopData?.data?.widget_config?.widgetSize || 'medium',
+          theme: shopData?.data?.widget_config?.theme || 'modern',
+          borderRadius: shopData?.data?.widget_config?.borderRadius || 'md',
+          animation: shopData?.data?.widget_config?.animation || 'fade',
+          autoOpen: shopData?.data?.widget_config?.autoOpen || false,
+          showAvatar: shopData?.data?.widget_config?.showAvatar !== false,
+          soundEnabled: shopData?.data?.widget_config?.soundEnabled !== false,
+          mobileOptimized: shopData?.data?.widget_config?.mobileOptimized !== false,
+          offlineMessage: shopData?.data?.widget_config?.offlineMessage,
+          isActive: shopData?.data?.widget_config?.isActive !== false,
+          language: shopData?.data?.widget_config?.language || 'fr'
         },
-        knowledgeBase: agentResponse.data.knowledgeBase || []
+        knowledgeBase: kbData.data || []
       }
 
       agentConfig.value = completeConfig
       console.log('✅ [useAgentConfig] Configuration chargée avec widget persisté:', {
         agent: completeConfig.agent.name,
         widget: completeConfig.widget.buttonText,
-        widgetPersisted: !!shopResponse?.data?.widget_config
+        widgetPersisted: !!shopData?.data?.widget_config
       })
       return { success: true, data: completeConfig }
 
     } catch (err: any) {
       console.error('❌ [useAgentConfig] Erreur fetchAgentConfig:', err)
-      error.value = err.message || 'Erreur lors de la récupération de la configuration'
-      return { success: false, error: error.value }
+      const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de la récupération de la configuration'
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
   }
 
-  // ✅ LIER DOCUMENTS DE BASE DE CONNAISSANCES
-  const linkKnowledgeBaseDocuments = async (agentId: string, documentIds: string[]) => {
-    saving.value = true
-    error.value = null
-
+  // ✅ NOUVELLE MÉTHODE POUR TEST IA AVEC GESTION D'ERREURS ROBUSTE
+  const testAIMessage = async (message: string, agentId: string) => {
     try {
-      console.log('🔗 [useAgentConfig] Liaison documents KB:', documentIds.length)
+      console.log('🧪 [testAIMessage] Test IA:', { message, agentId })
       
-      const response = await $fetch(`/api/v1/agents/${agentId}/knowledge`, {
+      if (!message.trim()) {
+        throw new Error('Message vide')
+      }
+
+      if (!agentId) {
+        throw new Error('Agent ID manquant')
+      }
+
+      const response = await $fetch('/api/v1/chat/test', {
         method: 'POST',
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders(),
-        body: { knowledgeBaseIds: documentIds }
+        body: {
+          message: message.trim(),
+          agentId,
+          shopId: authStore.user?.id || authStore.userShopId,
+          testMode: true
+        }
       })
 
-      if (!response.success) {
-        throw new Error(response.error || 'Erreur lors de la liaison')
+      if (response.success) {
+        return {
+          success: true,
+          message: response.data.message,
+          provider: response.data.provider || 'openai',
+          responseTime: response.data.responseTime || 0
+        }
+      } else {
+        throw new Error(response.error || 'Erreur lors du test IA')
       }
-
-      if (agentConfig.value) {
-        agentConfig.value.agent.config.linkedKnowledgeBase = documentIds
+    } catch (error: any) {
+      console.error('❌ Erreur test IA:', error)
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Erreur lors du test IA'
       }
-
-      console.log('✅ [useAgentConfig] Documents KB liés avec succès')
-      return { success: true }
-
-    } catch (err: any) {
-      console.error('❌ [useAgentConfig] Erreur linkKnowledgeBase:', err)
-      error.value = err.message || 'Erreur lors de la liaison des documents'
-      return { success: false, error: error.value }
-    } finally {
-      saving.value = false
     }
   }
 
-  // ✅ SAUVEGARDER CONFIGURATION COMPLÈTE - VERSION CORRIGÉE WIDGET
+  // ✅ SAUVEGARDER CONFIGURATION COMPLÈTE - VERSION CORRIGÉE
   const saveCompleteConfig = async (agentId: string, updates: Partial<AgentConfig>) => {
     saving.value = true
     widgetSyncStatus.value = 'syncing'
@@ -499,13 +568,12 @@ export const useAgentConfig = () => {
         console.log('✅ Agent sauvegardé')
       }
 
-      // ✅ SAUVEGARDER WIDGET - VERSION CORRIGÉE
+      // ✅ SAUVEGARDER WIDGET
       if (updates.widget) {
         console.log('🎨 Sauvegarde configuration widget...', updates.widget)
         
         const widgetPayload = {
           widget_config: {
-            // ✅ S'assurer que TOUTES les propriétés sont incluses
             buttonText: updates.widget.buttonText || 'Parler à un conseiller',
             primaryColor: updates.widget.primaryColor || '#3B82F6',
             position: updates.widget.position || 'above-cta',
@@ -540,11 +608,6 @@ export const useAgentConfig = () => {
         console.log('✅ Widget config sauvegardée avec succès:', widgetResult.data?.widget_config)
       }
 
-      // ✅ LIER DOCUMENTS KB SI FOURNI
-      if (updates.agent?.config?.linkedKnowledgeBase) {
-        await linkKnowledgeBaseDocuments(agentId, updates.agent.config.linkedKnowledgeBase)
-      }
-
       // ✅ METTRE À JOUR CONFIG LOCALE
       if (agentConfig.value) {
         if (updates.agent) {
@@ -562,9 +625,10 @@ export const useAgentConfig = () => {
 
     } catch (err: any) {
       console.error('❌ [useAgentConfig] Erreur saveCompleteConfig:', err)
-      error.value = err.message || 'Erreur lors de la sauvegarde'
+      const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de la sauvegarde'
+      error.value = errorMessage
       widgetSyncStatus.value = 'error'
-      return { success: false, error: error.value }
+      return { success: false, error: errorMessage }
     } finally {
       saving.value = false
       setTimeout(() => {
@@ -575,39 +639,56 @@ export const useAgentConfig = () => {
     }
   }
 
-  // ✅ TESTER L'IA EN TEMPS RÉEL
-  const testAIMessage = async (message: string, agentId: string) => {
-    try {
-      const response = await $fetch('/api/v1/chat/test', {
-        method: 'POST',
-        baseURL: config.public.apiBaseUrl,
-        headers: getAuthHeaders(),
-        body: {
-          message,
-          agentId,
-          shopId: authStore.user?.id || authStore.userShopId,
-          testMode: true
-        }
-      })
+      // ✅ NOUVELLE MÉTHODE : Lier documents à la base de connaissances
+    const linkKnowledgeBaseDocuments = async (agentId: string, documentIds: string[]) => {
+      saving.value = true
+      error.value = null
 
-      if (response.success) {
-        return {
-          success: true,
-          message: response.data.message,
-          provider: response.data.provider || 'openai',
-          responseTime: response.data.responseTime || 0
+      try {
+        console.log('🔗 [linkKnowledgeBaseDocuments] Liaison documents:', { agentId, documentIds })
+
+        if (!agentId) {
+          throw new Error('Agent ID manquant')
         }
-      } else {
-        throw new Error(response.error || 'Erreur lors du test IA')
-      }
-    } catch (error: any) {
-      console.error('❌ Erreur test IA:', error)
-      return {
-        success: false,
-        error: error.message || 'Erreur lors du test IA'
+
+        // ✅ TYPAGE EXPLICIT DE LA RÉPONSE
+        const response = await $fetch(`/api/v1/agents/${agentId}/knowledge-base`, {
+          method: 'PUT',
+          baseURL: config.public.apiBaseUrl,
+          headers: getAuthHeaders(),
+          body: {
+            documentIds: documentIds
+          }
+        }) as { success: boolean; data?: any; error?: string } // ← Type explicite
+
+        // ✅ VÉRIFICATION TYPE-SAFE AMÉLIORÉE
+        if (response.success) {
+          // Mettre à jour config locale
+          if (agentConfig.value) {
+            agentConfig.value.agent.config.linkedKnowledgeBase = documentIds
+            
+            if (response.data?.documents) {
+              agentConfig.value.agent.knowledgeBase = response.data.documents
+              agentConfig.value.knowledgeBase = response.data.documents
+            }
+          }
+
+          console.log('✅ Documents liés avec succès')
+          return { success: true, data: response.data }
+        } else {
+          // TypeScript sait maintenant que response.error peut exister
+          throw new Error(response.error || 'Erreur lors de la liaison des documents')
+        }
+
+      } catch (err: any) {
+        console.error('❌ [linkKnowledgeBaseDocuments] Erreur:', err)
+        const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de la liaison des documents'
+        error.value = errorMessage
+        return { success: false, error: errorMessage }
+      } finally {
+        saving.value = false
       }
     }
-  }
 
   // ✅ COPIER LE CODE D'INTÉGRATION
   const copyIntegrationCode = async () => {
@@ -647,8 +728,8 @@ export const useAgentConfig = () => {
     // Actions
     fetchAgentConfig,
     saveCompleteConfig,
-    linkKnowledgeBaseDocuments,
     testAIMessage,
+    linkKnowledgeBaseDocuments, 
     copyIntegrationCode,
     clearError
   }

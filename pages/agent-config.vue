@@ -1,4 +1,4 @@
-<!-- pages/agent-config.vue -->
+<!-- pages/agent-config.vue - VERSION CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -134,18 +134,63 @@
             <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🤖 Informations du Vendeur IA</h3>
             
             <div class="space-y-4 lg:space-y-6">
-              <!-- Nom -->
+              <!-- ✅ SUPPRESSION du champ Titre - Seul le nom reste -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Nom du Vendeur IA *</label>
                 <input
                   v-model="localConfig.agent.name"
                   type="text"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm lg:text-base"
-                  placeholder="Ex: Sarah, Expert Produits"
+                  placeholder="Ex: Sarah, Marc, Lisa, Sophie..."
                 />
+                <p class="text-xs text-gray-500 mt-1">
+                  Ce nom apparaîtra dans les conversations avec vos clients
+                </p>
               </div>
 
-              <!-- Type + Personnalité -->
+              <!-- ✅ NOUVEAU : Avatar du Vendeur IA -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Avatar du Vendeur IA</label>
+                <div class="flex items-center space-x-4">
+                  <!-- Prévisualisation de l'avatar -->
+                  <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-100 flex items-center justify-center">
+                    <img
+                      v-if="localConfig.agent.avatar"
+                      :src="localConfig.agent.avatar"
+                      :alt="localConfig.agent.name"
+                      class="w-full h-full object-cover"
+                      @error="handleAvatarError"
+                    />
+                    <div v-else class="text-gray-400 text-xs text-center">
+                      {{ localConfig.agent.name ? localConfig.agent.name.charAt(0).toUpperCase() : '?' }}
+                    </div>
+                  </div>
+                  
+                  <!-- URL de l'avatar -->
+                  <div class="flex-1">
+                    <input
+                      v-model="localConfig.agent.avatar"
+                      type="url"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                      placeholder="https://example.com/avatar.jpg (optionnel)"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">
+                      Laissez vide pour utiliser un avatar généré automatiquement
+                    </p>
+                  </div>
+                  
+                  <!-- Bouton pour générer un avatar automatique -->
+                  <button
+                    @click="generateAvatar"
+                    type="button"
+                    class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                  >
+                    Générer
+                  </button>
+                </div>
+              </div>
+
+              <!-- Type + Personnalité (reste identique) -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Type de vendeur</label>
@@ -184,6 +229,7 @@
                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
                     >
                       <option value="openai">🤖 GPT-4o-mini (Gratuit)</option>
+                      <option value="claude" :disabled="!isPaidUser">🧠 GPT-4.1 (Pro)</option>
                       <option value="claude" :disabled="!isPaidUser">🧠 Claude Sonnet (Pro)</option>
                     </select>
                   </div>
@@ -200,7 +246,7 @@
                   </div>
                 </div>
                 <p v-if="!isPaidUser" class="text-xs text-yellow-600 mt-1">
-                  💡 Passez au plan Pro pour accéder à Claude AI et paramètres avancés
+                  💡 Passez au plan Pro pour accéder aux autres IA et aux paramètres avancés
                 </p>
               </div>
 
@@ -968,7 +1014,7 @@
                 <svg class="animate-spin h-3 w-3 mr-2" :class="message.role === 'user' ? 'text-white' : 'text-blue-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-                <span class="text-xs">{{ localConfig.agent.config.aiProvider === 'claude' ? 'Claude' : 'OpenAI' }} réfléchit...</span>
+                <span class="text-xs text-gray-500 mr-2">{{ agentName }} est en train d'écrire...</span>
               </div>
               <!-- ✅ CORRECTION PRINCIPALE : Utiliser v-html avec formatage -->
               <div v-else>
@@ -1098,22 +1144,6 @@
         
         <!-- Guide d'intégration -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
-        <!-- ✅ DEBUG TEMPORAIRE - À SUPPRIMER PLUS TARD -->
-          <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <h4 class="text-sm font-medium text-red-800 mb-2">🔧 Debug Temporaire</h4>
-            <button
-              @click="debugIntegrationCode"
-              class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 mr-4"
-            >
-              🔍 Debug Code d'Intégration
-            </button>
-            <div class="mt-2 text-xs text-red-600">
-              <p>Statut: {{ integrationCode.includes('Chargement') ? '⏳ En cours de chargement' : '✅ Code prêt' }}</p>
-              <p>Agent ID: {{ agentId }}</p>
-              <p>Agent Config: {{ !!agentConfig ? '✅' : '❌' }}</p>
-              <p>Store Valid: {{ agentConfigStore.hasValidAgent ? '✅' : '❌' }}</p>
-            </div>
-          </div>
           <h3 class="text-xl lg:text-2xl font-semibold text-gray-900 mb-4 lg:mb-6">🔗 Guide d'Intégration</h3>
           
           <!-- Informations de base -->
@@ -1673,15 +1703,15 @@ const loadAgentData = async () => {
 // ✅ NOUVELLE FONCTION : Formatage des messages identique au widget
 const formatMessage = (content: string): string => {
   return content
+    // Préserver les emojis AVANT tout autre traitement
+    .replace(/([\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}])/gu, '<span class="emoji">$1</span>')
+    
     // Gestion des markdown
     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
     .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
     
     // Gestion des liens
     .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-600 underline hover:text-blue-800 transition-colors">$1</a>')
-    
-    // Gestion des émojis avec espacement
-    .replace(/([😀 - 🙏 - 🌀 - 🗿 - 🚀 - ➿])/g, '<span class="inline-block mx-1">$1</span>')
     
     // Gestion des sauts de ligne
     .replace(/\n\n/g, '<br><br class="my-2">')
@@ -1759,6 +1789,22 @@ const resetWidgetToDefaults = () => {
       successMessage.value = null
     }, 3000)
   }
+}
+
+// ✅ NOUVELLE MÉTHODE : Générer avatar automatique
+const generateAvatar = () => {
+  if (localConfig.value.agent.name) {
+    const name = encodeURIComponent(localConfig.value.agent.name)
+    const color = localConfig.value.widget?.primaryColor?.replace('#', '') || '3B82F6'
+    localConfig.value.agent.avatar = `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=200&rounded=true`
+  }
+}
+
+// ✅ NOUVELLE MÉTHODE : Gérer erreur avatar
+const handleAvatarError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  const name = encodeURIComponent(localConfig.value.agent.name || 'Agent')
+  img.src = `https://ui-avatars.com/api/?name=${name}&background=6B7280&color=fff&size=200&rounded=true`
 }
 
 // ✅ HELPER METHODS POUR WIDGET
@@ -1922,37 +1968,37 @@ const sendTestMessageReal = async () => {
   } catch (error: any) {
     console.error('❌ Erreur test IA:', error)
     
-    // ✅ SIMULER UNE RÉPONSE RÉALISTE en cas d'erreur
-    const messageIndex = testMessages.value.findIndex(m => m.loading)
-    if (messageIndex !== -1) {
-      let simulatedResponse = ''
-      
-      const msg = messageContent.toLowerCase()
-      if (msg.includes('prix') || msg.includes('coût')) {
-        simulatedResponse = `Le prix de **"Jeu de cartes VIENS ON S'CONNAÎT"** est de **15 000 FCFA**. 💰
+  // ✅ SIMULER UNE RÉPONSE RÉALISTE en cas d'erreur
+  const messageIndex = testMessages.value.findIndex(m => m.loading)
+  if (messageIndex !== -1) {
+    let simulatedResponse = ''
+    
+    const msg = messageContent.toLowerCase()
+    if (msg.includes('prix') || msg.includes('coût')) {
+      simulatedResponse = `Merci pour votre question sur les tarifs ! 💰
 
-C'est un excellent rapport qualité-prix ! 
+  Je vous mets en relation avec notre équipe pour vous donner les informations les plus précises.
 
-Voulez-vous que je vous aide à passer commande ? 🛒`
-      } else if (msg.includes('acheter') || msg.includes('commander')) {
-        simulatedResponse = `Parfait ! Je vais vous aider à finaliser votre commande. ✨
+  Y a-t-il autre chose que je puisse vous aider ? 😊`
+    } else if (msg.includes('acheter') || msg.includes('commander')) {
+      simulatedResponse = `Parfait ! Je vais vous aider à finaliser votre commande. ✨
 
-**Combien d'exemplaires** souhaitez-vous commander ? 📦`
-      } else {
-        simulatedResponse = `Merci pour votre question ! Concernant **"Jeu de cartes VIENS ON S'CONNAÎT"**, je vous mets en relation avec notre équipe pour vous donner les meilleures informations.
+  Pouvez-vous me donner plus de détails sur ce qui vous intéresse ? 📦`
+    } else {
+      simulatedResponse = `Merci pour votre question ! Je vous mets en relation avec notre équipe pour vous donner les meilleures informations.
 
-Y a-t-il autre chose que je puisse vous aider ? 😊`
-      }
-      
-      testMessages.value[messageIndex] = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: simulatedResponse,
-        timestamp: new Date(),
-        provider: localConfig.value.agent.config.aiProvider || 'openai',
-        responseTime: Date.now() - startTime
-      }
+  Y a-t-il autre chose que je puisse vous aider ? 😊`
     }
+    
+    testMessages.value[messageIndex] = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: simulatedResponse,
+      timestamp: new Date(),
+      provider: localConfig.value.agent.config.aiProvider || 'openai',
+      responseTime: Date.now() - startTime
+    }
+  }
   } finally {
     sendingTestMessage.value = false
     await nextTick()
@@ -1978,19 +2024,17 @@ const resetTestChat = () => {
   testMessages.value = []
   responseTimes.value = []
   
-  // ✅ NOUVEAU : Ajouter message d'accueil contextualisé comme dans le vrai widget
+  // ✅ CORRECTION : Message d'accueil basé sur la vraie configuration
   let welcomeMessage = ''
   
   if (localConfig.value.agent.welcomeMessage) {
     welcomeMessage = localConfig.value.agent.welcomeMessage
   } else {
-    // Générer un message d'accueil avec contexte produit simulé
+    // ✅ Message d'accueil générique (pas de contenu mocké spécifique)
     const agentName = localConfig.value.agent.name || 'Assistant'
     welcomeMessage = `Bonjour ! 👋 Je suis ${agentName}, votre conseiller commercial.
 
-Je vois que vous vous intéressez à **"Jeu de cartes VIENS ON S'CONNAÎT"**. C'est un excellent choix ! 💫
-
-Comment puis-je vous aider avec ce produit ? 😊`
+Comment puis-je vous aider aujourd'hui ? 😊`
   }
   
   testMessages.value.push({
@@ -2040,43 +2084,6 @@ const copyIntegrationCodeAction = async () => {
       clearError()
     }, 3000)
   }
-}
-
-// ✅ FONCTION DEBUG TEMPORAIRE
-const debugIntegrationCode = () => {
-  console.log('🔍 [DEBUG] Analyse de l\'état des données pour le code d\'intégration:')
-  console.log('════════════════════════════════════════════════════════════════')
-  
-  // Vérifier agentConfig depuis le composable
-  console.log('1. agentConfig.value:', agentConfig.value)
-  console.log('   - Existe:', !!agentConfig.value)
-  console.log('   - Agent ID:', agentConfig.value?.agent?.id)
-  console.log('   - Agent Name:', agentConfig.value?.agent?.name)
-  
-  // Vérifier localConfig
-  console.log('2. localConfig.value:', localConfig.value)
-  console.log('   - Agent ID:', localConfig.value.agent.id)
-  console.log('   - Agent Name:', localConfig.value.agent.name)
-  
-  // Vérifier agentConfigStore
-  console.log('3. agentConfigStore:')
-  console.log('   - hasValidAgent:', agentConfigStore.hasValidAgent)
-  console.log('   - isDataFresh:', agentConfigStore.isDataFresh)
-  const storeAgent = agentConfigStore.getAgentForConfig()
-  console.log('   - Store Agent:', storeAgent)
-  
-  // Vérifier authStore
-  console.log('4. authStore:')
-  console.log('   - User ID:', authStore.user?.id)
-  console.log('   - User Shop ID:', authStore.userShopId)
-  console.log('   - Token exists:', !!authStore.token)
-  
-  // Vérifier l'état du computed integrationCode
-  console.log('5. integrationCode:')
-  console.log('   - Value preview:', integrationCode.value.substring(0, 100) + '...')
-  console.log('   - Is loading?:', integrationCode.value.includes('Chargement'))
-  
-  console.log('════════════════════════════════════════════════════════════════')
 }
 
 // ✅ HELPER METHODS
@@ -2182,6 +2189,23 @@ onMounted(async () => {
   console.log('  - Environment:', config.public.environment)
 
   console.log('🚀 [agent-config] Page montée, chargement config agent...')
+
+  // ✅ NOUVELLE LOGIQUE : Détecter l'onglet depuis l'URL
+  if (route.query.tab && typeof route.query.tab === 'string') {
+    const requestedTab = route.query.tab
+    const validTabs = ['agent', 'widget', 'playground', 'integration']
+    
+    if (validTabs.includes(requestedTab)) {
+      activeTab.value = requestedTab
+      console.log(`🎯 Onglet automatique activé: ${requestedTab}`)
+      
+      // Si c'est playground, initialiser le chat de test
+      if (requestedTab === 'playground') {
+        resetTestChat()
+        console.log('🧪 Playground initialisé automatiquement')
+      }
+    }
+  }
   
   // Initialiser le chat de test
   resetTestChat()
@@ -2201,6 +2225,33 @@ useHead({
 
 <style scoped>
 /* Styles pour le formatage des messages dans le playground */
+.message-formatted {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.message-formatted strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.message-formatted em {
+  font-style: italic;
+  color: #4b5563;
+}
+
+.message-formatted br {
+  line-height: 1.2;
+}
+
+.emoji {
+  display: inline-block;
+  margin: 0 1px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 1.1em;
+  line-height: 1;
+}
+
 .message-formatted {
   line-height: 1.6;
   word-break: break-word;

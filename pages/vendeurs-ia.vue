@@ -1024,31 +1024,61 @@ const configureAgent = async (agent: Agent) => {
   }
 }
 
-const testAgent = (agent: Agent) => {
-  if (trialExpired.value) {
-    alert('❌ Votre essai gratuit est terminé.\n\nPassez au plan Starter pour tester vos agents IA.')
-    router.push('/billing')
-    return
-  }
-  
-  if (!canTestAgents.value) {
-    alert('❌ La fonctionnalité de test est réservée aux utilisateurs des plans payants.')
-    router.push('/billing')
-    return
-  }
-  
-  showTestModal.value = true
-  selectedAgent.value = agent
-  
-  chatMessages.value = [
-    {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: agent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?',
-      timestamp: new Date()
+  const testAgent = async (agent: Agent) => {
+    if (trialExpired.value) {
+      alert('❌ Votre essai gratuit est terminé.\n\nPassez au plan Starter pour tester vos agents IA.')
+      router.push('/billing')
+      return
     }
-  ]
-}
+    
+    if (!canTestAgents.value) {
+      alert('❌ La fonctionnalité de test est réservée aux utilisateurs des plans payants.')
+      router.push('/billing')
+      return
+    }
+    
+    console.log('🧪 Redirection vers test playground pour agent:', agent.id, agent.name)
+    
+    try {
+      // ✅ SAUVEGARDER L'AGENT DANS LE STORE AVANT NAVIGATION
+      const { useAgentConfigStore } = await import('~/stores/agentConfig')
+      const agentConfigStore = useAgentConfigStore()
+      
+      const agentDataForConfig = {
+        id: agent.id,
+        name: agent.name,
+        type: agent.type,
+        personality: agent.personality || 'friendly',
+        description: agent.description || '',
+        welcomeMessage: agent.welcomeMessage || '',
+        fallbackMessage: agent.fallbackMessage || '',
+        avatar: agent.avatar || '',
+        isActive: agent.isActive,
+        config: agent.config || {},
+        stats: agent.stats || { conversations: 0, conversions: 0 },
+        sourceComponent: 'vendeurs-ia'
+      }
+      
+      agentConfigStore.setAgentForConfig(agentDataForConfig, 'vendeurs-ia')
+      console.log('✅ Agent sauvegardé pour test playground')
+      
+      // ✅ NAVIGATION VERS AGENT-CONFIG AVEC ONGLET TEST ACTIF
+      await navigateTo({
+        path: '/agent-config',
+        query: { 
+          id: agent.id,
+          tab: 'playground'  // ← Ouvrir directement l'onglet test
+        }
+      })
+      
+      console.log('✅ Navigation vers playground réussie')
+      
+    } catch (navigationError) {
+      console.warn('⚠️ Erreur navigation:', navigationError)
+      // Fallback avec window.location
+      window.location.href = `/agent-config?id=${agent.id}&tab=playground`
+    }
+  }
 
 const sendTestMessage = async () => {
   if (!testMessage.value.trim() || sendingMessage.value || !selectedAgent.value) return
