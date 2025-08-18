@@ -169,9 +169,10 @@ export const useAgentConfig = () => {
         position: '${position}',
         theme: '${theme}',
         language: '${language}',
+        borderRadius: '${getTypeLabel(widgetData?.borderRadius || 'md')}', // ✅ AJOUT borderRadius
         autoDetectProduct: true,
         debug: false,
-        disableFallback: true, // ✅ AJOUTÉ : Empêche le double bouton
+        disableFallback: true,
         agentConfig: {
           id: '${agentId}',
           name: '${agentName.replace(/'/g, "\\'")}',
