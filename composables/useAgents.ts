@@ -1,4 +1,4 @@
-// composables/useAgents.ts - VERSION API PURE FINALE AVEC TOUTES LES FONCTIONNALITÉS
+// composables/useAgents.ts 
 
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
@@ -7,6 +7,7 @@ import { useAuthStore } from '~/stores/auth'
 export interface Agent {
   id: string
   name: string
+  title?: string // ✅ NOUVEAU: Title personnalisable
   type: 'general' | 'product_specialist' | 'support' | 'upsell'
   personality: 'professional' | 'friendly' | 'expert' | 'casual'
   description: string | null
@@ -26,6 +27,7 @@ export interface Agent {
 
 export interface CreateAgentData {
   name: string
+  title?: string // ✅ NOUVEAU: Title personnalisable
   type: Agent['type']
   personality: Agent['personality']
   description?: string
@@ -44,9 +46,10 @@ interface ApiResponse<T = any> {
   data?: T
   error?: string
   message?: string
+  meta?: any
 }
 
-// ✅ COMPOSABLE PRINCIPAL 100% API PURE
+// ✅ COMPOSABLE PRODUCTION PURE - 100% API
 export const useAgents = () => {
   const authStore = useAuthStore()
   const config = useRuntimeConfig()
@@ -60,15 +63,15 @@ export const useAgents = () => {
   // ✅ COMPUTED PLAN DETAILS DEPUIS LE STORE AUTH
   const planDetails = computed(() => {
     return authStore.planDetails || {
-      name: 'Aucun plan',
-      agentLimit: 0,
-      knowledgeBaseLimit: 0,
+      name: 'Free',
+      agentLimit: 1,
+      knowledgeBaseLimit: 1,
       features: [],
-      isActive: false,
-      isTrial: false,
-      trialDaysLeft: 0,
+      isActive: true,
+      isTrial: true,
+      trialDaysLeft: 7,
       trialEndDate: null,
-      hasExpired: true
+      hasExpired: false
     }
   })
 
@@ -113,10 +116,12 @@ export const useAgents = () => {
     return hasActiveAccess.value
   })
 
-  // ✅ HELPER: Headers avec authentification
+  // ✅ HELPER: Headers avec authentification ROBUSTE
   const getAuthHeaders = () => {
     if (!authStore.token) {
-      throw new Error('🔐 Token d\'authentification manquant. Veuillez vous reconnecter.')
+      console.error('❌ [useAgents] Token manquant - redirection vers login')
+      navigateTo('/login')
+      throw new Error('🔐 Session expirée. Redirection vers la connexion...')
     }
     
     return {
@@ -125,7 +130,7 @@ export const useAgents = () => {
     }
   }
 
-  // ✅ HELPER: Gestion des erreurs API
+  // ✅ HELPER: Gestion des erreurs API AMÉLIORÉE
   const handleApiError = (err: any, defaultMessage: string): ApiResponse => {
     console.error('❌ [useAgents] API Error:', err)
     
@@ -133,8 +138,10 @@ export const useAgents = () => {
     
     if (err.status === 401 || err.statusCode === 401) {
       authStore.clearAuth()
-      errorMessage = 'Session expirée. Veuillez vous reconnecter.'
+      errorMessage = '🔐 Session expirée. Veuillez vous reconnecter.'
       navigateTo('/login')
+    } else if (err.status === 403 || err.statusCode === 403) {
+      errorMessage = '🚫 Accès refusé. Vérifiez vos permissions ou votre plan.'
     } else if (err.data?.error && typeof err.data.error === 'string') {
       errorMessage = err.data.error
     } else if (err.message && typeof err.message === 'string') {
@@ -147,201 +154,76 @@ export const useAgents = () => {
     return { success: false, error: errorMessage }
   }
 
-  // ✅ VÉRIFICATION DES LIMITES AVANT ACTION
-  const checkLimitsBeforeAction = (action: string): boolean => {
-    if (trialExpired.value) {
-      error.value = '❌ Votre essai gratuit de 7 jours est terminé. Passez au plan Starter pour continuer à utiliser ChatSeller.'
+  // ✅ VÉRIFICATION API DISPONIBLE
+  const checkApiAvailable = async (): Promise<boolean> => {
+    try {
+      const response = await $fetch('/health', {
+        baseURL: config.public.apiBaseUrl,
+        timeout: 5000
+      })
+      
+      if (response?.status === 'ok') {
+        console.log('✅ [useAgents] API disponible:', config.public.apiBaseUrl)
+        return true
+      }
+      
+      console.warn('⚠️ [useAgents] API répond mais status incorrect:', response)
       return false
+      
+    } catch (error) {
+      console.error('❌ [useAgents] API indisponible:', config.public.apiBaseUrl, error)
+      throw new Error(`API indisponible sur ${config.public.apiBaseUrl}. Vérifiez que votre serveur local fonctionne.`)
     }
-
-    if (action === 'create' && !canCreateAgent.value) {
-      const limit = planDetails.value.agentLimit
-      error.value = `❌ Limite de votre plan atteinte (${limit} agent${limit > 1 ? 's' : ''} maximum). Passez au plan supérieur pour créer plus d'agents.`
-      return false
-    }
-
-    if (['update', 'delete', 'toggle'].includes(action) && trialExpired.value) {
-      error.value = '❌ Votre essai gratuit est terminé. Passez au plan Starter pour gérer vos agents.'
-      return false
-    }
-
-    return true
   }
 
-  // ✅ RÉCUPÉRER TOUS LES AGENTS - 100% API
+  // ✅ RÉCUPÉRER TOUS LES AGENTS - 100% API PURE
   const fetchAgents = async (): Promise<ApiResponse<Agent[]>> => {
     loading.value = true
     error.value = null
 
     try {
-      console.log('🔍 [useAgents] Récupération des agents via API...')
+      console.log('🔍 [useAgents] Récupération des agents via API pure...')
       
-      if (!authStore.token) {
-        console.warn('⚠️ [useAgents] Pas de token, utilisation données mockées')
-        
-        // ✅ DONNÉES MOCKÉES STRICTEMENT LIMITÉES SELON LE PLAN
-        const baseMockAgents: Agent[] = [
-          {
-            id: 'agent_001',
-            name: 'Sarah',
-            type: 'general',
-            personality: 'friendly',
-            description: 'Assistante commerciale polyvalente spécialisée dans l\'accompagnement client et la conversion.',
-            welcomeMessage: 'Bonjour ! Je suis Sarah, votre conseillère. Comment puis-je vous aider à trouver le produit parfait ?',
-            fallbackMessage: 'Je transmets votre question à notre équipe, un conseiller vous recontactera rapidement.',
-            avatar: 'https://ui-avatars.com/api/?name=Sarah&background=3B82F6&color=fff',
-            isActive: !trialExpired.value, // ✅ INACTIF SI ESSAI EXPIRÉ
-            config: {
-              collectName: true,
-              collectEmail: true,
-              collectPhone: true,
-              upsellEnabled: false,
-              urgencyEnabled: false
-            },
-            stats: { conversations: 247, conversions: 52 },
-            knowledgeBase: [],
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
-            id: 'agent_002',
-            name: 'Marc Expert',
-            type: 'product_specialist',
-            personality: 'expert',
-            description: 'Expert technique spécialisé dans les conseils produits avancés et les recommandations personnalisées.',
-            welcomeMessage: 'Bonjour, Marc à votre service. Je suis là pour vous guider techniquement. Que recherchez-vous ?',
-            fallbackMessage: 'Cette question nécessite une expertise approfondie. Je vous mets en relation avec notre équipe technique.',
-            avatar: 'https://ui-avatars.com/api/?name=Marc&background=10B981&color=fff',
-            isActive: !trialExpired.value, // ✅ INACTIF SI ESSAI EXPIRÉ
-            config: {
-              collectName: true,
-              collectEmail: true,
-              collectPhone: false,
-              upsellEnabled: true,
-              urgencyEnabled: false
-            },
-            stats: { conversations: 156, conversions: 38 },
-            knowledgeBase: [],
-            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
-            id: 'agent_003',
-            name: 'Lisa Premium',
-            type: 'upsell',
-            personality: 'professional',
-            description: 'Spécialiste en optimisation panier et ventes additionnelles pour maximiser la valeur client.',
-            welcomeMessage: 'Bonjour ! Je suis Lisa, spécialiste en solutions premium. Laissez-moi vous présenter nos meilleures offres.',
-            fallbackMessage: 'Je vais vous mettre en relation avec notre équipe commerciale pour une offre personnalisée.',
-            avatar: 'https://ui-avatars.com/api/?name=Lisa&background=8B5CF6&color=fff',
-            isActive: !trialExpired.value, // ✅ INACTIF SI ESSAI EXPIRÉ
-            config: {
-              collectName: true,
-              collectEmail: true,
-              collectPhone: true,
-              upsellEnabled: true,
-              urgencyEnabled: true
-            },
-            stats: { conversations: 89, conversions: 31 },
-            knowledgeBase: [],
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString()
-          }
-        ]
-
-        // ✅ APPLIQUER LES LIMITES DE PLAN
-        let mockAgents = baseMockAgents
-        
-        if (trialExpired.value) {
-          // Si essai expiré, forcer tous les agents inactifs
-          mockAgents = baseMockAgents.map(agent => ({
-            ...agent,
-            isActive: false
-          }))
-          console.log('❌ [useAgents] Essai expiré - agents désactivés')
-        } else if (planDetails.value.agentLimit !== -1) {
-          // Limiter selon le plan
-          mockAgents = baseMockAgents.slice(0, planDetails.value.agentLimit)
-          console.log(`📊 [useAgents] Agents limités à ${planDetails.value.agentLimit} selon le plan ${planDetails.value.name}`)
-        }
-        
-        agents.value = mockAgents
-        console.log(`✅ [useAgents] ${mockAgents.length} agents mockés chargés`)
-        return { success: true, data: mockAgents }
-      }
+      // ✅ VÉRIFIER API DISPONIBLE
+      await checkApiAvailable()
       
-      // ✅ APPEL API RÉEL
+      // ✅ APPEL API DIRECT - PLUS DE FALLBACK MOCK
       const response = await $fetch('/api/v1/agents', {
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders()
       }) as ApiResponse<Agent[]>
 
+      console.log('📦 [useAgents] Réponse API brute:', response)
+
       if (response.success && Array.isArray(response.data)) {
-        // ✅ FORCER DÉSACTIVATION SI ESSAI EXPIRÉ
-        let finalAgents = response.data
-        if (trialExpired.value) {
-          finalAgents = response.data.map(agent => ({
-            ...agent,
-            isActive: false
-          }))
-          console.log('❌ [useAgents] Essai expiré - agents désactivés via API')
-        }
+        agents.value = response.data
+        console.log(`✅ [useAgents] ${response.data.length} agents récupérés depuis l'API`)
         
-        agents.value = finalAgents
-        console.log(`✅ [useAgents] ${finalAgents.length} agents récupérés depuis l'API`)
-        return { success: true, data: finalAgents }
+        // ✅ LOG DES LIMITES DE PLAN
+        const limit = planDetails.value.agentLimit
+        console.log(`📊 [useAgents] Plan ${planDetails.value.name}: ${agents.value.length}/${limit === -1 ? '∞' : limit} agents`)
+        
+        return { success: true, data: response.data }
       } else {
         throw new Error(response.error || 'Réponse API invalide')
       }
 
     } catch (err: any) {
-      console.error('❌ [useAgents] Erreur API:', err)
-      
-      // ✅ FALLBACK AVEC RESPECT DES LIMITES
-      let fallbackAgents: Agent[] = []
-      
-      if (!trialExpired.value) {
-        fallbackAgents = [
-          {
-            id: 'fallback_agent_1',
-            name: 'Agent Fallback',
-            type: 'general',
-            personality: 'friendly',
-            description: 'Agent de test en cas d\'erreur API',
-            welcomeMessage: 'Bonjour ! Agent de test disponible.',
-            fallbackMessage: 'Erreur de connexion, veuillez réessayer.',
-            avatar: null,
-            isActive: true,
-            config: {},
-            stats: { conversations: 0, conversions: 0 },
-            knowledgeBase: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
-        ]
-      }
-      
-      agents.value = fallbackAgents
-      console.log('✅ [useAgents] Données de fallback chargées')
-      return { success: true, data: fallbackAgents }
-      
+      return handleApiError(err, 'Erreur lors de la récupération des agents')
     } finally {
       loading.value = false
     }
   }
 
-  // ✅ CRÉER UN AGENT - 100% API
+  // ✅ CRÉER UN AGENT - 100% API PURE
   const createAgent = async (data: CreateAgentData): Promise<ApiResponse<Agent>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('🏗️ [useAgents] Création agent via API:', data.name)
+      console.log('🏗️ [useAgents] Création agent via API pure:', data.name)
       
-      if (!checkLimitsBeforeAction('create')) {
-        return { success: false, error: error.value || 'Limite atteinte' }
-      }
-      
+      // ✅ VÉRIFICATIONS PRÉALABLES
       if (!data.name?.trim()) {
         throw new Error('Le nom de l\'agent est requis')
       }
@@ -349,49 +231,48 @@ export const useAgents = () => {
       if (!data.welcomeMessage?.trim()) {
         throw new Error('Le message d\'accueil est requis')
       }
-      
-      // ✅ MODE DÉVELOPPEMENT - CRÉER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        const mockAgent: Agent = {
-          id: Date.now().toString(),
-          name: data.name,
-          type: data.type,
-          personality: data.personality,
-          description: data.description || '',
-          welcomeMessage: data.welcomeMessage || '',
-          fallbackMessage: data.fallbackMessage || '',
-          avatar: data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=3B82F6&color=fff`,
-          isActive: data.isActive ?? true,
-          config: data.config || {},
-          stats: { conversations: 0, conversions: 0 },
-          knowledgeBase: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-        
-        agents.value.unshift(mockAgent)
-        console.log(`✅ Agent créé (mock): ${mockAgent.id}`)
-        return { success: true, data: mockAgent }
+
+      // ✅ VÉRIFIER LIMITES AVANT APPEL API
+      if (!canCreateAgent.value) {
+        const limit = planDetails.value.agentLimit
+        throw new Error(`❌ Limite de votre plan atteinte (${limit} agent${limit > 1 ? 's' : ''} maximum). Passez au plan supérieur pour créer plus d'agents.`)
       }
+
+      // ✅ VÉRIFIER API DISPONIBLE
+      await checkApiAvailable()
+      
+      // ✅ CONSTRUIRE PAYLOAD AVEC TITLE
+      const payload: CreateAgentData & { shopId?: string } = {
+        name: data.name.trim(),
+        title: data.title?.trim() || undefined, // ✅ NOUVEAU: Title personnalisable
+        type: data.type,
+        personality: data.personality,
+        description: data.description?.trim() || null,
+        welcomeMessage: data.welcomeMessage.trim(),
+        fallbackMessage: data.fallbackMessage?.trim() || null,
+        avatar: data.avatar || null,
+        isActive: data.isActive ?? true,
+        config: data.config || {},
+        shopId: authStore.userShopId || authStore.user?.id
+      }
+
+      console.log('📤 [useAgents] Payload envoyé:', payload)
       
       const response = await $fetch('/api/v1/agents', {
         method: 'POST',
         baseURL: config.public.apiBaseUrl,
         headers: getAuthHeaders(),
-        body: {
-          ...data,
-          shopId: authStore.userShopId
-        }
+        body: payload
       }) as ApiResponse<Agent>
+
+      console.log('📦 [useAgents] Réponse création:', response)
 
       if (response.success && response.data) {
         agents.value.unshift(response.data)
-        console.log(`✅ Agent créé: ${response.data.id}`)
+        console.log(`✅ Agent créé avec succès: ${response.data.id}`)
         return { success: true, data: response.data }
       } else {
-        throw new Error(response.error || 'Erreur lors de la création')
+        throw new Error(response.error || 'Erreur lors de la création de l\'agent')
       }
 
     } catch (err: any) {
@@ -401,39 +282,20 @@ export const useAgents = () => {
     }
   }
 
-  // ✅ MODIFIER UN AGENT - 100% API
+  // ✅ MODIFIER UN AGENT - 100% API PURE
   const updateAgent = async (id: string, data: UpdateAgentData): Promise<ApiResponse<Agent>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('📝 [useAgents] Modification agent via API:', id)
-      
-      if (!checkLimitsBeforeAction('update')) {
-        return { success: false, error: error.value || 'Accès limité' }
-      }
+      console.log('📝 [useAgents] Modification agent via API pure:', id)
       
       if (!id) {
         throw new Error('ID agent requis pour la modification')
       }
-      
-      // ✅ MODE DÉVELOPPEMENT - MODIFIER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        const index = agents.value.findIndex(agent => agent.id === id)
-        if (index !== -1) {
-          const updatedAgent = {
-            ...agents.value[index],
-            ...data,
-            updatedAt: new Date().toISOString()
-          }
-          agents.value[index] = updatedAgent
-          console.log(`✅ Agent modifié (mock): ${id}`)
-          return { success: true, data: updatedAgent }
-        }
-        throw new Error('Agent non trouvé')
-      }
+
+      // ✅ VÉRIFIER API DISPONIBLE
+      await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}`, {
         method: 'PUT',
@@ -447,7 +309,7 @@ export const useAgents = () => {
         if (index !== -1) {
           agents.value[index] = { ...agents.value[index], ...response.data }
         }
-        console.log(`✅ Agent modifié: ${id}`)
+        console.log(`✅ Agent modifié avec succès: ${id}`)
         return { success: true, data: response.data }
       } else {
         throw new Error(response.error || 'Erreur lors de la modification')
@@ -460,29 +322,20 @@ export const useAgents = () => {
     }
   }
 
-  // ✅ SUPPRIMER UN AGENT - 100% API
+  // ✅ SUPPRIMER UN AGENT - 100% API PURE
   const deleteAgent = async (id: string): Promise<ApiResponse> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('🗑️ [useAgents] Suppression agent via API:', id)
-      
-      if (!checkLimitsBeforeAction('delete')) {
-        return { success: false, error: error.value || 'Accès limité' }
-      }
+      console.log('🗑️ [useAgents] Suppression agent via API pure:', id)
       
       if (!id) {
         throw new Error('ID agent requis pour la suppression')
       }
-      
-      // ✅ MODE DÉVELOPPEMENT - SUPPRIMER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        agents.value = agents.value.filter(agent => agent.id !== id)
-        console.log(`✅ Agent supprimé (mock): ${id}`)
-        return { success: true }
-      }
+
+      // ✅ VÉRIFIER API DISPONIBLE
+      await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}`, {
         method: 'DELETE',
@@ -492,7 +345,7 @@ export const useAgents = () => {
 
       if (response.success) {
         agents.value = agents.value.filter(agent => agent.id !== id)
-        console.log(`✅ Agent supprimé: ${id}`)
+        console.log(`✅ Agent supprimé avec succès: ${id}`)
         return { success: true }
       } else {
         throw new Error(response.error || 'Erreur lors de la suppression')
@@ -505,29 +358,16 @@ export const useAgents = () => {
     }
   }
 
-  // ✅ ACTIVER/DÉSACTIVER UN AGENT - 100% API
+  // ✅ ACTIVER/DÉSACTIVER UN AGENT - 100% API PURE
   const toggleAgentStatus = async (id: string, isActive: boolean): Promise<ApiResponse> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log(`🔄 [useAgents] ${isActive ? 'Activation' : 'Désactivation'} agent via API:`, id)
+      console.log(`🔄 [useAgents] ${isActive ? 'Activation' : 'Désactivation'} agent via API pure:`, id)
       
-      if (!checkLimitsBeforeAction('toggle')) {
-        return { success: false, error: error.value || 'Accès limité' }
-      }
-      
-      // ✅ MODE DÉVELOPPEMENT - MODIFIER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 300))
-        const index = agents.value.findIndex(agent => agent.id === id)
-        if (index !== -1) {
-          agents.value[index].isActive = isActive
-          agents.value[index].updatedAt = new Date().toISOString()
-        }
-        console.log(`✅ Statut agent modifié (mock): ${id} -> ${isActive ? 'actif' : 'inactif'}`)
-        return { success: true }
-      }
+      // ✅ VÉRIFIER API DISPONIBLE
+      await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}/toggle`, {
         method: 'PATCH',
@@ -555,40 +395,22 @@ export const useAgents = () => {
     }
   }
 
-  // ✅ DUPLIQUER UN AGENT - 100% API
+  // ✅ DUPLIQUER UN AGENT - 100% API PURE
   const duplicateAgent = async (id: string): Promise<ApiResponse<Agent>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('📋 [useAgents] Duplication agent via API:', id)
+      console.log('📋 [useAgents] Duplication agent via API pure:', id)
       
-      if (!checkLimitsBeforeAction('create')) {
-        return { success: false, error: error.value || 'Limite atteinte' }
+      // ✅ VÉRIFIER LIMITES AVANT DUPLICATION
+      if (!canCreateAgent.value) {
+        const limit = planDetails.value.agentLimit
+        throw new Error(`❌ Limite de votre plan atteinte (${limit} agent${limit > 1 ? 's' : ''} maximum). Impossible de dupliquer.`)
       }
-      
-      // ✅ MODE DÉVELOPPEMENT - DUPLIQUER EN LOCAL
-      if (!authStore.token) {
-        await new Promise(resolve => setTimeout(resolve, 800))
-        
-        const originalAgent = agents.value.find(agent => agent.id === id)
-        if (!originalAgent) {
-          throw new Error('Agent original non trouvé')
-        }
-        
-        const duplicatedAgent: Agent = {
-          ...originalAgent,
-          id: Date.now().toString(),
-          name: `${originalAgent.name} (copie)`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          stats: { conversations: 0, conversions: 0 }
-        }
-        
-        agents.value.unshift(duplicatedAgent)
-        console.log(`✅ Agent dupliqué (mock): ${duplicatedAgent.id}`)
-        return { success: true, data: duplicatedAgent }
-      }
+
+      // ✅ VÉRIFIER API DISPONIBLE
+      await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}/duplicate`, {
         method: 'POST',
@@ -598,7 +420,7 @@ export const useAgents = () => {
 
       if (response.success && response.data) {
         agents.value.unshift(response.data)
-        console.log(`✅ Agent dupliqué: ${response.data.id}`)
+        console.log(`✅ Agent dupliqué avec succès: ${response.data.id}`)
         return { success: true, data: response.data }
       } else {
         throw new Error(response.error || 'Erreur lors de la duplication')
@@ -616,7 +438,7 @@ export const useAgents = () => {
     return agents.value.find(agent => agent.id === id) || null
   }
 
-  // ✅ HELPER FUNCTIONS
+  // ✅ HELPER FUNCTIONS AVEC TITLE
   const getTypeLabel = (type: Agent['type']): string => {
     const labels = {
       general: 'Vendeur généraliste',
@@ -625,6 +447,16 @@ export const useAgents = () => {
       upsell: 'Upsell & Cross-sell'
     }
     return labels[type] || type
+  }
+
+  const getDefaultTitle = (type: Agent['type']): string => {
+    const titles = {
+      general: 'Conseiller commercial',
+      product_specialist: 'Spécialiste produit',
+      support: 'Conseiller support',
+      upsell: 'Conseiller premium'
+    }
+    return titles[type] || 'Assistant commercial'
   }
 
   const getPersonalityLabel = (personality: Agent['personality']): string => {
@@ -675,7 +507,7 @@ export const useAgents = () => {
       
       const response = await $fetch('/health', {
         baseURL: config.public.apiBaseUrl,
-        headers: { 'Content-Type': 'application/json' }
+        timeout: 5000
       })
       
       console.log('✅ [useAgents] API accessible:', response)
@@ -718,6 +550,7 @@ export const useAgents = () => {
     // Helpers
     getAgent,
     getTypeLabel,
+    getDefaultTitle, // ✅ NOUVEAU
     getPersonalityLabel,
     getAgentIcon,
     getAvatarClass,
