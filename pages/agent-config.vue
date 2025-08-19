@@ -663,10 +663,10 @@
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                   >
                     <option value="none">Aucune</option>
-                    <option value="sm">Légères</option>
-                    <option value="md">Moyennes</option>
-                    <option value="lg">Arrondies</option>
-                    <option value="xl">Très arrondies</option>
+                    <option value="md">Légères</option>
+                    <option value="lg">Moyennes</option>
+                    <option value="xl">Arrondies</option>
+                    <option value="full">Très arrondies</option>
                   </select>
                 </div>
               </div>
@@ -783,7 +783,6 @@
                 >
                   <option value="fr">🇫🇷 Français</option>
                   <option value="en">🇺🇸 English</option>
-                  <option value="wo">🇸🇳 Wolof</option>
                 </select>
               </div>
 
