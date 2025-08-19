@@ -1,4 +1,4 @@
-// composables/useAgentConfig.ts 
+// composables/useAgentConfig.ts - VERSION CORRIGÉE AVEC NOUVEAU CODE D'INTÉGRATION
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
@@ -88,8 +88,39 @@ export const useAgentConfig = () => {
     return hasAgentData || hasStoreData || hasWidgetData
   })
 
-    // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION CORRIGÉE
-    const integrationCode = computed(() => {
+  // ✅ HELPER FUNCTIONS POUR LE CODE D'INTÉGRATION
+  const adjustColor = (color: string, percent: number): string => {
+    try {
+      const hex = color.replace('#', '')
+      const r = parseInt(hex.substr(0, 2), 16)
+      const g = parseInt(hex.substr(2, 2), 16)
+      const b = parseInt(hex.substr(4, 2), 16)
+      
+      const adjust = (channel: number) => {
+        const adjusted = channel + (channel * percent / 100)
+        return Math.max(0, Math.min(255, Math.round(adjusted)))
+      }
+      
+      return `rgb(${adjust(r)}, ${adjust(g)}, ${adjust(b)})`
+    } catch (error) {
+      return color
+    }
+  }
+
+  const getBorderRadiusValue = (radius: string): string => {
+    const radiusMap = {
+      'none': '0px',
+      'sm': '6px',
+      'md': '12px',
+      'lg': '16px',
+      'xl': '24px',
+      'full': '50px'
+    }
+    return radiusMap[radius as keyof typeof radiusMap] || '12px'
+  }
+
+  // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION CORRIGÉE COMPLÈTE
+  const integrationCode = computed(() => {
     console.log('🔧 [integrationCode] Génération du code d\'intégration...')
     
     // ✅ RÉCUPÉRATION DONNÉES AVEC GESTION D'ERREURS ROBUSTE
@@ -148,247 +179,335 @@ export const useAgentConfig = () => {
       const position = widgetData?.position || 'above-cta'
       const theme = widgetData?.theme || 'modern'
       const language = widgetData?.language || 'fr'
+      const borderRadius = widgetData?.borderRadius || 'md'
+      
+      // ✅ CALCULER LES VALEURS CSS À L'AVANCE
+      const adjustedColor = adjustColor(primaryColor, -15)
+      const borderRadiusValue = getBorderRadiusValue(borderRadius)
       
       // ✅ URL WIDGET CORRIGÉE - POINT CRUCIAL
       const widgetUrl = 'https://widget.chatseller.app'
       const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
-    // ✅ CODE D'INTÉGRATION ROBUSTE POUR SHOPIFY - CORRIGÉ
-    return `<!-- 🤖 ChatSeller Widget - Agent: ${agentName} -->
-    <script>
-    (function() {
-      'use strict';
+      // ✅ CODE D'INTÉGRATION ROBUSTE POUR SHOPIFY - VERSION 1.3.0 CORRIGÉE
+      return `<!-- 🤖 ChatSeller Widget - Agent: ${agentName} - Version 1.3.0 -->
+<script>
+(function() {
+  'use strict';
+  
+  // ✅ Configuration du widget ChatSeller
+  window.ChatSellerConfig = {
+    shopId: '${shopId}',
+    agentId: '${agentId}',
+    apiUrl: '${apiUrl}',
+    buttonText: '${buttonText.replace(/'/g, "\\'")}',
+    primaryColor: '${primaryColor}',
+    position: '${position}',
+    theme: '${theme}',
+    language: '${language}',
+    borderRadius: '${borderRadius}',
+    autoDetectProduct: true,
+    debug: false,
+    disableFallback: false,
+    agentConfig: {
+      id: '${agentId}',
+      name: '${agentName.replace(/'/g, "\\'")}',
+      title: '${getTypeLabel(agentData.type)}',
+      welcomeMessage: '${(agentData.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
+      fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
+      personality: '${agentData.personality || 'friendly'}'
+    }
+  };
+  
+  // ✅ VARIABLES GLOBALES POUR ÉVITER DOUBLE CHARGEMENT
+  if (window.ChatSellerInitialized) {
+    console.log('⚠️ ChatSeller: Déjà initialisé, arrêt');
+    return;
+  }
+  window.ChatSellerInitialized = true;
+  
+  // ✅ NETTOYAGE PRÉVENTIF DES WIDGETS EXISTANTS
+  function cleanupExistingWidgets() {
+    const selectors = [
+      '#chatseller-widget',
+      '#chatseller-fallback', 
+      '[data-chatseller]',
+      '.chatseller-widget',
+      '.chatseller-button'
+    ];
+    
+    selectors.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => el.remove());
+    });
+  }
+  
+  // ✅ Fonction de chargement robuste pour Shopify avec CSS forcé
+  function loadChatSellerWidget() {
+    console.log('🚀 ChatSeller: Initialisation widget v1.3.0...');
+    
+    // Nettoyer avant de commencer
+    cleanupExistingWidgets();
+    
+    // Vérification anti-double chargement
+    if (window.ChatSellerLoaded) {
+      console.log('⚠️ ChatSeller: Déjà chargé, ignore');
+      return;
+    }
+    window.ChatSellerLoaded = true;
+    
+    // ✅ INJECTION CSS CRITIQUE IMMÉDIATE
+    if (!document.getElementById('chatseller-critical-css')) {
+      const style = document.createElement('style');
+      style.id = 'chatseller-critical-css';
+      style.textContent = \`
+/* 🔥 CHATSELLER CSS CRITIQUE - SHOPIFY READY */
+.cs-chatseller-widget, .cs-chatseller-widget * {
+  all: unset !important;
+  box-sizing: border-box !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.cs-chatseller-widget {
+  position: relative !important;
+  z-index: 999999 !important;
+  display: block !important;
+  margin: 8px 0 !important;
+  width: 100% !important;
+  contain: layout style !important;
+  isolation: isolate !important;
+}
+
+.cs-chat-trigger-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  padding: 16px 24px !important;
+  background: linear-gradient(135deg, ${primaryColor} 0%, ${adjustedColor} 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: ${borderRadiusValue} !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3) !important;
+  min-height: 56px !important;
+  font-family: inherit !important;
+  text-decoration: none !important;
+  outline: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  user-select: none !important;
+}
+
+.cs-chat-trigger-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 35px rgba(59, 130, 246, 0.4) !important;
+}
+
+.cs-chat-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  font-family: inherit !important;
+  contain: layout style !important;
+}
+
+@media (max-width: 767px) {
+  .cs-chat-modal-overlay {
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+}
+      \`;
+      document.head.appendChild(style);
+      console.log('✅ CSS critique injecté');
+    }
+    
+    // Création et configuration du script
+    var script = document.createElement('script');
+    script.src = '${widgetUrl}/embed.js?v=1.3.0&t=' + Date.now();
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.setAttribute('data-chatseller', 'main-widget');
+    
+    // Gestion du succès
+    script.onload = function() {
+      console.log('✅ ChatSeller: Script chargé');
       
-      // Configuration du widget ChatSeller
-      window.ChatSellerConfig = {
-        shopId: '${shopId}',
-        agentId: '${agentId}',
-        apiUrl: '${apiUrl}',
-        buttonText: '${buttonText.replace(/'/g, "\\'")}',
-        primaryColor: '${primaryColor}',
-        position: '${position}',
-        theme: '${theme}',
-        language: '${language}',
-        borderRadius: '${widgetData?.borderRadius || 'md'}', // ✅ CORRECTION CRITIQUE
-        autoDetectProduct: true,
-        debug: false,
-        disableFallback: true,
-        agentConfig: {
-          id: '${agentId}',
-          name: '${agentName.replace(/'/g, "\\'")}',
-          title: '${getTypeLabel(agentData.type)}',
-          welcomeMessage: '${(agentData.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
-          fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
-          personality: '${agentData.personality || 'friendly'}'
-        }
-      };
+      // Attendre que le SDK soit disponible
+      var maxAttempts = 25;
+      var attempts = 0;
       
-      // ✅ VARIABLES GLOBALES POUR ÉVITER DOUBLE CHARGEMENT
-      if (window.ChatSellerInitialized) {
-        console.log('⚠️ ChatSeller: Déjà initialisé, arrêt');
-        return;
-      }
-      window.ChatSellerInitialized = true;
-      
-      // ✅ NETTOYAGE PRÉVENTIF DES WIDGETS EXISTANTS
-      function cleanupExistingWidgets() {
-        const selectors = [
-          '#chatseller-widget',
-          '#chatseller-fallback', 
-          '[data-chatseller]',
-          '.chatseller-widget',
-          '.chatseller-button'
-        ];
-        
-        selectors.forEach(selector => {
-          const elements = document.querySelectorAll(selector);
-          elements.forEach(el => el.remove());
-        });
-      }
-      
-      // Fonction de chargement robuste pour Shopify
-      function loadChatSellerWidget() {
-        console.log('🚀 ChatSeller: Initialisation widget...');
-        
-        // Nettoyer avant de commencer
-        cleanupExistingWidgets();
-        
-        // Vérification anti-double chargement
-        if (window.ChatSellerLoaded) {
-          console.log('⚠️ ChatSeller: Déjà chargé, ignore');
-          return;
-        }
-        window.ChatSellerLoaded = true;
-        
-        // Création et configuration du script
-        var script = document.createElement('script');
-        script.src = '${widgetUrl}/embed.js?v=' + Date.now();
-        script.async = true;
-        script.crossOrigin = 'anonymous';
-        script.setAttribute('data-chatseller', 'main-widget');
-        
-        // Gestion du succès
-        script.onload = function() {
-          console.log('✅ ChatSeller: Script chargé');
-          
-          // Attendre que le SDK soit disponible
-          var maxAttempts = 25;
-          var attempts = 0;
-          
-          function tryInit() {
-            attempts++;
-            if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
-              try {
-                window.ChatSeller.init(window.ChatSellerConfig);
-                console.log('✅ ChatSeller: Widget initialisé');
-                
-                // Analytics optionnel
-                if (typeof gtag !== 'undefined') {
-                  gtag('event', 'chatseller_loaded', {
-                    'agent_id': '${agentId}',
-                    'shop_id': '${shopId}'
-                  });
-                }
-              } catch (error) {
-                console.error('❌ ChatSeller: Erreur init:', error);
-              }
-            } else if (attempts < maxAttempts) {
-              setTimeout(tryInit, 300);
-            } else {
-              console.warn('⏰ ChatSeller: Timeout init - max tentatives atteint');
-              if (!window.ChatSellerConfig.disableFallback) {
-                createFallbackWidget();
-              }
+      function tryInit() {
+        attempts++;
+        if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
+          try {
+            window.ChatSeller.init(window.ChatSellerConfig);
+            console.log('✅ ChatSeller: Widget initialisé');
+            
+            // Analytics optionnel
+            if (typeof gtag !== 'undefined') {
+              gtag('event', 'chatseller_loaded', {
+                'agent_id': '${agentId}',
+                'shop_id': '${shopId}'
+              });
             }
+          } catch (error) {
+            console.error('❌ ChatSeller: Erreur init:', error);
           }
-          
-          tryInit();
-        };
-        
-        // Gestion des erreurs
-        script.onerror = function(error) {
-          console.error('❌ ChatSeller: Erreur chargement:', error);
+        } else if (attempts < maxAttempts) {
+          setTimeout(tryInit, 300);
+        } else {
+          console.warn('⏰ ChatSeller: Timeout init - max tentatives atteint');
           if (!window.ChatSellerConfig.disableFallback) {
             createFallbackWidget();
           }
-        };
-        
-        // ✅ TIMEOUT DE SÉCURITÉ
-        setTimeout(function() {
-          if (!window.ChatSeller || !window.ChatSeller.isReady) {
-            console.warn('⏰ ChatSeller: Timeout général');
-            if (!window.ChatSellerConfig.disableFallback) {
-              createFallbackWidget();
-            }
-          }
-        }, 20000);
-        
-        // Injection sécurisée du script
-        var firstScript = document.getElementsByTagName('script')[0];
-        if (firstScript && firstScript.parentNode) {
-          firstScript.parentNode.insertBefore(script, firstScript);
-        } else {
-          document.head.appendChild(script);
         }
       }
       
-      // Widget de fallback Shopify-optimisé
-      function createFallbackWidget() {
-        if (document.getElementById('chatseller-fallback')) return;
-        
-        console.log('🔧 ChatSeller: Activation fallback');
-        
-        // Styles CSS
-        var style = document.createElement('style');
-        style.textContent = \`
-          #chatseller-fallback {
-            position: fixed !important;
-            bottom: 20px !important;
-            right: 20px !important;
-            z-index: 999999 !important;
-            background: ${primaryColor} !important;
-            color: white !important;
-            padding: 12px 20px !important;
-            border-radius: 25px !important;
-            border: none !important;
-            cursor: pointer !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-            transition: all 0.3s ease !important;
-            text-decoration: none !important;
-          }
-          #chatseller-fallback:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 25px rgba(0,0,0,0.4) !important;
-          }
-        \`;
-        document.head.appendChild(style);
-        
-        // Bouton de fallback
-        var fallbackButton = document.createElement('a');
-        fallbackButton.id = 'chatseller-fallback';
-        fallbackButton.href = 'https://dashboard.chatseller.app/contact';
-        fallbackButton.target = '_blank';
-        fallbackButton.innerHTML = '💬 ${buttonText}';
-        
-        document.body.appendChild(fallbackButton);
+      tryInit();
+    };
+    
+    // Gestion des erreurs
+    script.onerror = function(error) {
+      console.error('❌ ChatSeller: Erreur chargement:', error);
+      if (!window.ChatSellerConfig.disableFallback) {
+        createFallbackWidget();
       }
-      
-      // Démarrage intelligent pour Shopify
-      function startWidget() {
-        // Vérifier que nous ne sommes pas dans l'admin Shopify
-        if (window.location.href.includes('/admin/')) {
-          console.log('🛑 ChatSeller: Admin Shopify détecté, widget désactivé');
-          return;
+    };
+    
+    // ✅ TIMEOUT DE SÉCURITÉ
+    setTimeout(function() {
+      if (!window.ChatSeller || !window.ChatSeller.isReady) {
+        console.warn('⏰ ChatSeller: Timeout général');
+        if (!window.ChatSellerConfig.disableFallback) {
+          createFallbackWidget();
         }
-        
-        loadChatSellerWidget();
       }
-      
-      // Démarrage selon l'état du DOM
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', startWidget);
-      } else {
-        setTimeout(startWidget, 200);
+    }, 20000);
+    
+    // Injection sécurisée du script
+    var firstScript = document.getElementsByTagName('script')[0];
+    if (firstScript && firstScript.parentNode) {
+      firstScript.parentNode.insertBefore(script, firstScript);
+    } else {
+      document.head.appendChild(script);
+    }
+  }
+  
+  // ✅ Widget de fallback Shopify-optimisé
+  function createFallbackWidget() {
+    if (document.getElementById('chatseller-fallback')) return;
+    
+    console.log('🔧 ChatSeller: Activation fallback');
+    
+    // Bouton de fallback
+    var fallbackButton = document.createElement('a');
+    fallbackButton.id = 'chatseller-fallback';
+    fallbackButton.href = 'https://dashboard.chatseller.app/contact';
+    fallbackButton.target = '_blank';
+    fallbackButton.innerHTML = '💬 ${buttonText}';
+    fallbackButton.style.cssText = \`
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
+      z-index: 999999 !important;
+      background: ${primaryColor} !important;
+      color: white !important;
+      padding: 12px 20px !important;
+      border-radius: 25px !important;
+      border: none !important;
+      cursor: pointer !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+      transition: all 0.3s ease !important;
+      text-decoration: none !important;
+    \`;
+    
+    fallbackButton.addEventListener('mouseover', function() {
+      this.style.transform = 'translateY(-2px)';
+      this.style.boxShadow = '0 6px 25px rgba(0,0,0,0.4)';
+    });
+    
+    fallbackButton.addEventListener('mouseout', function() {
+      this.style.transform = 'translateY(0px)';
+      this.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+    });
+    
+    document.body.appendChild(fallbackButton);
+  }
+  
+  // ✅ Démarrage intelligent pour Shopify
+  function startWidget() {
+    // Vérifier que nous ne sommes pas dans l'admin Shopify
+    if (window.location.href.includes('/admin/')) {
+      console.log('🛑 ChatSeller: Admin Shopify détecté, widget désactivé');
+      return;
+    }
+    
+    loadChatSellerWidget();
+  }
+  
+  // ✅ Démarrage selon l'état du DOM
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startWidget);
+  } else {
+    setTimeout(startWidget, 200);
+  }
+  
+  // ✅ Support Shopify sections dynamiques
+  if (window.Shopify || document.querySelector('[data-shopify]')) {
+    console.log('🛍️ ChatSeller: Mode Shopify activé');
+    
+    // Écouter les changements de section Shopify
+    document.addEventListener('shopify:section:load', function(event) {
+      console.log('🔄 ChatSeller: Section Shopify rechargée');
+      if (!window.ChatSeller || !window.ChatSeller.isReady) {
+        cleanupExistingWidgets();
+        setTimeout(startWidget, 800);
       }
-      
-      // Support Shopify sections dynamiques
-      if (window.Shopify || document.querySelector('[data-shopify]')) {
-        console.log('🛍️ ChatSeller: Mode Shopify activé');
-        
-        // Écouter les changements de section Shopify
-        document.addEventListener('shopify:section:load', function(event) {
-          console.log('🔄 ChatSeller: Section Shopify rechargée');
-          if (!window.ChatSeller || !window.ChatSeller.isReady) {
-            cleanupExistingWidgets();
-            setTimeout(startWidget, 800);
-          }
-        });
-        
-        // Écouter les changements de produit (thèmes avec AJAX)
-        document.addEventListener('variant:change', function() {
-          if (window.ChatSeller && window.ChatSeller.refreshProduct) {
-            window.ChatSeller.refreshProduct();
-          }
-        });
-        
-        // Écouter changements URL pour SPA SHOPIFY
-        let currentUrl = window.location.href;
-        setInterval(function() {
-          if (window.location.href !== currentUrl) {
-            currentUrl = window.location.href;
-            console.log('🔄 URL changée, rechargement widget');
-            cleanupExistingWidgets();
-            setTimeout(startWidget, 500);
-          }
-        }, 2000);
+    });
+    
+    // Écouter les changements de produit (thèmes avec AJAX)
+    document.addEventListener('variant:change', function() {
+      if (window.ChatSeller && window.ChatSeller.refreshProduct) {
+        window.ChatSeller.refreshProduct();
       }
-      
-    })();
-    <\/script>
-    <!-- 🚀 Fin ChatSeller Widget -->`
+    });
+    
+    // Écouter changements URL pour SPA SHOPIFY
+    let currentUrl = window.location.href;
+    setInterval(function() {
+      if (window.location.href !== currentUrl) {
+        currentUrl = window.location.href;
+        console.log('🔄 URL changée, rechargement widget');
+        cleanupExistingWidgets();
+        setTimeout(startWidget, 500);
+      }
+    }, 2000);
+  }
+  
+})();
+<\/script>
+<!-- 🚀 Fin ChatSeller Widget v1.3.0 -->`
 
     } catch (error) {
       console.error('❌ Erreur génération code intégration:', error)
@@ -702,56 +821,56 @@ export const useAgentConfig = () => {
     }
   }
 
-      // ✅ NOUVELLE MÉTHODE : Lier documents à la base de connaissances
-    const linkKnowledgeBaseDocuments = async (agentId: string, documentIds: string[]) => {
-      saving.value = true
-      error.value = null
+  // ✅ NOUVELLE MÉTHODE : Lier documents à la base de connaissances
+  const linkKnowledgeBaseDocuments = async (agentId: string, documentIds: string[]) => {
+    saving.value = true
+    error.value = null
 
-      try {
-        console.log('🔗 [linkKnowledgeBaseDocuments] Liaison documents:', { agentId, documentIds })
+    try {
+      console.log('🔗 [linkKnowledgeBaseDocuments] Liaison documents:', { agentId, documentIds })
 
-        if (!agentId) {
-          throw new Error('Agent ID manquant')
-        }
-
-        // ✅ TYPAGE EXPLICIT DE LA RÉPONSE
-        const response = await $fetch(`/api/v1/agents/${agentId}/knowledge-base`, {
-          method: 'PUT',
-          baseURL: config.public.apiBaseUrl,
-          headers: getAuthHeaders(),
-          body: {
-            documentIds: documentIds
-          }
-        }) as { success: boolean; data?: any; error?: string } // ← Type explicite
-
-        // ✅ VÉRIFICATION TYPE-SAFE AMÉLIORÉE
-        if (response.success) {
-          // Mettre à jour config locale
-          if (agentConfig.value) {
-            agentConfig.value.agent.config.linkedKnowledgeBase = documentIds
-            
-            if (response.data?.documents) {
-              agentConfig.value.agent.knowledgeBase = response.data.documents
-              agentConfig.value.knowledgeBase = response.data.documents
-            }
-          }
-
-          console.log('✅ Documents liés avec succès')
-          return { success: true, data: response.data }
-        } else {
-          // TypeScript sait maintenant que response.error peut exister
-          throw new Error(response.error || 'Erreur lors de la liaison des documents')
-        }
-
-      } catch (err: any) {
-        console.error('❌ [linkKnowledgeBaseDocuments] Erreur:', err)
-        const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de la liaison des documents'
-        error.value = errorMessage
-        return { success: false, error: errorMessage }
-      } finally {
-        saving.value = false
+      if (!agentId) {
+        throw new Error('Agent ID manquant')
       }
+
+      // ✅ TYPAGE EXPLICIT DE LA RÉPONSE
+      const response = await $fetch(`/api/v1/agents/${agentId}/knowledge-base`, {
+        method: 'PUT',
+        baseURL: config.public.apiBaseUrl,
+        headers: getAuthHeaders(),
+        body: {
+          documentIds: documentIds
+        }
+      }) as { success: boolean; data?: any; error?: string } // ← Type explicite
+
+      // ✅ VÉRIFICATION TYPE-SAFE AMÉLIORÉE
+      if (response.success) {
+        // Mettre à jour config locale
+        if (agentConfig.value) {
+          agentConfig.value.agent.config.linkedKnowledgeBase = documentIds
+          
+          if (response.data?.documents) {
+            agentConfig.value.agent.knowledgeBase = response.data.documents
+            agentConfig.value.knowledgeBase = response.data.documents
+          }
+        }
+
+        console.log('✅ Documents liés avec succès')
+        return { success: true, data: response.data }
+      } else {
+        // TypeScript sait maintenant que response.error peut exister
+        throw new Error(response.error || 'Erreur lors de la liaison des documents')
+      }
+
+    } catch (err: any) {
+      console.error('❌ [linkKnowledgeBaseDocuments] Erreur:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de la liaison des documents'
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
+    } finally {
+      saving.value = false
     }
+  }
 
   // ✅ COPIER LE CODE D'INTÉGRATION
   const copyIntegrationCode = async () => {
