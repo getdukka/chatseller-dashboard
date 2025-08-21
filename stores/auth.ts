@@ -298,100 +298,135 @@ export const useAuthStore = defineStore('auth', {
 
     // ✅ FONCTION CORRIGÉE : RÉCUPÉRATION DONNÉES VIA API AVEC RETRY
     async fetchCompleteUserDataViaAPI(authUser: any, token: string, forceRefresh: boolean = false): Promise<User> {
-  try {
-    console.log('📡 [Store] Récupération données utilisateur via API...', forceRefresh ? '(FORCE REFRESH)' : '')
-    
-    const config = useRuntimeConfig()
-    const baseURL = config.public.apiBaseUrl
-    
-    // ✅ TIMEOUT ET RETRY POUR ÉVITER LES BLOCAGES
-    const timeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout API')), 10000)
-    )
-    
-    // ✅ CACHE BUST POUR FORCER LE REFRESH
-    const cacheBuster = forceRefresh ? `?_t=${Date.now()}` : ''
-    
-    const apiCall = $fetch(`/api/v1/shops/${authUser.id}${cacheBuster}`, {
-      baseURL,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        // ✅ HEADERS POUR ÉVITER LE CACHE
-        ...(forceRefresh && {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        })
-      },
-      // ✅ RETRY AUTOMATIQUE
-      retry: 2,
-      retryDelay: 1000
-    }) as Promise<any>
+    try {
+      console.log('📡 [Store] Récupération données utilisateur via API...', forceRefresh ? '(FORCE REFRESH)' : '')
+      
+      // ✅ TENTATIVE D'APPEL API AVEC TIMEOUT COURT
+      const api = useApi()
+      
+      try {
+        // ✅ TIMEOUT COURT POUR ÉVITER LES BLOCAGES
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout API')), 5000)
+        )
+        
+        const apiPromise = api.shops.get(authUser.id)
+        
+        const shopResponse = await Promise.race([apiPromise, timeoutPromise]) as any
 
-    const shopResponse = await Promise.race([apiCall, timeout])
+        if (shopResponse?.success && shopResponse?.data) {
+          const shopData = shopResponse.data
+          console.log('✅ [Store] Données shop récupérées via API:', {
+            id: shopData.id,
+            email: shopData.email,
+            plan: shopData.subscription_plan,
+            isActive: shopData.is_active,
+            onboarding_completed: shopData.onboarding_completed
+          })
 
-    let shopData = null
-    if (shopResponse && shopResponse.success !== false) {
-      shopData = shopResponse.data || shopResponse
-      console.log('✅ [Store] Données shop récupérées via API:', {
-        id: shopData.id,
-        email: shopData.email,
-        plan: shopData.subscription_plan,
-        isActive: shopData.is_active,
-        updatedAt: shopData.updatedAt,
-        onboarding_completed: shopData.onboarding_completed
-      })
-    } else {
-      console.warn('⚠️ [Store] Shop non trouvé ou erreur API, utilisation métadonnées auth')
+          // ✅ ASSEMBLAGE UTILISATEUR AVEC DONNÉES COMPLÈTES
+          const user: User = {
+            id: authUser.id,
+            email: authUser.email!,
+            firstName: authUser.user_metadata?.first_name || shopData.first_name || null,
+            lastName: authUser.user_metadata?.last_name || shopData.last_name || null,
+            name: authUser.user_metadata?.name || 
+                  (authUser.user_metadata?.first_name && authUser.user_metadata?.last_name 
+                    ? `${authUser.user_metadata.first_name} ${authUser.user_metadata.last_name}` 
+                    : null) ||
+                  shopData.name ||
+                  authUser.email?.split('@')[0],
+            shopId: authUser.id,
+            shop_id: authUser.id,
+            avatar: authUser.user_metadata?.avatar_url,
+            role: 'user',
+            createdAt: authUser.created_at,
+            shop: shopData
+          }
+
+          console.log('✅ [Store] Données utilisateur complètes assemblées via API')
+          return user
+
+        } else {
+          console.warn('⚠️ [Store] API retourné mais pas de données shop valides')
+          throw new Error('Pas de données shop')
+        }
+
+      } catch (apiError: any) {
+        console.warn('⚠️ [Store] Erreur appel API shops:', apiError.message)
+        
+        // ✅ SI L'API ÉCHOUE, UTILISER SUPABASE DIRECTEMENT
+        console.log('🔄 [Store] Fallback: Tentative récupération via Supabase direct')
+        
+        try {
+          const supabase = useSupabase()
+          
+          // Utiliser le service client pour lire la table shops
+          const { data: shopDataSupabase, error: supabaseError } = await supabase
+            .from('shops')
+            .select('*')
+            .eq('id', authUser.id)
+            .single()
+          
+          if (!supabaseError && shopDataSupabase) {
+            console.log('✅ [Store] Données shop récupérées via Supabase direct')
+            
+            const user: User = {
+              id: authUser.id,
+              email: authUser.email!,
+              firstName: authUser.user_metadata?.first_name || shopDataSupabase.first_name || null,
+              lastName: authUser.user_metadata?.last_name || shopDataSupabase.last_name || null,
+              name: authUser.user_metadata?.name || shopDataSupabase.name || authUser.email?.split('@')[0],
+              shopId: authUser.id,
+              shop_id: authUser.id,
+              avatar: authUser.user_metadata?.avatar_url,
+              role: 'user',
+              createdAt: authUser.created_at,
+              shop: shopDataSupabase
+            }
+            
+            return user
+          } else {
+            console.warn('⚠️ [Store] Supabase direct échoué aussi:', supabaseError)
+            throw new Error('Shop non trouvé via Supabase')
+          }
+          
+        } catch (supabaseError: any) {
+          console.warn('⚠️ [Store] Erreur Supabase direct:', supabaseError.message)
+          throw supabaseError
+        }
+      }
+
+    } catch (error: any) {
+      console.warn('⚠️ [Store] Toutes les tentatives ont échoué, utilisation données fallback')
+      
+      // ✅ FALLBACK ROBUSTE - CRÉER UN UTILISATEUR AVEC LES DONNÉES AUTH SEULEMENT
+      const fallbackUser: User = {
+        id: authUser.id,
+        email: authUser.email!,
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
+        firstName: authUser.user_metadata?.first_name || null,
+        lastName: authUser.user_metadata?.last_name || null,
+        shopId: authUser.id,
+        shop_id: authUser.id,
+        avatar: authUser.user_metadata?.avatar_url,
+        role: 'user',
+        createdAt: authUser.created_at,
+        shop: {
+          id: authUser.id,
+          name: authUser.user_metadata?.name || `Shop de ${authUser.email?.split('@')[0]}`,
+          email: authUser.email,
+          subscription_plan: 'free',
+          is_active: true,
+          onboarding_completed: true, // ✅ IMPORTANT: Par défaut true pour éviter la boucle onboarding
+          created_at: authUser.created_at
+        }
+      }
+      
+      console.log('⚠️ [Store] Utilisation des données fallback robustes')
+      return fallbackUser
     }
-
-    // ✅ ASSEMBLAGE UTILISATEUR AVEC DONNÉES COMPLÈTES
-    const user: User = {
-      id: authUser.id,
-      email: authUser.email!,
-      firstName: authUser.user_metadata?.first_name || null,
-      lastName: authUser.user_metadata?.last_name || null,
-      name: authUser.user_metadata?.name || 
-            (authUser.user_metadata?.first_name && authUser.user_metadata?.last_name 
-              ? `${authUser.user_metadata.first_name} ${authUser.user_metadata.last_name}` 
-              : null) ||
-            authUser.email?.split('@')[0],
-      shopId: authUser.id,
-      shop_id: authUser.id,
-      avatar: authUser.user_metadata?.avatar_url,
-      role: 'user',
-      createdAt: authUser.created_at,
-      shop: shopData
-    }
-
-    console.log('✅ [Store] Données utilisateur complètes assemblées')
-    console.log('📋 [Store] Plan détecté:', shopData?.subscription_plan || 'free')
-    console.log('🎯 [Store] Onboarding complété:', shopData?.onboarding_completed || false)
-    
-    return user
-
-  } catch (error: any) {
-    console.warn('⚠️ [Store] Erreur récupération données utilisateur via API:', error.message || error)
-    
-    // ✅ FALLBACK ROBUSTE EN CAS D'ERREUR API
-    const fallbackUser: User = {
-      id: authUser.id,
-      email: authUser.email!,
-      name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
-      firstName: authUser.user_metadata?.first_name || null,
-      lastName: authUser.user_metadata?.last_name || null,
-      shopId: authUser.id,
-      shop_id: authUser.id,
-      avatar: authUser.user_metadata?.avatar_url,
-      role: 'user',
-      createdAt: authUser.created_at,
-      shop: null // ✅ IMPORTANT: null pour forcer la création si nécessaire
-    }
-    
-    console.log('⚠️ [Store] Utilisation des données fallback')
-    return fallbackUser
-  }
-},
+  },
 
     // ✅ ACTION REGISTER INCHANGÉE
     async register(data: RegisterData) {

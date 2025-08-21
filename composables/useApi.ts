@@ -1,4 +1,4 @@
-// composables/useApi.ts - VERSION CORRIGÉE DEV/PROD
+// composables/useApi.ts - VERSION CORRIGÉE ET SIMPLIFIÉE
 
 import { useAuthStore } from "~~/stores/auth"
 
@@ -14,12 +14,9 @@ export const useApi = () => {
   
   // ✅ CONFIGURATION DYNAMIQUE DEV/PROD
   const getBaseURL = () => {
-    // En développement
     if (process.dev || process.env.NODE_ENV === 'development') {
-      return 'http://localhost:3001' // ✅ CORRIGÉ : Port 3001 comme dans ton serveur
+      return 'http://localhost:3001'
     }
-    
-    // En production
     return config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
   }
   
@@ -28,8 +25,7 @@ export const useApi = () => {
   console.log('🔧 API Configuration:', { 
     baseURL, 
     env: process.env.NODE_ENV,
-    isDev: process.dev,
-    configApiUrl: config.public.apiBaseUrl 
+    isDev: process.dev
   })
 
   // ✅ GET SUPABASE TOKEN FROM AUTH STORE
@@ -59,10 +55,9 @@ export const useApi = () => {
       baseURL,
       headers,
       onResponseError({ response }: any) {
-        console.error('❌ API Error:', response.status, response.statusText, response._data)
+        console.error('❌ API Error:', response.status, response.statusText)
         
         if (response.status === 401) {
-          console.error('🚨 Token invalide, redirection vers login')
           const authStore = useAuthStore()
           authStore.clearAuth()
           navigateTo('/login')
@@ -84,6 +79,7 @@ export const useApi = () => {
       
       console.log('✅ API Response:', response)
       
+      // ✅ NORMALISER LA RÉPONSE
       if (response && typeof response === 'object') {
         if ('success' in response) {
           return response
@@ -122,83 +118,41 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ CONVERSATIONS
+  // ✅ SHOPS (ROUTES PRINCIPALES UTILISÉES PAR LE MIDDLEWARE)
   // =====================================
   
-  const conversations = {
+  const shops = {
+    // ✅ GET SHOP (ROUTE PRINCIPALE)
+    get: async (shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}`)
+    },
+
+    // ✅ CREATE SHOP
+    create: async (data: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/shops', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    // ✅ UPDATE SHOP
+    update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/shops/${shopId}`, {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    // ✅ LIST SHOPS
     list: async (): Promise<ApiResponse<any[]>> => {
-      return apiCall('/api/v1/conversations')
-    },
-
-    get: async (conversationId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/conversations/${conversationId}`)
-    },
-
-    create: async (data: { 
-      shopId: string, 
-      visitorId: string, 
-      productId?: string,
-      productName?: string,
-      productPrice?: number,
-      productUrl?: string 
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/conversations', {
-        method: 'POST',
-        body: data
-      })
-    }
-  }
-
-  // =====================================
-  // ✅ ORDERS  
-  // =====================================
-  
-  const orders = {
-    list: async (): Promise<ApiResponse<any[]>> => {
-      return { success: true, data: [] }
-    },
-
-    startOrder: async (data: {
-      conversationId: string,
-      productInfo?: any,
-      message?: string
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/orders/start-order', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    processStep: async (data: {
-      conversationId: string,
-      step: string,
-      data: any
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/orders/process-step', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    complete: async (data: {
-      conversationId: string,
-      orderData: any
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/orders/complete', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    analyzeIntent: async (data: {
-      message: string,
-      conversationId: string,
-      productInfo?: any
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/orders/analyze-intent', {
-        method: 'POST',
-        body: data
-      })
+      return apiCall('/api/v1/shops')
     }
   }
 
@@ -239,49 +193,24 @@ export const useApi = () => {
       return apiCall(`/api/v1/agents/${agentId}`, {
         method: 'DELETE'
       })
+    },
+
+    getConfig: async (agentId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/agents/${agentId}/config`)
     }
   }
 
   // =====================================
-  // ✅ PRODUCTS
+  // ✅ CONVERSATIONS
   // =====================================
   
-  const products = {
-    list: async (params: {
-      search?: string,
-      category?: string,
-      source?: string,
-      isActive?: string,
-      page?: string,
-      limit?: string
-    } = {}): Promise<ApiResponse<any[]>> => {
-      const queryString = new URLSearchParams(params).toString()
-      const endpoint = queryString ? `/api/v1/products?${queryString}` : '/api/v1/products'
-      return apiCall(endpoint)
+  const conversations = {
+    list: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/conversations')
     },
 
-    get: async (productId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/products/${productId}`)
-    },
-
-    create: async (data: any): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/products', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    update: async (productId: string, data: any): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/products/${productId}`, {
-        method: 'PUT',
-        body: data
-      })
-    },
-
-    delete: async (productId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/products/${productId}`, {
-        method: 'DELETE'
-      })
+    get: async (conversationId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/conversations/${conversationId}`)
     }
   }
 
@@ -300,14 +229,6 @@ export const useApi = () => {
       const queryString = new URLSearchParams(params).toString()
       const endpoint = queryString ? `/api/v1/analytics/detailed?${queryString}` : '/api/v1/analytics/detailed'
       return apiCall(endpoint)
-    },
-
-    usageStats: async (): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/analytics/usage-stats')
-    },
-
-    billing: async (): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/analytics/billing')
     }
   }
 
@@ -327,7 +248,7 @@ export const useApi = () => {
       return apiCall('/api/v1/knowledge-base/upload', {
         method: 'POST',
         body: formData,
-        headers: {}
+        headers: {} // Laisser le navigateur définir le Content-Type pour FormData
       })
     },
 
@@ -384,68 +305,6 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ SHOPS
-  // =====================================
-  
-  const shops = {
-    get: async (shopId?: string): Promise<ApiResponse<any>> => {
-      const authStore = useAuthStore()
-      const targetShopId = shopId || authStore.userShopId
-      
-      if (!targetShopId) {
-        return { success: false, error: 'Shop ID manquant' }
-      }
-      
-      return apiCall(`/api/v1/shops/${targetShopId}`)
-    },
-
-    create: async (data: any): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/shops', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/shops/${shopId}`, {
-        method: 'PUT',
-        body: data
-      })
-    }
-  }
-
-  // =====================================
-  // ✅ CHAT
-  // =====================================
-  
-  const chat = {
-    test: async (data: {
-      message: string,
-      agentId: string,
-      shopId: string,
-      testMode?: boolean
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/chat/test', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    message: async (data: {
-      message: string,
-      conversationId?: string,
-      shopId: string,
-      agentId?: string,
-      productContext?: any
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/chat/message', {
-        method: 'POST',
-        body: data
-      })
-    }
-  }
-
-  // =====================================
   // ✅ UTILS
   // =====================================
   
@@ -461,14 +320,11 @@ export const useApi = () => {
 
   return {
     baseURL,
-    conversations,
-    orders,
+    shops,
     agents,
-    products,
+    conversations,
     analytics,
     knowledgeBase,
-    shops,
-    chat,
     billing,
     utils
   }

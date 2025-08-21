@@ -131,10 +131,11 @@
           
           <!-- Informations de base -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
-            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🤖 Informations du Vendeur IA</h3>
-            
-            <div class="space-y-4 lg:space-y-6">
-              <!-- ✅ SUPPRESSION du champ Titre - Seul le nom reste -->
+          <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">🤖 Informations du Vendeur IA</h3>
+          
+          <div class="space-y-4 lg:space-y-6">
+            <!-- ✅ NOUVEAU : Nom ET Titre côte à côte -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Nom du Vendeur IA *</label>
                 <input
@@ -144,126 +145,145 @@
                   placeholder="Ex: Sarah, Marc, Lisa, Sophie..."
                 />
                 <p class="text-xs text-gray-500 mt-1">
-                  Ce nom apparaîtra dans les conversations avec vos clients
+                  Ce nom apparaîtra dans les conversations
                 </p>
               </div>
-
-              <!-- ✅ NOUVEAU : Avatar du Vendeur IA -->
+              
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Avatar du Vendeur IA</label>
-                <div class="flex items-center space-x-4">
-                  <!-- Prévisualisation de l'avatar -->
-                  <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-100 flex items-center justify-center">
-                    <img
-                      v-if="localConfig.agent.avatar"
-                      :src="localConfig.agent.avatar"
-                      :alt="localConfig.agent.name"
-                      class="w-full h-full object-cover"
-                      @error="handleAvatarError"
-                    />
-                    <div v-else class="text-gray-400 text-xs text-center">
-                      {{ localConfig.agent.name ? localConfig.agent.name.charAt(0).toUpperCase() : '?' }}
-                    </div>
-                  </div>
-                  
-                  <!-- URL de l'avatar -->
-                  <div class="flex-1">
-                    <input
-                      v-model="localConfig.agent.avatar"
-                      type="url"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-                      placeholder="https://example.com/avatar.jpg (optionnel)"
-                    />
-                    <p class="text-xs text-gray-500 mt-1">
-                      Laissez vide pour utiliser un avatar généré automatiquement
-                    </p>
-                  </div>
-                  
-                  <!-- Bouton pour générer un avatar automatique -->
-                  <button
-                    @click="generateAvatar"
-                    type="button"
-                    class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-                  >
-                    Générer
-                  </button>
-                </div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Titre/Fonction *</label>
+                <input
+                  v-model="localConfig.agent.title"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm lg:text-base"
+                  placeholder="Ex: Conseillère produit, Vendeur expert..."
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                  Affiché sous le nom dans le chat
+                </p>
               </div>
+            </div>
 
-              <!-- Type + Personnalité (reste identique) -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Type de vendeur</label>
-                  <select v-model="localConfig.agent.type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
-                    <option value="general">🎯 Vendeur généraliste</option>
-                    <option value="product_specialist">🛍️ Spécialiste produit</option>
-                    <option value="support">🆘 Support & SAV</option>
-                    <option value="upsell">💎 Upsell Premium</option>
-                  </select>
+            <!-- ✅ OPTIMISÉ : Avatar du Vendeur IA avec prévisualisation améliorée -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Avatar du Vendeur IA</label>
+              <div class="flex items-center space-x-4">
+                <!-- Prévisualisation de l'avatar -->
+                <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-100 flex items-center justify-center">
+                  <img
+                    v-if="localConfig.agent.avatar"
+                    :src="localConfig.agent.avatar"
+                    :alt="localConfig.agent.name"
+                    class="w-full h-full object-cover"
+                    @error="handleAvatarError"
+                  />
+                  <div v-else class="text-gray-400 text-xs text-center">
+                    {{ localConfig.agent.name ? localConfig.agent.name.charAt(0).toUpperCase() : '?' }}
+                  </div>
                 </div>
                 
+                <!-- URL de l'avatar -->
+                <div class="flex-1">
+                  <input
+                    v-model="localConfig.agent.avatar"
+                    type="url"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                    placeholder="https://example.com/avatar.jpg (optionnel)"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">
+                    Laissez vide pour utiliser un avatar généré automatiquement
+                  </p>
+                </div>
+                
+                <!-- Bouton pour générer un avatar automatique -->
+                <button
+                  @click="generateAvatar"
+                  type="button"
+                  class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                >
+                  Générer
+                </button>
+              </div>
+            </div>
+
+            <!-- Type + Personnalité (optimisé) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Type de vendeur</label>
+                <select v-model="localConfig.agent.type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
+                  <option value="general">🎯 Vendeur généraliste</option>
+                  <option value="product_specialist">🛍️ Spécialiste produit</option>
+                  <option value="support">🆘 Support & SAV</option>
+                  <option value="upsell">💎 Upsell Premium</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Personnalité</label>
+                <select v-model="localConfig.agent.personality" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
+                  <option value="professional">💼 Professionnel</option>
+                  <option value="friendly">😊 Amical</option>
+                  <option value="expert">🎓 Expert technique</option>
+                  <option value="casual">😎 Décontracté</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- ✅ NOUVEAU : Choix du LLM (Plan Pro) - Reste identique -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Intelligence Artificielle
+                <span v-if="!isPaidUser" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Plan Pro
+                </span>
+              </label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Personnalité</label>
-                  <select v-model="localConfig.agent.personality" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
-                    <option value="professional">💼 Professionnel</option>
-                    <option value="friendly">😊 Amical</option>
-                    <option value="expert">🎓 Expert technique</option>
-                    <option value="casual">😎 Décontracté</option>
+                  <select 
+                    v-model="localConfig.agent.config.aiProvider" 
+                    :disabled="!isPaidUser"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
+                  >
+                    <option value="openai">🤖 GPT-4o-mini (Gratuit)</option>
+                    <option value="claude" :disabled="!isPaidUser">🧠 GPT-4.1 (Pro)</option>
+                    <option value="claude" :disabled="!isPaidUser">🧠 Claude Sonnet (Pro)</option>
+                  </select>
+                </div>
+                <div>
+                  <select 
+                    v-model="localConfig.agent.config.temperature" 
+                    :disabled="!isPaidUser"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
+                  >
+                    <option :value="0.3">🎯 Précis (0.3)</option>
+                    <option :value="0.7">⚖️ Équilibré (0.7)</option>
+                    <option :value="1.0">🎨 Créatif (1.0)</option>
                   </select>
                 </div>
               </div>
+              <p v-if="!isPaidUser" class="text-xs text-yellow-600 mt-1">
+                💡 Passez au plan Pro pour accéder aux autres IA et aux paramètres avancés
+              </p>
+            </div>
 
-              <!-- ✅ NOUVEAU : Choix du LLM (Plan Pro) -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Intelligence Artificielle
-                  <span v-if="!isPaidUser" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                    Plan Pro
-                  </span>
-                </label>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <select 
-                      v-model="localConfig.agent.config.aiProvider" 
-                      :disabled="!isPaidUser"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
-                    >
-                      <option value="openai">🤖 GPT-4o-mini (Gratuit)</option>
-                      <option value="claude" :disabled="!isPaidUser">🧠 GPT-4.1 (Pro)</option>
-                      <option value="claude" :disabled="!isPaidUser">🧠 Claude Sonnet (Pro)</option>
-                    </select>
+            <!-- Messages -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Message d'accueil *</label>
+              <textarea
+                v-model="localConfig.agent.welcomeMessage"
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                placeholder="Bonjour ! Je suis Sarah, spécialiste produits. Comment puis-je vous aider à trouver le produit parfait ?"
+              ></textarea>
+              <!-- Aperçu en temps réel avec nom ET titre -->
+              <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-start space-x-2">
+                  <div class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="text-white text-xs">{{ localConfig.agent.name ? localConfig.agent.name.charAt(0).toUpperCase() : 'IA' }}</span>
                   </div>
-                  <div>
-                    <select 
-                      v-model="localConfig.agent.config.temperature" 
-                      :disabled="!isPaidUser"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
-                    >
-                      <option :value="0.3">🎯 Créatif (0.3)</option>
-                      <option :value="0.7">⚖️ Équilibré (0.7)</option>
-                      <option :value="1.0">🎨 Créatif (1.0)</option>
-                    </select>
-                  </div>
-                </div>
-                <p v-if="!isPaidUser" class="text-xs text-yellow-600 mt-1">
-                  💡 Passez au plan Pro pour accéder aux autres IA et aux paramètres avancés
-                </p>
-              </div>
-
-              <!-- Messages -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Message d'accueil *</label>
-                <textarea
-                  v-model="localConfig.agent.welcomeMessage"
-                  rows="3"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                  placeholder="Bonjour ! Je suis Sarah, spécialiste produits. Comment puis-je vous aider à trouver le produit parfait ?"
-                ></textarea>
-                <!-- Aperçu en temps réel -->
-                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div class="flex items-start space-x-2">
-                    <div class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span class="text-white text-xs">IA</span>
+                  <div class="flex-1">
+                    <div class="text-xs text-gray-600 mb-1">
+                      <strong>{{ localConfig.agent.name || 'Nom du vendeur' }}</strong>
+                      <span v-if="localConfig.agent.title"> • {{ localConfig.agent.title }}</span>
                     </div>
                     <p class="text-sm text-gray-800">{{ localConfig.agent.welcomeMessage || 'Tapez votre message d\'accueil...' }}</p>
                   </div>
@@ -271,6 +291,7 @@
               </div>
             </div>
           </div>
+        </div>
 
           <!-- ✅ NOUVELLE SECTION : Base de Connaissances -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
@@ -461,6 +482,10 @@
               <div class="flex justify-between">
                 <span class="font-medium">Type:</span>
                 <span class="capitalize">{{ getTypeLabel(localConfig.agent.type) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium">Titre:</span>
+                <span class="text-blue-600">{{ localConfig.agent.title || getTypeLabel(localConfig.agent.type) }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="font-medium">Fournisseur d'IA:</span>
@@ -975,7 +1000,7 @@
           <div>
             <h4 class="font-medium text-sm lg:text-base">{{ localConfig.agent.name }}</h4>
             <p class="text-xs text-white text-opacity-90 flex items-center">
-              {{ getTypeLabel(localConfig.agent.type) }}
+              {{ localConfig.agent.title || getTypeLabel(localConfig.agent.type) }}
               <span class="ml-2 px-2 py-0.5 bg-white bg-opacity-20 rounded text-xs">
                 {{ localConfig.agent.config.aiProvider === 'claude' ? '🧠 Claude' : '🤖 OpenAI' }}
               </span>
@@ -1477,6 +1502,7 @@ const localConfig = ref({
   agent: {
     id: '',
     name: '',
+    title: '', // ✅ AJOUT DU CHAMP TITLE
     type: 'general' as AgentType,
     personality: 'friendly' as PersonalityType,
     description: '',
@@ -1627,6 +1653,7 @@ const loadAgentData = async () => {
       localConfig.value.agent = {
         id: storeAgent.id,
         name: storeAgent.name,
+        title: storeAgent.title || getTypeLabel(storeAgent.type),
         type: storeAgent.type as AgentType,
         personality: storeAgent.personality as PersonalityType || 'friendly',
         description: storeAgent.description || '',
@@ -1793,9 +1820,16 @@ const resetWidgetToDefaults = () => {
 // ✅ NOUVELLE MÉTHODE : Générer avatar automatique
 const generateAvatar = () => {
   if (localConfig.value.agent.name) {
-    const name = encodeURIComponent(localConfig.value.agent.name)
+    // Utilise nom + titre pour un avatar plus descriptif
+    const displayName = localConfig.value.agent.title 
+      ? `${localConfig.value.agent.name} ${localConfig.value.agent.title}`
+      : localConfig.value.agent.name
+      
+    const name = encodeURIComponent(displayName)
     const color = localConfig.value.widget?.primaryColor?.replace('#', '') || '3B82F6'
     localConfig.value.agent.avatar = `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=200&rounded=true`
+    
+    console.log('✅ Avatar généré pour:', displayName)
   }
 }
 
@@ -2023,15 +2057,15 @@ const resetTestChat = () => {
   testMessages.value = []
   responseTimes.value = []
   
-  // ✅ CORRECTION : Message d'accueil basé sur la vraie configuration
+  // ✅ Message d'accueil avec nom ET titre
   let welcomeMessage = ''
   
   if (localConfig.value.agent.welcomeMessage) {
     welcomeMessage = localConfig.value.agent.welcomeMessage
   } else {
-    // ✅ Message d'accueil générique (pas de contenu mocké spécifique)
     const agentName = localConfig.value.agent.name || 'Assistant'
-    welcomeMessage = `Bonjour ! 👋 Je suis ${agentName}, votre conseiller commercial.
+    const agentTitle = localConfig.value.agent.title || getTypeLabel(localConfig.value.agent.type)
+    welcomeMessage = `Bonjour ! 👋 Je suis ${agentName}, ${agentTitle}.
 
 Comment puis-je vous aider aujourd'hui ? 😊`
   }

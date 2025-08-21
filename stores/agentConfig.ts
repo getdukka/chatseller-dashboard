@@ -4,6 +4,7 @@ import { defineStore } from 'pinia'
 export interface AgentConfigData {
   id: string
   name: string
+  title?: string
   type: string
   personality?: string
   description?: string
