@@ -156,64 +156,96 @@ export const useAgents = () => {
 
   // ✅ VÉRIFICATION API DISPONIBLE
   const checkApiAvailable = async (): Promise<boolean> => {
-    try {
-      const response = await $fetch('/health', {
-        baseURL: config.public.apiBaseUrl,
-        timeout: 5000
-      })
-      
-      if (response?.status === 'ok') {
-        console.log('✅ [useAgents] API disponible:', config.public.apiBaseUrl)
-        return true
-      }
-      
-      console.warn('⚠️ [useAgents] API répond mais status incorrect:', response)
-      return false
-      
-    } catch (error) {
-      console.error('❌ [useAgents] API indisponible:', config.public.apiBaseUrl, error)
-      throw new Error(`API indisponible sur ${config.public.apiBaseUrl}. Vérifiez que votre serveur local fonctionne.`)
+  try {
+    console.log('🔍 [useAgents] Test API URL:', config.public.apiBaseUrl)
+    
+    // ✅ FALLBACK SI apiBaseUrl N'EST PAS CONFIGURÉ
+    const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
+    console.log('🔍 [useAgents] URL finale utilisée:', apiUrl)
+    
+    const response = await $fetch('/health', {
+      baseURL: apiUrl,
+      timeout: 5000
+    })
+    
+    console.log('✅ [useAgents] Réponse health check:', response)
+    
+    if (response?.status === 'ok') {
+      console.log('✅ [useAgents] API disponible:', apiUrl)
+      return true
     }
+    
+    console.warn('⚠️ [useAgents] API répond mais status incorrect:', response)
+    return false
+    
+  } catch (error: any) {
+    console.error('❌ [useAgents] API indisponible:', error)
+    console.error('❌ [useAgents] URL testée:', config.public.apiBaseUrl)
+    console.error('❌ [useAgents] Erreur détails:', error.message)
+    
+    // ✅ MESSAGE D'ERREUR PLUS INFORMATIF
+    throw new Error(`
+🚨 Impossible de contacter l'API ChatSeller
+
+URL testée: ${config.public.apiBaseUrl || 'NON CONFIGURÉE'}
+Erreur: ${error.message}
+
+Solutions possibles:
+1. Vérifiez que votre serveur API tourne sur http://localhost:3001
+2. Vérifiez la variable NUXT_PUBLIC_API_BASE_URL dans votre .env
+3. Redémarrez le serveur Dashboard après modification du .env
+    `)
   }
+}
 
   // ✅ RÉCUPÉRER TOUS LES AGENTS - 100% API PURE
   const fetchAgents = async (): Promise<ApiResponse<Agent[]>> => {
-    loading.value = true
-    error.value = null
+  loading.value = true
+  error.value = null
 
-    try {
-      console.log('🔍 [useAgents] Récupération des agents via API pure...')
+  try {
+    console.log('🔍 [useAgents] === DÉBUT RÉCUPÉRATION AGENTS ===')
+    console.log('🔍 [useAgents] Config API URL:', config.public.apiBaseUrl)
+    console.log('🔍 [useAgents] Token présent:', !!authStore.token)
+    
+    // ✅ VÉRIFIER API DISPONIBLE
+    await checkApiAvailable()
+    
+    // ✅ URL FINALE AVEC FALLBACK
+    const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
+    console.log('🔍 [useAgents] Appel API vers:', `${apiUrl}/api/v1/agents`)
+    
+    // ✅ APPEL API DIRECT
+    const response = await $fetch('/api/v1/agents', {
+      baseURL: apiUrl,
+      headers: getAuthHeaders(),
+      timeout: 10000
+    }) as ApiResponse<Agent[]>
+
+    console.log('📦 [useAgents] Réponse API complète:', response)
+
+    if (response.success && Array.isArray(response.data)) {
+      agents.value = response.data
+      console.log(`✅ [useAgents] ${response.data.length} agents récupérés depuis l'API`)
       
-      // ✅ VÉRIFIER API DISPONIBLE
-      await checkApiAvailable()
+      // ✅ LOG DES LIMITES DE PLAN
+      const limit = planDetails.value.agentLimit
+      console.log(`📊 [useAgents] Plan ${planDetails.value.name}: ${agents.value.length}/${limit === -1 ? '∞' : limit} agents`)
       
-      // ✅ APPEL API DIRECT - PLUS DE FALLBACK MOCK
-      const response = await $fetch('/api/v1/agents', {
-        baseURL: config.public.apiBaseUrl,
-        headers: getAuthHeaders()
-      }) as ApiResponse<Agent[]>
-
-      console.log('📦 [useAgents] Réponse API brute:', response)
-
-      if (response.success && Array.isArray(response.data)) {
-        agents.value = response.data
-        console.log(`✅ [useAgents] ${response.data.length} agents récupérés depuis l'API`)
-        
-        // ✅ LOG DES LIMITES DE PLAN
-        const limit = planDetails.value.agentLimit
-        console.log(`📊 [useAgents] Plan ${planDetails.value.name}: ${agents.value.length}/${limit === -1 ? '∞' : limit} agents`)
-        
-        return { success: true, data: response.data }
-      } else {
-        throw new Error(response.error || 'Réponse API invalide')
-      }
-
-    } catch (err: any) {
-      return handleApiError(err, 'Erreur lors de la récupération des agents')
-    } finally {
-      loading.value = false
+      return { success: true, data: response.data }
+    } else {
+      console.error('❌ [useAgents] Réponse API invalide:', response)
+      throw new Error(response.error || 'Réponse API invalide - format incorrect')
     }
+
+  } catch (err: any) {
+    console.error('❌ [useAgents] Erreur complète:', err)
+    console.error('❌ [useAgents] Stack trace:', err.stack)
+    return handleApiError(err, 'Erreur lors de la récupération des agents')
+  } finally {
+    loading.value = false
   }
+}
 
   // ✅ CRÉER UN AGENT - 100% API PURE
   const createAgent = async (data: CreateAgentData): Promise<ApiResponse<Agent>> => {
