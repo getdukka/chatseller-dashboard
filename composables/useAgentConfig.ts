@@ -78,6 +78,7 @@ export const useAgentConfig = () => {
   const saving = ref(false)
   const error = ref<string | null>(null)
   const agentConfig = ref<AgentConfig | null>(null)
+  const localConfig = ref<AgentConfig | null>(null)
   const widgetSyncStatus = ref<'idle' | 'syncing' | 'synced' | 'error'>('idle')
 
   // ✅ COMPUTED POUR VALIDATION
@@ -130,6 +131,7 @@ export const useAgentConfig = () => {
     let agentData = null
     let agentId = ''
     let agentName = ''
+    let agentTitle = ''
     let widgetData = null
     
     // Source 1: agentConfig (API)
@@ -138,27 +140,40 @@ export const useAgentConfig = () => {
       widgetData = agentConfig.value.widget
       agentId = agentData.id
       agentName = agentData.name
+      agentTitle = agentData.title || getTypeLabel(agentData.type) 
       console.log('✅ [integrationCode] Données depuis agentConfig API')
     }
-    // Source 2: agentConfigStore (store temporaire)
+    // Source 2: localConfig (état actuel de l'éditeur) - NOUVEAU
+    else if (localConfig.value?.agent?.name) {
+      agentData = localConfig.value.agent
+      widgetData = localConfig.value.widget
+      agentId = agentData.id || 'temp-agent'
+      agentName = agentData.name
+      agentTitle = agentData.title || getTypeLabel(agentData.type || 'general') 
+      console.log('✅ [integrationCode] Données depuis localConfig en cours d\'édition')
+    }
+    // Source 3: agentConfigStore (store temporaire)
     else if (agentConfigStore.hasValidAgent) {
       const storeAgent = agentConfigStore.getAgentForConfig()
       if (storeAgent) {
         agentId = storeAgent.id
         agentName = storeAgent.name
+        agentTitle = storeAgent.title || getTypeLabel(storeAgent.type) 
         console.log('✅ [integrationCode] Données depuis agentConfigStore')
         
         // Construire un objet minimal
         agentData = {
           id: storeAgent.id,
           name: storeAgent.name,
+          title: agentTitle, // ✅ CORRECTION : Titre explicite
           type: storeAgent.type,
           personality: storeAgent.personality || 'friendly',
           welcomeMessage: storeAgent.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
           fallbackMessage: storeAgent.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.'
         }
         
-        widgetData = {
+        // ✅ CORRECTION : Utiliser les vraies configurations du widget
+        widgetData = localConfig.value?.widget || {
           buttonText: 'Parler à un conseiller',
           primaryColor: '#EC4899', // ✅ Rose par défaut comme dans les captures
           position: 'above-cta',
@@ -725,127 +740,143 @@ export const useAgentConfig = () => {
 
   // ✅ SAUVEGARDER CONFIGURATION COMPLÈTE
   const saveCompleteConfig = async (agentId: string, updates: Partial<AgentConfig>) => {
-    saving.value = true
-    widgetSyncStatus.value = 'syncing'
-    error.value = null
+  saving.value = true
+  widgetSyncStatus.value = 'syncing'
+  error.value = null
 
-    try {
-      if (!authStore.token) {
-        throw new Error('Session expirée. Veuillez vous reconnecter.')
+  try {
+    if (!authStore.token) {
+      throw new Error('Session expirée. Veuillez vous reconnecter.')
+    }
+
+    if (!agentId) {
+      throw new Error('ID agent manquant')
+    }
+
+    const shopId = authStore.user?.id || authStore.userShopId
+    if (!shopId) {
+      throw new Error('Shop ID manquant')
+    }
+
+    console.log('💾 [saveCompleteConfig] Début sauvegarde moderne:', {
+      agentId,
+      shopId,
+      hasAgentUpdates: !!updates.agent,
+      hasWidgetUpdates: !!updates.widget,
+      agentTitle: updates.agent?.title // ✅ AJOUT : Logging du titre
+    })
+
+    // ✅ SAUVEGARDER AGENT AVEC TITRE OBLIGATOIRE
+    if (updates.agent) {
+      console.log('💾 Sauvegarde configuration agent avec titre...', updates.agent.title)
+      
+      // ✅ CORRECTION PRINCIPALE : Assurer que le titre est toujours présent
+      const agentPayload = {
+        ...updates.agent,
+        title: updates.agent.title || getTypeLabel(updates.agent.type || 'general'), // ✅ CORRECTION : Titre obligatoire
+        config: {
+          ...updates.agent.config,
+          aiProvider: updates.agent.config?.aiProvider || 'openai',
+          temperature: updates.agent.config?.temperature || 0.7,
+          maxTokens: updates.agent.config?.maxTokens || 1000
+        }
       }
-
-      if (!agentId) {
-        throw new Error('ID agent manquant')
-      }
-
-      const shopId = authStore.user?.id || authStore.userShopId
-      if (!shopId) {
-        throw new Error('Shop ID manquant')
-      }
-
-      console.log('💾 [saveCompleteConfig] Début sauvegarde moderne:', {
-        agentId,
-        shopId,
-        hasAgentUpdates: !!updates.agent,
-        hasWidgetUpdates: !!updates.widget
+      
+      console.log('📤 [AGENT SAVE] Payload complet avec titre:', {
+        name: agentPayload.name,
+        title: agentPayload.title,
+        type: agentPayload.type
+      })
+      
+      const agentResult = await $fetch(`/api/v1/agents/${agentId}`, {
+        method: 'PUT',
+        baseURL: config.public.apiBaseUrl,
+        headers: getAuthHeaders(),
+        body: agentPayload
       })
 
-      // ✅ SAUVEGARDER AGENT SI FOURNI
-      if (updates.agent) {
-        console.log('💾 Sauvegarde configuration agent...')
-        
-        const agentResult = await $fetch(`/api/v1/agents/${agentId}`, {
-          method: 'PUT',
-          baseURL: config.public.apiBaseUrl,
-          headers: getAuthHeaders(),
-          body: {
-            ...updates.agent,
-            config: {
-              ...updates.agent.config,
-              aiProvider: updates.agent.config?.aiProvider || 'openai',
-              temperature: updates.agent.config?.temperature || 0.7,
-              maxTokens: updates.agent.config?.maxTokens || 1000
-            }
-          }
-        })
-
-        if (!agentResult.success) {
-          throw new Error(`Erreur agent: ${agentResult.error}`)
-        }
-
-        console.log('✅ Agent sauvegardé')
+      if (!agentResult.success) {
+        throw new Error(`Erreur agent: ${agentResult.error}`)
       }
 
-      // ✅ SAUVEGARDER WIDGET MODERNE
-      if (updates.widget) {
-        console.log('🎨 Sauvegarde configuration widget moderne...', updates.widget)
-        
-        const widgetPayload = {
-          widget_config: {
-            buttonText: updates.widget.buttonText || 'Parler à un conseiller',
-            primaryColor: updates.widget.primaryColor || '#EC4899', // ✅ Rose par défaut
-            position: updates.widget.position || 'above-cta',
-            theme: updates.widget.theme || 'modern',
-            language: updates.widget.language || 'fr',
-            widgetSize: updates.widget.widgetSize || 'medium',
-            borderRadius: updates.widget.borderRadius || 'md',
-            animation: updates.widget.animation || 'fade',
-            autoOpen: updates.widget.autoOpen || false,
-            showAvatar: updates.widget.showAvatar !== false,
-            soundEnabled: updates.widget.soundEnabled !== false,
-            mobileOptimized: updates.widget.mobileOptimized !== false,
-            isActive: updates.widget.isActive !== false,
-            offlineMessage: updates.widget.offlineMessage || null
-          }
-        }
-
-        console.log('📤 [saveCompleteConfig] Payload widget moderne à envoyer:', widgetPayload)
-        
-        const widgetResult = await $fetch(`/api/v1/shops/${shopId}`, {
-          method: 'PUT',
-          baseURL: config.public.apiBaseUrl,
-          headers: getAuthHeaders(),
-          body: widgetPayload
-        })
-
-        if (!widgetResult.success) {
-          console.error('❌ Erreur API widget moderne:', widgetResult)
-          throw new Error(`Erreur widget: ${widgetResult.error}`)
-        }
-
-        console.log('✅ Widget moderne sauvegardé:', widgetResult.data?.widget_config)
-      }
-
-      // ✅ METTRE À JOUR CONFIG LOCALE
-      if (agentConfig.value) {
-        if (updates.agent) {
-          agentConfig.value.agent = { ...agentConfig.value.agent, ...updates.agent }
-        }
-        if (updates.widget) {
-          agentConfig.value.widget = { ...agentConfig.value.widget, ...updates.widget }
-          console.log('✅ Widget moderne config locale mise à jour:', agentConfig.value.widget)
-        }
-      }
-
-      widgetSyncStatus.value = 'synced'
-      console.log('✅ Configuration moderne complète sauvegardée et synchronisée')
-      return { success: true, message: 'Configuration sauvegardée avec succès' }
-
-    } catch (err: any) {
-      console.error('❌ [useAgentConfig] Erreur saveCompleteConfig moderne:', err)
-      const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de la sauvegarde'
-      error.value = errorMessage
-      widgetSyncStatus.value = 'error'
-      return { success: false, error: errorMessage }
-    } finally {
-      saving.value = false
-      setTimeout(() => {
-        if (widgetSyncStatus.value !== 'error') {
-          widgetSyncStatus.value = 'idle'
-        }
-      }, 3000)
+      console.log('✅ Agent sauvegardé avec titre:', agentResult.data?.title)
     }
+
+    // ✅ SAUVEGARDER WIDGET MODERNE (reste identique)
+    if (updates.widget) {
+      console.log('🎨 Sauvegarde configuration widget moderne...', updates.widget)
+      
+      const widgetPayload = {
+        widget_config: {
+          buttonText: updates.widget.buttonText || 'Parler à un conseiller',
+          primaryColor: updates.widget.primaryColor || '#EC4899', // ✅ Rose par défaut
+          position: updates.widget.position || 'above-cta',
+          theme: updates.widget.theme || 'modern',
+          language: updates.widget.language || 'fr',
+          widgetSize: updates.widget.widgetSize || 'medium',
+          borderRadius: updates.widget.borderRadius || 'md',
+          animation: updates.widget.animation || 'fade',
+          autoOpen: updates.widget.autoOpen || false,
+          showAvatar: updates.widget.showAvatar !== false,
+          soundEnabled: updates.widget.soundEnabled !== false,
+          mobileOptimized: updates.widget.mobileOptimized !== false,
+          isActive: updates.widget.isActive !== false,
+          offlineMessage: updates.widget.offlineMessage || null
+        }
+      }
+
+      console.log('📤 [saveCompleteConfig] Payload widget moderne à envoyer:', widgetPayload)
+      
+      const widgetResult = await $fetch(`/api/v1/shops/${shopId}`, {
+        method: 'PUT',
+        baseURL: config.public.apiBaseUrl,
+        headers: getAuthHeaders(),
+        body: widgetPayload
+      })
+
+      if (!widgetResult.success) {
+        console.error('❌ Erreur API widget moderne:', widgetResult)
+        throw new Error(`Erreur widget: ${widgetResult.error}`)
+      }
+
+      console.log('✅ Widget moderne sauvegardé:', widgetResult.data?.widget_config)
+    }
+
+    // ✅ METTRE À JOUR CONFIG LOCALE AVEC TITRE
+    if (agentConfig.value) {
+      if (updates.agent) {
+        agentConfig.value.agent = { ...agentConfig.value.agent, ...updates.agent }
+        // ✅ CORRECTION : S'assurer que le titre est bien dans la config locale
+        if (!agentConfig.value.agent.title && agentConfig.value.agent.type) {
+          agentConfig.value.agent.title = getTypeLabel(agentConfig.value.agent.type)
+        }
+        console.log('✅ Config locale agent mise à jour avec titre:', agentConfig.value.agent.title)
+      }
+      if (updates.widget) {
+        agentConfig.value.widget = { ...agentConfig.value.widget, ...updates.widget }
+        console.log('✅ Widget moderne config locale mise à jour:', agentConfig.value.widget)
+      }
+    }
+
+    widgetSyncStatus.value = 'synced'
+    console.log('✅ Configuration moderne complète sauvegardée et synchronisée')
+    return { success: true, message: 'Configuration sauvegardée avec succès' }
+
+  } catch (err: any) {
+    console.error('❌ [useAgentConfig] Erreur saveCompleteConfig moderne:', err)
+    const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de la sauvegarde'
+    error.value = errorMessage
+    widgetSyncStatus.value = 'error'
+    return { success: false, error: errorMessage }
+  } finally {
+    saving.value = false
+    setTimeout(() => {
+      if (widgetSyncStatus.value !== 'error') {
+        widgetSyncStatus.value = 'idle'
+      }
+    }, 3000)
   }
+}
 
   // ✅ LIER DOCUMENTS À LA BASE DE CONNAISSANCES
   const linkKnowledgeBaseDocuments = async (agentId: string, documentIds: string[]) => {

@@ -688,10 +688,10 @@
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                   >
                     <option value="none">Aucune</option>
-                    <option value="md">Légères</option>
-                    <option value="lg">Moyennes</option>
-                    <option value="xl">Arrondies</option>
-                    <option value="full">Très arrondies</option>
+                    <option value="sm">Légères</option>
+                    <option value="md">Moyennes</option>
+                    <option value="lg">Arrondies</option>
+                    <option value="xl">Très arrondies</option>
                   </select>
                 </div>
               </div>
@@ -1530,7 +1530,7 @@ const localConfig = ref({
     knowledgeBase: [] as any[]
   },
   widget: {
-    buttonText: 'Parler à un conseiller',
+    buttonText: 'Parler à la vendueuse',
     primaryColor: '#3B82F6',
     position: 'above-cta' as WidgetPosition,
     widgetSize: 'medium' as WidgetSize,
@@ -1567,7 +1567,7 @@ const agentId = computed(() => {
 })
 
 const agentName = computed(() => {
-  return localConfig.value.agent.name || 'Agent IA'
+  return localConfig.value.agent.name || 'Vendeur IA'
 })
 
 const linkedKnowledgeBase = computed(() => {
@@ -1843,9 +1843,9 @@ const handleAvatarError = (event: Event) => {
 // ✅ HELPER METHODS POUR WIDGET
 const getBorderRadiusValue = (radius: string): string => {
   const radiusMap = {
-    none: '0px', sm: '4px', md: '8px', lg: '12px', xl: '16px'
+    none: '0px', sm: '8px', md: '12px', lg: '16px', xl: '32px'
   }
-  return radiusMap[radius as keyof typeof radiusMap] || '8px'
+  return radiusMap[radius as keyof typeof radiusMap] || '12px'
 }
 
 const getWidgetPadding = (size: string): string => {
@@ -1975,8 +1975,13 @@ const sendTestMessageReal = async () => {
   const startTime = Date.now()
 
   try {
-    // ✅ APPEL IA RÉEL
+    console.log('🧪 [TEST AI] Début test avec agent:', agentId.value)
+    console.log('🧪 [TEST AI] Message:', messageContent)
+    
+    // ✅ APPEL IA RÉEL AVEC MEILLEUR DEBUG
     const result = await testAIMessage(messageContent, agentId.value)
+    
+    console.log('📥 [TEST AI] Résultat complet:', result)
     
     const responseTime = Date.now() - startTime
     responseTimes.value.push(responseTime)
@@ -1994,44 +1999,53 @@ const sendTestMessageReal = async () => {
           responseTime: responseTime
         }
       }
+      
+      console.log('✅ [TEST AI] Message IA ajouté avec succès')
     } else {
       throw new Error(result.error || 'Erreur lors du test IA')
     }
 
   } catch (error: any) {
-    console.error('❌ Erreur test IA:', error)
+    console.error('❌ [TEST AI] Erreur complète:', error)
     
-  // ✅ SIMULER UNE RÉPONSE RÉALISTE en cas d'erreur
-  const messageIndex = testMessages.value.findIndex(m => m.loading)
-  if (messageIndex !== -1) {
-    let simulatedResponse = ''
-    
-    const msg = messageContent.toLowerCase()
-    if (msg.includes('prix') || msg.includes('coût')) {
-      simulatedResponse = `Merci pour votre question sur les tarifs ! 💰
+    // ✅ SIMULER UNE RÉPONSE RÉALISTE avec nom et titre corrects
+    const messageIndex = testMessages.value.findIndex(m => m.loading)
+    if (messageIndex !== -1) {
+      const agentName = localConfig.value.agent.name || 'Assistant'
+      const agentTitle = localConfig.value.agent.title || 'Conseiller'
+      
+      let simulatedResponse = ''
+      
+      const msg = messageContent.toLowerCase()
+      if (msg.includes('prix') || msg.includes('coût')) {
+        simulatedResponse = `Merci pour votre question sur les tarifs ! 💰
 
-  Je vous mets en relation avec notre équipe pour vous donner les informations les plus précises.
+Je suis **${agentName}**, votre ${agentTitle}. Je vous mets en relation avec notre équipe pour vous donner les informations les plus précises.
 
-  Y a-t-il autre chose que je puisse vous aider ? 😊`
-    } else if (msg.includes('acheter') || msg.includes('commander')) {
-      simulatedResponse = `Parfait ! Je vais vous aider à finaliser votre commande. ✨
+Y a-t-il autre chose que je puisse vous aider ? 😊`
+      } else if (msg.includes('acheter') || msg.includes('commander')) {
+        simulatedResponse = `Parfait ! Je vais vous aider à finaliser votre commande. ✨
 
-  Pouvez-vous me donner plus de détails sur ce qui vous intéresse ? 📦`
-    } else {
-      simulatedResponse = `Merci pour votre question ! Je vous mets en relation avec notre équipe pour vous donner les meilleures informations.
+Pouvez-vous me donner plus de détails sur ce qui vous intéresse ? 📦`
+      } else {
+        simulatedResponse = `Merci pour votre question ! Je suis **${agentName}**, ${agentTitle}.
 
-  Y a-t-il autre chose que je puisse vous aider ? 😊`
+Je vous mets en relation avec notre équipe pour vous donner les meilleures informations.
+
+Y a-t-il autre chose que je puisse vous aider ? 😊`
+      }
+      
+      testMessages.value[messageIndex] = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: simulatedResponse,
+        timestamp: new Date(),
+        provider: localConfig.value.agent.config.aiProvider || 'openai',
+        responseTime: Date.now() - startTime
+      }
+      
+      console.log('⚠️ [TEST AI] Réponse simulée utilisée avec agent:', agentName)
     }
-    
-    testMessages.value[messageIndex] = {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: simulatedResponse,
-      timestamp: new Date(),
-      provider: localConfig.value.agent.config.aiProvider || 'openai',
-      responseTime: Date.now() - startTime
-    }
-  }
   } finally {
     sendingTestMessage.value = false
     await nextTick()
@@ -2057,15 +2071,30 @@ const resetTestChat = () => {
   testMessages.value = []
   responseTimes.value = []
   
-  // ✅ Message d'accueil avec nom ET titre
+  // ✅ CORRECTION : Utiliser les bonnes sources de données avec fallbacks robustes
+  const agentName = localConfig.value.agent.name || 
+                   agentConfig.value?.agent?.name || 
+                   'Assistant IA'
+                   
+  const agentTitle = localConfig.value.agent.title || 
+                    agentConfig.value?.agent?.title || 
+                    getTypeLabel(localConfig.value.agent.type || 'general')
+  
+  console.log('🧪 [PLAYGROUND] Initialisation chat avec:', {
+    name: agentName,
+    title: agentTitle,
+    type: localConfig.value.agent.type,
+    hasLocalConfig: !!localConfig.value.agent.name,
+    hasAgentConfig: !!agentConfig.value?.agent?.name
+  })
+  
+  // ✅ Message d'accueil avec nom ET titre - CORRECTION MAJEURE
   let welcomeMessage = ''
   
   if (localConfig.value.agent.welcomeMessage) {
     welcomeMessage = localConfig.value.agent.welcomeMessage
   } else {
-    const agentName = localConfig.value.agent.name || 'Assistant'
-    const agentTitle = localConfig.value.agent.title || getTypeLabel(localConfig.value.agent.type)
-    welcomeMessage = `Bonjour ! 👋 Je suis ${agentName}, ${agentTitle}.
+    welcomeMessage = `Bonjour ! 👋 Je suis **${agentName}**, ${agentTitle}.
 
 Comment puis-je vous aider aujourd'hui ? 😊`
   }
@@ -2077,6 +2106,8 @@ Comment puis-je vous aider aujourd'hui ? 😊`
     timestamp: new Date(),
     provider: localConfig.value.agent.config.aiProvider || 'openai'
   })
+  
+  console.log('✅ [PLAYGROUND] Chat initialisé avec message d\'accueil:', welcomeMessage.substring(0, 50))
 }
 
 const saveAllConfig = async () => {
