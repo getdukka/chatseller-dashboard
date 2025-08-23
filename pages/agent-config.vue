@@ -24,23 +24,7 @@
                   </svg>
                   Synchronisation...
                 </span>
-                <span v-else-if="widgetSyncStatus === 'synced' || autoSaveStatus === 'saved'" class="ml-2 inline-flex items-center text-green-600">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  {{ autoSaveStatus === 'saved' ? 'Auto-sauvegardé' : 'Synchronisé' }}
-                </span>
-                <span v-else-if="autoSaveStatus === 'saving'" class="ml-2 inline-flex items-center text-blue-600">
-                  <svg class="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                  Auto-sauvegarde...
-                </span>
-                <span v-else-if="autoSaveStatus === 'error'" class="ml-2 inline-flex items-center text-red-600">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  Erreur sauvegarde
+                <span v-else-if="widgetSyncStatus === 'synced'" class="ml-2 inline-flex items-center text-green-600">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                   </svg>
@@ -166,25 +150,13 @@
               </div>
               
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Titre/Fonction *
-                  <span class="text-xs text-gray-500 font-normal ml-1">(obligatoire)</span>
-                </label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Titre/Fonction *</label>
                 <input
                   v-model="localConfig.agent.title"
                   type="text"
-                  :class="[
-                    'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors text-sm lg:text-base',
-                    !localConfig.agent.title || !localConfig.agent.title.trim() 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-300 focus:border-blue-500'
-                  ]"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm lg:text-base"
                   placeholder="Ex: Conseillère produit, Vendeur expert..."
-                  required
                 />
-                <p v-if="!localConfig.agent.title || !localConfig.agent.title.trim()" class="text-xs text-red-500 mt-1">
-                  ⚠️ Le titre est obligatoire pour l'affichage dans le chat
-                </p>
                 <p class="text-xs text-gray-500 mt-1">
                   Affiché sous le nom dans le chat
                 </p>
@@ -1659,50 +1631,6 @@ const testScenarios = [
   }
 ]
 
-// ✅ NOUVEAU : Auto-save avec debounce
-const autoSaveTimeout = ref<NodeJS.Timeout | null>(null)
-const lastSaveTime = ref<Date | null>(null)
-const autoSaveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle')
-
-// ✅ FONCTION AUTO-SAVE INTELLIGENTE
-const triggerAutoSave = async () => {
-  if (autoSaveTimeout.value) {
-    clearTimeout(autoSaveTimeout.value)
-  }
-  
-  autoSaveTimeout.value = setTimeout(async () => {
-    if (!isConfigValid.value) return
-    
-    autoSaveStatus.value = 'saving'
-    console.log('💾 [AUTO-SAVE] Sauvegarde automatique...')
-    
-    try {
-      const result = await saveCompleteConfig(agentId.value, {
-        agent: localConfig.value.agent,
-        widget: localConfig.value.widget
-      })
-      
-      if (result.success) {
-        autoSaveStatus.value = 'saved'
-        lastSaveTime.value = new Date()
-        console.log('✅ [AUTO-SAVE] Sauvegarde réussie')
-        
-        // Retour à idle après 2 secondes
-        setTimeout(() => {
-          if (autoSaveStatus.value === 'saved') {
-            autoSaveStatus.value = 'idle'
-          }
-        }, 2000)
-      } else {
-        throw new Error(result.error)
-      }
-    } catch (error) {
-      autoSaveStatus.value = 'error'
-      console.error('❌ [AUTO-SAVE] Erreur:', error)
-    }
-  }, 1500) // Attendre 1.5s après le dernier changement
-}
-
 // ✅ METHODS
 
 const goBack = () => {
@@ -1902,14 +1830,6 @@ const generateAvatar = () => {
     localConfig.value.agent.avatar = `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=200&rounded=true`
     
     console.log('✅ Avatar généré pour:', displayName)
-  }
-}
-
-// ✅ NOUVELLE FONCTION : Auto-générer titre si manquant
-const ensureTitleExists = () => {
-  if (!localConfig.value.agent.title || !localConfig.value.agent.title.trim()) {
-    localConfig.value.agent.title = getTypeLabel(localConfig.value.agent.type || 'general')
-    console.log('✅ Titre auto-généré:', localConfig.value.agent.title)
   }
 }
 
@@ -2191,35 +2111,16 @@ Comment puis-je vous aider aujourd'hui ? 😊`
 }
 
 const saveAllConfig = async () => {
-  // ✅ Assurer que le titre existe
-  ensureTitleExists()
-  
-  // ✅ Validation avant sauvegarde
-  if (!localConfig.value.agent.name || !localConfig.value.agent.title) {
-    error.value = 'Le nom et le titre du vendeur IA sont obligatoires'
-    return
-  }
-  
-  autoSaveStatus.value = 'saving'
-  
   const result = await saveCompleteConfig(agentId.value, {
     agent: localConfig.value.agent,
     widget: localConfig.value.widget
   })
 
   if (result.success) {
-    autoSaveStatus.value = 'saved'
     successMessage.value = '✅ Configuration sauvegardée et synchronisée avec succès !'
-    lastSaveTime.value = new Date()
-    
     setTimeout(() => {
       successMessage.value = null
-      if (autoSaveStatus.value === 'saved') {
-        autoSaveStatus.value = 'idle'
-      }
     }, 3000)
-  } else {
-    autoSaveStatus.value = 'error'
   }
 }
 
@@ -2336,35 +2237,6 @@ watch(() => integrationCode.value, (newCode, oldCode) => {
   }
 }, { immediate: true })
 
-// ✅ WATCHERS POUR AUTO-SAVE
-watch(() => localConfig.value.agent.name, (newName) => {
-  if (newName && newName.trim()) {
-    triggerAutoSave()
-  }
-}, { deep: true })
-
-watch(() => localConfig.value.agent.title, (newTitle) => {
-  if (newTitle && newTitle.trim()) {
-    triggerAutoSave()
-  }
-}, { deep: true })
-
-watch(() => localConfig.value.agent.welcomeMessage, () => {
-  triggerAutoSave()
-}, { deep: true })
-
-watch(() => localConfig.value.widget, () => {
-  triggerAutoSave()
-}, { deep: true })
-
-// ✅ WATCHER SPÉCIAL : Auto-génération titre si manquant
-watch(() => localConfig.value.agent.type, (newType) => {
-  if (newType && !localConfig.value.agent.title) {
-    localConfig.value.agent.title = getTypeLabel(newType)
-  }
-  triggerAutoSave()
-})
-
 // ✅ NOUVEAU WATCHER POUR WIDGET
 watch(() => localConfig.value.widget, (newWidget) => {
   updateWidgetPreview()
@@ -2404,12 +2276,6 @@ onMounted(async () => {
   
   // Charger les données de manière sécurisée
   await loadAgentData()
-
-  // ✅ Assurer que le titre existe après chargement
-  ensureTitleExists()
-
-  // ✅ Initialiser auto-save status
-  autoSaveStatus.value = 'idle'
   
   // Charger les documents de base de connaissances
   await fetchKnowledgeBaseDocuments()

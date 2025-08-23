@@ -1,4 +1,4 @@
-// stores/agentConfig.ts - STORE TEMPORAIRE POUR CONFIGURATION AGENT
+// stores/agentConfig.ts 
 import { defineStore } from 'pinia'
 
 export interface AgentConfigData {
