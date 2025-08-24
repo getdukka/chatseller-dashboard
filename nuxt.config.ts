@@ -1,4 +1,4 @@
-// nuxt.config.ts - VERSION PRODUCTION-READY AVEC URLS DYNAMIQUES
+// nuxt.config.ts 
 export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_ENV === 'development' },
   
