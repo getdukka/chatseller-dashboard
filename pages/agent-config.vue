@@ -1,4 +1,4 @@
-<!-- pages/agent-config.vue - VERSION CORRIGÉE -->
+<!-- pages/agent-config.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -29,6 +29,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                   </svg>
                   Synchronisé
+                </span>
+                <span v-if="hasUnsavedChanges" class="ml-2 inline-flex items-center text-orange-600">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Sauvegarde dans 2min
+                </span>
+
+                <span v-if="lastAutoSave" class="ml-2 inline-flex items-center text-green-600 text-xs">
+                  Sauvé auto: {{ formatTime(lastAutoSave) }}
                 </span>
               </p>
             </div>
@@ -93,15 +103,15 @@
         </div>
       </div>
       
-      <div v-if="error" class="p-3 lg:p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div v-if="displayError" class="p-3 lg:p-4 bg-red-50 border border-red-200 rounded-lg">
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <svg class="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <p class="text-red-700 text-sm">{{ error }}</p>
+            <p class="text-red-700 text-sm">{{ displayError }}</p>
           </div>
-          <button @click="clearError" class="text-red-400 hover:text-red-600">
+          <button @click="clearLocalError" class="text-red-400 hover:text-red-600">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -140,6 +150,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Nom du Vendeur IA *</label>
                 <input
                   v-model="localConfig.agent.name"
+                  @input="handleConfigChange"
                   type="text"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm lg:text-base"
                   placeholder="Ex: Sarah, Marc, Lisa, Sophie..."
@@ -153,6 +164,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Titre/Fonction *</label>
                 <input
                   v-model="localConfig.agent.title"
+                  @input="handleConfigChange"
                   type="text"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm lg:text-base"
                   placeholder="Ex: Conseillère produit, Vendeur expert..."
@@ -185,6 +197,7 @@
                 <div class="flex-1">
                   <input
                     v-model="localConfig.agent.avatar"
+                    @input="handleConfigChange"
                     type="url"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
                     placeholder="https://example.com/avatar.jpg (optionnel)"
@@ -209,7 +222,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Type de vendeur</label>
-                <select v-model="localConfig.agent.type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
+                <select v-model="localConfig.agent.type" @change="handleConfigChange" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
                   <option value="general">🎯 Vendeur généraliste</option>
                   <option value="product_specialist">🛍️ Spécialiste produit</option>
                   <option value="support">🆘 Support & SAV</option>
@@ -219,13 +232,37 @@
               
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Personnalité</label>
-                <select v-model="localConfig.agent.personality" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
+                <select v-model="localConfig.agent.personality" @change="handleConfigChange" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base">
                   <option value="professional">💼 Professionnel</option>
                   <option value="friendly">😊 Amical</option>
                   <option value="expert">🎓 Expert technique</option>
                   <option value="casual">😎 Décontracté</option>
                 </select>
               </div>
+            </div>
+
+            <!-- ✅ NOUVEAU : Type de produit -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Type de produit proposé
+                <span class="ml-1 text-xs text-gray-500">(pour personnaliser les réponses)</span>
+              </label>
+              <select 
+                v-model="localConfig.agent.productType" 
+                @change="handleConfigChange"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+              >
+                <option 
+                  v-for="option in getProductTypeOptions()" 
+                  :key="option.value" 
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">
+                {{ getProductTypeOptions().find(opt => opt.value === localConfig.agent.productType)?.description || 'Sélectionnez le type de produit' }}
+              </p>
             </div>
 
             <!-- ✅ NOUVEAU : Choix du LLM (Plan Pro) - Reste identique -->
@@ -270,6 +307,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Message d'accueil *</label>
               <textarea
                 v-model="localConfig.agent.welcomeMessage"
+                @change="handleConfigChange"
                 rows="3"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                 placeholder="Bonjour ! Je suis Sarah, spécialiste produits. Comment puis-je vous aider à trouver le produit parfait ?"
@@ -353,19 +391,19 @@
                 <label class="block text-sm font-medium text-gray-700 mb-3">Informations à collecter</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <label class="flex items-center">
-                    <input v-model="localConfig.agent.config.collectName" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <input v-model="localConfig.agent.config.collectName" @input="handleConfigChange" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="ml-2 text-sm text-gray-700">👤 Nom complet</span>
                   </label>
                   <label class="flex items-center">
-                    <input v-model="localConfig.agent.config.collectPhone" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <input v-model="localConfig.agent.config.collectPhone" @input="handleConfigChange" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="ml-2 text-sm text-gray-700">📞 Téléphone</span>
                   </label>
                   <label class="flex items-center">
-                    <input v-model="localConfig.agent.config.collectEmail" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <input v-model="localConfig.agent.config.collectEmail" @input="handleConfigChange" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="ml-2 text-sm text-gray-700">📧 Email</span>
                   </label>
                   <label class="flex items-center">
-                    <input v-model="localConfig.agent.config.collectAddress" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <input v-model="localConfig.agent.config.collectAddress" @input="handleConfigChange" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="ml-2 text-sm text-gray-700">🏠 Adresse</span>
                   </label>
                 </div>
@@ -438,32 +476,38 @@
 
               <!-- Instructions spécifiques -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Instructions spécifiques</label>
-                <div class="space-y-2">
-                  <div v-for="(instruction, index) in localConfig.agent.config.specificInstructions" :key="index" class="flex items-center space-x-2">
-                    <input
-                      v-model="localConfig.agent.config.specificInstructions[index]"
-                      type="text"
-                      class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="Ex: Toujours demander le prénom du client"
-                    />
-                    <button
-                      @click="removeInstruction(index)"
-                      class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
-                  </div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Instructions spécifiques</label>
+              <div class="space-y-2">
+                <div 
+                  v-for="(instruction, index) in (localConfig.agent.config.specificInstructions || [])" 
+                  :key="index" 
+                  class="flex items-center space-x-2"
+                >
+                  <input
+                    v-model="localConfig.agent.config.specificInstructions[index]"
+                    @input="handleConfigChange"
+                    type="text"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="Ex: Toujours demander le prénom du client"
+                  />
                   <button
-                    @click="addInstruction"
-                    class="w-full p-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-300 hover:text-blue-600 transition-colors text-sm"
+                    @click="removeInstruction(index)"
+                    class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                    title="Supprimer cette instruction"
                   >
-                    + Ajouter une instruction
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
                   </button>
                 </div>
+                <button
+                  @click="addInstruction"
+                  class="w-full p-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-300 hover:text-blue-600 transition-colors text-sm"
+                >
+                  + Ajouter une instruction
+                </button>
               </div>
+            </div>
             </div>
           </div>
         </div>
@@ -595,7 +639,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Texte du bouton *</label>
                 <input
                   v-model="localConfig.widget.buttonText"
-                  @input="updateWidgetPreview"
+                  @input="updateWidgetPreview"  
                   type="text"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm lg:text-base"
                   placeholder="Ex: Parler à un conseiller"
@@ -710,7 +754,7 @@
                   <p class="text-xs text-gray-500 mt-1">Le chat s'ouvre automatiquement après quelques secondes</p>
                 </div>
                 <button
-                  @click="toggleAutoOpen"
+                  @click="handleToggleAndChange(() => localConfig.widget.autoOpen = !localConfig.widget.autoOpen)"
                   :class="[
                     'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                     localConfig.widget.autoOpen ? 'bg-blue-600' : 'bg-gray-200'
@@ -732,7 +776,7 @@
                   <p class="text-xs text-gray-500 mt-1">Avatar du Vendeur IA dans les conversations</p>
                 </div>
                 <button
-                  @click="toggleShowAvatar"
+                  @click="handleToggleAndChange(() => localConfig.widget.showAvatar = !localConfig.widget.showAvatar)"
                   :class="[
                     'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                     localConfig.widget.showAvatar ? 'bg-blue-600' : 'bg-gray-200'
@@ -754,7 +798,7 @@
                   <p class="text-xs text-gray-500 mt-1">Sons pour les nouveaux messages</p>
                 </div>
                 <button
-                  @click="toggleSoundEnabled"
+                  @click="handleToggleAndChange(() => localConfig.widget.soundEnabled = !localConfig.widget.soundEnabled)"
                   :class="[
                     'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                     localConfig.widget.soundEnabled ? 'bg-blue-600' : 'bg-gray-200'
@@ -776,7 +820,7 @@
                   <p class="text-xs text-gray-500 mt-1">Interface adaptée aux smartphones</p>
                 </div>
                 <button
-                  @click="toggleMobileOptimized"
+                  @click="handleToggleAndChange(() => localConfig.widget.mobileOptimized = !localConfig.widget.mobileOptimized)"
                   :class="[
                     'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                     localConfig.widget.mobileOptimized ? 'bg-blue-600' : 'bg-gray-200'
@@ -1424,19 +1468,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch, readonly } from 'vue'
+// ✅ IMPORTS CORRIGÉS AVEC TYPES DU COMPOSABLE
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
-import { useAgentConfig } from '~/composables/useAgentConfig'
 import { useKnowledgeBase } from '~/composables/useKnowledgeBase'
+import { useAgentConfig } from '~~/composables/useAgentConfig'
 
-// ✅ TYPES CORRIGÉS
+// ✅ TYPES SIMPLIFIÉS COMPATIBLES AVEC LE COMPOSABLE
 type AgentType = 'general' | 'product_specialist' | 'support' | 'upsell'
 type PersonalityType = 'professional' | 'friendly' | 'expert' | 'casual'
-type WidgetPosition = 'above-cta' | 'below-cta' | 'beside-cta' | 'bottom-right' | 'bottom-left'
-type WidgetSize = 'small' | 'medium' | 'large'
-type WidgetTheme = 'modern' | 'minimal' | 'brand_adaptive'
+type ProductType = 'auto' | 'jeu' | 'livre' | 'formation' | 'smartphone' | 'ordinateur' | 'vêtement' | 'service' | 'bijou' | 'produit'
 
 // ✅ PAGE META
 definePageMeta({
@@ -1449,44 +1492,59 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const agentConfigStore = useAgentConfigStore()
-const config = useRuntimeConfig() 
+const config = useRuntimeConfig()
 
+// ✅ COMPOSABLE CORRIGÉ AVEC DESTRUCTURATION COMPLÈTE
 const { 
-  loading, 
+  loading: composableLoading,
   saving, 
   error, 
   agentConfig, 
   isConfigValid,
   integrationCode,
   widgetSyncStatus,
+  hasUnsavedChanges,
+  lastAutoSave,
+  getProductTypeOptions,
+  getProductTypeLabel,
+  getTypeLabel,
+  formatTime,
   fetchAgentConfig,
   saveCompleteConfig,
   linkKnowledgeBaseDocuments,
   testAIMessage,
   copyIntegrationCode,
+  triggerAutoSave,
   clearError
 } = useAgentConfig()
 
+// Local reactive state for loading
+const loading = ref(false)
+
+// ✅ KNOWLEDGE BASE COMPOSABLE
 const {
   documents: knowledgeBaseDocuments,
   loading: knowledgeBaseLoading,
   fetchDocuments: fetchKnowledgeBaseDocuments
 } = useKnowledgeBase()
 
-// ✅ REACTIVE STATE
-const activeTab = ref('agent')
-const activePlatform = ref('shopify')
+// ✅ REACTIVE STATE - TOUS LES REFS CORRIGÉS
+const activeTab = ref<string>('agent')
+const activePlatform = ref<string>('shopify')
 const successMessage = ref<string | null>(null)
-const codeCopied = ref(false)
-const hasValidAgentData = ref(false)
+const codeCopied = ref<boolean>(false)
+const hasValidAgentData = ref<boolean>(false)
+
+// ✅ LOCAL ERROR STATE POUR ÉVITER READONLY
+const localError = ref<string | null>(null)
 
 // ✅ NOUVEAU STATE POUR KNOWLEDGE BASE
-const showKnowledgeBaseModal = ref(false)
+const showKnowledgeBaseModal = ref<boolean>(false)
 const selectedKnowledgeBase = ref<string[]>([])
-const savingKnowledgeBase = ref(false)
+const savingKnowledgeBase = ref<boolean>(false)
 
 // ✅ NOUVEAU STATE POUR WIDGET
-const presetColors = ref([
+const presetColors = ref<string[]>([
   '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
   '#8B5CF6', '#06B6D4', '#F97316', '#84CC16'
 ])
@@ -1497,14 +1555,15 @@ const isPaidUser = computed(() => {
          authStore.user?.subscription_plan === 'enterprise'
 })
 
-// ✅ LOCAL CONFIG POUR ÉDITION AVEC TYPES CORRECTS
+// ✅ LOCAL CONFIG UTILISANT LES TYPES DU COMPOSABLE - CORRECTION MAJEURE
 const localConfig = ref({
   agent: {
     id: '',
     name: '',
-    title: '', // ✅ AJOUT DU CHAMP TITLE
+    title: '',
     type: 'general' as AgentType,
     personality: 'friendly' as PersonalityType,
+    productType: 'auto' as ProductType,
     description: '',
     welcomeMessage: '',
     fallbackMessage: '',
@@ -1523,20 +1582,26 @@ const localConfig = ref({
       aiProvider: 'openai' as 'openai' | 'claude',
       temperature: 0.7,
       maxTokens: 1000,
-      systemPrompt: '' as string,
-      tone: 'friendly' as string
+      systemPrompt: '',
+      tone: 'friendly'
     },
     stats: { conversations: 0, conversions: 0 },
-    knowledgeBase: [] as any[]
+    knowledgeBase: [] as Array<{
+      id: string
+      title: string
+      contentType: string
+      isActive: boolean
+      tags: string[]
+    }>
   },
   widget: {
     buttonText: 'Parler à la vendueuse',
     primaryColor: '#3B82F6',
-    position: 'above-cta' as WidgetPosition,
-    widgetSize: 'medium' as WidgetSize,
-    theme: 'modern' as WidgetTheme,
-    borderRadius: 'md' as const,
-    animation: 'fade' as const,
+    position: 'above-cta' as 'above-cta' | 'below-cta' | 'beside-cta' | 'bottom-right' | 'bottom-left',
+    widgetSize: 'medium' as 'small' | 'medium' | 'large',
+    theme: 'modern' as 'modern' | 'minimal' | 'brand_adaptive',
+    borderRadius: 'md' as 'none' | 'sm' | 'md' | 'lg' | 'full',
+    animation: 'fade' as 'fade' | 'slide' | 'bounce' | 'none',
     autoOpen: false,
     showAvatar: true,
     soundEnabled: true,
@@ -1546,14 +1611,22 @@ const localConfig = ref({
   }
 })
 
-// ✅ TEST PLAYGROUND STATE AMÉLIORÉ
-const testMessage = ref('')
-const testMessages = ref<any[]>([])
-const sendingTestMessage = ref(false)
+// ✅ TEST PLAYGROUND STATE AMÉLIORÉ - TYPES CORRECTS
+const testMessage = ref<string>('')
+const testMessages = ref<Array<{
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+  loading?: boolean
+  provider?: string
+  responseTime?: number
+}>>([])
+const sendingTestMessage = ref<boolean>(false)
 const responseTimes = ref<number[]>([])
 
-// ✅ COMPUTED
-const agentId = computed(() => {
+// ✅ COMPUTED AVEC TYPES CORRECTS
+const agentId = computed<string>(() => {
   if (route.query.id && typeof route.query.id === 'string') {
     return route.query.id
   }
@@ -1566,7 +1639,12 @@ const agentId = computed(() => {
   return 'unknown'
 })
 
-const agentName = computed(() => {
+// ✅ CORRECTION : Fonction pour copier les données readonly vers mutable
+const copyReadonlyData = <T>(data: T): T => {
+  return JSON.parse(JSON.stringify(data))
+}
+
+const agentName = computed<string>(() => {
   return localConfig.value.agent.name || 'Vendeur IA'
 })
 
@@ -1578,12 +1656,12 @@ const availableKnowledgeBase = computed(() => {
   return knowledgeBaseDocuments.value || []
 })
 
-const averageResponseTime = computed(() => {
+const averageResponseTime = computed<number>(() => {
   if (responseTimes.value.length === 0) return 0
   return Math.round(responseTimes.value.reduce((a, b) => a + b, 0) / responseTimes.value.length)
 })
 
-// ✅ DATA
+// ✅ DATA AVEC TYPES CORRECTS
 const tabs = [
   { id: 'agent', name: 'Agent', icon: '🤖' },
   { id: 'widget', name: 'Widget', icon: '🎨' },
@@ -1631,14 +1709,34 @@ const testScenarios = [
   }
 ]
 
-// ✅ METHODS
+// ✅ METHODS AVEC TYPES CORRECTS ET CORRECTION SETERROR
 
-const goBack = () => {
+const goBack = (): void => {
   agentConfigStore.clearAgentConfig()
   router.push('/vendeurs-ia')
 }
 
-const loadAgentData = async () => {
+const handleToggleAndChange = (toggleFunction: () => void): void => {
+  toggleFunction()
+  handleConfigChange()
+}
+
+// ✅ CORRECTION MAJEURE : setError utilise localError au lieu de error readonly
+const setError = (message: string): void => {
+  localError.value = message
+}
+
+// ✅ COMPUTED POUR GÉRER L'ERREUR COMBINÉE
+const displayError = computed(() => {
+  return localError.value || error.value
+})
+
+const clearLocalError = (): void => {
+  localError.value = null
+  clearError()
+}
+
+const loadAgentData = async (): Promise<void> => {
   console.log('🔄 [loadAgentData] Début chargement données agent...')
   
   try {
@@ -1653,19 +1751,26 @@ const loadAgentData = async () => {
       localConfig.value.agent = {
         id: storeAgent.id,
         name: storeAgent.name,
-        title: storeAgent.title || getTypeLabel(storeAgent.type),
-        type: storeAgent.type as AgentType,
-        personality: storeAgent.personality as PersonalityType || 'friendly',
+        title: storeAgent.title || getTypeLabel(storeAgent.type || 'general'),
+        type: (storeAgent.type as AgentType) || 'general',
+        personality: (storeAgent.personality as PersonalityType) || 'friendly',
+        productType: 'auto' as ProductType,
         description: storeAgent.description || '',
         welcomeMessage: storeAgent.welcomeMessage || '',
         fallbackMessage: storeAgent.fallbackMessage || '',
         avatar: storeAgent.avatar || '',
         isActive: storeAgent.isActive,
         config: {
-          ...storeAgent.config,
-          specificInstructions: storeAgent.config?.specificInstructions || [],
-          linkedKnowledgeBase: storeAgent.config?.linkedKnowledgeBase || [],
-          aiProvider: storeAgent.config?.aiProvider || 'openai',
+          collectName: storeAgent.config?.collectName ?? true,
+          collectPhone: storeAgent.config?.collectPhone ?? true,
+          collectEmail: storeAgent.config?.collectEmail ?? true,
+          collectAddress: storeAgent.config?.collectAddress ?? false,
+          collectPayment: storeAgent.config?.collectPayment ?? true,
+          upsellEnabled: storeAgent.config?.upsellEnabled ?? false,
+          urgencyEnabled: storeAgent.config?.urgencyEnabled ?? false,
+          specificInstructions: storeAgent.config?.specificInstructions ? [...storeAgent.config.specificInstructions] : [],
+          linkedKnowledgeBase: storeAgent.config?.linkedKnowledgeBase ? [...storeAgent.config.linkedKnowledgeBase] : [],
+          aiProvider: (storeAgent.config?.aiProvider as 'openai' | 'claude') || 'openai',
           temperature: storeAgent.config?.temperature || 0.7,
           maxTokens: storeAgent.config?.maxTokens || 1000,
           systemPrompt: storeAgent.config?.systemPrompt || '',
@@ -1714,13 +1819,12 @@ const loadAgentData = async () => {
     
     // ✅ ÉTAPE 3: Si rien ne fonctionne, afficher une erreur
     console.error('❌ [loadAgentData] Aucune donnée agent disponible')
-    hasValidAgentData.value = false
-    error.value = 'Impossible de charger les données de l\'agent. Veuillez réessayer.'
+    setError('Impossible de charger les données de l\'agent. Veuillez réessayer.')
     
   } catch (globalError) {
     console.error('❌ [loadAgentData] Erreur globale:', globalError)
     hasValidAgentData.value = false
-    error.value = 'Erreur lors du chargement des données de l\'agent'
+    setError('Erreur lors du chargement des données de l\'agent')
   } finally {
     loading.value = false
   }
@@ -1751,47 +1855,30 @@ const formatMessage = (content: string): string => {
 }
 
 // ✅ MÉTHODES WIDGET
-const selectPresetColor = (color: string) => {
+const selectPresetColor = (color: string): void => {
   localConfig.value.widget.primaryColor = color
   updateWidgetPreview()
 }
 
-const toggleAutoOpen = () => {
-  localConfig.value.widget.autoOpen = !localConfig.value.widget.autoOpen
-  updateWidgetPreview()
-}
+// Add local sync status
+const localWidgetSyncStatus = ref<'idle' | 'syncing' | 'synced'>('idle')
 
-const toggleShowAvatar = () => {
-  localConfig.value.widget.showAvatar = !localConfig.value.widget.showAvatar
-  updateWidgetPreview()
-}
-
-const toggleSoundEnabled = () => {
-  localConfig.value.widget.soundEnabled = !localConfig.value.widget.soundEnabled
-  updateWidgetPreview()
-}
-
-const toggleMobileOptimized = () => {
-  localConfig.value.widget.mobileOptimized = !localConfig.value.widget.mobileOptimized
-  updateWidgetPreview()
-}
-
-const updateWidgetPreview = () => {
+const updateWidgetPreview = (): void => {
   console.log('🎨 Widget configuration updated:', localConfig.value.widget)
   
-  if (widgetSyncStatus.value !== 'syncing') {
-    widgetSyncStatus.value = 'syncing'
+  if (localWidgetSyncStatus.value !== 'syncing') {
+    localWidgetSyncStatus.value = 'syncing'
     
     setTimeout(() => {
-      widgetSyncStatus.value = 'synced'
+      localWidgetSyncStatus.value = 'synced'
       setTimeout(() => {
-        widgetSyncStatus.value = 'idle'
+        localWidgetSyncStatus.value = 'idle'
       }, 2000)
     }, 500)
   }
 }
 
-const resetWidgetToDefaults = () => {
+const resetWidgetToDefaults = (): void => {
   if (confirm('Êtes-vous sûr de vouloir réinitialiser la configuration du widget ?')) {
     localConfig.value.widget = {
       buttonText: 'Parler à un conseiller',
@@ -1818,7 +1905,7 @@ const resetWidgetToDefaults = () => {
 }
 
 // ✅ NOUVELLE MÉTHODE : Générer avatar automatique
-const generateAvatar = () => {
+const generateAvatar = (): void => {
   if (localConfig.value.agent.name) {
     // Utilise nom + titre pour un avatar plus descriptif
     const displayName = localConfig.value.agent.title 
@@ -1834,16 +1921,20 @@ const generateAvatar = () => {
 }
 
 // ✅ NOUVELLE MÉTHODE : Gérer erreur avatar
-const handleAvatarError = (event: Event) => {
+const handleAvatarError = (event: Event): void => {
   const img = event.target as HTMLImageElement
   const name = encodeURIComponent(localConfig.value.agent.name || 'Agent')
   img.src = `https://ui-avatars.com/api/?name=${name}&background=6B7280&color=fff&size=200&rounded=true`
 }
 
-// ✅ HELPER METHODS POUR WIDGET
+// ✅ HELPER METHODS POUR WIDGET - VALEURS CORRIGÉES
 const getBorderRadiusValue = (radius: string): string => {
   const radiusMap = {
-    none: '0px', sm: '8px', md: '12px', lg: '16px', xl: '32px'
+    none: '0px', 
+    sm: '8px', 
+    md: '12px', 
+    lg: '16px', 
+    full: '50px'  // ✅ 'xl' remplacé par 'full' pour compatibilité
   }
   return radiusMap[radius as keyof typeof radiusMap] || '12px'
 }
@@ -1879,7 +1970,7 @@ const getWidgetSizeLabel = (size: string): string => {
 }
 
 // ✅ NOUVELLE MÉTHODE : Gérer les toggles avec restrictions plan
-const handleUpsellToggle = () => {
+const handleUpsellToggle = (): void => {
   if (!isPaidUser.value) {
     showUpgradeModal('upsell')
     return
@@ -1887,7 +1978,7 @@ const handleUpsellToggle = () => {
   localConfig.value.agent.config.upsellEnabled = !localConfig.value.agent.config.upsellEnabled
 }
 
-const handleUrgencyToggle = () => {
+const handleUrgencyToggle = (): void => {
   if (!isPaidUser.value) {
     showUpgradeModal('urgency')
     return
@@ -1895,7 +1986,7 @@ const handleUrgencyToggle = () => {
   localConfig.value.agent.config.urgencyEnabled = !localConfig.value.agent.config.urgencyEnabled
 }
 
-const showUpgradeModal = (feature: string) => {
+const showUpgradeModal = (feature: string): void => {
   const featureNames = {
     upsell: 'Propositions d\'upsell intelligentes',
     urgency: 'Création d\'urgence (FOMO)'
@@ -1905,7 +1996,7 @@ const showUpgradeModal = (feature: string) => {
 }
 
 // ✅ NOUVELLE MÉTHODE : Gérer Knowledge Base
-const openKnowledgeBaseModal = async () => {
+const openKnowledgeBaseModal = async (): Promise<void> => {
   showKnowledgeBaseModal.value = true
   selectedKnowledgeBase.value = [...(localConfig.value.agent.config.linkedKnowledgeBase || [])]
   
@@ -1913,19 +2004,19 @@ const openKnowledgeBaseModal = async () => {
   await fetchKnowledgeBaseDocuments()
 }
 
-const closeKnowledgeBaseModal = () => {
+const closeKnowledgeBaseModal = (): void => {
   showKnowledgeBaseModal.value = false
   selectedKnowledgeBase.value = []
 }
 
-const saveKnowledgeBaseSelection = async () => {
+const saveKnowledgeBaseSelection = async (): Promise<void> => {
   savingKnowledgeBase.value = true
   
   try {
     const result = await linkKnowledgeBaseDocuments(agentId.value, selectedKnowledgeBase.value)
     
     if (result.success) {
-      // Mettre à jour la config locale
+      // Mettre à jour la config locale - CORRECTION MAJEURE POUR ÉVITER READONLY
       localConfig.value.agent.config.linkedKnowledgeBase = [...selectedKnowledgeBase.value]
       
       // Recharger la config pour avoir les documents complets
@@ -1946,7 +2037,7 @@ const saveKnowledgeBaseSelection = async () => {
 }
 
 // ✅ NOUVELLE MÉTHODE : Test IA réel
-const sendTestMessageReal = async () => {
+const sendTestMessageReal = async (): Promise<void> => {
   if (!testMessage.value.trim() || sendingTestMessage.value) return
 
   const messageContent = testMessage.value.trim()
@@ -1956,7 +2047,7 @@ const sendTestMessageReal = async () => {
   // Ajouter message utilisateur
   const userMessage = {
     id: Date.now().toString(),
-    role: 'user',
+    role: 'user' as const,
     content: messageContent,
     timestamp: new Date()
   }
@@ -1965,7 +2056,7 @@ const sendTestMessageReal = async () => {
   // Ajouter message de chargement
   const loadingMessage = {
     id: (Date.now() + 1).toString(),
-    role: 'assistant',
+    role: 'assistant' as const,
     content: '',
     timestamp: new Date(),
     loading: true
@@ -2053,7 +2144,7 @@ Y a-t-il autre chose que je puisse vous aider ? 😊`
   }
 }
 
-const runTestScenario = (scenario: any) => {
+const runTestScenario = (scenario: any): void => {
   // Messages contextualisés pour le produit
   const contextualizedMessages = {
     greeting: 'Bonjour',
@@ -2067,7 +2158,7 @@ const runTestScenario = (scenario: any) => {
   sendTestMessageReal()
 }
 
-const resetTestChat = () => {
+const resetTestChat = (): void => {
   testMessages.value = []
   responseTimes.value = []
   
@@ -2079,24 +2170,37 @@ const resetTestChat = () => {
   const agentTitle = localConfig.value.agent.title || 
                     agentConfig.value?.agent?.title || 
                     getTypeLabel(localConfig.value.agent.type || 'general')
+                    
+  const productType = localConfig.value.agent.productType || 'auto'
+  const productTypeLabel = getProductTypeLabel(productType)
   
   console.log('🧪 [PLAYGROUND] Initialisation chat avec:', {
     name: agentName,
     title: agentTitle,
     type: localConfig.value.agent.type,
+    productType,
     hasLocalConfig: !!localConfig.value.agent.name,
     hasAgentConfig: !!agentConfig.value?.agent?.name
   })
   
-  // ✅ Message d'accueil avec nom ET titre - CORRECTION MAJEURE
+  // ✅ Message d'accueil cohérent avec le Widget
   let welcomeMessage = ''
   
   if (localConfig.value.agent.welcomeMessage) {
     welcomeMessage = localConfig.value.agent.welcomeMessage
   } else {
+    // ✅ Simuler un produit de test selon le type choisi
+    const testProduct = productType !== 'auto' 
+      ? `notre ${productTypeLabel.toLowerCase().replace('🎯', '').replace('🎮', 'jeu').replace('📚', 'livre').replace('🎓', 'formation').replace('📱', 'smartphone').replace('💻', 'ordinateur').replace('👗', 'vêtement').replace('🔧', 'service').replace('💎', 'bijou').replace('📦', 'produit').trim()} de test`
+      : 'ce produit de démonstration'
+      
     welcomeMessage = `Bonjour ! 👋 Je suis **${agentName}**, ${agentTitle}.
 
-Comment puis-je vous aider aujourd'hui ? 😊`
+Je vois que vous vous intéressez à ${testProduct}. Excellent choix ! ✨
+
+Comment puis-je vous aider ? 😊
+
+*Note : Ceci est un aperçu de test. Sur votre site, je détecterai automatiquement vos vrais produits.*`
   }
   
   testMessages.value.push({
@@ -2107,10 +2211,10 @@ Comment puis-je vous aider aujourd'hui ? 😊`
     provider: localConfig.value.agent.config.aiProvider || 'openai'
   })
   
-  console.log('✅ [PLAYGROUND] Chat initialisé avec message d\'accueil:', welcomeMessage.substring(0, 50))
+  console.log('✅ [PLAYGROUND] Chat initialisé avec message d\'accueil cohérent:', welcomeMessage.substring(0, 50))
 }
 
-const saveAllConfig = async () => {
+const saveAllConfig = async (): Promise<void> => {
   const result = await saveCompleteConfig(agentId.value, {
     agent: localConfig.value.agent,
     widget: localConfig.value.widget
@@ -2124,8 +2228,8 @@ const saveAllConfig = async () => {
   }
 }
 
-// ✅ MÉTHODE POUR COPIER LE CODE D'INTÉGRATION
-const copyIntegrationCodeAction = async () => {
+// ✅ MÉTHODE POUR COPIER LE CODE D'INTÉGRATION - CORRIGÉE
+const copyIntegrationCodeAction = async (): Promise<void> => {
   try {
     if (!integrationCode.value) {
       throw new Error('Code d\'intégration non disponible')
@@ -2143,24 +2247,14 @@ const copyIntegrationCodeAction = async () => {
     
   } catch (err: any) {
     console.error('❌ Erreur copie:', err)
-    error.value = 'Impossible de copier le code d\'intégration'
+    setError('Impossible de copier le code d\'intégration')
     setTimeout(() => {
-      clearError()
+      clearLocalError()
     }, 3000)
   }
 }
 
 // ✅ HELPER METHODS
-const getTypeLabel = (type: string): string => {
-  const labels = {
-    general: 'Vendeur généraliste',
-    product_specialist: 'Spécialiste produit', 
-    support: 'Support & SAV',
-    upsell: 'Upsell & Cross-sell'
-  }
-  return labels[type as keyof typeof labels] || type
-}
-
 const getContentTypeLabel = (type: string): string => {
   const labels = {
     manual: '📝 Manuel',
@@ -2185,45 +2279,107 @@ const adjustColor = (color: string, percent: number): string => {
   return `rgb(${adjust(r)}, ${adjust(g)}, ${adjust(b)})`
 }
 
-const addInstruction = () => {
+const addInstruction = (): void => {
+  if (!localConfig.value.agent.config.specificInstructions) {
+    localConfig.value.agent.config.specificInstructions = []
+  }
   localConfig.value.agent.config.specificInstructions.push('')
+  handleConfigChange()
 }
 
-const removeInstruction = (index: number) => {
-  localConfig.value.agent.config.specificInstructions.splice(index, 1)
+const removeInstruction = (index: number): void => {
+  if (localConfig.value.agent.config.specificInstructions) {
+    localConfig.value.agent.config.specificInstructions.splice(index, 1)
+    handleConfigChange()
+  }
 }
 
-const scrollChatToBottom = () => {
+// Gestion des changements avec sauvegarde auto
+const handleConfigChange = (): void => {
+  console.log('🔄 [CONFIG CHANGE] Changement détecté, déclenchement auto-save')
+  triggerAutoSave()
+}
+
+const scrollChatToBottom = (): void => {
   const container = document.querySelector('.overflow-y-auto')
   if (container) {
     container.scrollTop = container.scrollHeight
   }
 }
 
-// ✅ WATCH
+// ✅ WATCH CORRIGÉS AVEC TYPES ET DEEP COPY COMPATIBLE
 watch(() => agentConfig.value, (newConfig) => {
   if (newConfig && newConfig.agent && newConfig.agent.id) {
     console.log('🔄 [watcher] Mise à jour localConfig avec données API')
     
-    localConfig.value = {
-      agent: { 
-        ...newConfig.agent,
+    try {
+      localConfig.value.agent = {
+        id: newConfig.agent.id,
+        name: newConfig.agent.name,
+        title: newConfig.agent.title || getTypeLabel(newConfig.agent.type || 'general'),
+        type: (newConfig.agent.type as AgentType) || 'general',
+        personality: (newConfig.agent.personality as PersonalityType) || 'friendly',
+        productType: (newConfig.agent.productType as ProductType) || 'auto',
+        description: newConfig.agent.description || '',
+        welcomeMessage: newConfig.agent.welcomeMessage || '',
+        fallbackMessage: newConfig.agent.fallbackMessage || '',
+        avatar: newConfig.agent.avatar || '',
+        isActive: newConfig.agent.isActive ?? true,
         config: {
-          ...newConfig.agent.config,
-          specificInstructions: newConfig.agent.config.specificInstructions || [],
-          linkedKnowledgeBase: newConfig.agent.config.linkedKnowledgeBase || [],
-          aiProvider: newConfig.agent.config.aiProvider || 'openai',
-          temperature: newConfig.agent.config.temperature || 0.7,
-          maxTokens: newConfig.agent.config.maxTokens || 1000,
-          systemPrompt: newConfig.agent.config.systemPrompt || '',
-          tone: newConfig.agent.config.tone || 'friendly'
+          collectName: newConfig.agent.config?.collectName ?? true,
+          collectPhone: newConfig.agent.config?.collectPhone ?? true,
+          collectEmail: newConfig.agent.config?.collectEmail ?? true,
+          collectAddress: newConfig.agent.config?.collectAddress ?? false,
+          collectPayment: newConfig.agent.config?.collectPayment ?? true,
+          upsellEnabled: newConfig.agent.config?.upsellEnabled ?? false,
+          urgencyEnabled: newConfig.agent.config?.urgencyEnabled ?? false,
+          specificInstructions: newConfig.agent.config?.specificInstructions ? 
+            [...newConfig.agent.config.specificInstructions] : [],
+          linkedKnowledgeBase: newConfig.agent.config?.linkedKnowledgeBase ? 
+            [...newConfig.agent.config.linkedKnowledgeBase] : [],
+          aiProvider: (newConfig.agent.config?.aiProvider as 'openai' | 'claude') || 'openai',
+          temperature: newConfig.agent.config?.temperature || 0.7,
+          maxTokens: newConfig.agent.config?.maxTokens || 1000,
+          systemPrompt: newConfig.agent.config?.systemPrompt || '',
+          tone: newConfig.agent.config?.tone || 'friendly'
+        },
+        stats: newConfig.agent.stats || { conversations: 0, conversions: 0 },
+        knowledgeBase: newConfig.agent.knowledgeBase ? newConfig.agent.knowledgeBase.map(doc => ({
+          id: doc.id,
+          title: doc.title,
+          contentType: doc.contentType,
+          isActive: doc.isActive,
+          tags: [...doc.tags]
+        })) : []
+      }
+      
+      if (newConfig.widget) {
+        localConfig.value.widget = {
+          buttonText: newConfig.widget.buttonText || 'Parler à un conseiller',
+          primaryColor: newConfig.widget.primaryColor || '#3B82F6',
+          position: newConfig.widget.position || 'above-cta',
+          widgetSize: newConfig.widget.widgetSize || 'medium',
+          theme: newConfig.widget.theme || 'modern',
+          borderRadius: (['none', 'sm', 'md', 'lg', 'full'].includes(newConfig.widget.borderRadius as string)) 
+            ? newConfig.widget.borderRadius as 'none' | 'sm' | 'md' | 'lg' | 'full'
+            : 'md',
+          animation: newConfig.widget.animation || 'fade',
+          autoOpen: newConfig.widget.autoOpen ?? false,
+          showAvatar: newConfig.widget.showAvatar ?? true,
+          soundEnabled: newConfig.widget.soundEnabled ?? true,
+          mobileOptimized: newConfig.widget.mobileOptimized ?? true,
+          isActive: newConfig.widget.isActive ?? true,
+          language: newConfig.widget.language || 'fr'
         }
-      },
-      widget: { ...newConfig.widget }
+      }
+      
+      hasValidAgentData.value = true
+      console.log('✅ [watcher] localConfig mis à jour avec nouveaux champs')
+      
+    } catch (watchError) {
+      console.error('❌ [watcher] Erreur mise à jour localConfig:', watchError)
+      setError('Erreur lors de la mise à jour de la configuration')
     }
-    
-    hasValidAgentData.value = true
-    console.log('✅ [watcher] localConfig mis à jour, code d\'intégration disponible')
   }
 }, { immediate: true, deep: true })
 
@@ -2238,8 +2394,10 @@ watch(() => integrationCode.value, (newCode, oldCode) => {
 }, { immediate: true })
 
 // ✅ NOUVEAU WATCHER POUR WIDGET
-watch(() => localConfig.value.widget, (newWidget) => {
-  updateWidgetPreview()
+watch(() => localConfig.value, (newConfig) => {
+  if (newConfig && newConfig.agent && newConfig.agent.name) {
+    handleConfigChange()
+  }
 }, { deep: true })
 
 // ✅ LIFECYCLE
@@ -2288,7 +2446,7 @@ useHead({
 </script>
 
 <style scoped>
-/* Styles pour le formatage des messages dans le playground */
+/* ✅ STYLES POUR LE FORMATAGE DES MESSAGES DANS LE PLAYGROUND */
 .message-formatted {
   line-height: 1.6;
   word-break: break-word;
@@ -2316,26 +2474,7 @@ useHead({
   line-height: 1;
 }
 
-.message-formatted {
-  line-height: 1.6;
-  word-break: break-word;
-}
-
-.message-formatted strong {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.message-formatted em {
-  font-style: italic;
-  color: #4b5563;
-}
-
-.message-formatted br {
-  line-height: 1.2;
-}
-
-/* Animation pour les messages */
+/* ✅ ANIMATION POUR LES MESSAGES */
 .space-y-4 > * {
   animation: slideInMessage 0.3s ease-out;
 }
@@ -2351,39 +2490,7 @@ useHead({
   }
 }
 
-/* Responsive improvements */
-@media (max-width: 640px) {
-  .bg-white {
-    @apply rounded-lg;
-  }
-  
-  .p-4 {
-    @apply p-3;
-  }
-  
-  .text-base {
-    @apply text-sm;
-  }
-  
-  .grid-cols-2 {
-    @apply grid-cols-1;
-  }
-}
-
-@media (max-width: 768px) {
-  .xl\:col-span-2 {
-    @apply col-span-1;
-  }
-  
-  .lg\:grid-cols-2 {
-    @apply grid-cols-1;
-  }
-  
-  .space-y-8 {
-    @apply space-y-6;
-  }
-}
-
+/* ✅ ANIMATIONS DE BASE */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -2393,7 +2500,7 @@ useHead({
   animation: spin 1s linear infinite;
 }
 
-/* Scrollbar personnalisé pour le chat */
+/* ✅ SCROLLBAR PERSONNALISÉ POUR LE CHAT */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
@@ -2412,23 +2519,7 @@ useHead({
   background: #9ca3af;
 }
 
-/* Animation pour les messages */
-.space-y-4 > * {
-  animation: slideInMessage 0.3s ease-out;
-}
-
-@keyframes slideInMessage {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Responsive improvements */
+/* ✅ AMÉLIORATIONS RESPONSIVE */
 @media (max-width: 640px) {
   .bg-white {
     @apply rounded-lg;
@@ -2445,6 +2536,16 @@ useHead({
   .grid-cols-2 {
     @apply grid-cols-1;
   }
+
+  /* ✅ AMÉLIORATION MOBILE SPÉCIFIQUE POUR LES ONGLETS */
+  .sm\:hidden select {
+    @apply text-sm;
+  }
+
+  /* ✅ AMÉLIORATION MOBILE POUR LE HEADER */
+  .min-h-screen .px-4 {
+    @apply px-3;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2458,6 +2559,396 @@ useHead({
   
   .space-y-8 {
     @apply space-y-6;
+  }
+
+  /* ✅ AMÉLIORATION MOBILE POUR LE CHAT */
+  .h-96 {
+    @apply h-80;
+  }
+
+  .lg\:h-\[600px\] {
+    @apply h-96;
+  }
+
+  /* ✅ AMÉLIORATION MOBILE POUR LES BOUTONS */
+  .px-4 {
+    @apply px-3;
+  }
+
+  .py-2 {
+    @apply py-1.5;
+  }
+}
+
+@media (max-width: 1024px) {
+  /* ✅ AMÉLIORATION TABLET POUR LA SIDEBAR */
+  .space-y-6 {
+    @apply space-y-4;
+  }
+
+  .p-6 {
+    @apply p-4;
+  }
+}
+
+/* ✅ AMÉLIORATION DU FOCUS ET ACCESSIBILITY */
+.focus\:ring-2:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* ✅ AMÉLIORATION DES TOGGLES/SWITCHES */
+.cursor-pointer:hover {
+  transform: scale(1.02);
+  transition: transform 0.1s ease;
+}
+
+/* ✅ AMÉLIORATION DES CARDS */
+.bg-white.rounded-xl {
+  transition: box-shadow 0.2s ease;
+}
+
+.bg-white.rounded-xl:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ✅ AMÉLIORATION DU CODE D'INTÉGRATION */
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875em;
+}
+
+/* ✅ AMÉLIORATION DES COULEURS PRESET */
+.hover\:scale-110:hover {
+  transform: scale(1.1);
+}
+
+/* ✅ AMÉLIORATION DES MESSAGES DE SUCCESS/ERROR */
+.bg-green-50 {
+  animation: slideInAlert 0.3s ease-out;
+}
+
+.bg-red-50 {
+  animation: slideInAlert 0.3s ease-out;
+}
+
+@keyframes slideInAlert {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ✅ AMÉLIORATION DES INDICATEURS DE STATUS */
+.text-green-600,
+.text-red-600,
+.text-blue-600 {
+  font-weight: 500;
+}
+
+/* ✅ AMÉLIORATION DE LA MODAL KNOWLEDGE BASE */
+.fixed.inset-0 {
+  backdrop-filter: blur(4px);
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bg-white.rounded-lg.shadow-xl {
+  animation: slideInModal 0.3s ease-out;
+}
+
+@keyframes slideInModal {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ✅ AMÉLIORATION DES TAGS DANS LA KNOWLEDGE BASE */
+.bg-blue-100 {
+  transition: background-color 0.2s ease;
+}
+
+.bg-blue-100:hover {
+  background-color: #dbeafe;
+}
+
+/* ✅ AMÉLIORATION DU PLAYGROUND CHAT */
+.bg-gray-50.p-3 {
+  background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%);
+}
+
+/* ✅ AMÉLIORATION DES AVATARS */
+.rounded-full {
+  transition: transform 0.2s ease;
+}
+
+.w-16.h-16.rounded-full:hover {
+  transform: scale(1.05);
+}
+
+/* ✅ AMÉLIORATION DES INPUTS */
+input[type="text"],
+input[type="url"],
+input[type="color"],
+textarea,
+select {
+  transition: all 0.2s ease;
+}
+
+input[type="text"]:hover,
+input[type="url"]:hover,
+textarea:hover,
+select:hover {
+  border-color: #9ca3af;
+}
+
+/* ✅ AMÉLIORATION DES BOUTONS */
+button {
+  transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ✅ AMÉLIORATION DE LA PRÉVISUALISATION DU WIDGET */
+.bg-gray-100.p-4 {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border: 1px solid #d1d5db;
+}
+
+/* ✅ AMÉLIORATION DES STATISTIQUES */
+.text-lg.font-bold {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ✅ AMÉLIORATION DES INSTRUCTIONS SPÉCIFIQUES */
+.border-2.border-dashed {
+  transition: all 0.2s ease;
+}
+
+.border-2.border-dashed:hover {
+  border-color: #3b82f6;
+  background-color: #f0f9ff;
+}
+
+/* ✅ AMÉLIORATION DU CODE HIGHLIGHT */
+.text-green-400 {
+  text-shadow: 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+/* ✅ AMÉLIORATION DES PLATFORM TABS */
+.bg-gray-100.p-1 {
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* ✅ AMÉLIORATION DE L'INDICATEUR DE TYPING */
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* ✅ AMÉLIORATION DES GRADIENTS */
+.bg-gradient-to-r {
+  background: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+/* ✅ AMÉLIORATION DES SHADOWS CUSTOM */
+.shadow-custom {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-custom-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ✅ AMÉLIORATION DE LA COPIE DU CODE */
+.fixed.bottom-4.right-4 {
+  animation: slideInNotification 0.3s ease-out;
+  z-index: 9999;
+}
+
+@keyframes slideInNotification {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ✅ AMÉLIORATION DU RESPONSIVE DESIGN ADVANCED */
+@media (min-width: 1280px) {
+  .xl\:col-span-2 {
+    display: block;
+  }
+  
+  .space-y-8 {
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .p-8 {
+    padding: 2.5rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.75rem;
+  }
+}
+
+/* ✅ DARK MODE SUPPORT (OPTIONNEL - POUR LE FUTUR) */
+@media (prefers-color-scheme: dark) {
+  .bg-white {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .border-gray-200 {
+    border-color: #374151;
+  }
+  
+  .text-gray-900 {
+    color: #f9fafb;
+  }
+  
+  .text-gray-600 {
+    color: #d1d5db;
+  }
+  
+  .text-gray-500 {
+    color: #9ca3af;
+  }
+  
+  .bg-gray-50 {
+    background-color: #111827;
+  }
+  
+  .bg-gray-100 {
+    background-color: #1f2937;
+  }
+}
+
+/* ✅ HIGH CONTRAST MODE SUPPORT */
+@media (prefers-contrast: high) {
+  .border-gray-200 {
+    border-color: #000;
+    border-width: 2px;
+  }
+  
+  .text-gray-600 {
+    color: #000;
+  }
+  
+  .bg-blue-600 {
+    background-color: #0000ff;
+  }
+  
+  .text-blue-600 {
+    color: #0000ff;
+  }
+}
+
+/* ✅ REDUCED MOTION SUPPORT */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin,
+  .animate-pulse,
+  .transition-all,
+  .transition-colors,
+  .transition-transform {
+    animation: none;
+    transition: none;
+  }
+  
+  .hover\:scale-110:hover,
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+}
+
+/* ✅ PRINT STYLES */
+@media print {
+  .no-print,
+  .fixed,
+  button,
+  input,
+  textarea,
+  select {
+    display: none !important;
+  }
+  
+  .bg-white {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .shadow-sm,
+  .shadow-lg,
+  .shadow-xl {
+    box-shadow: none !important;
+  }
+}
+
+/* ✅ FOCUS VISIBLE MODERN */
+@supports selector(:focus-visible) {
+  :focus {
+    outline: none;
+  }
+  
+  :focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
   }
 }
 </style>
