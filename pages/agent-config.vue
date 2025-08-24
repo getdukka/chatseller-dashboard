@@ -2446,454 +2446,118 @@ useHead({
 </script>
 
 <style scoped>
-/* ✅ Responsive helpers via Tailwind components (avoid circular @apply on utilities) */
-@layer components {
-  .mobile-rounded { @apply rounded-lg sm:rounded-none; }
-  .mobile-p { @apply p-3 sm:p-4; }
-  .mobile-text { @apply text-sm sm:text-base; }
-  .mobile-grid { @apply grid-cols-1 sm:grid-cols-2; }
-  .mobile-h { @apply h-80 sm:h-[600px]; }
-  .mobile-px { @apply px-3 sm:px-4; }
-  .mobile-py { @apply py-1.5 sm:py-2; }
-}
-/* ✅ STYLES POUR LE FORMATAGE DES MESSAGES DANS LE PLAYGROUND */
-.message-formatted {
-  line-height: 1.6;
-  word-break: break-word;
+/* ---- Reset local & box-model safety ---- */
+:host, *, *::before, *::after {
+  box-sizing: border-box;
 }
 
-.message-formatted strong {
-  font-weight: 600;
-  color: #1f2937;
+/* ---- Accessibilité : focus visible ---- */
+:focus-visible {
+  outline: 2px solid #3b82f6; /* Tailwind blue-500 */
+  outline-offset: 2px;
 }
 
-.message-formatted em {
-  font-style: italic;
-  color: #4b5563;
+/* ---- Scrollbars (WebKit) ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db; /* gray-300 */
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
 }
 
-.message-formatted br {
-  line-height: 1.2;
+/* ---- Zones de drop (si utilisées pour upload) ---- */
+.file-dropzone {
+  border: 2px dashed #e5e7eb; /* gray-200 */
+  border-radius: 0.5rem;       /* ~ rounded-md */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.file-dropzone.drag-over {
+  background-color: #f3f4f6;   /* gray-100 */
+  border-color: #3b82f6;       /* blue-500 */
 }
 
-.emoji {
+/* ---- Petites animations utiles ---- */
+.fade-in {
+  animation: fadeIn 0.2s ease-in;
+}
+.slide-in-up {
+  animation: slideInUp 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to   { opacity: 1 }
+}
+@keyframes slideInUp {
+  from { transform: translateY(8px); opacity: 0 }
+  to   { transform: translateY(0);   opacity: 1 }
+}
+
+/* ---- Helpers non-Tailwind, safe dans un <style scoped> ---- */
+.kbd {
   display: inline-block;
-  margin: 0 1px;
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-  font-size: 1.1em;
-  line-height: 1;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #111827;           /* gray-900 */
+  background: #f3f4f6;      /* gray-100 */
+  border: 1px solid #e5e7eb;/* gray-200 */
+  border-bottom-width: 2px;
+  border-radius: 0.375rem;  /* rounded-md */
 }
 
-/* ✅ ANIMATION POUR LES MESSAGES */
-.space-y-4 > * {
-  animation: slideInMessage 0.3s ease-out;
+.tooltip {
+  position: relative;
 }
-
-@keyframes slideInMessage {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ✅ ANIMATIONS DE BASE */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* ✅ SCROLLBAR PERSONNALISÉ POUR LE CHAT */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
-  border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-/* ✅ AMÉLIORATIONS RESPONSIVE */
-
-
-
-
-
-
-/* ✅ AMÉLIORATION DU FOCUS ET ACCESSIBILITY */
-.focus\:ring-2:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-/* ✅ AMÉLIORATION DES TOGGLES/SWITCHES */
-.cursor-pointer:hover {
-  transform: scale(1.02);
-  transition: transform 0.1s ease;
-}
-
-/* ✅ AMÉLIORATION DES CARDS */
-.bg-white.rounded-xl {
-  transition: box-shadow 0.2s ease;
-}
-
-.bg-white.rounded-xl:hover {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* ✅ AMÉLIORATION DU CODE D'INTÉGRATION */
-pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-code {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 0.875em;
-}
-
-/* ✅ AMÉLIORATION DES COULEURS PRESET */
-.hover\:scale-110:hover {
-  transform: scale(1.1);
-}
-
-/* ✅ AMÉLIORATION DES MESSAGES DE SUCCESS/ERROR */
-.bg-green-50 {
-  animation: slideInAlert 0.3s ease-out;
-}
-
-.bg-red-50 {
-  animation: slideInAlert 0.3s ease-out;
-}
-
-@keyframes slideInAlert {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ✅ AMÉLIORATION DES INDICATEURS DE STATUS */
-.text-green-600,
-.text-red-600,
-.text-blue-600 {
-  font-weight: 500;
-}
-
-/* ✅ AMÉLIORATION DE LA MODAL KNOWLEDGE BASE */
-.fixed.inset-0 {
-  backdrop-filter: blur(4px);
-  animation: fadeInModal 0.2s ease-out;
-}
-
-@keyframes fadeInModal {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.bg-white.rounded-lg.shadow-xl {
-  animation: slideInModal 0.3s ease-out;
-}
-
-@keyframes slideInModal {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* ✅ AMÉLIORATION DES TAGS DANS LA KNOWLEDGE BASE */
-.bg-blue-100 {
-  transition: background-color 0.2s ease;
-}
-
-.bg-blue-100:hover {
-  background-color: #dbeafe;
-}
-
-/* ✅ AMÉLIORATION DU PLAYGROUND CHAT */
-.bg-gray-50.p-3 {
-  background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%);
-}
-
-/* ✅ AMÉLIORATION DES AVATARS */
-.rounded-full {
-  transition: transform 0.2s ease;
-}
-
-.w-16.h-16.rounded-full:hover {
-  transform: scale(1.05);
-}
-
-/* ✅ AMÉLIORATION DES INPUTS */
-input[type="text"],
-input[type="url"],
-input[type="color"],
-textarea,
-select {
-  transition: all 0.2s ease;
-}
-
-input[type="text"]:hover,
-input[type="url"]:hover,
-textarea:hover,
-select:hover {
-  border-color: #9ca3af;
-}
-
-/* ✅ AMÉLIORATION DES BOUTONS */
-button {
-  transition: all 0.2s ease;
-}
-
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-button:active:not(:disabled) {
+.tooltip:hover .tooltip-content {
+  opacity: 1;
   transform: translateY(0);
+  pointer-events: auto;
+}
+.tooltip-content {
+  position: absolute;
+  z-index: 50;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -4px);
+  background: #111827;   /* gray-900 */
+  color: white;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  white-space: nowrap;
 }
 
-/* ✅ AMÉLIORATION DE LA PRÉVISUALISATION DU WIDGET */
-.bg-gray-100.p-4 {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  border: 1px solid #d1d5db;
+/* ---- Tables “collantes” (si tu en as) ---- */
+.table-sticky thead th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb; /* gray-50 */
+  z-index: 1;
 }
 
-/* ✅ AMÉLIORATION DES STATISTIQUES */
-.text-lg.font-bold {
-  font-variant-numeric: tabular-nums;
+/* ---- Conteneur de paramètres (aucun util Tailwind ici) ---- */
+.settings-section {
+  border: 1px solid #e5e7eb; /* gray-200 */
+  border-radius: 0.5rem;
+  background: #ffffff;
 }
 
-/* ✅ AMÉLIORATION DES INSTRUCTIONS SPÉCIFIQUES */
-.border-2.border-dashed {
-  transition: all 0.2s ease;
-}
-
-.border-2.border-dashed:hover {
-  border-color: #3b82f6;
-  background-color: #f0f9ff;
-}
-
-/* ✅ AMÉLIORATION DU CODE HIGHLIGHT */
-.text-green-400 {
-  text-shadow: 0 0 2px rgba(34, 197, 94, 0.3);
-}
-
-/* ✅ AMÉLIORATION DES PLATFORM TABS */
-.bg-gray-100.p-1 {
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-}
-
-/* ✅ AMÉLIORATION DE L'INDICATEUR DE TYPING */
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .5;
-  }
-}
-
-/* ✅ AMÉLIORATION DES GRADIENTS */
-.bg-gradient-to-r {
-  background: linear-gradient(to right, var(--tw-gradient-stops));
-}
-
-/* ✅ AMÉLIORATION DES SHADOWS CUSTOM */
-.shadow-custom {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.shadow-custom-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* ✅ AMÉLIORATION DE LA COPIE DU CODE */
-.fixed.bottom-4.right-4 {
-  animation: slideInNotification 0.3s ease-out;
-  z-index: 9999;
-}
-
-@keyframes slideInNotification {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* ✅ AMÉLIORATION DU RESPONSIVE DESIGN ADVANCED */
-@media (min-width: 1280px) {
-  .xl\:col-span-2 {
-    display: block;
-  }
-  
-  .space-y-8 {
-    gap: 2rem;
-  }
-}
-
-@media (min-width: 1536px) {
-  .p-8 {
-    padding: 2.5rem;
-  }
-  
-  .text-2xl {
-    font-size: 1.75rem;
-  }
-}
-
-/* ✅ DARK MODE SUPPORT (OPTIONNEL - POUR LE FUTUR) */
-@media (prefers-color-scheme: dark) {
-  .bg-white {
-    background-color: #1f2937;
-    color: #f9fafb;
-  }
-  
-  .border-gray-200 {
-    border-color: #374151;
-  }
-  
-  .text-gray-900 {
-    color: #f9fafb;
-  }
-  
-  .text-gray-600 {
-    color: #d1d5db;
-  }
-  
-  .text-gray-500 {
-    color: #9ca3af;
-  }
-  
-  .bg-gray-50 {
-    background-color: #111827;
-  }
-  
-  .bg-gray-100 {
-    background-color: #1f2937;
-  }
-}
-
-/* ✅ HIGH CONTRAST MODE SUPPORT */
-@media (prefers-contrast: high) {
-  .border-gray-200 {
-    border-color: #000;
-    border-width: 2px;
-  }
-  
-  .text-gray-600 {
-    color: #000;
-  }
-  
-  .bg-blue-600 {
-    background-color: #0000ff;
-  }
-  
-  .text-blue-600 {
-    color: #0000ff;
-  }
-}
-
-/* ✅ REDUCED MOTION SUPPORT */
-@media (prefers-reduced-motion: reduce) {
-  .animate-spin,
-  .animate-pulse,
-  .transition-all,
-  .transition-colors,
-  .transition-transform {
-    animation: none;
-    transition: none;
-  }
-  
-  .hover\:scale-110:hover,
-  .hover\:scale-105:hover {
-    transform: none;
-  }
-}
-
-/* ✅ PRINT STYLES */
-@media print {
-  .no-print,
-  .fixed,
-  button,
-  input,
-  textarea,
-  select {
-    display: none !important;
-  }
-  
-  .bg-white {
-    background: white !important;
-    color: black !important;
-  }
-  
-  .shadow-sm,
-  .shadow-lg,
-  .shadow-xl {
-    box-shadow: none !important;
-  }
-}
-
-/* ✅ FOCUS VISIBLE MODERN */
-@supports selector(:focus-visible) {
-  :focus {
-    outline: none;
-  }
-  
-  :focus-visible {
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
+/* ---- Media queries légères (le reste se fait via classes Tailwind) ---- */
+@media (max-width: 640px) {
+  .stack-on-mobile {
+    display: block !important;
   }
 }
 </style>
