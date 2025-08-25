@@ -1,4 +1,4 @@
-// composables/useAgentConfig.ts - VERSION CORRIGÉE COMPLÈTE AVEC TOUTES LES CORRECTIONS ✅
+// composables/useAgentConfig.ts - VERSION CORRIGÉE COMPLÈTE ✅
 import { ref, computed, readonly } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
@@ -11,6 +11,7 @@ export interface AgentConfig {
     type: 'general' | 'product_specialist' | 'support' | 'upsell'
     personality: 'professional' | 'friendly' | 'expert' | 'casual'
     productType?: 'auto' | 'jeu' | 'livre' | 'formation' | 'smartphone' | 'ordinateur' | 'vêtement' | 'service' | 'bijou' | 'produit' 
+    customProductType?: string // ✅ NOUVEAU : Type personnalisé
     shopName?: string
     description: string | null
     welcomeMessage: string | null
@@ -51,7 +52,7 @@ export interface AgentConfig {
     position: 'above-cta' | 'below-cta' | 'beside-cta' | 'bottom-right' | 'bottom-left'
     widgetSize: 'small' | 'medium' | 'large'
     theme: 'modern' | 'minimal' | 'brand_adaptive'
-    borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'full'
+    borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'full' // ✅ CORRECTION : 'xl' supprimé
     animation: 'fade' | 'slide' | 'bounce' | 'none'
     autoOpen: boolean
     showAvatar: boolean
@@ -133,8 +134,7 @@ export const useAgentConfig = () => {
       'sm': '6px',
       'md': '12px',
       'lg': '16px',
-      'xl': '24px',
-      'full': '50px'
+      'full': '50px'  // ✅ CORRECTION : 'xl' devient 'full'
     }
     return radiusMap[radius as keyof typeof radiusMap] || '12px'
   }
@@ -167,7 +167,7 @@ export const useAgentConfig = () => {
     return labels[type as keyof typeof labels] || 'Vendeur IA' 
   }
 
-  // ✅ NOUVEAUX HELPERS POUR TYPE DE PRODUIT
+  // ✅ NOUVEAUX HELPERS POUR TYPE DE PRODUIT AVEC CUSTOM
   const getProductTypeOptions = () => [
     { value: 'auto', label: '🎯 Détection automatique', description: 'Le système détecte automatiquement le type' },
     { value: 'jeu', label: '🎮 Jeux', description: 'Jeux de société, cartes, etc.' },
@@ -178,15 +178,108 @@ export const useAgentConfig = () => {
     { value: 'vêtement', label: '👗 Vêtements', description: 'Mode, accessoires vestimentaires' },
     { value: 'service', label: '🔧 Services', description: 'Consultations, prestations' },
     { value: 'bijou', label: '💎 Bijoux', description: 'Bijoux, montres, accessoires' },
-    { value: 'produit', label: '📦 Autre produit', description: 'Autres types de produits' }
+    { value: 'produit', label: '📦 Autre produit', description: 'Spécifiez votre type de produit' } 
   ]
 
-  const getProductTypeLabel = (type: string): string => {
+  const getProductTypeLabel = (type: string, customType?: string): string => {
+    // Si c'est un type personnalisé, utiliser la valeur personnalisée
+    if (type === 'produit' && customType) {
+      return customType
+    }
+    
     const option = getProductTypeOptions().find(opt => opt.value === type)
     return option ? option.label : '🎯 Détection automatique'
   }
 
-  // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION FINALE MODERNE
+  // ✅ NOUVEAU : Template par défaut intelligent
+  const getDefaultWelcomeTemplate = () => {
+    return `\${greeting} 👋 Je suis \${agentName}, \${agentTitle} chez \${shopName}.
+
+Je vois que vous vous intéressez à notre \${productType} "\${productName}". Excellent choix ! ✨
+
+Comment puis-je vous aider avec ce \${productType} ? 😊`
+  }
+
+  // ✅ NOUVEAU : Fonction de prévisualisation du message d'accueil avec variables
+  const previewWelcomeMessage = computed(() => {
+    if (!localConfig.value?.agent?.welcomeMessage) return ''
+    
+    const message = localConfig.value.agent.welcomeMessage
+    const agentName = localConfig.value.agent.name || 'Assistant'
+    const agentTitle = localConfig.value.agent.title || getTypeLabel(localConfig.value.agent.type || 'general')
+    const shopName = localConfig.value.agent.shopName || 'Votre Boutique'
+    const currentTime = new Date().getHours()
+    const greeting = currentTime < 12 ? 'Bonjour' : currentTime < 18 ? 'Bonsoir' : 'Bonsoir'
+    
+    // Utiliser le type personnalisé s'il existe
+    let productType = 'produit'
+    if (localConfig.value.agent.productType === 'produit' && localConfig.value.agent.customProductType) {
+      productType = localConfig.value.agent.customProductType
+    } else if (localConfig.value.agent.productType !== 'auto') {
+      const typeOption = getProductTypeOptions().find(opt => opt.value === localConfig.value.agent.productType)
+      productType = typeOption?.label.replace(/[🎯🎮📚🎓📱💻👗🔧💎📦]/g, '').trim().toLowerCase() || 'produit'
+    }
+    
+    return message
+      .replace(/\$\{agentName\}/g, `<strong>${agentName}</strong>`)
+      .replace(/\$\{agentTitle\}/g, `<strong>${agentTitle}</strong>`)
+      .replace(/\$\{shopName\}/g, `<strong>${shopName}</strong>`)
+      .replace(/\$\{productName\}/g, '<strong>Nom du Produit</strong>')
+      .replace(/\$\{productType\}/g, `<strong>${productType}</strong>`)
+      .replace(/\$\{greeting\}/g, `<strong>${greeting}</strong>`)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>')
+  })
+
+  // ✅ NOUVEAU : Test spécifique du message d'accueil
+  const testWelcomeMessage = async (agentId: string) => {
+    try {
+      console.log('🧪 [testWelcomeMessage] Test message d\'accueil avec vraie API...')
+      
+      if (!agentId) {
+        throw new Error('Agent ID manquant')
+      }
+
+      // Appeler l'API publique pour obtenir le vrai message d'accueil
+      const response = await $fetch('/api/v1/public/chat', {
+        method: 'POST',
+        baseURL: config.public.apiBaseUrl,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: {
+          message: 'Bonjour', // Message générique pour déclencher l'accueil
+          shopId: authStore.user?.id || authStore.userShopId || 'demo-shop',
+          conversationId: null,
+          productInfo: {
+            name: localConfig.value?.agent?.customProductType || 'Produit de test',
+            price: 29900,
+            id: 'test-product-123'
+          },
+          visitorId: `test-visitor-${Date.now()}`,
+          isFirstMessage: true // Important pour déclencher le message d'accueil
+        }
+      })
+
+      if (response.success) {
+        return {
+          success: true,
+          message: response.data.message,
+          isWelcome: response.data.isWelcomeMessage || true
+        }
+      } else {
+        throw new Error(response.error || 'Erreur lors du test du message d\'accueil')
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur test message d\'accueil:', error)
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Erreur lors du test du message d\'accueil'
+      }
+    }
+  }
+
+  // ✅ COMPUTED POUR CODE D'INTÉGRATION - VERSION FINALE MODERNE CORRIGÉE
   const integrationCode = computed(() => {
     console.log('🔧 [integrationCode] Génération du code d\'intégration avec icône...')
     
@@ -233,14 +326,14 @@ export const useAgentConfig = () => {
       const widgetUrl = 'https://widget.chatseller.app'
       const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
-      // ✅ CODE D'INTÉGRATION FINAL AVEC ICÔNE ET CORRECTIONS
-      return `<!-- 🤖 ChatSeller Widget v1.5.1 - ${agentName} (${agentTitle}) - ICÔNE CORRIGÉE -->
+      // ✅ CODE D'INTÉGRATION CHATSELLER CORRIGÉ
+      return `<!-- 🤖 ChatSeller Widget v1.5.1 - ${agentName}, ${agentTitle} IA -->
 
 <script>
 (function() {
   'use strict';
   
-  // ✅ Configuration ChatSeller Widget avec ICÔNE FORCÉE
+  // ✅ Configuration ChatSeller Widget
   window.ChatSellerConfig = {
     shopId: '${shopId}',
     agentId: '${agentId}',
@@ -258,11 +351,11 @@ export const useAgentConfig = () => {
       id: '${agentId}',
       name: '${agentName.replace(/'/g, "\\'")}',
       title: '${agentTitle.replace(/'/g, "\\'")}',
-      welcomeMessage: '${(agentData.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?').replace(/'/g, "\\'")}',
-      fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question à notre équipe.').replace(/'/g, "\\'")}',
+      welcomeMessage: null,
+      fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question au Service Client.').replace(/'/g, "\\'")}',
       personality: '${agentData.personality || 'friendly'}',
-      productType: '${agentData.productType || 'auto'}',
-      shopName: '${agentData.shopName || 'cette boutique'}'
+      productType: '${agentData.customProductType || agentData.productType || 'auto'}', 
+      shopName: '${agentData.shopName || 'cette boutique en ligne'}'
     }
   };
   
@@ -273,14 +366,14 @@ export const useAgentConfig = () => {
   }
   window.ChatSellerInitialized = true;
   
-  // ✅ NETTOYAGE PRÉVENTIF (supprime automatiquement les boutons flottants)
+  // ✅ NETTOYAGE PRÉVENTIF 
   function cleanupExistingWidgets() {
     const selectors = [
       '#chatseller-widget',
       '#chatseller-modal',
       '[data-chatseller]',
       '.chatseller-widget',
-      '#chatseller-fallback' // ✅ AJOUT : Supprime le bouton flottant indésirable
+      '#chatseller-fallback' 
     ];
     
     selectors.forEach(selector => {
@@ -289,14 +382,14 @@ export const useAgentConfig = () => {
     });
   }
   
-  // ✅ CSS CRITIQUE AVEC ICÔNE FORCÉE MAXIMAL
+  // ✅ CSS CRITIQUE
   function injectCriticalCSS() {
     if (document.getElementById('chatseller-critical-css')) return;
     
     const style = document.createElement('style');
     style.id = 'chatseller-critical-css';
     style.textContent = \`
-/* 🎨 CHATSELLER CSS AVEC ICÔNE FORCÉE SHOPIFY-PROOF */
+/* 🎨 CHATSELLER CSS CORRIGÉ */
 .cs-chatseller-widget, .cs-chatseller-widget * {
   all: unset !important;
   box-sizing: border-box !important;
@@ -313,7 +406,7 @@ export const useAgentConfig = () => {
   isolation: isolate !important;
 }
 
-/* ✅ BOUTON AVEC ICÔNE FORCÉE MAXIMALE */
+/* ✅ BOUTON AVEC ICÔNE FORCÉE */
 .cs-chat-trigger-button {
   display: flex !important;
   align-items: center !important;
@@ -340,7 +433,7 @@ export const useAgentConfig = () => {
   box-shadow: 0 12px 35px rgba(${hexToRgb(primaryColor)}, 0.4) !important;
 }
 
-/* ✅ ICÔNE SVG PROTECTION MAXIMALE SHOPIFY */
+/* ✅ ICÔNE SVG FORCÉE */
 .cs-chat-trigger-button svg {
   width: 20px !important;
   height: 20px !important;
@@ -359,6 +452,7 @@ export const useAgentConfig = () => {
   min-height: 20px !important;
   max-height: 20px !important;
   color: white !important;
+  stroke: white !important;
 }
 
 .cs-chat-trigger-button svg * {
@@ -372,21 +466,7 @@ export const useAgentConfig = () => {
   display: block !important;
   pointer-events: none !important;
   color: white !important;
-}
-
-/* ✅ PROTECTION ANTI-OVERRIDE SHOPIFY MAXIMALE */
-.shopify-section .cs-chat-trigger-button svg,
-.product-form .cs-chat-trigger-button svg,
-[class*="product"] .cs-chat-trigger-button svg,
-.theme-shopify .cs-chat-trigger-button svg,
-.page .cs-chat-trigger-button svg {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  width: 20px !important;
-  height: 20px !important;
   stroke: white !important;
-  color: white !important;
 }
     \`;
     document.head.appendChild(style);
@@ -396,8 +476,8 @@ export const useAgentConfig = () => {
   function loadChatSellerWidget() {
     console.log('🚀 ChatSeller: Chargement widget avec icône corrigée...');
     
-    cleanupExistingWidgets(); // Supprime tout bouton flottant existant
-    injectCriticalCSS(); // Injecte le CSS avec icône forcée
+    cleanupExistingWidgets();
+    injectCriticalCSS();
     
     if (window.ChatSellerLoaded) {
       console.log('⚠️ ChatSeller: Déjà chargé');
@@ -431,7 +511,6 @@ export const useAgentConfig = () => {
           setTimeout(tryInit, 300);
         } else {
           console.warn('⏰ ChatSeller: Timeout init');
-          // ✅ PAS DE FALLBACK FLOTTANT - comportement corrigé
         }
       }
       
@@ -440,7 +519,6 @@ export const useAgentConfig = () => {
     
     script.onerror = function(error) {
       console.error('❌ ChatSeller: Erreur chargement:', error);
-      // ✅ PAS DE FALLBACK FLOTTANT - comportement corrigé
     };
     
     var firstScript = document.getElementsByTagName('script')[0];
@@ -469,7 +547,7 @@ export const useAgentConfig = () => {
   
 })();
 <\/script>
-<!-- 🚀 Fin ChatSeller Widget ICÔNE CORRIGÉE -->`
+<!-- 🚀 Fin ChatSeller Widget -->`
 
     } catch (error) {
       console.error('❌ Erreur génération code intégration:', error)
@@ -542,11 +620,12 @@ export const useAgentConfig = () => {
         agent: {
           id: agentData.data.agent.id,
           name: agentData.data.agent.name,
-          title: agentData.data.agent.title || getTypeLabel(agentData.data.agent.type || 'general'), // ✅ CORRECTION: Titre obligatoire
+          title: agentData.data.agent.title || getTypeLabel(agentData.data.agent.type || 'general'),
           type: agentData.data.agent.type,
           personality: agentData.data.agent.personality,
-          productType: agentData.data.agent.productType || 'auto', // ✅ NOUVEAU CHAMP
-          shopName: shopData?.data?.name || agentData.data.agent.shopName || 'cette boutique', // ✅ NOUVEAU CHAMP
+          productType: agentData.data.agent.productType || 'auto',
+          customProductType: agentData.data.agent.customProductType || '', // ✅ NOUVEAU
+          shopName: shopData?.data?.name || agentData.data.agent.shopName || 'cette boutique',
           description: agentData.data.agent.description,
           welcomeMessage: agentData.data.agent.welcomeMessage,
           fallbackMessage: agentData.data.agent.fallbackMessage,
@@ -567,7 +646,7 @@ export const useAgentConfig = () => {
         },
         widget: {
           buttonText: shopData?.data?.widget_config?.buttonText || 'Parler à un conseiller',
-          primaryColor: shopData?.data?.widget_config?.primaryColor || '#EC4899', // ✅ Rose par défaut
+          primaryColor: shopData?.data?.widget_config?.primaryColor || '#EC4899',
           position: shopData?.data?.widget_config?.position || 'above-cta',
           widgetSize: shopData?.data?.widget_config?.widgetSize || 'medium',
           theme: shopData?.data?.widget_config?.theme || 'modern',
@@ -577,7 +656,7 @@ export const useAgentConfig = () => {
           showAvatar: shopData?.data?.widget_config?.showAvatar !== false,
           soundEnabled: shopData?.data?.widget_config?.soundEnabled !== false,
           mobileOptimized: shopData?.data?.widget_config?.mobileOptimized !== false,
-          showTypingIndicator: shopData?.data?.widget_config?.showTypingIndicator !== false, // ✅ NOUVEAU CHAMP
+          showTypingIndicator: shopData?.data?.widget_config?.showTypingIndicator !== false,
           offlineMessage: shopData?.data?.widget_config?.offlineMessage,
           isActive: shopData?.data?.widget_config?.isActive !== false,
           language: shopData?.data?.widget_config?.language || 'fr'
@@ -590,6 +669,7 @@ export const useAgentConfig = () => {
         agent: completeConfig.agent.name,
         title: completeConfig.agent.title,
         productType: completeConfig.agent.productType,
+        customProductType: completeConfig.agent.customProductType,
         shopName: completeConfig.agent.shopName,
         widget: completeConfig.widget.buttonText,
         primaryColor: completeConfig.widget.primaryColor
@@ -607,16 +687,24 @@ export const useAgentConfig = () => {
   }
 
   // ✅ TEST IA RÉEL (CORRECTION MAJEURE POUR PLAYGROUND COHÉRENT)
-  const testAIMessage = async (message: string, agentId: string) => {
+  const testAIMessage = async (message: string, agentId: string, isWelcomeTest = false) => {
     try {
-      console.log('🧪 [testAIMessage] Test IA cohérent avec Widget:', { message, agentId })
+      console.log('🧪 [testAIMessage] Test cohérent avec Widget corrigé:', { message, agentId, isWelcomeTest })
       
-      if (!message.trim()) {
+      if (!message.trim() && !isWelcomeTest) {
         throw new Error('Message vide')
       }
 
       if (!agentId) {
         throw new Error('Agent ID manquant')
+      }
+
+      // Utiliser le type de produit personnalisé dans la payload
+      const getEffectiveProductType = () => {
+        if (localConfig.value?.agent?.productType === 'produit' && localConfig.value?.agent?.customProductType) {
+          return localConfig.value.agent.customProductType
+        }
+        return getProductTypeLabel(localConfig.value?.agent?.productType || 'auto')
       }
 
       // ✅ CORRECTION MAJEURE : Utiliser la vraie API publique comme le Widget
@@ -627,18 +715,16 @@ export const useAgentConfig = () => {
           'Content-Type': 'application/json'
         },
         body: {
-          message: message.trim(),
+          message: isWelcomeTest ? 'Bonjour' : message.trim(),
           shopId: authStore.user?.id || authStore.userShopId || 'demo-shop',
           conversationId: null,
           productInfo: {
-            name: localConfig.value?.agent?.productType !== 'auto' 
-              ? `Produit de test ${getProductTypeLabel(localConfig.value?.agent?.productType || 'auto')}` 
-              : 'Produit de test',
-            price: 29900, // Prix de test en centimes (299€)
+            name: `Produit de test ${getEffectiveProductType()}`,
+            price: 29900,
             id: 'test-product-123'
           },
           visitorId: `test-visitor-${Date.now()}`,
-          isFirstMessage: false
+          isFirstMessage: isWelcomeTest 
         }
       })
 
@@ -646,6 +732,7 @@ export const useAgentConfig = () => {
         return {
           success: true,
           message: response.data.message,
+          isWelcome: response.data.isWelcomeMessage || isWelcomeTest,
           provider: response.data.mode === 'test' ? 'openai' : (response.data.provider || 'openai'),
           responseTime: response.data.responseTime || 0
         }
@@ -688,23 +775,26 @@ export const useAgentConfig = () => {
         hasWidgetUpdates: !!updates.widget,
         agentTitle: updates.agent?.title,
         productType: updates.agent?.productType,
+        customProductType: updates.agent?.customProductType,
         shopName: updates.agent?.shopName,
         isAutoSave
       })
 
       // ✅ SAUVEGARDER AGENT AVEC NOUVEAUX CHAMPS
       if (updates.agent) {
-        console.log('💾 Sauvegarde configuration agent avec nouveaux champs...', {
+        console.log('💾 Sauvegarde configuration agent avec champs personnalisés...', {
           title: updates.agent.title,
           productType: updates.agent.productType,
+          customProductType: updates.agent.customProductType, // ✅ NOUVEAU
           shopName: updates.agent.shopName
         })
         
         const agentPayload = {
           ...updates.agent,
-          title: updates.agent.title || getTypeLabel(updates.agent.type || 'general'), // ✅ CORRECTION : Titre obligatoire
-          productType: updates.agent.productType || 'auto', // ✅ NOUVEAU CHAMP
-          shopName: updates.agent.shopName || 'cette boutique', // ✅ NOUVEAU CHAMP
+          title: updates.agent.title || getTypeLabel(updates.agent.type || 'general'),
+          productType: updates.agent.productType || 'auto',
+          customProductType: updates.agent.customProductType || '', // ✅ NOUVEAU
+          shopName: updates.agent.shopName || 'cette boutique',
           config: {
             ...updates.agent.config,
             aiProvider: updates.agent.config?.aiProvider || 'openai',
@@ -714,11 +804,12 @@ export const useAgentConfig = () => {
           }
         }
         
-        console.log('📤 [AGENT SAVE] Payload complet avec nouveaux champs:', {
+        console.log('📤 [AGENT SAVE] Payload avec champs personnalisés:', {
           name: agentPayload.name,
           title: agentPayload.title,
           type: agentPayload.type,
           productType: agentPayload.productType,
+          customProductType: agentPayload.customProductType, // ✅ NOUVEAU
           shopName: agentPayload.shopName
         })
         
@@ -733,7 +824,7 @@ export const useAgentConfig = () => {
           throw new Error(`Erreur agent: ${agentResult.error}`)
         }
 
-        console.log('✅ Agent sauvegardé avec nouveaux champs:', agentResult.data?.title)
+        console.log('✅ Agent sauvegardé avec champs personnalisés')
       }
 
       // ✅ SAUVEGARDER WIDGET MODERNE AVEC NOUVEAU CHAMP
@@ -743,7 +834,7 @@ export const useAgentConfig = () => {
         const widgetPayload = {
           widget_config: {
             buttonText: updates.widget.buttonText || 'Parler au vendeur',
-            primaryColor: updates.widget.primaryColor || '#EC4899', // ✅ Rose par défaut
+            primaryColor: updates.widget.primaryColor || '#EC4899',
             position: updates.widget.position || 'above-cta',
             theme: updates.widget.theme || 'modern',
             language: updates.widget.language || 'fr',
@@ -754,7 +845,7 @@ export const useAgentConfig = () => {
             showAvatar: updates.widget.showAvatar !== false,
             soundEnabled: updates.widget.soundEnabled !== false,
             mobileOptimized: updates.widget.mobileOptimized !== false,
-            showTypingIndicator: updates.widget.showTypingIndicator !== false, // ✅ NOUVEAU CHAMP
+            showTypingIndicator: updates.widget.showTypingIndicator !== false,
             isActive: updates.widget.isActive !== false,
             offlineMessage: updates.widget.offlineMessage || null
           }
@@ -781,7 +872,6 @@ export const useAgentConfig = () => {
       if (agentConfig.value) {
         if (updates.agent) {
           agentConfig.value.agent = { ...agentConfig.value.agent, ...updates.agent }
-          // ✅ CORRECTION : S'assurer que les nouveaux champs sont bien dans la config locale
           if (!agentConfig.value.agent.title && agentConfig.value.agent.type) {
             agentConfig.value.agent.title = getTypeLabel(agentConfig.value.agent.type)
           }
@@ -794,6 +884,7 @@ export const useAgentConfig = () => {
           console.log('✅ Config locale agent mise à jour avec nouveaux champs:', {
             title: agentConfig.value.agent.title,
             productType: agentConfig.value.agent.productType,
+            customProductType: agentConfig.value.agent.customProductType,
             shopName: agentConfig.value.agent.shopName
           })
         }
@@ -925,12 +1016,6 @@ export const useAgentConfig = () => {
     }
   }
 
-  // ✅ CORRECTION : Fonction setError manquante
-  const setError = (message: string) => {
-    error.value = message
-    widgetSyncStatus.value = 'error'
-  }
-
   // ✅ RÉINITIALISER L'ERREUR
   const clearError = () => {
     error.value = null
@@ -954,6 +1039,7 @@ export const useAgentConfig = () => {
     // Computed
     isConfigValid,
     integrationCode,
+    previewWelcomeMessage,
 
     // Helpers
     getProductTypeOptions,
@@ -962,16 +1048,17 @@ export const useAgentConfig = () => {
     getBorderRadiusValue,
     hexToRgb,
     adjustColor,
-    formatTime, 
+    formatTime,
+    getDefaultWelcomeTemplate,
 
     // Actions
     fetchAgentConfig,
     saveCompleteConfig,
     testAIMessage,
+    testWelcomeMessage,
     linkKnowledgeBaseDocuments, 
     copyIntegrationCode,
     triggerAutoSave,
-    setError, 
     clearError
   }
 }

@@ -193,28 +193,46 @@
                   </div>
                 </div>
                 
-                <!-- URL de l'avatar -->
-                <div class="flex-1">
-                  <input
-                    v-model="localConfig.agent.avatar"
-                    @input="handleConfigChange"
-                    type="url"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-                    placeholder="https://example.com/avatar.jpg (optionnel)"
-                  />
-                  <p class="text-xs text-gray-500 mt-1">
-                    Laissez vide pour utiliser un avatar généré automatiquement
-                  </p>
+                <!-- Options d'avatar -->
+                <div class="flex-1 space-y-3">
+                  <div>
+                    <input
+                      v-model="localConfig.agent.avatar"
+                      @input="handleConfigChange"
+                      type="url"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                      placeholder="https://example.com/avatar.jpg (optionnel)"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">
+                      URL d'image pour l'avatar personnalisé
+                    </p>
+                  </div>
+                  
+                  <!-- ✅ CORRECTION : Upload d'image avec ref correcte -->
+                  <div class="flex items-center space-x-2">
+                    <input
+                      ref="avatarUploadRef"
+                      type="file"
+                      accept="image/*"
+                      @change="handleAvatarUpload"
+                      class="hidden"
+                    />
+                    <button
+                      @click="triggerAvatarUpload"
+                      type="button"
+                      class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+                    >
+                      📁 Choisir une image
+                    </button>
+                    <button
+                      @click="generateAvatar"
+                      type="button"
+                      class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                    >
+                      🎨 Générer
+                    </button>
+                  </div>
                 </div>
-                
-                <!-- Bouton pour générer un avatar automatique -->
-                <button
-                  @click="generateAvatar"
-                  type="button"
-                  class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-                >
-                  Générer
-                </button>
               </div>
             </div>
 
@@ -241,31 +259,48 @@
               </div>
             </div>
 
-            <!-- ✅ NOUVEAU : Type de produit -->
+            <!-- ✅ NOUVEAU : Type de produit avec champ personnalisé -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Type de produit proposé
                 <span class="ml-1 text-xs text-gray-500">(pour personnaliser les réponses)</span>
               </label>
-              <select 
-                v-model="localConfig.agent.productType" 
-                @change="handleConfigChange"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-              >
-                <option 
-                  v-for="option in getProductTypeOptions()" 
-                  :key="option.value" 
-                  :value="option.value"
+              <div class="space-y-3">
+                <select 
+                  v-model="localConfig.agent.productType" 
+                  @change="handleProductTypeChange"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                 >
-                  {{ option.label }}
-                </option>
-              </select>
-              <p class="text-xs text-gray-500 mt-1">
-                {{ getProductTypeOptions().find(opt => opt.value === localConfig.agent.productType)?.description || 'Sélectionnez le type de produit' }}
-              </p>
+                  <option 
+                    v-for="option in getProductTypeOptions()" 
+                    :key="option.value" 
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+                
+                <!-- ✅ Champ personnalisé quand "Autre produit" est sélectionné -->
+                <div v-if="localConfig.agent.productType === 'produit'" class="space-y-2">
+                  <input
+                    v-model="localConfig.agent.customProductType"
+                    @input="handleConfigChange"
+                    type="text"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="Ex: bijou, meuble, cosmétique, jeu..."
+                  />
+                  <p class="text-xs text-gray-500">
+                    Spécifiez le type de produit exact (ex: "jeu" au lieu de "produit")
+                  </p>
+                </div>
+                
+                <p class="text-xs text-gray-500">
+                  {{ getProductTypeOptions().find(opt => opt.value === localConfig.agent.productType)?.description || 'Sélectionnez le type de produit' }}
+                </p>
+              </div>
             </div>
 
-            <!-- ✅ NOUVEAU : Choix du LLM (Plan Pro) - Reste identique -->
+            <!-- ✅ NOUVEAU : Choix du LLM (Plan Pro) -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Intelligence Artificielle
@@ -278,10 +313,10 @@
                   <select 
                     v-model="localConfig.agent.config.aiProvider" 
                     :disabled="!isPaidUser"
+                    @change="handleConfigChange"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
                   >
                     <option value="openai">🤖 GPT-4o-mini (Gratuit)</option>
-                    <option value="claude" :disabled="!isPaidUser">🧠 GPT-4.1 (Pro)</option>
                     <option value="claude" :disabled="!isPaidUser">🧠 Claude Sonnet (Pro)</option>
                   </select>
                 </div>
@@ -289,6 +324,7 @@
                   <select 
                     v-model="localConfig.agent.config.temperature" 
                     :disabled="!isPaidUser"
+                    @change="handleConfigChange"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
                   >
                     <option :value="0.3">🎯 Précis (0.3)</option>
@@ -298,34 +334,70 @@
                 </div>
               </div>
               <p v-if="!isPaidUser" class="text-xs text-yellow-600 mt-1">
-                💡 Passez au plan Pro pour accéder aux autres IA et aux paramètres avancés
+                💡 Passez au plan Pro pour accéder à Claude Sonnet et aux paramètres avancés
               </p>
             </div>
 
-            <!-- Messages -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Message d'accueil *</label>
-              <textarea
-                v-model="localConfig.agent.welcomeMessage"
-                @change="handleConfigChange"
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                placeholder="Bonjour ! Je suis Sarah, spécialiste produits. Comment puis-je vous aider à trouver le produit parfait ?"
-              ></textarea>
-              <!-- Aperçu en temps réel avec nom ET titre -->
-              <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div class="flex items-start space-x-2">
-                  <div class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span class="text-white text-xs">{{ localConfig.agent.name ? localConfig.agent.name.charAt(0).toUpperCase() : 'IA' }}</span>
-                  </div>
-                  <div class="flex-1">
-                    <div class="text-xs text-gray-600 mb-1">
-                      <strong>{{ localConfig.agent.name || 'Nom du vendeur' }}</strong>
-                      <span v-if="localConfig.agent.title"> • {{ localConfig.agent.title }}</span>
-                    </div>
-                    <p class="text-sm text-gray-800">{{ localConfig.agent.welcomeMessage || 'Tapez votre message d\'accueil...' }}</p>
-                  </div>
+            <!-- ✅ Message d'accueil avec variables dynamiques AMÉLIORÉ -->
+            <div class="space-y-4">
+              <label class="block text-sm font-medium text-gray-700">
+                Message d'accueil personnalisé *
+                <span class="text-gray-500 font-normal ml-2">(Avec variables dynamiques)</span>
+              </label>
+              
+              <!-- Variables disponibles avec boutons -->
+              <div class="bg-blue-50 p-4 rounded-lg text-sm">
+                <p class="font-medium text-blue-800 mb-3">🔧 Variables disponibles :</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <button
+                    v-for="variable in availableVariables"
+                    :key="variable.name"
+                    @click="insertVariable(variable.name)"
+                    type="button"
+                    class="px-2 py-1 bg-white text-blue-700 rounded border hover:bg-blue-50 transition-colors text-xs"
+                  >
+                    {{ variable.display }}
+                  </button>
                 </div>
+                <div class="mt-3 flex space-x-2">
+                  <button 
+                    @click="resetToDefaultTemplate"
+                    type="button"
+                    class="text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    🔄 Template par défaut
+                  </button>
+                  <button 
+                    @click="testWelcomeMessagePreview"
+                    type="button"
+                    class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
+                  >
+                    🧪 Tester le message réel
+                  </button>
+                </div>
+              </div>
+              
+              <!-- ✅ CORRECTION : Champ de saisie avec ref correcte -->
+              <div>
+                <textarea 
+                  ref="welcomeMessageInputRef"
+                  v-model="localConfig.agent.welcomeMessage"
+                  @input="handleConfigChange"
+                  placeholder="Tapez votre message d'accueil avec des variables..."
+                  class="w-full p-3 border rounded-lg font-mono text-sm"
+                  rows="4"
+                />
+              </div>
+              
+              <!-- Aperçu en temps réel -->
+              <div class="bg-gray-50 p-4 rounded-lg border">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-xs font-medium text-gray-600">📋 Aperçu en temps réel :</p>
+                </div>
+                <div 
+                  class="text-sm p-3 bg-white rounded border min-h-[60px]" 
+                  v-html="previewWelcomeMessage || '<em class=&quot;text-gray-400&quot;>Votre aperçu apparaîtra ici...</em>'"
+                />
               </div>
             </div>
           </div>
@@ -492,6 +564,7 @@
                   />
                   <button
                     @click="removeInstruction(index)"
+                    type="button"
                     class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
                     title="Supprimer cette instruction"
                   >
@@ -502,6 +575,7 @@
                 </div>
                 <button
                   @click="addInstruction"
+                  type="button"
                   class="w-full p-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-300 hover:text-blue-600 transition-colors text-sm"
                 >
                   + Ajouter une instruction
@@ -558,7 +632,7 @@
               <div class="flex items-center justify-between">
                 <span class="text-sm font-medium">Vendeur IA actif</span>
                 <button
-                  @click="localConfig.agent.isActive = !localConfig.agent.isActive"
+                  @click="localConfig.agent.isActive = !localConfig.agent.isActive; handleConfigChange()"
                   :class="[
                     'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                     localConfig.agent.isActive ? 'bg-blue-600' : 'bg-gray-200'
@@ -670,6 +744,7 @@
                       :key="color"
                       @click="selectPresetColor(color)"
                       :style="{ backgroundColor: color }"
+                      type="button"
                       class="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-transform"
                       :class="localConfig.widget.primaryColor === color ? 'border-gray-900' : 'border-gray-300'"
                       :title="color"
@@ -735,7 +810,7 @@
                     <option value="sm">Légères</option>
                     <option value="md">Moyennes</option>
                     <option value="lg">Arrondies</option>
-                    <option value="xl">Très arrondies</option>
+                    <option value="full">Très arrondies</option>
                   </select>
                 </div>
               </div>
@@ -852,6 +927,7 @@
                 >
                   <option value="fr">🇫🇷 Français</option>
                   <option value="en">🇺🇸 English</option>
+                  <option value="wo">🇸🇳 Wolof</option>
                 </select>
               </div>
 
@@ -984,7 +1060,7 @@
               <div class="flex items-center justify-between">
                 <span class="text-sm font-medium">Widget actif</span>
                 <button
-                  @click="localConfig.widget.isActive = !localConfig.widget.isActive"
+                  @click="localConfig.widget.isActive = !localConfig.widget.isActive; handleConfigChange()"
                   :class="[
                     'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                     localConfig.widget.isActive ? 'bg-blue-600' : 'bg-gray-200'
@@ -1053,7 +1129,7 @@
         </div>
       </div>
       
-      <div class="flex-1 p-3 lg:p-4 overflow-y-auto bg-gray-50" ref="chatContainer">
+      <div class="flex-1 p-3 lg:p-4 overflow-y-auto bg-gray-50" ref="chatContainerRef">
         <div class="space-y-3 lg:space-y-4">
           <div 
             v-for="message in testMessages" 
@@ -1168,6 +1244,7 @@
                 v-for="scenario in testScenarios"
                 :key="scenario.id"
                 @click="runTestScenario(scenario)"
+                type="button"
                 class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 :disabled="sendingTestMessage"
               >
@@ -1198,6 +1275,7 @@
             <div class="mt-4">
               <button
                 @click="resetTestChat"
+                type="button"
                 class="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm lg:text-base"
               >
                 🔄 Réinitialiser
@@ -1245,6 +1323,7 @@
                 
                 <button
                   @click="copyIntegrationCodeAction"
+                  type="button"
                   class="absolute top-3 lg:top-4 right-3 lg:right-4 inline-flex items-center px-2 lg:px-3 py-1 border border-gray-600 text-xs font-medium rounded text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors"
                 >
                   <svg class="w-3 lg:w-4 h-3 lg:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1265,6 +1344,7 @@
                   v-for="platform in platforms"
                   :key="platform.id"
                   @click="activePlatform = platform.id"
+                  type="button"
                   :class="[
                     'px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
                     activePlatform === platform.id 
@@ -1506,7 +1586,6 @@ const {
   hasUnsavedChanges,
   lastAutoSave,
   getProductTypeOptions,
-  getProductTypeLabel,
   getTypeLabel,
   formatTime,
   fetchAgentConfig,
@@ -1515,7 +1594,10 @@ const {
   testAIMessage,
   copyIntegrationCode,
   triggerAutoSave,
-  clearError
+  clearError,
+  previewWelcomeMessage,
+  getDefaultWelcomeTemplate,
+  testWelcomeMessage
 } = useAgentConfig()
 
 // Local reactive state for loading
@@ -1549,6 +1631,11 @@ const presetColors = ref<string[]>([
   '#8B5CF6', '#06B6D4', '#F97316', '#84CC16'
 ])
 
+// ✅ CORRECTION MAJEURE : Refs HTML avec noms corrects
+const avatarUploadRef = ref<HTMLInputElement>()
+const welcomeMessageInputRef = ref<HTMLTextAreaElement>()
+const chatContainerRef = ref<HTMLElement>()
+
 // ✅ ÉTAT POUR PLAN UTILISATEUR
 const isPaidUser = computed(() => {
   return authStore.user?.subscription_plan === 'professional' || 
@@ -1564,6 +1651,7 @@ const localConfig = ref({
     type: 'general' as AgentType,
     personality: 'friendly' as PersonalityType,
     productType: 'auto' as ProductType,
+    customProductType: '', // ✅ NOUVEAU : Type de produit personnalisé
     description: '',
     welcomeMessage: '',
     fallbackMessage: '',
@@ -1600,7 +1688,7 @@ const localConfig = ref({
     position: 'above-cta' as 'above-cta' | 'below-cta' | 'beside-cta' | 'bottom-right' | 'bottom-left',
     widgetSize: 'medium' as 'small' | 'medium' | 'large',
     theme: 'modern' as 'modern' | 'minimal' | 'brand_adaptive',
-    borderRadius: 'md' as 'none' | 'sm' | 'md' | 'lg' | 'full',
+    borderRadius: 'lg' as 'none' | 'sm' | 'md' | 'lg' | 'full', // ✅ CORRECTION : 'xl' supprimé
     animation: 'fade' as 'fade' | 'slide' | 'bounce' | 'none',
     autoOpen: false,
     showAvatar: true,
@@ -1624,6 +1712,16 @@ const testMessages = ref<Array<{
 }>>([])
 const sendingTestMessage = ref<boolean>(false)
 const responseTimes = ref<number[]>([])
+
+// ✅ NOUVEAU : Variables dynamiques disponibles
+const availableVariables = ref([
+  { name: '${agentName}', display: '👤 Nom vendeur' },
+  { name: '${agentTitle}', display: '💼 Titre vendeur' },
+  { name: '${shopName}', display: '🏪 Nom boutique' },
+  { name: '${productName}', display: '📦 Nom produit' },
+  { name: '${productType}', display: '🏷️ Type produit' },
+  { name: '${greeting}', display: '👋 Salutation' }
+])
 
 // ✅ COMPUTED AVEC TYPES CORRECTS
 const agentId = computed<string>(() => {
@@ -1736,6 +1834,37 @@ const clearLocalError = (): void => {
   clearError()
 }
 
+// ✅ CORRECTION MAJEURE : Fonction triggerAvatarUpload pour éviter l'erreur 'click'
+const triggerAvatarUpload = (): void => {
+  if (avatarUploadRef.value) {
+    avatarUploadRef.value.click()
+  }
+}
+
+// Réinitialiser au template par défaut
+const resetToDefaultTemplate = () => {
+  if (localConfig.value?.agent) {
+    localConfig.value.agent.welcomeMessage = getDefaultWelcomeTemplate()
+    triggerAutoSave()
+  }
+}
+
+// Tester le vrai message d'accueil
+const testWelcomeMessagePreview = async () => {
+  if (!agentConfig.value?.agent.id) return
+  
+  try {
+    const result = await testWelcomeMessage(agentConfig.value.agent.id)
+    if (result.success) {
+      alert(`Message d'accueil réel :\n\n${result.message}`)
+    } else {
+      alert(`Erreur test : ${result.error}`)
+    }
+  } catch (error) {
+    console.error('Erreur test message d\'accueil:', error)
+  }
+}
+
 const loadAgentData = async (): Promise<void> => {
   console.log('🔄 [loadAgentData] Début chargement données agent...')
   
@@ -1754,7 +1883,8 @@ const loadAgentData = async (): Promise<void> => {
         title: storeAgent.title || getTypeLabel(storeAgent.type || 'general'),
         type: (storeAgent.type as AgentType) || 'general',
         personality: (storeAgent.personality as PersonalityType) || 'friendly',
-        productType: 'auto' as ProductType,
+        productType: (storeAgent.productType as ProductType) || 'auto',
+        customProductType: storeAgent.customProductType || '', 
         description: storeAgent.description || '',
         welcomeMessage: storeAgent.welcomeMessage || '',
         fallbackMessage: storeAgent.fallbackMessage || '',
@@ -1876,6 +2006,8 @@ const updateWidgetPreview = (): void => {
       }, 2000)
     }, 500)
   }
+  
+  handleConfigChange()
 }
 
 const resetWidgetToDefaults = (): void => {
@@ -1886,7 +2018,7 @@ const resetWidgetToDefaults = (): void => {
       position: 'above-cta',
       widgetSize: 'medium',
       theme: 'modern',
-      borderRadius: 'md',
+      borderRadius: 'lg', // ✅ CORRECTION : 'md' remplacé par 'lg'
       animation: 'fade',
       autoOpen: false,
       showAvatar: true,
@@ -1904,6 +2036,76 @@ const resetWidgetToDefaults = (): void => {
   }
 }
 
+// ✅ NOUVEAU : Fonction d'insertion de variables
+const insertVariable = (variableName: string) => {
+  const textarea = welcomeMessageInputRef.value
+  if (textarea) {
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const text = localConfig.value.agent.welcomeMessage || ''
+    
+    localConfig.value.agent.welcomeMessage = 
+      text.substring(0, start) + variableName + text.substring(end)
+    
+    // Remettre le focus et positionner le curseur
+    nextTick(() => {
+      textarea.focus()
+      textarea.selectionStart = textarea.selectionEnd = start + variableName.length
+    })
+    
+    triggerAutoSave()
+  }
+}
+
+// ✅ NOUVEAU : Gestion upload d'avatar
+const handleAvatarUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file) return
+  
+  // Vérifier que c'est une image
+  if (!file.type.startsWith('image/')) {
+    alert('Veuillez sélectionner un fichier image valide.')
+    return
+  }
+  
+  // Vérifier la taille (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('L\'image doit faire moins de 5MB.')
+    return
+  }
+  
+  try {
+    // Convertir en base64 pour prévisualisation immédiate
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        localConfig.value.agent.avatar = e.target.result as string
+        handleConfigChange()
+      }
+    }
+    reader.readAsDataURL(file)
+    
+    // TODO: Ici, vous pourrez plus tard ajouter l'upload vers un service cloud
+    // comme Cloudinary, AWS S3, ou Supabase Storage
+    console.log('📁 Image sélectionnée:', file.name)
+    
+  } catch (error) {
+    console.error('❌ Erreur upload avatar:', error)
+    alert('Erreur lors du téléchargement de l\'image.')
+  }
+}
+
+// ✅ NOUVEAU : Gestion changement type de produit
+const handleProductTypeChange = () => {
+  // Si ce n'est pas "produit", réinitialiser le type personnalisé
+  if (localConfig.value.agent.productType !== 'produit') {
+    localConfig.value.agent.customProductType = ''
+  }
+  handleConfigChange()
+}
+
 // ✅ NOUVELLE MÉTHODE : Générer avatar automatique
 const generateAvatar = (): void => {
   if (localConfig.value.agent.name) {
@@ -1914,8 +2116,9 @@ const generateAvatar = (): void => {
       
     const name = encodeURIComponent(displayName)
     const color = localConfig.value.widget?.primaryColor?.replace('#', '') || '3B82F6'
-    localConfig.value.agent.avatar = `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=200&rounded=true`
+    localConfig.value.agent.avatar = `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=200&rounded=true&font-size=0.4`
     
+    handleConfigChange()
     console.log('✅ Avatar généré pour:', displayName)
   }
 }
@@ -1924,17 +2127,18 @@ const generateAvatar = (): void => {
 const handleAvatarError = (event: Event): void => {
   const img = event.target as HTMLImageElement
   const name = encodeURIComponent(localConfig.value.agent.name || 'Agent')
-  img.src = `https://ui-avatars.com/api/?name=${name}&background=6B7280&color=fff&size=200&rounded=true`
+  const color = localConfig.value.widget?.primaryColor?.replace('#', '') || '6B7280'
+  img.src = `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=200&rounded=true&font-size=0.4`
 }
 
 // ✅ HELPER METHODS POUR WIDGET - VALEURS CORRIGÉES
 const getBorderRadiusValue = (radius: string): string => {
   const radiusMap = {
     none: '0px', 
-    sm: '8px', 
+    sm: '6px', 
     md: '12px', 
     lg: '16px', 
-    full: '50px'  // ✅ 'xl' remplacé par 'full' pour compatibilité
+    full: '50px'  // ✅ 'xl' supprimé complètement
   }
   return radiusMap[radius as keyof typeof radiusMap] || '12px'
 }
@@ -1976,6 +2180,7 @@ const handleUpsellToggle = (): void => {
     return
   }
   localConfig.value.agent.config.upsellEnabled = !localConfig.value.agent.config.upsellEnabled
+  handleConfigChange()
 }
 
 const handleUrgencyToggle = (): void => {
@@ -1984,6 +2189,7 @@ const handleUrgencyToggle = (): void => {
     return
   }
   localConfig.value.agent.config.urgencyEnabled = !localConfig.value.agent.config.urgencyEnabled
+  handleConfigChange()
 }
 
 const showUpgradeModal = (feature: string): void => {
@@ -2172,7 +2378,15 @@ const resetTestChat = (): void => {
                     getTypeLabel(localConfig.value.agent.type || 'general')
                     
   const productType = localConfig.value.agent.productType || 'auto'
-  const productTypeLabel = getProductTypeLabel(productType)
+  const getProductTypeLabel = (type: string, customType?: string): string => {
+    // Si c'est un type personnalisé, utiliser la valeur personnalisée
+    if (type === 'produit' && customType) {
+      return customType
+    }
+    
+    const option = getProductTypeOptions().find(opt => opt.value === type)
+    return option ? option.label : '🎯 Détection automatique'
+  }
   
   console.log('🧪 [PLAYGROUND] Initialisation chat avec:', {
     name: agentName,
@@ -2191,7 +2405,7 @@ const resetTestChat = (): void => {
   } else {
     // ✅ Simuler un produit de test selon le type choisi
     const testProduct = productType !== 'auto' 
-      ? `notre ${productTypeLabel.toLowerCase().replace('🎯', '').replace('🎮', 'jeu').replace('📚', 'livre').replace('🎓', 'formation').replace('📱', 'smartphone').replace('💻', 'ordinateur').replace('👗', 'vêtement').replace('🔧', 'service').replace('💎', 'bijou').replace('📦', 'produit').trim()} de test`
+      ? `notre ${getProductTypeLabel(productType, localConfig.value.agent.customProductType).toLowerCase().replace(/[🎯🎮📚🎓📱💻👗🔧💎📦]/g, '').trim()} de test`
       : 'ce produit de démonstration'
       
     welcomeMessage = `Bonjour ! 👋 Je suis **${agentName}**, ${agentTitle}.
@@ -2301,7 +2515,7 @@ const handleConfigChange = (): void => {
 }
 
 const scrollChatToBottom = (): void => {
-  const container = document.querySelector('.overflow-y-auto')
+  const container = chatContainerRef.value
   if (container) {
     container.scrollTop = container.scrollHeight
   }
@@ -2309,9 +2523,7 @@ const scrollChatToBottom = (): void => {
 
 // ✅ WATCH CORRIGÉS AVEC TYPES ET DEEP COPY COMPATIBLE
 watch(() => agentConfig.value, (newConfig) => {
-  if (newConfig && newConfig.agent && newConfig.agent.id) {
-    console.log('🔄 [watcher] Mise à jour localConfig avec données API')
-    
+  if (newConfig?.agent) {
     try {
       localConfig.value.agent = {
         id: newConfig.agent.id,
@@ -2320,6 +2532,7 @@ watch(() => agentConfig.value, (newConfig) => {
         type: (newConfig.agent.type as AgentType) || 'general',
         personality: (newConfig.agent.personality as PersonalityType) || 'friendly',
         productType: (newConfig.agent.productType as ProductType) || 'auto',
+        customProductType: newConfig.agent.customProductType || '', // ✅ NOUVEAU
         description: newConfig.agent.description || '',
         welcomeMessage: newConfig.agent.welcomeMessage || '',
         fallbackMessage: newConfig.agent.fallbackMessage || '',
@@ -2352,35 +2565,35 @@ watch(() => agentConfig.value, (newConfig) => {
           tags: [...doc.tags]
         })) : []
       }
-      
-      if (newConfig.widget) {
-        localConfig.value.widget = {
-          buttonText: newConfig.widget.buttonText || 'Parler à un conseiller',
-          primaryColor: newConfig.widget.primaryColor || '#3B82F6',
-          position: newConfig.widget.position || 'above-cta',
-          widgetSize: newConfig.widget.widgetSize || 'medium',
-          theme: newConfig.widget.theme || 'modern',
-          borderRadius: (['none', 'sm', 'md', 'lg', 'full'].includes(newConfig.widget.borderRadius as string)) 
-            ? newConfig.widget.borderRadius as 'none' | 'sm' | 'md' | 'lg' | 'full'
-            : 'md',
-          animation: newConfig.widget.animation || 'fade',
-          autoOpen: newConfig.widget.autoOpen ?? false,
-          showAvatar: newConfig.widget.showAvatar ?? true,
-          soundEnabled: newConfig.widget.soundEnabled ?? true,
-          mobileOptimized: newConfig.widget.mobileOptimized ?? true,
-          isActive: newConfig.widget.isActive ?? true,
-          language: newConfig.widget.language || 'fr'
+        
+        if (newConfig.widget) {
+          localConfig.value.widget = {
+            buttonText: newConfig.widget.buttonText || 'Parler à un conseiller',
+            primaryColor: newConfig.widget.primaryColor || '#3B82F6',
+            position: newConfig.widget.position || 'above-cta',
+            widgetSize: newConfig.widget.widgetSize || 'medium',
+            theme: newConfig.widget.theme || 'modern',
+            borderRadius: (['none', 'sm', 'md', 'lg', 'full'].includes(newConfig.widget.borderRadius as string)) 
+              ? newConfig.widget.borderRadius as 'none' | 'sm' | 'md' | 'lg' | 'full'
+              : 'lg', // ✅ CORRECTION : 'md' remplacé par 'lg' par défaut
+            animation: newConfig.widget.animation || 'fade',
+            autoOpen: newConfig.widget.autoOpen ?? false,
+            showAvatar: newConfig.widget.showAvatar ?? true,
+            soundEnabled: newConfig.widget.soundEnabled ?? true,
+            mobileOptimized: newConfig.widget.mobileOptimized ?? true,
+            isActive: newConfig.widget.isActive ?? true,
+            language: newConfig.widget.language || 'fr'
+          }
         }
+        
+        hasValidAgentData.value = true
+        console.log('✅ [watcher] localConfig mis à jour avec nouveaux champs')
+        
+      } catch (watchError) {
+        console.error('❌ [watcher] Erreur mise à jour localConfig:', watchError)
+        setError('Erreur lors de la mise à jour de la configuration')
       }
-      
-      hasValidAgentData.value = true
-      console.log('✅ [watcher] localConfig mis à jour avec nouveaux champs')
-      
-    } catch (watchError) {
-      console.error('❌ [watcher] Erreur mise à jour localConfig:', watchError)
-      setError('Erreur lors de la mise à jour de la configuration')
     }
-  }
 }, { immediate: true, deep: true })
 
 // ✅ WATCHER POUR DÉTECTER LES CHANGEMENTS DU CODE D'INTÉGRATION
@@ -2445,8 +2658,6 @@ useHead({
 })
 </script>
 
-<!-- REMPLACEZ UNIQUEMENT CETTE SECTION EN BAS DE VOTRE FICHIER agent-config.vue -->
-
 <style scoped>
 /* ✅ STYLES ESSENTIELS SANS CONFLITS TAILWIND */
 
@@ -2462,7 +2673,17 @@ useHead({
   50% { opacity: 0.5; }
 }
 
-/* Formatage des messages dans le chat */
+/* ✅ NOUVEAU : Styles pour upload d'avatar */
+.avatar-upload-area {
+  transition: all 0.2s ease;
+}
+
+.avatar-upload-area:hover {
+  background-color: #f8fafc;
+  border-color: #3b82f6;
+}
+
+/* ✅ AMÉLIORATION : Formatage des messages dans le chat */
 .message-formatted {
   line-height: 1.6;
   word-break: break-word;
@@ -2478,7 +2699,18 @@ useHead({
   color: #4b5563;
 }
 
-/* Emojis */
+/* ✅ NOUVEAU : Styles pour les liens formatés */
+.message-formatted a {
+  color: #2563eb;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.message-formatted a:hover {
+  color: #1d4ed8;
+}
+
+/* ✅ Emojis optimisés */
 .emoji {
   display: inline-block;
   margin: 0 1px;
@@ -2487,7 +2719,26 @@ useHead({
   line-height: 1;
 }
 
-/* Scrollbar personnalisé pour le chat uniquement */
+/* ✅ NOUVEAU : Styles pour les variables dynamiques */
+.variable-button {
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.variable-button:hover {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+/* ✅ NOUVEAU : Styles pour la prévisualisation du message d'accueil */
+.welcome-preview {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+/* ✅ AMÉLIORATION : Scrollbar personnalisé pour le chat uniquement */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
@@ -2500,16 +2751,86 @@ useHead({
 .overflow-y-auto::-webkit-scrollbar-thumb {
   background: #cbd5e0;
   border-radius: 3px;
+  transition: background 0.2s ease;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
 
-/* Animations simples pour les modales */
+/* ✅ NOUVEAU : Styles pour les toggles améliorés */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  height: 24px;
+  width: 44px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.toggle-switch:focus {
+  box-shadow: 0 0 0 2px #3b82f6, 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.toggle-switch.active {
+  background-color: #3b82f6;
+}
+
+.toggle-switch.inactive {
+  background-color: #d1d5db;
+}
+
+.toggle-switch.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.toggle-knob {
+  pointer-events: none;
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  transform: translateX(0);
+  border-radius: 50%;
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.toggle-knob.active {
+  transform: translateX(20px);
+}
+
+/* ✅ NOUVEAU : Styles pour les couleurs prédéfinies */
+.color-preset-button {
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.color-preset-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.color-preset-button.active {
+  border-color: #1f2937;
+  box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.2);
+}
+
+/* ✅ NOUVEAU : Animations pour les modales */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { 
+    opacity: 0; 
+    transform: scale(0.95);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1);
+  }
 }
 
 @keyframes slideIn {
@@ -2523,12 +2844,323 @@ useHead({
   }
 }
 
-/* Support des préférences utilisateur */
+.modal-enter {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ✅ NOUVEAU : Styles pour les instructions spécifiques */
+.instruction-input {
+  transition: all 0.2s ease;
+}
+
+.instruction-input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-remove-button {
+  transition: all 0.2s ease;
+  border-radius: 6px;
+}
+
+.instruction-remove-button:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+  transform: scale(1.1);
+}
+
+/* ✅ NOUVEAU : Styles pour les scénarios de test */
+.test-scenario-button {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.test-scenario-button:hover {
+  background-color: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.test-scenario-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ✅ NOUVEAU : Styles pour le code d'intégration */
+.integration-code-block {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.copy-button {
+  transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+  background-color: #374151;
+  transform: translateY(-1px);
+}
+
+/* ✅ NOUVEAU : Styles pour les statistiques */
+.stat-item {
+  transition: all 0.2s ease;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.stat-item:hover {
+  background-color: #f9fafb;
+  transform: translateY(-1px);
+}
+
+/* ✅ AMÉLIORATION : Styles responsifs pour mobile */
+@media (max-width: 640px) {
+  .avatar-upload-area {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .variable-button {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  
+  .integration-code-block {
+    font-size: 11px;
+  }
+  
+  .stat-item {
+    padding: 8px;
+  }
+}
+
+/* ✅ NOUVEAU : Styles pour les alertes et notifications */
+.alert-success {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #a7f3d0;
+  animation: slideIn 0.3s ease-out;
+}
+
+.alert-error {
+  background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+  border: 1px solid #fca5a5;
+  animation: slideIn 0.3s ease-out;
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ✅ NOUVEAU : Styles pour les badges de statut */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.inactive {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.status-badge.pro {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+/* ✅ NOUVEAU : Styles pour les onglets améliorés */
+.tab-button {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 24px;
+  height: 2px;
+  background-color: #3b82f6;
+  border-radius: 1px;
+  transform: translateX(-50%);
+}
+
+.tab-button:hover:not(.active) {
+  color: #374151;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* ✅ NOUVEAU : Styles pour les tooltips */
+.tooltip {
+  position: relative;
+}
+
+.tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 8px;
+  background-color: #1f2937;
+  color: white;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* ✅ CORRECTION : Support des préférences utilisateur pour l'accessibilité */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  
+  .toggle-switch,
+  .toggle-knob,
+  .color-preset-button,
+  .test-scenario-button,
+  .instruction-input,
+  .variable-button {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ✅ NOUVEAU : Styles pour le focus clavier (accessibilité) */
+.focus-visible:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ✅ NOUVEAU : Styles pour les états de chargement */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: loading-dots 1.5s linear infinite;
+}
+
+@keyframes loading-dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
+
+/* ✅ NOUVEAU : Styles pour les transitions de page */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* ✅ NOUVEAU : Styles pour améliorer la lisibilité */
+.text-readable {
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+.code-readable {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+}
+
+/* ✅ NOUVEAU : Styles pour les cards avec hover effects */
+.card-hover {
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.card-hover:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* ✅ NOUVEAU : Styles pour les inputs avec validation */
+.input-valid {
+  border-color: #10b981;
+  box-shadow: 0 0 0 1px #10b981;
+}
+
+.input-invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+.input-valid:focus {
+  ring-color: #10b981;
+}
+
+.input-invalid:focus {
+  ring-color: #ef4444;
+}
+
+/* ✅ NOUVEAU : Styles pour les drag & drop zones */
+.drop-zone {
+  transition: all 0.2s ease;
+  border: 2px dashed #d1d5db;
+}
+
+.drop-zone.drag-over {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+/* ✅ FINAL : Reset pour éviter les conflits avec d'autres styles */
+.agent-config-container * {
+  box-sizing: border-box;
+}
+
+.agent-config-container button {
+  outline: none;
+}
+
+.agent-config-container input,
+.agent-config-container select,
+.agent-config-container textarea {
+  outline: none;
 }
 </style>

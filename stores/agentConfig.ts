@@ -10,6 +10,10 @@ export interface AgentConfigData {
   description?: string
   welcomeMessage?: string
   fallbackMessage?: string
+  productType?: string
+  customProductType?: string
+  language?: string
+  tone?: string
   avatar?: string
   isActive: boolean
   config?: any
