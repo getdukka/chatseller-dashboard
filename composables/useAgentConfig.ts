@@ -11,7 +11,7 @@ export interface AgentConfig {
     type: 'general' | 'product_specialist' | 'support' | 'upsell'
     personality: 'professional' | 'friendly' | 'expert' | 'casual'
     productType?: 'auto' | 'jeu' | 'livre' | 'formation' | 'smartphone' | 'ordinateur' | 'vêtement' | 'service' | 'bijou' | 'produit' 
-    customProductType?: string // ✅ NOUVEAU : Type personnalisé
+    customProductType?: string 
     shopName?: string
     description: string | null
     welcomeMessage: string | null
