@@ -1,4 +1,4 @@
-<!-- components/SidebarContent.vue - SIDEBAR AVEC CLIQUABILITÉ 100% CORRIGÉE -->
+<!-- components/SidebarContent.vue -->
 <template>
   <div class="flex flex-col h-full bg-white">
     
@@ -24,10 +24,10 @@
       </button>
     </div>
 
-    <!-- Navigation principale - Flex grow pour prendre l'espace -->
+    <!-- Navigation principale -->
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto sidebar-navigation">
       
-      <!-- ✅ LIENS AVEC GESTION D'ÉVÉNEMENTS CORRIGÉE -->
+      <!-- LIENS DE NAVIGATION CORRIGÉS -->
       <SidebarLink
         to="/"
         :isActive="$route.path === '/'"
@@ -44,7 +44,7 @@
         @click="handleNavClick"
       />
 
-      <!-- ✅ LIEN CONVERSATIONS AVEC BADGE DYNAMIQUE -->
+      <!-- Lien Conversations avec badge -->
       <SidebarLink
         to="/conversations"
         :isActive="$route.path.startsWith('/conversations')"
@@ -103,10 +103,10 @@
       />
     </nav>
 
-    <!-- ✅ BOUTONS ADAPTATIFS SELON LE PLAN - LOGIQUE PARFAITEMENT SYNCHRONISÉE -->
+    <!-- Boutons d'abonnement -->
     <div class="px-4 pb-4 border-t border-gray-100 pt-4">
       
-      <!-- ✅ PLAN FREE + ESSAI ACTIF : Bouton "Passer à Starter" -->
+      <!-- Plan Free + Essai actif : Bouton "Passer à Starter" -->
       <button
         v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0"
         @click="handleUpgradeClick('starter')"
@@ -124,7 +124,7 @@
         <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Passer à Starter' }}</span>
       </button>
 
-      <!-- ✅ PLAN FREE + ESSAI EXPIRÉ : Bouton rouge "Réactiver" -->
+      <!-- Plan Free + Essai expiré : Bouton rouge "Réactiver" -->
       <button
         v-else-if="userSubscriptionPlan === 'free' && (!userSubscriptionActive || trialDaysLeft === 0)"
         @click="handleUpgradeClick('starter')"
@@ -142,7 +142,7 @@
         <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver (Starter)' }}</span>
       </button>
 
-      <!-- ✅ PLAN STARTER + ACTIF : Bouton "Passer au Pro" -->
+      <!-- Plan Starter + Actif : Bouton "Passer au Pro" -->
       <button
         v-else-if="userSubscriptionPlan === 'starter' && userSubscriptionActive"
         @click="handleUpgradeClick('pro')"
@@ -160,7 +160,7 @@
         <span>{{ upgradingToPlan === 'pro' ? 'Redirection...' : 'Passer au Pro' }}</span>
       </button>
 
-      <!-- ✅ PLAN PRO + ACTIF : Badge statique "Plan Pro Actif" -->
+      <!-- Plan Pro + Actif : Badge statique "Plan Pro Actif" -->
       <div
         v-else-if="userSubscriptionPlan === 'pro' && userSubscriptionActive"
         class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 mb-3"
@@ -171,7 +171,7 @@
         <span>Plan Pro Actif</span>
       </div>
 
-      <!-- ✅ PLAN STARTER + INACTIF : Bouton "Réactiver Starter" -->
+      <!-- Plan Starter + Inactif : Bouton "Réactiver Starter" -->
       <button
         v-else-if="userSubscriptionPlan === 'starter' && !userSubscriptionActive"
         @click="handleUpgradeClick('starter')"
@@ -189,7 +189,7 @@
         <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver Starter' }}</span>
       </button>
 
-      <!-- ✅ PLAN PRO + INACTIF : Bouton "Réactiver Pro" -->
+      <!-- Plan Pro + Inactif : Bouton "Réactiver Pro" -->
       <button
         v-else-if="userSubscriptionPlan === 'pro' && !userSubscriptionActive"
         @click="handleUpgradeClick('pro')"
@@ -207,7 +207,7 @@
         <span>{{ upgradingToPlan === 'pro' ? 'Redirection...' : 'Réactiver Pro' }}</span>
       </button>
 
-      <!-- ✅ Affichage des jours d'essai restants (si plan free et essai actif) -->
+      <!-- Affichage des jours d'essai restants -->
       <div 
         v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0" 
         class="text-center text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-lg py-2 px-3"
@@ -220,7 +220,7 @@
         </div>
       </div>
 
-      <!-- ✅ Message d'expiration (si essai terminé) -->
+      <!-- Message d'expiration -->
       <div 
         v-else-if="userSubscriptionPlan === 'free' && (!userSubscriptionActive || trialDaysLeft === 0)" 
         class="text-center text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg py-2 px-3"
@@ -234,16 +234,15 @@
       </div>
     </div>
 
-    <!-- ✅ PROFIL UTILISATEUR DYNAMIQUE EN BAS -->
+    <!-- Profil utilisateur en bas -->
     <div class="border-t border-gray-100 p-4 bg-white">
-      <!-- Dropdown profil -->
       <div class="relative" ref="profileDropdown">
         <button 
           @click="handleToggleProfile"
           type="button"
           class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <!-- ✅ AVATAR DYNAMIQUE AVEC INITIALES -->
+          <!-- Avatar dynamique -->
           <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
             <span class="text-sm font-semibold text-white">
               {{ userInitials }}
@@ -251,11 +250,11 @@
           </div>
           
           <div class="flex-1 min-w-0 text-left">
-            <!-- ✅ NOM UTILISATEUR DYNAMIQUE -->
+            <!-- Nom utilisateur dynamique -->
             <p class="text-sm font-semibold text-gray-900 truncate">
               {{ userName || 'Utilisateur' }}
             </p>
-            <!-- ✅ EMAIL UTILISATEUR DYNAMIQUE -->
+            <!-- Email utilisateur dynamique -->
             <p class="text-xs text-gray-500 truncate">
               {{ userEmail || 'email@exemple.com' }}
             </p>
@@ -317,9 +316,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
-// ✅ TYPES COHÉRENTS
+// Types
 type SubscriptionPlan = 'free' | 'starter' | 'pro'
 
 interface Props {
@@ -334,7 +333,7 @@ interface Props {
   trialDaysLeft?: number
 }
 
-// ✅ PROPS ET EMITS
+// Props et emits
 const props = withDefaults(defineProps<Props>(), {
   isMobile: false,
   userSubscriptionPlan: 'free',
@@ -350,79 +349,64 @@ const emit = defineEmits<{
   'upgrade-to-plan': [plan: 'starter' | 'pro']
 }>()
 
-// ✅ STATE POUR LES BOUTONS UPGRADE
+// State pour les boutons upgrade
 const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
 
-// ✅ COMPUTED POUR MODE DÉVELOPPEMENT
-const isDev = computed(() => process.dev)
-
-// ✅ HANDLE NAVIGATION CLICKS - AVEC DEBUG ET GESTION D'ÉVÉNEMENTS CORRIGÉE
-const handleNavClick = (event?: Event) => {
-  console.log('🖱️ [SidebarContent] Navigation click détecté', { 
-    isMobile: props.isMobile,
-    target: event?.target 
-  })
+// GESTION NAVIGATION SIMPLIFIÉE ET ROBUSTE
+const handleNavClick = () => {
+  console.log('[SidebarContent] Navigation click détecté')
   
-  // S'assurer que l'événement n'est pas empêché
-  if (event) {
-    event.stopPropagation()
-  }
-  
-  // Fermer le menu mobile lors de la navigation (si mobile)
+  // FERMER IMMÉDIATEMENT LE MENU MOBILE SI NÉCESSAIRE
   if (props.isMobile) {
-    console.log('📱 [SidebarContent] Fermeture du menu mobile')
-    setTimeout(() => {
-      emit('close-mobile')
-    }, 100) // Petit délai pour permettre à la navigation de s'initier
+    console.log('[SidebarContent] Fermeture menu mobile')
+    emit('close-mobile')
   }
   
-  // Fermer le menu profil si ouvert
+  // FERMER LE MENU PROFIL SI OUVERT
   if (props.showProfileMenu) {
     emit('close-profile')
   }
 }
 
-// ✅ HANDLE CLOSE MOBILE - GESTION CORRIGÉE
+// GESTION DES ACTIONS MOBILE/PROFIL
 const handleCloseMobile = () => {
-  console.log('❌ [SidebarContent] Close mobile trigger')
+  console.log('[SidebarContent] Close mobile trigger')
   emit('close-mobile')
 }
 
-// ✅ HANDLE PROFILE MENU - GESTION CORRIGÉE
 const handleToggleProfile = () => {
-  console.log('👤 [SidebarContent] Toggle profile menu')
+  console.log('[SidebarContent] Toggle profile menu')
   emit('toggle-profile')
 }
 
 const handleCloseProfile = () => {
-  console.log('❌ [SidebarContent] Close profile menu')
+  console.log('[SidebarContent] Close profile menu')
   emit('close-profile')
 }
 
 const handleLogout = () => {
-  console.log('🚪 [SidebarContent] Logout trigger')
+  console.log('[SidebarContent] Logout trigger')
   emit('logout')
 }
 
-// ✅ HANDLE UPGRADE CLICK - AVEC LOGGING AMÉLIORÉ
+// GESTION UPGRADE
 const handleUpgradeClick = async (targetPlan: 'starter' | 'pro') => {
-  console.log(`🚀 [SidebarContent] Upgrade click vers ${targetPlan}`)
+  console.log(`[SidebarContent] Upgrade click vers ${targetPlan}`)
   
   upgradingToPlan.value = targetPlan
   
   try {
-    // Émettre l'événement vers le parent pour déclencher Stripe
     emit('upgrade-to-plan', targetPlan)
-    console.log(`✅ [SidebarContent] Événement upgrade émis pour ${targetPlan}`)
+    console.log(`[SidebarContent] Événement upgrade émis pour ${targetPlan}`)
   } catch (error) {
-    console.error('❌ [SidebarContent] Erreur upgrade:', error)
+    console.error('[SidebarContent] Erreur upgrade:', error)
     upgradingToPlan.value = null
   }
 }
 </script>
 
 <style scoped>
-/* ✅ ASSURER QUE TOUS LES ÉLÉMENTS SONT CLIQUABLES */
+/* STYLES OPTIMISÉS POUR LA NAVIGATION */
 .sidebar-navigation {
   pointer-events: auto;
 }
@@ -431,18 +415,18 @@ const handleUpgradeClick = async (targetPlan: 'starter' | 'pro') => {
   pointer-events: auto;
 }
 
-/* ✅ EMPÊCHER LES OVERLAPS */
+/* ÉVITER LES OVERLAPS */
 button, a {
   position: relative;
   z-index: 1;
 }
 
-/* ✅ TRANSITIONS FLUIDES */
+/* TRANSITIONS FLUIDES */
 .transition-all {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ✅ HOVER EFFECTS MODERNES */
+/* HOVER EFFECTS */
 .group:hover .group-hover\:text-gray-600 {
   color: rgb(75 85 99);
 }
@@ -451,7 +435,7 @@ button, a {
   transform: scale(1.1);
 }
 
-/* ✅ SMOOTH SCROLLING POUR LA NAVIGATION */
+/* SCROLL STYLING */
 nav {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -461,7 +445,7 @@ nav::-webkit-scrollbar {
   display: none;
 }
 
-/* ✅ ANIMATION SPINNER */
+/* ANIMATIONS */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -471,18 +455,18 @@ nav::-webkit-scrollbar {
   animation: spin 1s linear infinite;
 }
 
-/* ✅ FOCUS STATES AMÉLIORÉS POUR L'ACCESSIBILITÉ */
+/* FOCUS STATES */
 button:focus, a:focus {
   outline: 2px solid rgb(59 130 246);
   outline-offset: 2px;
 }
 
-/* ✅ ASSURER LA VISIBILITÉ DU DROPDOWN */
+/* DROPDOWN Z-INDEX */
 .z-50 {
   z-index: 50;
 }
 
-/* ✅ BACKGROUND FIXE POUR ÉVITER LES CONFLITS */
+/* BACKGROUND FIXE */
 .bg-white {
   background-color: white !important;
 }

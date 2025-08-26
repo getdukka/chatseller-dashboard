@@ -1,8 +1,8 @@
-<!-- layouts/default.vue - VERSION API PURE AVEC SIDEBAR 100% FONCTIONNEL -->
+<!-- layouts/default.vue - NAVIGATION ROBUSTE CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     
-    <!-- ✅ DESKTOP SIDEBAR - VISIBLE UNIQUEMENT SUR LARGE SCREENS -->
+    <!-- DESKTOP SIDEBAR -->
     <div class="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-64 lg:bg-white lg:shadow-xl lg:border-r lg:border-gray-100">
       <SidebarContent 
         :unreadCount="unreadConversationsCount"
@@ -20,7 +20,7 @@
       />
     </div>
 
-    <!-- ✅ MOBILE OVERLAY - VISIBLE QUAND MENU OUVERT -->
+    <!-- MOBILE OVERLAY -->
     <div 
       v-if="mobileMenuOpen" 
       class="fixed inset-0 z-50 lg:hidden"
@@ -59,7 +59,7 @@
       </Transition>
     </div>
 
-    <!-- ✅ MOBILE HEADER AVEC BOUTON HAMBURGER ET BADGES CORRIGÉS -->
+    <!-- MOBILE HEADER -->
     <div class="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
       <div class="flex items-center justify-between">
         <!-- Mobile menu button -->
@@ -94,7 +94,7 @@
           <span class="text-lg font-bold text-gray-900">ChatSeller</span>
         </div>
 
-        <!-- ✅ BADGES ABONNEMENT MOBILE CORRIGÉS -->
+        <!-- Badges abonnement mobile -->
         <div class="flex items-center space-x-2">
           <!-- Badge Plan Pro Actif -->
           <div v-if="subscriptionInfo.plan === 'pro' && subscriptionInfo.isActive" class="flex items-center space-x-1 px-2 py-1 bg-green-50 border border-green-200 rounded-lg">
@@ -171,7 +171,7 @@
                   Facturation
                 </NuxtLink>
                 
-                <!-- ✅ BOUTONS UPGRADE MOBILE ADAPTATIFS -->
+                <!-- Boutons upgrade mobile adaptatifs -->
                 <button
                   v-if="subscriptionInfo.plan === 'free'"
                   @click="handleUpgradeToPlan('starter')"
@@ -212,14 +212,14 @@
       </div>
     </div>
 
-    <!-- ✅ ZONE DE CONTENU PRINCIPALE RESPONSIVE -->
+    <!-- ZONE DE CONTENU PRINCIPALE -->
     <div class="lg:pl-64">
       <main class="min-h-screen">
         <slot />
       </main>
     </div>
 
-    <!-- ✅ LOADING OVERLAY POUR UPGRADE -->
+    <!-- LOADING OVERLAY POUR UPGRADE -->
     <div v-if="upgradingToPlan" class="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center">
       <div class="bg-white rounded-xl shadow-xl p-8 max-w-sm w-full mx-4">
         <div class="text-center">
@@ -241,7 +241,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '~~/stores/auth'
 
-// ✅ TYPES COHÉRENTS
+// Types
 type SubscriptionPlan = 'free' | 'starter' | 'pro'
 
 interface SubscriptionInfo {
@@ -250,10 +250,10 @@ interface SubscriptionInfo {
   trialDaysLeft: number
 }
 
-// ✅ UTILISER L'API POUR TOUTES LES DONNÉES
+// Composables
 const authStore = useAuthStore()
 const config = useRuntimeConfig()
-const api = useApi() // ✅ NOUVEAU : Utiliser l'API pour toutes les données
+const api = useApi()
 
 // États locaux
 const mobileMenuOpen = ref(false)
@@ -261,23 +261,23 @@ const showProfileMenu = ref(false)
 const showMobileProfileMenu = ref(false)
 const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
 
-// ✅ NOUVEAU : ÉTAT POUR LES CONVERSATIONS NON LUES VIA API
+// État pour les conversations non lues
 const unreadConversationsCount = ref(0)
 const loadingConversations = ref(false)
 
-// ✅ DONNÉES D'ABONNEMENT AVEC SYNCHRONISATION AUTHSTORE
+// Données d'abonnement
 const subscriptionInfo = ref<SubscriptionInfo>({
   plan: 'free',
   isActive: false,
   trialDaysLeft: 7
 })
 
-// ✅ COMPUTED PROPERTIES POUR LES DONNÉES UTILISATEUR
+// Computed properties pour les données utilisateur
 const userName = computed(() => authStore.userName || 'Utilisateur')
 const userEmail = computed(() => authStore.userEmail || 'email@exemple.com')  
 const userInitials = computed(() => authStore.userInitials || 'U')
 
-// ✅ NOUVELLE MÉTHODE : CHARGER LES CONVERSATIONS NON LUES VIA API
+// FONCTION SIMPLIFIÉE POUR CHARGER LES CONVERSATIONS VIA API
 const loadUnreadConversations = async () => {
   if (!authStore.userShopId || loadingConversations.value) {
     return
@@ -285,34 +285,27 @@ const loadUnreadConversations = async () => {
 
   try {
     loadingConversations.value = true
-    console.log('🔄 [Layout] Chargement conversations non lues via API pour shop:', authStore.userShopId)
-
-    // ✅ UTILISER L'API AU LIEU DE SUPABASE DIRECT
     const response = await api.conversations.list()
     
     if (response.success && response.data) {
-      // Compter les conversations avec statut 'new' ou 'active'
       const unreadCount = response.data.filter(conv => 
         conv.status === 'new' || conv.status === 'active'
       ).length
       
       unreadConversationsCount.value = unreadCount
-      console.log('✅ [Layout] Conversations non lues chargées via API:', unreadCount)
     } else {
-      console.error('❌ [Layout] Erreur API conversations:', response.error)
       unreadConversationsCount.value = 0
     }
   } catch (error) {
-    console.error('❌ [Layout] Erreur loading conversations via API:', error)
+    console.error('[Layout] Erreur loading conversations:', error)
     unreadConversationsCount.value = 0
   } finally {
     loadingConversations.value = false
   }
 }
 
-// ✅ MOBILE MENU METHODS CORRIGÉS
+// FONCTIONS DE GESTION MOBILE MENU SIMPLIFIÉES
 const toggleMobileMenu = () => {
-  console.log('🔄 [Layout] Toggle mobile menu:', !mobileMenuOpen.value)
   mobileMenuOpen.value = !mobileMenuOpen.value
   if (mobileMenuOpen.value) {
     showMobileProfileMenu.value = false
@@ -320,34 +313,29 @@ const toggleMobileMenu = () => {
 }
 
 const closeMobileMenu = () => {
-  console.log('✅ [Layout] Fermeture mobile menu')
   mobileMenuOpen.value = false
 }
 
-// ✅ PROFILE MENU METHODS CORRIGÉS
+// FONCTIONS DE GESTION PROFILE MENU SIMPLIFIÉES
 const toggleProfileMenu = () => {
-  console.log('🔄 [Layout] Toggle profile menu:', !showProfileMenu.value)
   showProfileMenu.value = !showProfileMenu.value
 }
 
 const closeProfileMenu = () => {
-  console.log('✅ [Layout] Fermeture profile menu')
   showProfileMenu.value = false
 }
 
 const toggleMobileProfileMenu = () => {
-  console.log('🔄 [Layout] Toggle mobile profile menu:', !showMobileProfileMenu.value)
   showMobileProfileMenu.value = !showMobileProfileMenu.value
 }
 
 const closeMobileProfileMenu = () => {
-  console.log('✅ [Layout] Fermeture mobile profile menu')
   showMobileProfileMenu.value = false
 }
 
-// ✅ HANDLE UPGRADE TO PLAN CORRIGÉ
+// FONCTION UPGRADE SIMPLIFIÉE
 const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
-  console.log(`🚀 [Layout] Initiation upgrade vers ${targetPlan}`)
+  console.log(`[Layout] Initiation upgrade vers ${targetPlan}`)
   
   upgradingToPlan.value = targetPlan
   showMobileProfileMenu.value = false
@@ -367,28 +355,22 @@ const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
       }
     })
     
-    console.log('💳 [Layout] Réponse API checkout:', response)
-    
     if (response.success && response.checkoutUrl) {
-      console.log('🔄 [Layout] Redirection vers Stripe Checkout:', response.checkoutUrl)
       window.location.href = response.checkoutUrl
     } else {
       throw new Error(response.error || 'Impossible de créer la session de paiement')
     }
     
   } catch (error: any) {
-    console.error(`❌ [Layout] Erreur lors de l'upgrade vers ${targetPlan}:`, error)
+    console.error(`[Layout] Erreur upgrade vers ${targetPlan}:`, error)
     upgradingToPlan.value = null
     alert(error.message || `Erreur lors de l'upgrade vers ${targetPlan}`)
   }
 }
 
-// ✅ CHARGER LES INFORMATIONS D'ABONNEMENT VIA AUTHSTORE 
+// FONCTION POUR CHARGER LES INFOS D'ABONNEMENT
 const loadSubscriptionInfo = async () => {
   try {
-    console.log('🔄 [Layout] Synchronisation subscription info depuis AuthStore...')
-    
-    // ✅ UTILISER LES DONNÉES DU AUTHSTORE (qui utilise déjà l'API)
     const planDetails = authStore.planDetails
     
     subscriptionInfo.value = {
@@ -396,11 +378,8 @@ const loadSubscriptionInfo = async () => {
       isActive: planDetails.isActive,
       trialDaysLeft: planDetails.trialDaysLeft
     }
-    
-    console.log('✅ [Layout] Subscription info synchronisée:', subscriptionInfo.value)
-    
   } catch (error) {
-    console.error('❌ [Layout] Erreur synchronisation subscription info:', error)
+    console.error('[Layout] Erreur subscription info:', error)
     subscriptionInfo.value = {
       plan: 'free',
       isActive: true,
@@ -409,9 +388,8 @@ const loadSubscriptionInfo = async () => {
   }
 }
 
-// ✅ FONCTION DE DÉCONNEXION
+// FONCTION DE DÉCONNEXION
 const handleLogout = async () => {
-  console.log('🚪 [Layout] Déconnexion en cours...')
   showProfileMenu.value = false
   showMobileProfileMenu.value = false
   closeMobileMenu()
@@ -419,7 +397,7 @@ const handleLogout = async () => {
   await navigateTo('/login')
 }
 
-// ✅ Gestion des clics extérieurs pour fermer les dropdowns
+// GESTION DES CLICS EXTÉRIEURS SIMPLIFIÉE
 const handleClickOutside = (event: Event) => {
   const target = event.target as Element
   
@@ -428,7 +406,7 @@ const handleClickOutside = (event: Event) => {
   }
 }
 
-// ✅ Empêcher le scroll du body quand le menu mobile est ouvert
+// GESTION DU SCROLL BODY
 const updateBodyScroll = () => {
   if (mobileMenuOpen.value) {
     document.body.style.overflow = 'hidden'
@@ -437,12 +415,10 @@ const updateBodyScroll = () => {
   }
 }
 
-// ✅ Watch pour gérer le scroll du body
+// WATCHERS SIMPLIFIÉS
 watch(mobileMenuOpen, updateBodyScroll)
 
-// ✅ WATCHERS POUR RECHARGER LES INFOS SI AUTHSTORE CHANGE
 watch(() => authStore.isAuthenticated, async (isAuth) => {
-  console.log('🔄 [Layout] Auth state changed:', isAuth)
   if (isAuth && authStore.token) {
     await loadSubscriptionInfo()
     await loadUnreadConversations()
@@ -456,9 +432,7 @@ watch(() => authStore.isAuthenticated, async (isAuth) => {
   }
 })
 
-// ✅ WATCHER pour synchroniser avec les changements du planDetails AuthStore
 watch(() => authStore.planDetails, (newPlanDetails) => {
-  console.log('🔄 [Layout] Plan details changed in AuthStore:', newPlanDetails)
   subscriptionInfo.value = {
     plan: newPlanDetails.code as SubscriptionPlan,
     isActive: newPlanDetails.isActive,
@@ -466,9 +440,7 @@ watch(() => authStore.planDetails, (newPlanDetails) => {
   }
 }, { deep: true })
 
-// ✅ WATCHER pour recharger conversations si userShopId change
 watch(() => authStore.userShopId, async (newShopId) => {
-  console.log('🔄 [Layout] Shop ID changed:', newShopId)
   if (newShopId) {
     await loadUnreadConversations()
   } else {
@@ -476,37 +448,32 @@ watch(() => authStore.userShopId, async (newShopId) => {
   }
 })
 
-// ✅ Fermer le menu mobile lors de la navigation
+// WATCHER POUR FERMER MENUS LORS NAVIGATION - SIMPLIFIÉ
 const route = useRoute()
-watch(() => route.path, (newPath) => {
-  console.log('🔄 [Layout] Route changed:', newPath)
+watch(() => route.path, () => {
   closeMobileMenu()
   closeMobileProfileMenu()
   closeProfileMenu()
 })
 
 onMounted(async () => {
-  console.log('🚀 [Layout] Montage du layout...')
-  
   document.addEventListener('click', handleClickOutside)
   
   // Charger les données initiales si authentifié
   if (authStore.isAuthenticated && authStore.token) {
-    console.log('✅ [Layout] Utilisateur authentifié, chargement des données...')
     await loadSubscriptionInfo()
     await loadUnreadConversations()
   }
 
-  // ✅ POLLING PÉRIODIQUE DES CONVERSATIONS (toutes les 30 secondes)
+  // Polling conversations (toutes les 30 secondes)
   const conversationInterval = setInterval(async () => {
     if (authStore.userShopId && !loadingConversations.value && authStore.isAuthenticated) {
       await loadUnreadConversations()
     }
-  }, 30000) // 30 secondes
+  }, 30000)
 
   // Nettoyer l'intervalle au démontage
   onUnmounted(() => {
-    console.log('🧹 [Layout] Nettoyage du layout...')
     clearInterval(conversationInterval)
     document.removeEventListener('click', handleClickOutside)
     document.body.style.overflow = ''
@@ -515,19 +482,19 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* ✅ RESPONSIVE DESIGN AMÉLIORÉ */
+/* RESPONSIVE DESIGN */
 @media (max-width: 1023px) {
   .lg\:pl-64 {
     padding-left: 0 !important;
   }
 }
 
-/* ✅ TRANSITIONS FLUIDES */
+/* TRANSITIONS FLUIDES */
 .transition-all {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ✅ Z-INDEX MANAGEMENT */
+/* Z-INDEX MANAGEMENT */
 .z-40 {
   z-index: 40;
 }
@@ -536,7 +503,7 @@ onMounted(async () => {
   z-index: 50;
 }
 
-/* ✅ ANIMATIONS */
+/* ANIMATIONS */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -555,13 +522,13 @@ onMounted(async () => {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* ✅ ENSURE CLICKABLE ELEMENTS */
+/* ASSURER LA CLIQUABILITÉ */
 button, a {
   position: relative;
   z-index: 1;
 }
 
-/* ✅ PREVENT OVERLAPPING ISSUES */
+/* ÉVITER LES CONFLITS DE SUPERPOSITION */
 .sidebar-content {
   pointer-events: auto;
 }

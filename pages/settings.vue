@@ -163,26 +163,6 @@
 
             <!-- Avatar et résumé -->
             <div class="space-y-6">
-              <!-- Avatar -->
-              <div class="card-modern">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Photo de profil</h3>
-                
-                <div class="flex flex-col items-center space-y-4">
-                  <div class="relative">
-                    <div class="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
-                      <span class="text-2xl font-bold text-white">
-                        {{ userInitials }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="text-center">
-                    <h4 class="font-medium text-gray-900">{{ userDisplayName }}</h4>
-                    <p class="text-sm text-gray-500">{{ authStore.userEmail }}</p>
-                  </div>
-                </div>
-              </div>
-
               <!-- Résumé du compte -->
               <div class="card-modern">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Activité du compte</h3>

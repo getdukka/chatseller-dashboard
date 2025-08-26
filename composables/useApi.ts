@@ -1,4 +1,4 @@
-// composables/useApi.ts - VERSION CORRIGÉE ET SIMPLIFIÉE
+// composables/useApi.ts 
 
 import { useAuthStore } from "~~/stores/auth"
 
@@ -12,7 +12,6 @@ export interface ApiResponse<T = any> {
 export const useApi = () => {
   const config = useRuntimeConfig()
   
-  // ✅ CONFIGURATION DYNAMIQUE DEV/PROD
   const getBaseURL = () => {
     if (process.dev || process.env.NODE_ENV === 'development') {
       return 'http://localhost:3001'
@@ -21,23 +20,17 @@ export const useApi = () => {
   }
   
   const baseURL = getBaseURL()
-  
-  console.log('🔧 API Configuration:', { 
-    baseURL, 
-    env: process.env.NODE_ENV,
-    isDev: process.dev
-  })
 
-  // ✅ GET SUPABASE TOKEN FROM AUTH STORE
+  // ✅ GET SUPABASE TOKEN - ERREUR TYPESCRIPT CORRIGÉE
   const getAuthToken = (): string | null => {
     if (process.client) {
       const authStore = useAuthStore()
-      return authStore.token
+      // ✅ CORRECTION : Utiliser uniquement authStore.token (pas de .session)
+      return authStore.token || null
     }
     return null
   }
 
-  // ✅ CREATE AUTHENTICATED FETCH OPTIONS
   const createFetchOptions = (options: any = {}): any => {
     const token = getAuthToken()
     
@@ -48,6 +41,9 @@ export const useApi = () => {
 
     if (token) {
       headers.Authorization = `Bearer ${token}`
+      console.log('🔑 [API] Token utilisé pour auth:', token.substring(0, 20) + '...')
+    } else {
+      console.warn('⚠️ [API] Aucun token d\'authentification trouvé')
     }
 
     return {
@@ -55,31 +51,32 @@ export const useApi = () => {
       baseURL,
       headers,
       onResponseError({ response }: any) {
-        console.error('❌ API Error:', response.status, response.statusText)
+        console.error('❌ [API] Erreur réponse:', response.status, response.statusText, response._data)
         
         if (response.status === 401) {
+          console.warn('🔐 [API] Token expiré ou invalide, redirection login')
           const authStore = useAuthStore()
           authStore.clearAuth()
-          navigateTo('/login')
+          if (process.client) {
+            navigateTo('/login')
+          }
         }
       }
     }
   }
 
-  // ✅ GENERIC API CALL WITH PROPER ERROR HANDLING
   const apiCall = async (
     endpoint: string, 
     options: any = {}
   ): Promise<ApiResponse<any>> => {
     try {
-      console.log(`📡 API Call: ${options.method || 'GET'} ${baseURL}${endpoint}`)
+      console.log(`🔄 [API] Appel: ${endpoint}`)
       
       const fetchOptions = createFetchOptions(options)
       const response = await $fetch(endpoint, fetchOptions) as any
       
-      console.log('✅ API Response:', response)
+      console.log(`✅ [API] Réponse ${endpoint}:`, response)
       
-      // ✅ NORMALISER LA RÉPONSE
       if (response && typeof response === 'object') {
         if ('success' in response) {
           return response
@@ -98,7 +95,7 @@ export const useApi = () => {
         success: true
       }
     } catch (error: any) {
-      console.error('❌ API call failed for', endpoint, ':', error)
+      console.error(`❌ [API] Échec ${endpoint}:`, error)
       
       let errorMessage = 'Une erreur est survenue'
       
@@ -118,46 +115,135 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ✅ SHOPS (ROUTES PRINCIPALES UTILISÉES PAR LE MIDDLEWARE)
+  // ORDERS - ✅ AJOUT DU SERVICE MANQUANT
   // =====================================
   
-  const shops = {
-    // ✅ GET SHOP (ROUTE PRINCIPALE)
-    get: async (shopId?: string): Promise<ApiResponse<any>> => {
-      const authStore = useAuthStore()
-      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
-      
-      if (!targetShopId) {
-        return { success: false, error: 'Shop ID manquant' }
-      }
-      
-      return apiCall(`/api/v1/shops/${targetShopId}`)
+  const orders = {
+    list: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/orders')
     },
 
-    // ✅ CREATE SHOP
-    create: async (data: any): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/shops', {
+    get: async (orderId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/orders/${orderId}`)
+    },
+
+    create: async (data: {
+      conversationId: string,
+      productId?: string,
+      productName?: string,
+      productPrice?: number,
+      quantity?: number,
+      customerInfo?: any,
+      orderData?: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders', {
         method: 'POST',
         body: data
       })
     },
 
-    // ✅ UPDATE SHOP
-    update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/shops/${shopId}`, {
+    update: async (orderId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/orders/${orderId}`, {
         method: 'PUT',
         body: data
       })
     },
 
-    // ✅ LIST SHOPS
-    list: async (): Promise<ApiResponse<any[]>> => {
-      return apiCall('/api/v1/shops')
+    delete: async (orderId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/orders/${orderId}`, {
+        method: 'DELETE'
+      })
+    },
+
+    startOrder: async (data: {
+      conversationId: string,
+      productInfo?: any,
+      message?: string
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders/start', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    complete: async (data: {
+      conversationId: string,
+      orderData: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders/complete', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    cancel: async (orderId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/orders/${orderId}/cancel`, {
+        method: 'PUT'
+      })
+    },
+
+    stats: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders/stats')
     }
   }
 
   // =====================================
-  // ✅ AGENTS
+  // PRODUCTS - ✅ AJOUT DU SERVICE MANQUANT
+  // =====================================
+  
+  const products = {
+    list: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/products')
+    },
+
+    get: async (productId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}`)
+    },
+
+    create: async (data: {
+      name: string,
+      description?: string,
+      price?: number,
+      imageUrl?: string,
+      category?: string,
+      isActive?: boolean,
+      metadata?: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/products', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    update: async (productId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}`, {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    delete: async (productId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}`, {
+        method: 'DELETE'
+      })
+    },
+
+    sync: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/products/sync', {
+        method: 'POST'
+      })
+    },
+
+    detectFromUrl: async (url: string): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/products/detect', {
+        method: 'POST',
+        body: { url }
+      })
+    }
+  }
+
+  // =====================================
+  // AGENTS
   // =====================================
   
   const agents = {
@@ -197,27 +283,135 @@ export const useApi = () => {
 
     getConfig: async (agentId: string): Promise<ApiResponse<any>> => {
       return apiCall(`/api/v1/agents/${agentId}/config`)
+    },
+
+    uploadAvatar: async (file: File): Promise<ApiResponse<any>> => {
+      const formData = new FormData()
+      formData.append('avatar', file)
+
+      return apiCall('/api/v1/agents/upload-avatar', {
+        method: 'POST',
+        body: formData,
+        headers: {} // Laisser le navigateur définir le Content-Type pour FormData
+      })
     }
   }
 
   // =====================================
-  // ✅ CONVERSATIONS
+  // CONVERSATIONS
   // =====================================
-  
+
   const conversations = {
     list: async (): Promise<ApiResponse<any[]>> => {
+      console.log('📋 [API] Récupération liste conversations')
       return apiCall('/api/v1/conversations')
     },
 
     get: async (conversationId: string): Promise<ApiResponse<any>> => {
+      console.log('🔍 [API] Récupération conversation:', conversationId)
       return apiCall(`/api/v1/conversations/${conversationId}`)
+    },
+
+    getMessages: async (conversationId: string): Promise<ApiResponse<any[]>> => {
+      console.log('📨 [API] Récupération messages pour conversation:', conversationId)
+      return apiCall(`/api/v1/conversations/${conversationId}/messages`)
+    },
+
+    create: async (data: {
+      shopId: string,
+      visitorId: string,
+      productId?: string,
+      productName?: string,
+      productPrice?: number,
+      productUrl?: string,
+      agentId?: string
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/conversations', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    update: async (conversationId: string, data: {
+      status?: string,
+      last_activity?: string,
+      message_count?: number,
+      conversion_completed?: boolean
+    }): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/conversations/${conversationId}`, {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    delete: async (conversationId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/conversations/${conversationId}`, {
+        method: 'DELETE'
+      })
+    },
+
+    sendMessage: async (conversationId: string, data: {
+      content: string,
+      sender: 'agent' | 'visitor'
+    }): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    // ✅ NOUVELLE MÉTHODE : ÉDITER UN MESSAGE
+    updateMessage: async (conversationId: string, messageId: string, data: {
+      content: string
+    }): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/conversations/${conversationId}/messages/${messageId}`, {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    takeover: async (conversationId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/conversations/${conversationId}/takeover`, {
+        method: 'POST'
+      })
+    },
+
+    stats: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/conversations/stats')
     }
   }
 
-  // =====================================
-  // ✅ ANALYTICS
-  // =====================================
-  
+  const shops = {
+    get: async (shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}`)
+    },
+
+    create: async (data: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/shops', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/shops/${shopId}`, {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    list: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/shops')
+    }
+  }
+
   const analytics = {
     dashboard: async (): Promise<ApiResponse<any>> => {
       return apiCall('/api/v1/analytics/dashboard')
@@ -232,10 +426,6 @@ export const useApi = () => {
     }
   }
 
-  // =====================================
-  // ✅ KNOWLEDGE BASE
-  // =====================================
-  
   const knowledgeBase = {
     list: async (): Promise<ApiResponse<any[]>> => {
       return apiCall('/api/v1/knowledge-base')
@@ -248,7 +438,7 @@ export const useApi = () => {
       return apiCall('/api/v1/knowledge-base/upload', {
         method: 'POST',
         body: formData,
-        headers: {} // Laisser le navigateur définir le Content-Type pour FormData
+        headers: {}
       })
     },
 
@@ -268,10 +458,6 @@ export const useApi = () => {
       })
     }
   }
-
-  // =====================================
-  // ✅ BILLING
-  // =====================================
 
   const billing = {
     subscriptionStatus: async (): Promise<ApiResponse<any>> => {
@@ -304,10 +490,6 @@ export const useApi = () => {
     }
   }
 
-  // =====================================
-  // ✅ UTILS
-  // =====================================
-  
   const utils = {
     healthCheck: async (): Promise<ApiResponse<any>> => {
       return apiCall('/health')
@@ -321,6 +503,8 @@ export const useApi = () => {
   return {
     baseURL,
     shops,
+    orders, 
+    products,
     agents,
     conversations,
     analytics,

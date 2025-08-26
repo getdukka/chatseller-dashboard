@@ -67,7 +67,7 @@
                   <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                   </svg>
-                  Passer au plan Starter - 14€/mois
+                  Passer au plan Starter - 19€/mois
                 </NuxtLink>
               </div>
             </div>
@@ -319,7 +319,7 @@
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
             </svg>
-            Passer au plan Starter - 14€/mois
+            Passer au plan Starter - 19€/mois
           </button>
           <button
             v-else
@@ -827,7 +827,7 @@ const refreshAgents = async () => {
 
 const openCreateModal = () => {
   if (trialExpired.value) {
-    alert('❌ Votre essai gratuit de 7 jours est terminé.\n\nPassez au plan Starter (14€/mois) pour continuer à utiliser ChatSeller et créer vos agents IA.')
+    alert('❌ Votre essai gratuit de 7 jours est terminé.\n\nPassez au plan Starter (19€/mois) pour continuer à utiliser ChatSeller et créer vos agents IA.')
     router.push('/billing')
     return
   }

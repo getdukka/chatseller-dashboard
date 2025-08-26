@@ -1,4 +1,4 @@
-// stores/orders.ts - VERSION CORRIGÉE POUR VRAIE API
+// stores/orders.ts 
 import { defineStore } from 'pinia'
 import { useAuthStore } from './auth'
 

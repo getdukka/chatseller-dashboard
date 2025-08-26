@@ -45,6 +45,14 @@ export interface UpdateKnowledgeBaseData extends Partial<CreateKnowledgeBaseData
 export interface ApiSuccessResponse<T = any> {
   success: true
   data: T
+  meta?: {
+    totalPagesDiscovered?: number
+    totalDocumentsCreated?: number
+    baseUrl?: string
+    indexationType?: string
+    processedAt?: string
+    [key: string]: any
+  }
   error?: never
 }
 
@@ -52,6 +60,7 @@ export interface ApiErrorResponse {
   success: false
   error: string
   data?: never
+  meta?: never
 }
 
 export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
@@ -705,13 +714,17 @@ const uploadFile = async (file: File): Promise<ApiResponse<KnowledgeBaseDocument
   }
 }
 
-// ✅ MÉTHODE TRAITEMENT SITE WEB (à ajouter dans useKnowledgeBase.ts)
-const processWebsite = async (url: string, title?: string, tags?: string[]): Promise<ApiResponse<KnowledgeBaseDocument>> => {
+// ✅ MÉTHODE TRAITEMENT SITE WEB 
+const processWebsite = async (
+  url: string, 
+  title?: string, 
+  tags?: string[]
+): Promise<ApiResponse<KnowledgeBaseDocument[]>> => {
   saving.value = true
   error.value = null
 
   try {
-    console.log('🌐 Traitement site web:', url)
+    console.log('🌐 Traitement complet du site web:', url)
     
     if (!url || !url.startsWith('http')) {
       throw new Error('URL invalide')
@@ -727,25 +740,49 @@ const processWebsite = async (url: string, title?: string, tags?: string[]): Pro
       baseURL: config.public.apiBaseUrl,
       method: 'POST',
       headers: getAuthHeaders(),
+      timeout: 60000, // ✅ TIMEOUT PLUS LONG POUR TRAITEMENT MULTIPLE
       body: {
         url: url.trim(),
         title: title?.trim(),
-        tags: tags || ['website', 'automatique']
+        tags: tags || ['website', 'indexation-complete']
       }
     })
 
     if (response.success) {
-      // Ajouter le nouveau document à la liste
-      documents.value.unshift(response.data)
-      console.log(`✅ Site web traité avec succès: ${response.data.id}`)
-      return { success: true, data: response.data }
+      // ✅ AJOUTER TOUS LES DOCUMENTS CRÉÉS À LA LISTE
+      const createdDocuments = Array.isArray(response.data) ? response.data : [response.data]
+      
+      createdDocuments.forEach(doc => {
+        documents.value.unshift(doc)
+      })
+      
+      console.log(`✅ Site web traité avec succès: ${createdDocuments.length} document(s) créé(s)`)
+      
+      return { 
+        success: true, 
+        data: createdDocuments,
+        meta: response.meta 
+      }
     } else {
       throw new Error(response.error || 'Erreur lors du traitement du site web')
     }
 
   } catch (err: any) {
     console.error('❌ Erreur traitement site web:', err)
-    const errorMessage = err.response?.data?.error || err.message || 'Erreur lors du traitement du site web'
+    
+    let errorMessage = 'Erreur lors du traitement du site web'
+    
+    if (err.response?.data?.error) {
+      errorMessage = err.response.data.error
+    } else if (err.message) {
+      errorMessage = err.message
+    }
+    
+    // ✅ GESTION SPÉCIFIQUE DES ERREURS DE PLAN
+    if (err.response?.data?.requiresUpgrade) {
+      errorMessage += ' Passez au plan supérieur pour indexer plus de pages.'
+    }
+    
     error.value = errorMessage
     return { success: false, error: errorMessage }
   } finally {
@@ -767,7 +804,7 @@ const processWebsite = async (url: string, title?: string, tags?: string[]): Pro
     error: readonly(error),
     uploadProgress: readonly(uploadProgress),
 
-    // ✅ COMPUTED POUR GESTION PLAN
+    // ✅ COMPUTED POUR GESTION PLAN - MAINTENANT EXPORTÉS
     planDetails: readonly(planDetails),
     currentDocumentCount,
     documentLimit,

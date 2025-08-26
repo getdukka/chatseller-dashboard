@@ -1,4 +1,4 @@
-<!-- pages/conversations.vue  -->
+<!-- pages/conversations/index.vue  -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -402,19 +402,28 @@ const showNotification = (message: string, type: 'success' | 'error' = 'success'
   }, 5000)
 }
 
-// ✅ API METHODS UTILISANT LE COMPOSABLE API
+// ✅ API METHODS UTILISANT LE COMPOSABLE API - VERSION CORRIGÉE
 const loadConversations = async () => {
   loading.value = true
   error.value = null
 
   try {
-    console.log('🔄 Chargement conversations via API...')
+    console.log('Chargement conversations via API...')
     
     const response = await api.conversations.list()
     
     if (response.success && response.data) {
-      conversations.value = response.data
-      console.log('✅ Conversations chargées:', conversations.value.length)
+      // Traiter les données pour assurer la compatibilité
+      conversations.value = response.data.map((conv: any) => ({
+        ...conv,
+        // S'assurer que les champs sont correctement mappés
+        message_count: conv.message_count || (conv.messages ? conv.messages.length : 0),
+        // Assurer la compatibilité des dates
+        started_at: conv.started_at || conv.startedAt,
+        last_activity: conv.last_activity || conv.lastActivity || conv.started_at
+      }))
+      
+      console.log('Conversations chargées:', conversations.value.length)
       
       // Calculer les statistiques
       await loadStats()
@@ -423,7 +432,7 @@ const loadConversations = async () => {
     }
     
   } catch (err: any) {
-    console.error('❌ Erreur chargement conversations:', err)
+    console.error('Erreur chargement conversations:', err)
     error.value = err.message || 'Erreur lors du chargement des conversations'
   } finally {
     loading.value = false
@@ -460,20 +469,17 @@ const refreshConversations = async () => {
   }
 }
 
-// ✅ ACTION METHODS
+// ✅ ACTION METHODS - NAVIGATION CORRIGÉE
 const viewConversation = async (conversation: any) => {
   try {
-    const response = await api.conversations.get(conversation.id)
+    console.log('🔍 Navigation vers conversation:', conversation.id)
     
-    if (response.success) {
-      console.log('Conversation détaillée:', response.data)
-      // TODO: Ouvrir modal ou page de détail
-    } else {
-      showNotification('Erreur lors du chargement des détails', 'error')
-    }
+    // ✅ NAVIGATION AMÉLIORÉE AVEC GESTION D'ERREUR
+    await navigateTo(`/conversations/${conversation.id}`)
+    
   } catch (err) {
-    console.error('Erreur vue conversation:', err)
-    showNotification('Erreur lors du chargement des détails', 'error')
+    console.error('❌ Erreur navigation conversation:', err)
+    showNotification('Erreur lors de la navigation', 'error')
   }
 }
 

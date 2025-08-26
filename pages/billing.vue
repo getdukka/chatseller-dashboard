@@ -1,4 +1,4 @@
-<!-- pages/billing.vue -->
+<!-- pages/billing.vue - VERSION CORRIGÉE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -52,7 +52,19 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- 🚨 ALERTE ESSAI GRATUIT - PLAN FREE AVEC TRIAL -->
+      <!-- Loading overlay pendant synchronisation -->
+      <div v-if="syncing" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-md mx-4 text-center">
+          <div class="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <h3 class="text-lg font-semibold mb-2">Synchronisation en cours...</h3>
+          <p class="text-gray-600">Nous mettons à jour votre abonnement</p>
+          <div class="mt-4 text-sm text-gray-500">
+            Tentative {{ syncAttempt }}/{{ maxSyncAttempts }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Alertes selon l'état -->
       <div v-if="isPlanFree(subscriptionData.plan) && subscriptionData.trialDaysLeft > 0" class="mb-8">
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-xl overflow-hidden relative">
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-400 animate-pulse"></div>
@@ -67,7 +79,7 @@
                   </div>
                   <div>
                     <h2 class="text-3xl font-bold mb-2">
-                      🚀 Essai gratuit : {{ subscriptionData.trialDaysLeft }} jour(s) restant(s)
+                      Essai gratuit : {{ subscriptionData.trialDaysLeft }} jour(s) restant(s)
                     </h2>
                     <p class="text-blue-100 text-lg">
                       Profitez de toutes les fonctionnalités Starter gratuitement pendant 7 jours.
@@ -87,7 +99,7 @@
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
-                    Choisir Starter (14€/mois)
+                    Choisir Starter (19€/mois)
                   </button>
                   
                   <button 
@@ -106,7 +118,7 @@
         </div>
       </div>
 
-      <!-- 🚨 ALERTE ESSAI EXPIRÉ -->
+      <!-- Alerte essai expiré -->
       <div v-if="isPlanFree(subscriptionData.plan) && subscriptionData.trialDaysLeft === 0" class="mb-8">
         <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-xl shadow-xl overflow-hidden">
           <div class="px-8 py-8 text-white relative">
@@ -121,7 +133,7 @@
                     </div>
                   </div>
                   <div>
-                    <h2 class="text-3xl font-bold mb-2">⏰ Essai gratuit terminé</h2>
+                    <h2 class="text-3xl font-bold mb-2">Essai gratuit terminé</h2>
                     <p class="text-red-100 text-lg">
                       Votre Vendeur IA et votre widget sont maintenant <span class="font-bold">désactivés</span>.
                       <br>
@@ -133,7 +145,7 @@
                 </div>
                 
                 <div class="bg-red-800 bg-opacity-50 rounded-lg p-4 mb-6">
-                  <h3 class="font-semibold mb-2">🚫 Fonctionnalités désactivées :</h3>
+                  <h3 class="font-semibold mb-2">Fonctionnalités désactivées :</h3>
                   <ul class="text-sm text-red-100 space-y-1">
                     <li>• Votre Vendeur IA ne répond plus aux visiteurs</li>
                     <li>• Le widget ChatSeller est invisible sur votre site</li>
@@ -150,7 +162,7 @@
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
-                    Choisir Starter (14€/mois)
+                    Choisir Starter (19€/mois)
                   </button>
                   
                   <button 
@@ -247,20 +259,25 @@
                 
                 <button 
                   v-if="subscriptionData.isActive && !isPlanFree(subscriptionData.plan)"
-                  @click="manageSubscription"
+                  @click="handleManageSubscription"
+                  :disabled="loading.subscription"
                   class="btn-secondary"
                 >
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="loading.subscription" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
-                  Gérer l'abonnement
+                  {{ loading.subscription ? 'Ouverture...' : 'Gérer l\'abonnement' }}
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- Available Plans -->
+          <!-- Plans disponibles -->
           <div v-if="!isPlanPro(subscriptionData.plan)" ref="plansSection" class="card-modern">
             <div class="mb-8 text-center">
               <h2 class="text-3xl font-bold text-gray-900 mb-4">Choisissez votre plan</h2>
@@ -279,7 +296,7 @@
                     </div>
                     <h3 class="text-2xl font-bold mb-2">Starter</h3>
                     <div class="pricing">
-                      <span class="price">14€</span>
+                      <span class="price">19€</span>
                       <span class="period">/mois</span>
                     </div>
                     <p class="text-gray-600">Pour débuter avec l'IA commerciale</p>
@@ -287,7 +304,7 @@
                 </div>
                 
                 <div class="plan-features">
-                  <div v-for="feature in availablePlans.starter?.features || starterFeatures" :key="feature" class="feature-item">
+                  <div v-for="feature in starterFeatures" :key="feature" class="feature-item">
                     <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -325,7 +342,7 @@
               <div class="plan-card plan-card-featured">
                 <div class="plan-card-header">
                   <div class="popular-badge">
-                    <span class="text-sm font-bold">⭐ Recommandé</span>
+                    <span class="text-sm font-bold">Recommandé</span>
                   </div>
                   
                   <div class="text-center mb-6">
@@ -344,7 +361,7 @@
                 </div>
                 
                 <div class="plan-features">
-                  <div v-for="feature in availablePlans.pro?.features || proFeatures" :key="feature" class="feature-item">
+                  <div v-for="feature in proFeatures" :key="feature" class="feature-item">
                     <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -383,12 +400,12 @@
           <!-- Pro Features (only show if Pro) -->
           <div v-if="isPlanPro(subscriptionData.plan) && subscriptionData.isActive" class="card-modern">
             <div class="mb-6 text-center">
-              <h2 class="text-2xl font-bold text-gray-900 mb-4">🎉 Vos fonctionnalités Pro</h2>
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Vos fonctionnalités Pro</h2>
               <p class="text-gray-600">Profitez de toutes ces fonctionnalités avancées</p>
             </div>
 
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div v-for="feature in availablePlans.pro?.features || proFeatures" :key="feature" class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
+              <div v-for="feature in proFeatures" :key="feature" class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
                 <div class="flex items-center space-x-3">
                   <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -419,7 +436,7 @@
           
           <!-- Trial Progress (si essai en cours) -->
           <div v-if="isPlanFree(subscriptionData.plan) && subscriptionData.trialDaysLeft > 0" class="card-modern bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">🎯 Votre essai gratuit</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Votre essai gratuit</h3>
             
             <div class="text-center mb-6">
               <div class="relative inline-flex items-center justify-center w-24 h-24 mb-4">
@@ -438,15 +455,15 @@
             <div class="space-y-3">
               <div class="flex items-center justify-between text-sm">
                 <span class="text-gray-600">Vendeur IA actif</span>
-                <span class="text-green-600 font-medium">✓ Oui</span>
+                <span class="text-green-600 font-medium">Oui</span>
               </div>
               <div class="flex items-center justify-between text-sm">
                 <span class="text-gray-600">Widget fonctionnel</span>
-                <span class="text-green-600 font-medium">✓ Oui</span>
+                <span class="text-green-600 font-medium">Oui</span>
               </div>
               <div class="flex items-center justify-between text-sm">
                 <span class="text-gray-600">Conversations illimitées</span>
-                <span class="text-green-600 font-medium">✓ Oui</span>
+                <span class="text-green-600 font-medium">Oui</span>
               </div>
             </div>
             
@@ -496,7 +513,7 @@
 
             <div class="mt-4 p-3 bg-white bg-opacity-70 rounded-lg">
               <p class="text-xs text-gray-600 text-center">
-                💡 <strong>Astuce :</strong> Consultez notre guide de démarrage pour optimiser vos conversions
+                <strong>Astuce :</strong> Consultez notre guide de démarrage pour optimiser vos conversions
               </p>
             </div>
           </div>
@@ -504,7 +521,7 @@
       </div>
     </div>
 
-    <!-- ✅ NOUVEAU: MODAL DE CONFIRMATION DE PAIEMENT -->
+    <!-- Modal de confirmation de paiement (CORRIGÉ) -->
     <div v-if="successModal.show" class="fixed inset-0 z-50 overflow-y-auto">
       <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 transition-opacity" aria-hidden="true">
@@ -522,14 +539,14 @@
             </div>
             <div class="mt-3 text-center sm:mt-5">
               <h3 class="text-2xl leading-6 font-bold text-gray-900">
-                🎉 Paiement confirmé !
+                Paiement confirmé !
               </h3>
               <div class="mt-4">
                 <p class="text-lg text-gray-600 mb-4">
                   Félicitations ! Vous êtes maintenant abonné au plan <strong>{{ successModal.planName }}</strong>.
                 </p>
                 <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <h4 class="font-semibold text-green-800 mb-2">✅ Votre Vendeur IA est maintenant actif !</h4>
+                  <h4 class="font-semibold text-green-800 mb-2">Votre Vendeur IA est maintenant actif !</h4>
                   <ul class="text-sm text-green-700 space-y-1">
                     <li>• Widget ChatSeller activé sur votre site</li>
                     <li>• Conversations illimitées disponibles</li>
@@ -606,6 +623,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useBilling } from '~~/composables/useBilling'
 
 definePageMeta({
   middleware: 'auth',
@@ -613,10 +631,10 @@ definePageMeta({
 })
 
 const authStore = useAuthStore()
-const config = useRuntimeConfig()
 const router = useRouter()
+const { getSubscriptionStatus, createCheckoutSession, createCustomerPortal, waitForSubscriptionUpdate } = useBilling()
 
-// ✅ TYPES STRICTS
+// Types
 type SubscriptionPlan = 'free' | 'starter' | 'pro'
 
 interface SubscriptionData {
@@ -627,7 +645,7 @@ interface SubscriptionData {
   nextBillingDate: string
 }
 
-// ✅ ÉTATS REACTIFS
+// Reactive state
 const loading = ref({
   main: false,
   subscription: false
@@ -636,14 +654,17 @@ const loading = ref({
 const selectedPlan = ref<SubscriptionPlan | ''>('')
 const plansSection = ref<HTMLElement>()
 
-// ✅ NOUVEAU: MODAL DE SUCCÈS
+// ✅ NOUVEAUX ÉTATS POUR SYNCHRONISATION
+const syncing = ref(false)
+const syncAttempt = ref(0)
+const maxSyncAttempts = ref(12)
+
 const successModal = ref({
   show: false,
   planName: '',
   plan: ''
 })
 
-// ✅ DONNÉES RÉELLES UNIQUEMENT VIA API
 const subscriptionData = ref<SubscriptionData>({
   plan: 'free',
   isActive: true,
@@ -652,8 +673,6 @@ const subscriptionData = ref<SubscriptionData>({
   nextBillingDate: ''
 })
 
-const availablePlans = ref<any>({})
-
 // Notification system
 const notification = ref({
   show: false,
@@ -661,40 +680,42 @@ const notification = ref({
   message: ''
 })
 
-// ✅ FEATURES LISTS
+// Features lists
 const starterFeatures = [
   '1 Vendeur IA spécialisé',
-  '1000 conversations/mois',
-  '50 documents max',
+  '1000 crédits messages/mois',
+  '10 documents dans la base de connaissances',
+  'Détection automatique des infos produits',
+  'Intégration widget (Shopify, WooCommerce, etc.)',
   'Analytics de base',
-  'Support email',
-  'Intégration widget'
+  'Support email'
+  
 ]
 
 const proFeatures = [
   'Tout du plan Starter',
   '3 Vendeurs IA spécialisés',
-  'Conversations illimitées',
-  'Base de connaissance illimitée',
+  '5000 crédits messages/mois',
+  '50 documents dans la base de connaissances',
   'Upsell automatique intelligent',
   'Analytics avancées & ROI',
   'Support prioritaire',
   'API & webhooks'
 ]
 
-// ✅ COMPUTED PROPERTIES
+// Computed properties
 const getCurrentPlanFeatures = (): string[] => {
   const plan = subscriptionData.value.plan
   if (isPlanPro(plan)) {
-    return availablePlans.value.pro?.features || proFeatures.slice(0, 4)
+    return proFeatures.slice(0, 4)
   } else if (isPlanStarter(plan)) {
-    return availablePlans.value.starter?.features || starterFeatures.slice(0, 3)
+    return starterFeatures.slice(0, 3)
   } else {
     return ['Essai gratuit 7 jours', 'Toutes les fonctionnalités Starter', 'Support par email']
   }
 }
 
-// ✅ UTILITY METHODS
+// Utility methods
 const getPlanName = (plan: SubscriptionPlan): string => {
   const names: Record<SubscriptionPlan, string> = {
     free: 'Essai Gratuit',
@@ -712,7 +733,7 @@ const getPlanPrice = (plan: SubscriptionPlan): string => {
   }
   
   const prices: Record<Exclude<SubscriptionPlan, 'free'>, string> = {
-    starter: '14€/mois',
+    starter: '19€/mois',
     pro: '29€/mois'
   }
   return prices[plan] || ''
@@ -766,6 +787,7 @@ const getStatusBadgeClass = (plan: SubscriptionPlan): string => {
 }
 
 const formatDate = (dateString: string): string => {
+  if (!dateString) return ''
   return new Date(dateString).toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: 'long',
@@ -780,103 +802,45 @@ const showNotification = (type: 'success' | 'error', message: string) => {
   }, 5000)
 }
 
-// ✅ API FUNCTIONS
+// ✅ FONCTION DE CHARGEMENT AMÉLIORÉE
 const loadSubscriptionData = async () => {
   loading.value.main = true
   try {
-    console.log('🔄 Chargement données abonnement via API...')
-    
-    if (!authStore.token) {
-      console.log('⚠️ Pas de token - mode démo')
-      return
-    }
-
-    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/subscription-status`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      }
-    }) as any
-
-    if (response.success) {
-      subscriptionData.value = {
-        plan: response.subscription.plan as SubscriptionPlan,
-        isActive: response.subscription.isActive,
-        trialDaysLeft: response.subscription.trialDaysLeft || 0,
-        trialEndDate: response.subscription.trialEndDate || '',
-        nextBillingDate: response.subscription.nextBillingDate || ''
-      }
-      console.log('✅ Données abonnement chargées:', subscriptionData.value)
-    }
-  } catch (error) {
-    console.error('❌ Erreur chargement abonnement:', error)
+    const data = await getSubscriptionStatus()
+    subscriptionData.value = data
+    console.log('Données d\'abonnement chargées:', data)
+  } catch (error: any) {
+    console.error('Erreur chargement abonnement:', error)
     showNotification('error', 'Erreur lors du chargement des données d\'abonnement')
   } finally {
     loading.value.main = false
   }
 }
 
-const loadAvailablePlans = async () => {
-  try {
-    console.log('📋 Chargement plans disponibles via API...')
-    
-    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/plans`) as any
-
-    if (response.success) {
-      availablePlans.value = response.plans.reduce((acc: any, plan: any) => {
-        acc[plan.id] = plan
-        return acc
-      }, {})
-      console.log('✅ Plans disponibles chargés:', availablePlans.value)
-    }
-  } catch (error) {
-    console.error('❌ Erreur chargement plans:', error)
-  }
-}
-
 const refreshAllData = async () => {
-  await Promise.all([
-    loadSubscriptionData(),
-    loadAvailablePlans()
-  ])
-  
-  // ✅ NOUVEAU: FORCER LA SYNCHRONISATION DU STORE AUTH
+  await loadSubscriptionData()
   await authStore.restoreSession()
-  
   showNotification('success', 'Données actualisées')
 }
 
-// ✅ ACTION METHODS
+// ✅ SOUSCRIPTION AVEC SYNCHRONISATION INTELLIGENTE
 const handleSubscribeToPlan = async (plan: SubscriptionPlan) => {
   selectedPlan.value = plan
   loading.value.subscription = true
   
   try {
-    console.log('🚀 Initiation du paiement pour le plan:', plan)
+    const response = await createCheckoutSession(
+      plan,
+      `${window.location.origin}/billing?success=true&plan=${plan}`,
+      `${window.location.origin}/billing?cancelled=true`
+    )
     
-    const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/create-checkout-session`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json'
-      },
-      body: {
-        plan: plan,
-        successUrl: `${window.location.origin}/billing?success=true&plan=${plan}`,
-        cancelUrl: `${window.location.origin}/billing?cancelled=true`
-      }
-    }) as any
-    
-    console.log('💳 Réponse API checkout:', response)
-    
-    if (response.success && response.checkoutUrl) {
-      console.log('🔄 Redirection vers Stripe Checkout:', response.checkoutUrl)
+    if (response.checkoutUrl) {
       window.location.href = response.checkoutUrl
-    } else {
-      throw new Error(response.error || 'Impossible de créer la session de paiement')
     }
     
   } catch (error: any) {
-    console.error('❌ Erreur lors de la souscription:', error)
+    console.error('Erreur lors de la souscription:', error)
     showNotification('error', error.message || 'Erreur lors de la souscription au plan')
   } finally {
     loading.value.subscription = false
@@ -884,10 +848,26 @@ const handleSubscribeToPlan = async (plan: SubscriptionPlan) => {
   }
 }
 
-const manageSubscription = () => {
-  window.open('https://billing.stripe.com/p/login/test_123', '_blank')
+// ✅ GESTION D'ABONNEMENT AVEC CUSTOMER PORTAL
+const handleManageSubscription = async () => {
+  loading.value.subscription = true
+  
+  try {
+    const response = await createCustomerPortal()
+    
+    if (response.portalUrl) {
+      window.open(response.portalUrl, '_blank')
+    }
+    
+  } catch (error: any) {
+    console.error('Erreur ouverture portail client:', error)
+    showNotification('error', error.message || 'Erreur lors de l\'ouverture du portail client')
+  } finally {
+    loading.value.subscription = false
+  }
 }
 
+// Other action methods
 const contactSupport = () => {
   window.location.href = 'mailto:support@chatseller.app?subject=Aide avec la facturation'
 }
@@ -904,7 +884,7 @@ const scrollToPlans = () => {
   plansSection.value?.scrollIntoView({ behavior: 'smooth' })
 }
 
-// ✅ NOUVELLES FONCTIONS MODAL
+// Modal functions
 const closeSuccessModal = () => {
   successModal.value.show = false
 }
@@ -914,63 +894,47 @@ const goToAgents = () => {
   router.push('/vendeurs-ia')
 }
 
-// ✅ LIFECYCLE AVEC AMÉLIORATION MAJEURE
+// ✅ LIFECYCLE AVEC SYNCHRONISATION ROBUSTE
 onMounted(async () => {
-  console.log('🚀 Composant billing monté')
+  console.log('Composant billing monté')
   
-  await loadAvailablePlans()
   await loadSubscriptionData()
   
-  // ✅ AMÉLIORATION MAJEURE: GESTION DU RETOUR DE PAIEMENT
+  // ✅ GESTION DU RETOUR DE PAIEMENT AVEC SYNCHRONISATION INTELLIGENTE
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.get('success') === 'true') {
     const planFromUrl = urlParams.get('plan')
-    console.log('✅ Retour de paiement réussi détecté pour le plan:', planFromUrl)
+    console.log('Retour de paiement réussi détecté pour le plan:', planFromUrl)
     
-    // Afficher immédiatement le modal de succès
+    // Afficher le modal immédiatement
     successModal.value = {
       show: true,
       planName: getPlanName((planFromUrl as SubscriptionPlan) || 'starter'),
       plan: planFromUrl || 'starter'
     }
     
-    // ✅ NOUVELLE LOGIQUE: RETRY INTELLIGENT AVEC FEEDBACK
-    setTimeout(async () => {
-      console.log('🔄 Synchronisation données après paiement...')
+    // ✅ SYNCHRONISATION INTELLIGENTE EN ARRIÈRE-PLAN
+    if (planFromUrl) {
+      syncing.value = true
+      syncAttempt.value = 0
       
-      let retryCount = 0
-      const maxRetries = 5
-      const retryDelay = 3000 // 3 secondes
+      // Délai initial pour laisser le webhook traiter
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
-      while (retryCount < maxRetries) {
-        retryCount++
-        console.log(`🔄 Tentative ${retryCount}/${maxRetries}...`)
-        
-        // Charger les données d'abonnement
+      const success = await waitForSubscriptionUpdate(planFromUrl as SubscriptionPlan, maxSyncAttempts.value, 3000)
+      
+      if (success) {
+        // Recharger les données finales
         await loadSubscriptionData()
-        
-        // ✅ NOUVEAU: FORCER LA SYNCHRONISATION DU STORE AUTH
-        await authStore.restoreSession()
-        
-        // Vérifier si le plan a été mis à jour
-        if (subscriptionData.value.plan === planFromUrl && subscriptionData.value.plan !== 'free') {
-          console.log('✅ Mise à jour confirmée ! Plan actuel:', subscriptionData.value.plan)
-          break
-        }
-        
-        if (retryCount < maxRetries) {
-          console.log(`⏳ Plan pas encore mis à jour, retry dans ${retryDelay/1000}s...`)
-          await new Promise(resolve => setTimeout(resolve, retryDelay))
-        }
+        showNotification('success', 'Votre plan a été mis à jour avec succès !')
+      } else {
+        showNotification('error', 'La mise à jour prend plus de temps que prévu. Actualisez la page dans quelques minutes ou contactez le support.')
       }
       
-      // Si après tous les retries le plan n'est toujours pas à jour
-      if (subscriptionData.value.plan === 'free') {
-        console.warn('⚠️ Le plan n\'a pas pu être mis à jour automatiquement')
-        showNotification('error', 'La mise à jour prend plus de temps que prévu. Actualisez la page dans quelques minutes.')
-      }
-    }, 2000)
+      syncing.value = false
+    }
     
+    // Nettoyer l'URL
     window.history.replaceState({}, '', '/billing')
   } else if (urlParams.get('cancelled') === 'true') {
     showNotification('error', 'Le paiement a été annulé')

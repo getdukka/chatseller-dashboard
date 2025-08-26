@@ -785,9 +785,9 @@ Caractéristiques principales :
 
     <!-- Website Modal -->
     <div v-if="showWebsiteModal" class="modal-overlay" @click.self="showWebsiteModal = false">
-      <div class="modal-content">
+      <div class="modal-content modal-large">
         <div class="modal-header">
-          <h3 class="modal-title">Indexer un site web</h3>
+          <h3 class="modal-title">Indexer un site web complet</h3>
           <button @click="showWebsiteModal = false" class="modal-close">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -796,7 +796,8 @@ Caractéristiques principales :
         </div>
         
         <div class="modal-body">
-          <div class="space-y-4">
+          <div class="space-y-6">
+            <!-- URL Input -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">URL du site web</label>
               <input
@@ -804,29 +805,99 @@ Caractéristiques principales :
                 type="url"
                 placeholder="https://votre-site.com"
                 class="input-modern w-full"
+                :disabled="saving"
               >
+              <p class="text-xs text-gray-500 mt-1">
+                Nous découvrirons automatiquement toutes les pages accessibles de ce site
+              </p>
             </div>
             
+            <!-- Title Input -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Nom (optionnel)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nom du projet (optionnel)</label>
               <input
                 v-model="websiteForm.name"
                 type="text"
-                placeholder="Site principal, FAQ, Blog..."
+                placeholder="Ex: Site principal, Documentation, FAQ..."
                 class="input-modern w-full"
+                :disabled="saving"
               >
+              <p class="text-xs text-gray-500 mt-1">
+                Ce nom sera utilisé comme préfixe pour tous les documents créés
+              </p>
             </div>
             
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Options d'indexation</label>
-              <div class="space-y-2">
-                <label class="flex items-center">
-                  <input v-model="websiteForm.includeSubpages" type="checkbox" class="rounded">
-                  <span class="ml-2 text-sm text-gray-700">Inclure les sous-pages</span>
-                </label>
-                <label class="flex items-center">
-                  <input v-model="websiteForm.autoUpdate" type="checkbox" class="rounded">
-                  <span class="ml-2 text-sm text-gray-700">Mise à jour automatique (quotidienne)</span>
+            <!-- Indexation Options -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-900">Options d'indexation</h4>
+              
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <div class="flex-1">
+                    <h5 class="text-sm font-medium text-blue-800 mb-1">Indexation intelligente</h5>
+                    <p class="text-sm text-blue-700 mb-3">
+                      Notre système découvre automatiquement toutes les pages de votre site via le sitemap.xml 
+                      ou en explorant les liens internes.
+                    </p>
+                    <div class="space-y-2">
+                      <label class="flex items-center text-sm">
+                        <input 
+                          v-model="websiteForm.includeSubpages" 
+                          type="checkbox" 
+                          class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                          :disabled="saving"
+                        >
+                        <span class="text-blue-800">
+                          Indexer toutes les pages découvertes (recommandé)
+                        </span>
+                      </label>
+                      
+                      <div v-if="!websiteForm.includeSubpages" class="bg-yellow-50 border border-yellow-200 rounded p-2 ml-6">
+                        <p class="text-xs text-yellow-700">
+                          Seule la page principale sera indexée si cette option est désactivée
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Plan Limits Info -->
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h5 class="text-sm font-medium text-gray-900 mb-2">Limites de votre plan</h5>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span class="text-gray-600">Documents disponibles:</span>
+                    <span class="ml-2 font-medium">
+                      {{ documentsRemaining === -1 ? 'Illimité' : documentsRemaining }}
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600">Pages max par site:</span>
+                    <span class="ml-2 font-medium">
+                      {{ planDetails.name === 'free' ? '5' : 
+                         planDetails.name === 'starter' ? '10' : 
+                         planDetails.name === 'pro' ? '25' : '50' }}
+                    </span>
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                  Chaque page découverte créera un document séparé dans votre base de connaissances
+                </p>
+              </div>
+
+              <!-- Future feature -->
+              <div class="opacity-50">
+                <label class="flex items-center text-sm text-gray-400">
+                  <input 
+                    type="checkbox" 
+                    disabled
+                    class="rounded border-gray-300 mr-2"
+                  >
+                  <span>Mise à jour automatique (quotidienne) - Bientôt disponible</span>
                 </label>
               </div>
             </div>
@@ -834,13 +905,25 @@ Caractéristiques principales :
         </div>
         
         <div class="modal-footer">
-          <button @click="showWebsiteModal = false" class="btn-secondary">Annuler</button>
+          <button 
+            @click="showWebsiteModal = false" 
+            :disabled="saving"
+            class="btn-secondary flex-1"
+          >
+            Annuler
+          </button>
           <button 
             @click="handleIndexWebsite" 
-            :disabled="!websiteForm.url || saving" 
-            class="btn-primary"
+            :disabled="!websiteForm.url || saving || !canUploadDocument" 
+            class="btn-primary flex-1"
           >
-            {{ saving ? 'Indexation...' : 'Indexer le site' }}
+            <div v-if="saving" class="flex items-center justify-center">
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Indexation...
+            </div>
+            <span v-else>
+              Indexer le site
+            </span>
           </button>
         </div>
       </div>
@@ -1011,6 +1094,14 @@ const {
   activeDocuments,
   documentsByType,
   totalWordCount,
+  // ✅ NOUVELLES PROPRIÉTÉS POUR LA GESTION DU PLAN
+  planDetails,
+  currentDocumentCount,
+  documentLimit,
+  canUploadDocument,
+  documentsRemaining,
+  isLimitReached,
+  // Actions
   fetchDocuments,
   createDocument,
   updateDocument,
@@ -1335,17 +1426,84 @@ const handleUploadFile = async () => {
 
 // Website processing
 const handleIndexWebsite = async () => {
-  const result = await processWebsite(
-    websiteForm.value.url,
-    websiteForm.value.name || undefined
-  )
+  try {
+    // ✅ VALIDATION DE BASE
+    if (!websiteForm.value.url.trim()) {
+      error.value = 'Veuillez saisir une URL valide'
+      return
+    }
 
-  if (result.success) {
-    showNotification('Site web indexé avec succès!')
-    websiteForm.value = { url: '', name: '', includeSubpages: true, autoUpdate: false }
-    showWebsiteModal.value = false
-  } else {
-    console.error('Erreur lors de l\'indexation:', result)
+    // ✅ AFFICHER LE PROGRÈS D'INDEXATION
+    const indexingProgress = ref({
+      step: 'discovery', // 'discovery', 'processing', 'complete'
+      pagesDiscovered: 0,
+      pagesProcessed: 0,
+      currentPage: '',
+      errors: [] as string[]
+    })
+
+    // ✅ METTRE À JOUR L'ÉTAT POUR AFFICHER LE PROGRÈS
+    saving.value = true
+    error.value = null
+    
+    // Créer une notification de progrès
+    successMessage.value = `🔍 Découverte des pages du site ${websiteForm.value.url}...`
+    showSuccessMessage.value = true
+
+    const result = await processWebsite(
+      websiteForm.value.url,
+      websiteForm.value.name || undefined,
+      websiteForm.value.includeSubpages ? ['website', 'multi-page'] : ['website', 'page-unique']
+    )
+
+    if (result.success) {
+      const documentsCreated = Array.isArray(result.data) ? result.data : [result.data]
+      const meta = (result as any).meta
+
+      // ✅ NOTIFICATION DE SUCCÈS DÉTAILLÉE
+      if (documentsCreated.length === 1) {
+        showNotification(`Site web indexé avec succès! 1 page traitée.`)
+      } else {
+        showNotification(`Site web indexé avec succès! ${documentsCreated.length} pages traitées.`)
+      }
+
+      // ✅ AFFICHER UN RÉSUMÉ SI PLUSIEURS PAGES
+      if (meta?.totalPagesDiscovered && meta.totalPagesDiscovered > 1) {
+        setTimeout(() => {
+          showNotification(
+            `📊 Résumé: ${meta.totalPagesDiscovered} pages découvertes, ${meta.totalDocumentsCreated} documents créés`,
+            false
+          )
+        }, 2000)
+      }
+
+      // ✅ RÉINITIALISER LE FORMULAIRE
+      websiteForm.value = { 
+        url: '', 
+        name: '', 
+        includeSubpages: true, 
+        autoUpdate: false 
+      }
+      showWebsiteModal.value = false
+
+    } else {
+      console.error('Erreur lors de l\'indexation:', result)
+      
+      // ✅ GESTION DES ERREURS SPÉCIFIQUES
+      let errorMsg = result.error || 'Erreur lors de l\'indexation du site web'
+      
+      if (errorMsg.includes('Limite de votre plan atteinte')) {
+        errorMsg += '\n\n💡 Conseil: Passez au plan supérieur pour indexer plus de pages simultanément.'
+      } else if (errorMsg.includes('Pas assez d\'espace')) {
+        errorMsg += '\n\n💡 Conseil: Supprimez quelques documents existants ou passez au plan supérieur.'
+      }
+      
+      error.value = errorMsg
+    }
+
+  } catch (err: any) {
+    console.error('Erreur handleIndexWebsite:', err)
+    error.value = err.message || 'Erreur inattendue lors de l\'indexation'
   }
 }
 

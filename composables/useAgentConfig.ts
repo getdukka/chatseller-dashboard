@@ -1,4 +1,4 @@
-// composables/useAgentConfig.ts 
+// composables/useAgentConfig.ts - CORRIGÉ
 import { ref, computed, readonly } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
@@ -170,14 +170,14 @@ export const useAgentConfig = () => {
   // HELPERS POUR TYPE DE PRODUIT AVEC CUSTOM
   const getProductTypeOptions = () => [
     { value: 'auto', label: '🎯 Détection automatique', description: 'Le système détecte automatiquement le type' },
-    { value: 'jeu', label: '🎮 Jeux', description: 'Jeux de société, cartes, etc.' },
-    { value: 'livre', label: '📚 Livres', description: 'Livres, romans, manuels' },
-    { value: 'formation', label: '🎓 Formations', description: 'Cours en ligne, formations' },
-    { value: 'smartphone', label: '📱 Smartphones', description: 'Téléphones, accessoires mobiles' },
-    { value: 'ordinateur', label: '💻 Ordinateurs', description: 'PC, laptops, composants' },
-    { value: 'vêtement', label: '👗 Vêtements', description: 'Mode, accessoires vestimentaires' },
-    { value: 'service', label: '🔧 Services', description: 'Consultations, prestations' },
-    { value: 'bijou', label: '💎 Bijoux', description: 'Bijoux, montres, accessoires' },
+    { value: 'jeu', label: '🎮 Jeu', description: 'Jeux de société, cartes, etc.' },
+    { value: 'livre', label: '📚 Livre', description: 'Livres, romans, manuels' },
+    { value: 'formation', label: '🎓 Formation', description: 'Cours en ligne, formations' },
+    { value: 'smartphone', label: '📱 Smartphone', description: 'Téléphones, accessoires mobiles' },
+    { value: 'ordinateur', label: '💻 Ordinateur', description: 'PC, laptops, composants' },
+    { value: 'vêtement', label: '👗 Vêtement', description: 'Mode, accessoires vestimentaires' },
+    { value: 'service', label: '🔧 Service', description: 'Consultations, prestations' },
+    { value: 'bijou', label: '💎 Bijou', description: 'Bijoux, montres, accessoires' },
     { value: 'produit', label: '📦 Autre produit', description: 'Spécifiez votre type de produit' } 
   ]
 
@@ -282,6 +282,22 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     }
   }
 
+  // ✅ NOUVELLE FONCTION : Nettoyer l'URL avatar - CORRIGÉE
+  const getCleanAvatarUrl = (avatar: string | null | undefined): string => {
+    // Si pas d'avatar ou si c'est un base64 trop long, utiliser un avatar généré
+    if (!avatar || avatar.startsWith('data:image/') || avatar.length > 200) {
+      // ✅ CORRECTION: Utiliser les références correctes
+      const currentAgentName = localConfig.value?.agent?.name || agentConfig.value?.agent?.name || 'Agent'
+      const currentPrimaryColor = localConfig.value?.widget?.primaryColor || agentConfig.value?.widget?.primaryColor || '#8B5CF6'
+      
+      const name = encodeURIComponent(currentAgentName)
+      const color = currentPrimaryColor.replace('#', '')
+      return `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=128`
+    }
+    
+    return avatar
+  }
+
   // ✅ CORRECTION MAJEURE : Code d'intégration CORRIGÉ avec welcomeMessage
   const integrationCode = computed(() => {
     console.log('🔧 [integrationCode] Génération du code d\'intégration avec welcomeMessage...')
@@ -352,6 +368,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     borderRadius: '${borderRadius}',
     autoDetectProduct: true,
     debug: false,
+    forceDisplay: true,
     disableFallback: false,
     agentConfig: {
       id: '${agentId}',
@@ -362,7 +379,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
       personality: '${agentData.personality || 'friendly'}',
       productType: '${agentData.customProductType || agentData.productType || 'auto'}', 
       shopName: '${agentData.shopName || 'cette boutique en ligne'}',
-      avatar: '${agentData.avatar || ''}'
+      avatar: '${getCleanAvatarUrl(agentData.avatar)}'
     }
   };
   
@@ -569,7 +586,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     }
   })
 
-  // HELPER: Headers avec authentification ROBUSTE
+  // HELPER: Headers avec authentification 
   const getAuthHeaders = () => {
     if (!authStore.token) {
       throw new Error('Token d\'authentification manquant. Veuillez vous reconnecter.')

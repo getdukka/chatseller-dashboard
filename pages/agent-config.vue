@@ -30,12 +30,6 @@
                   </svg>
                   Synchronisé
                 </span>
-                <span v-if="hasUnsavedChanges" class="ml-2 inline-flex items-center text-orange-600">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  Sauvegarde dans 2min
-                </span>
 
                 <span v-if="lastAutoSave" class="ml-2 inline-flex items-center text-green-600 text-xs">
                   Sauvé auto: {{ formatTime(lastAutoSave) }}
@@ -813,14 +807,11 @@
                   >
                     <option value="above-cta">Au-dessus du bouton d'achat</option>
                     <option value="below-cta">En-dessous du bouton d'achat</option>
-                    <option value="beside-cta">À côté du bouton d'achat</option>
-                    <option value="bottom-right">Coin en bas à droite</option>
-                    <option value="bottom-left">Coin en bas à gauche</option>
                   </select>
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Thème</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Thème du Widget</label>
                   <select 
                     v-model="localConfig.widget.theme" 
                     @change="updateWidgetPreview"
@@ -836,7 +827,7 @@
               <!-- Taille et bordures -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Taille du widget</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Taille du bouton</label>
                   <select 
                     v-model="localConfig.widget.widgetSize" 
                     @change="updateWidgetPreview"
@@ -913,12 +904,6 @@
                     ]"
                   ></span>
                 </button>
-              </div>
-
-              <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p class="text-xs text-blue-800">
-                  <strong>Focus MVP :</strong> Nous avons simplifié les comportements aux 2 fonctionnalités les plus impactantes pour vos conversions.
-                </p>
               </div>
             </div>
           </div>
@@ -2153,30 +2138,87 @@ const handleAvatarUpload = async (event: Event) => {
     return
   }
   
-  // Vérifier la taille (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('L\'image doit faire moins de 5MB.')
+  // Vérifier la taille (max 2MB pour éviter les problèmes)
+  if (file.size > 2 * 1024 * 1024) {
+    alert('L\'image doit faire moins de 2MB.')
     return
   }
   
   try {
-    // Convertir en base64 pour prévisualisation immédiate
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        localConfig.value.agent.avatar = e.target.result as string
-        handleConfigChange()
-      }
+    // Afficher un loader pendant l'upload
+    localConfig.value.agent.avatar = 'uploading...'
+    
+    // ✅ NOUVEAU : Upload vers Supabase Storage
+    const { $supabase } = useNuxtApp()
+    
+    // Générer nom de fichier unique
+    const fileExtension = file.name.split('.').pop()
+    const fileName = `agent-${agentId.value}-${Date.now()}.${fileExtension}`
+    const filePath = `avatars/${fileName}`
+    
+    console.log('📤 Upload avatar vers Supabase:', filePath)
+    
+    // Upload du fichier
+    const { data: uploadData, error: uploadError } = await $supabase.storage
+      .from('avatars')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+    
+    if (uploadError) {
+      throw uploadError
     }
-    reader.readAsDataURL(file)
     
-    // TODO: Ici, vous pourrez plus tard ajouter l'upload vers un service cloud
-    // comme Cloudinary, AWS S3, ou Supabase Storage
-    console.log('📁 Image sélectionnée:', file.name)
+    // Obtenir l'URL publique
+    const { data: publicUrlData } = $supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath)
     
-  } catch (error) {
+    if (!publicUrlData?.publicUrl) {
+      throw new Error('Impossible d\'obtenir l\'URL publique')
+    }
+    
+    // ✅ STOCKER L'URL AU LIEU DU BASE64
+    localConfig.value.agent.avatar = publicUrlData.publicUrl
+    
+    console.log('✅ Avatar uploadé avec succès:', publicUrlData.publicUrl)
+    
+    // Sauvegarder immédiatement
+    handleConfigChange()
+    
+    // Feedback utilisateur
+    successMessage.value = '✅ Avatar uploadé avec succès !'
+    setTimeout(() => {
+      successMessage.value = null
+    }, 3000)
+    
+  } catch (error: any) {
     console.error('❌ Erreur upload avatar:', error)
-    alert('Erreur lors du téléchargement de l\'image.')
+    
+    // Remettre l'ancien avatar ou générer un fallback
+    const name = encodeURIComponent(localConfig.value.agent.name || 'Agent')
+    const color = localConfig.value.widget?.primaryColor?.replace('#', '') || '6B7280'
+    localConfig.value.agent.avatar = `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=200&rounded=true&font-size=0.4`
+    
+    alert(`Erreur lors de l'upload de l'avatar: ${error.message}`)
+  }
+}
+
+// ✅ NOUVELLE FONCTION : Nettoyer les avatars base64 existants
+const cleanupExistingAvatar = () => {
+  if (localConfig.value.agent.avatar && localConfig.value.agent.avatar.startsWith('data:image/')) {
+    console.log('🧹 Nettoyage avatar base64 existant...')
+    
+    // Remplacer par un avatar généré
+    const name = encodeURIComponent(localConfig.value.agent.name || 'Agent')
+    const color = localConfig.value.widget?.primaryColor?.replace('#', '') || '6B7280'
+    localConfig.value.agent.avatar = `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=200&rounded=true&font-size=0.4`
+    
+    // Sauvegarder le changement
+    handleConfigChange()
+    
+    console.log('✅ Avatar base64 remplacé par URL générée')
   }
 }
 
@@ -2243,10 +2285,7 @@ const getWidgetFontSize = (size: string): string => {
 const getPositionLabel = (position: string): string => {
   const positionLabels = {
     'above-cta': 'Au-dessus du CTA',
-    'below-cta': 'En-dessous du CTA',
-    'beside-cta': 'À côté du CTA',
-    'bottom-right': 'Coin bas droite',
-    'bottom-left': 'Coin bas gauche'
+    'below-cta': 'En-dessous du CTA'
   }
   return positionLabels[position as keyof typeof positionLabels] || position
 }
@@ -2730,6 +2769,9 @@ onMounted(async () => {
   
   // Charger les données de manière sécurisée
   await loadAgentData()
+
+  // ✅ NOUVEAU : Nettoyer les avatars base64 existants
+  cleanupExistingAvatar()
   
   // Charger les documents de base de connaissances
   await fetchKnowledgeBaseDocuments()

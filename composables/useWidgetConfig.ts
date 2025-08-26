@@ -1,5 +1,4 @@
 // composables/useWidgetConfig.ts
-// ✅ COMPOSABLE OPTIONNEL pour centraliser la logique Widget
 
 import { ref, computed, watch, type Ref } from 'vue'
 

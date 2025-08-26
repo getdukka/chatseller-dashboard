@@ -1,4 +1,4 @@
-// composables/useProducts.ts - API PURE VERSION
+// composables/useProducts.ts
 
 import { ref, computed } from 'vue'
 
