@@ -26,79 +26,98 @@ export default defineNuxtConfig({
     typeCheck: false
   },
 
-  // ✅ CONFIGURATION RUNTIME CORRIGÉE POUR VERCEL
+  // ✅ CONFIGURATION RUNTIME CORRIGÉE
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-chatseller-dashboard',
     
     public: {
-      supabaseUrl: process.env.SUPABASE_URL || process.env.NUXT_PUBLIC_SUPABASE_URL,
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY || process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+      // ✅ Utilise les bonnes variables d'environnement
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY,
       
-      // ✅ URLS SÉCURISÉES AVEC FALLBACKS ROBUSTES
+      // ✅ URLS DYNAMIQUES SELON L'ENVIRONNEMENT
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 
-        'https://chatseller-api-production.up.railway.app',
+        (process.env.NODE_ENV === 'production' 
+          ? 'https://chatseller-api-production.up.railway.app'
+          : 'http://localhost:3001'),
           
       widgetUrl: process.env.NUXT_PUBLIC_WIDGET_URL || 
-        'https://widget.chatseller.app',
+        (process.env.NODE_ENV === 'production'
+          ? 'https://widget.chatseller.app'
+          : 'https://widget.chatseller.app'),
           
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 
-        'https://dashboard.chatseller.app',
+        (process.env.NODE_ENV === 'production'
+          ? 'https://dashboard.chatseller.app'
+          : 'http://localhost:3002'),
           
-      environment: process.env.NODE_ENV || 'production',
-      debug: process.env.DEBUG === 'true'
+      environment: process.env.NODE_ENV || 'development',
+      debug: process.env.DEBUG === 'true' || process.env.NODE_ENV === 'development'
     }
   },
 
-  // ✅ RÈGLES DE ROUTAGE CORRIGÉES POUR VERCEL
+  // ✅ RÈGLES DE ROUTAGE OPTIMISÉES
   routeRules: {
-    // Pages statiques pour de meilleures performances
     '/': { 
       prerender: false, 
-      ssr: true,
-      headers: { 'Cache-Control': 's-maxage=300' }
+      ssr: true 
     },
     '/login': { 
-      ssr: true,
-      headers: { 'Cache-Control': 's-maxage=300' }
+      prerender: process.env.NODE_ENV === 'production',
+      ssr: true
     },
     '/register': { 
-      ssr: true,
-      headers: { 'Cache-Control': 's-maxage=300' }
+      prerender: process.env.NODE_ENV === 'production',
+      ssr: true
     },
-    
-    // Pages dynamiques côté client uniquement
     '/auth/callback': { 
+      prerender: false, 
       ssr: false,
-      prerender: false,
-      headers: { 
-        'X-Robots-Tag': 'noindex',
-        'Cache-Control': 'no-cache'
-      }
+      headers: { 'X-Robots-Tag': 'noindex' }
     },
     '/onboarding': { 
+      prerender: false, 
       ssr: false,
-      prerender: false
+      headers: { 'X-Robots-Tag': 'noindex' }
     },
-    
-    // Pages protégées avec SSR conditionnel
     '/vendeurs-ia/**': { 
-      ssr: false,  // ✅ Désactivé pour éviter les erreurs de données utilisateur
-      prerender: false
+      prerender: false, 
+      ssr: process.env.NODE_ENV === 'production'
     },
     '/conversations/**': { 
-      ssr: false,
-      prerender: false
+      prerender: false, 
+      ssr: false 
     },
-    '/agent-config': {  // ✅ AJOUT SPÉCIFIQUE
-      ssr: false,
-      prerender: false
+    '/orders/**': { 
+      prerender: false, 
+      ssr: false 
     },
-    
-    // API routes
+    '/settings/**': { 
+      prerender: false, 
+      ssr: process.env.NODE_ENV === 'production'
+    },
+    '/billing': { 
+      prerender: false, 
+      ssr: process.env.NODE_ENV === 'production'
+    },
+    '/analytics': { 
+      prerender: false, 
+      ssr: false 
+    },
+    '/knowledge-base/**': { 
+      prerender: false, 
+      ssr: false 
+    },
+    '/products/**': { 
+      prerender: false, 
+      ssr: false 
+    },
     '/api/**': { 
       cors: true,
       headers: { 
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
+        'Cache-Control': process.env.NODE_ENV === 'production' 
+          ? 'public, max-age=300' 
+          : 'no-cache, no-store, must-revalidate'
       }
     }
   },
@@ -119,27 +138,36 @@ export default defineNuxtConfig({
     }
   ],
 
-  // ✅ SSR DÉSACTIVÉ POUR LES PAGES SENSIBLES
   ssr: true,
 
-  // ✅ CONFIGURATION NITRO OPTIMISÉE VERCEL
+  // ✅ CONFIGURATION NITRO FIXÉE POUR VERCEL
   nitro: {
-    preset: 'vercel',
-    compressPublicAssets: true,
-    minify: true,
-    storage: {
-      redis: {
-        driver: 'memory'  // Évite les erreurs Redis sur Vercel
+    preset: process.env.NODE_ENV === 'production' ? 'vercel' : 'node-server',
+    compressPublicAssets: process.env.NODE_ENV === 'production',
+    // ✅ Suppression des configurations problématiques
+    routeRules: {
+      '/auth/callback': { 
+        headers: { 
+          'X-Robots-Tag': 'noindex',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        } 
+      },
+      '/onboarding': { 
+        headers: { 
+          'X-Robots-Tag': 'noindex',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        } 
       }
     }
   },
 
-  // ✅ HEADERS SÉCURITÉ PRODUCTION
-  headers: {
-    'X-Frame-Options': 'SAMEORIGIN',
+  // ✅ HEADERS DE SÉCURITÉ EN PRODUCTION
+  headers: process.env.NODE_ENV === 'production' ? {
+    'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
-    'Referrer-Policy': 'strict-origin-when-cross-origin'
-  },
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+  } : {},
 
   plugins: [
     '~/plugins/auth.client.ts'
@@ -152,35 +180,53 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Dashboard ChatSeller - Créez des Vendeurs IA pour votre e-commerce' }
+        { name: 'description', content: 'Dashboard ChatSeller - Créez des Vendeurs IA pour votre e-commerce' },
+        { name: 'robots', content: process.env.NODE_ENV === 'production' ? 'index, follow' : 'noindex, nofollow' }
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'canonical', href: process.env.NUXT_PUBLIC_APP_URL || 'https://dashboard.chatseller.app' }
       ]
     }
   },
 
-  // ✅ BUILD OPTIMISÉ VERCEL
+  hooks: process.env.NODE_ENV === 'development' ? {
+    'render:route': (url: string) => {
+      console.log('🛣️ [Nuxt] Route rendue:', url)
+    },
+    'app:created': () => {
+      console.log('🚀 [Nuxt] App créée avec succès')
+    }
+  } : {},
+
   build: {
     transpile: ['@headlessui/vue']
   },
 
   vite: {
     define: {
-      __VUE_PROD_DEVTOOLS__: false
+      __VUE_PROD_DEVTOOLS__: process.env.NODE_ENV === 'development'
     },
     optimizeDeps: {
       include: ['@supabase/supabase-js']
     },
     build: {
       target: 'es2020',
-      sourcemap: false  // Désactivé pour optimiser
+      rollupOptions: {
+        output: {
+          manualChunks: process.env.NODE_ENV === 'production' ? {
+            'supabase': ['@supabase/supabase-js'],
+            'vendor': ['vue', 'pinia']
+          } : undefined
+        }
+      }
     }
   },
 
-  // ✅ CONFIGURATION EXPÉRIMENTALE VERCEL
   experimental: {
-    payloadExtraction: false,  
-    inlineSSRStyles: false
-  }
+    payloadExtraction: process.env.NODE_ENV === 'production',
+    inlineSSRStyles: process.env.NODE_ENV === 'production'
+  },
+
+  errorHandler: '~/error.vue'
 })
