@@ -1,4 +1,0 @@
-const default_vue_vue_type_style_index_0_scoped_b378fda0_lang = "@media (max-width:1023px){.lg\\:pl-64[data-v-b378fda0]{padding-left:0!important}}.transition-all[data-v-b378fda0]{transition:all .2s cubic-bezier(.4,0,.2,1)}.z-40[data-v-b378fda0]{z-index:40}.z-50[data-v-b378fda0]{z-index:50}@keyframes spin-b378fda0{0%{transform:rotate(0)}to{transform:rotate(1turn)}}.animate-spin[data-v-b378fda0]{animation:spin-b378fda0 1s linear infinite}@keyframes pulse-b378fda0{0%,to{opacity:1}50%{opacity:.5}}.animate-pulse[data-v-b378fda0]{animation:pulse-b378fda0 2s cubic-bezier(.4,0,.6,1) infinite}a[data-v-b378fda0],button[data-v-b378fda0]{position:relative;z-index:1}.sidebar-content[data-v-b378fda0]{pointer-events:auto}";
-
-export { default_vue_vue_type_style_index_0_scoped_b378fda0_lang as d };
-//# sourceMappingURL=default-styles-1.mjs-nhsFlj9W.mjs.map
