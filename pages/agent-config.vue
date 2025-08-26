@@ -280,22 +280,28 @@
                   </option>
                 </select>
                 
-                <!-- ✅ Champ personnalisé quand "Autre produit" est sélectionné -->
+                <!-- ✅ CORRIGÉ : Champ personnalisé avec sauvegarde automatique -->
                 <div v-if="localConfig.agent.productType === 'produit'" class="space-y-2">
                   <input
                     v-model="localConfig.agent.customProductType"
-                    @input="handleConfigChange"
+                    @input="handleCustomProductTypeChange"
                     type="text"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                     placeholder="Ex: bijou, meuble, cosmétique, jeu..."
                   />
                   <p class="text-xs text-gray-500">
-                    Spécifiez le type de produit exact (ex: "livre" au lieu de "produit")
+                    Spécifiez le type de produit exact (ex: "jeu" au lieu de "produit")
                   </p>
+                  <div v-if="localConfig.agent.customProductType" class="text-xs text-green-600 flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Type personnalisé sauvegardé
+                  </div>
                 </div>
                 
                 <p class="text-xs text-gray-500">
-                  {{ getProductTypeOptions().find(opt => opt.value === localConfig.agent.productType)?.description || 'Sélectionnez le type de produit' }}
+                  {{ getEffectiveProductTypeDescription() }}
                 </p>
               </div>
             </div>
@@ -378,15 +384,35 @@
               </div>
               
               <!-- ✅ CORRECTION : Champ de saisie avec ref correcte -->
-              <div>
-                <textarea 
-                  ref="welcomeMessageInputRef"
-                  v-model="localConfig.agent.welcomeMessage"
-                  @input="handleConfigChange"
-                  placeholder="Tapez votre message d'accueil avec des variables..."
-                  class="w-full p-3 border rounded-lg font-mono text-sm"
-                  rows="4"
+              <div class="bg-gray-50 p-4 rounded-lg border">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-xs font-medium text-gray-600">👁️ Aperçu en temps réel :</p>
+                  <button
+                    v-if="localConfig.agent.welcomeMessage"
+                    @click="resetToDefaultTemplate"
+                    type="button"
+                    class="text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    🔄 Remettre template par défaut
+                  </button>
+                </div>
+                <div 
+                  class="text-sm p-3 bg-white rounded border min-h-[60px] leading-relaxed" 
+                  v-html="getPreviewWelcomeMessage() || '<em class=&quot;text-gray-400&quot;>Tapez votre message d\'accueil pour voir l\'aperçu...</em>'"
                 />
+                <div class="mt-2 flex justify-between items-center">
+                  <p class="text-xs text-gray-500">
+                    Variables remplacées automatiquement
+                  </p>
+                  <button 
+                    v-if="localConfig.agent.welcomeMessage"
+                    @click="testWelcomeMessagePreview"
+                    type="button"
+                    class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
+                  >
+                    🧪 Test API réel
+                  </button>
+                </div>
               </div>
               
               <!-- Aperçu en temps réel -->
@@ -548,40 +574,63 @@
 
               <!-- Instructions spécifiques -->
               <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Instructions spécifiques</label>
-              <div class="space-y-2">
-                <div 
-                  v-for="(instruction, index) in (localConfig.agent.config.specificInstructions || [])" 
-                  :key="index" 
-                  class="flex items-center space-x-2"
-                >
-                  <input
-                    v-model="localConfig.agent.config.specificInstructions[index]"
-                    @input="handleConfigChange"
-                    type="text"
-                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    placeholder="Ex: Toujours demander le prénom du client"
-                  />
-                  <button
-                    @click="removeInstruction(index)"
-                    type="button"
-                    class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-                    title="Supprimer cette instruction"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                  </button>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-700">Instructions spécifiques</label>
+                  <span v-if="!isPaidUser" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Plan Pro
+                  </span>
                 </div>
-                <button
-                  @click="addInstruction"
-                  type="button"
-                  class="w-full p-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-300 hover:text-blue-600 transition-colors text-sm"
-                >
-                  + Ajouter une instruction
-                </button>
+                <div class="space-y-2">
+                  <div 
+                    v-for="(instruction, index) in (localConfig.agent.config.specificInstructions || [])" 
+                    :key="`instruction-${index}`" 
+                    class="flex items-center space-x-2"
+                  >
+                    <input
+                      v-model="localConfig.agent.config.specificInstructions[index]"
+                      @input="handleInstructionChange(index)"
+                      @blur="validateAndSaveInstruction(index)"
+                      :disabled="!isPaidUser"
+                      type="text"
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                      placeholder="Ex: Toujours demander le prénom du client"
+                    />
+                    <button
+                      v-if="localConfig.agent.config.specificInstructions[index]"
+                      @click="validateAndSaveInstruction(index)"
+                      type="button"
+                      class="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
+                      title="Valider cette instruction"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    </button>
+                    <button
+                      @click="removeInstruction(index)"
+                      :disabled="!isPaidUser"
+                      type="button"
+                      class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50"
+                      title="Supprimer cette instruction"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <button
+                    @click="addInstruction"
+                    :disabled="!isPaidUser"
+                    type="button"
+                    class="w-full p-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-300 hover:text-blue-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    + Ajouter une instruction
+                  </button>
+                  <p v-if="!isPaidUser" class="text-xs text-yellow-600">
+                    Fonctionnalité réservée au plan Pro pour des instructions personnalisées avancées
+                  </p>
+                </div>
               </div>
-            </div>
             </div>
           </div>
         </div>
@@ -819,14 +868,14 @@
 
           <!-- Comportement du Widget -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
-            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">⚙️ Comportement</h3>
+            <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-4 lg:mb-6">⚙️ Comportement Widget</h3>
             
             <div class="space-y-4">
               <!-- Ouverture automatique -->
               <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div class="flex-1">
                   <h4 class="text-sm font-medium text-gray-900">Ouverture automatique</h4>
-                  <p class="text-xs text-gray-500 mt-1">Le chat s'ouvre automatiquement après quelques secondes</p>
+                  <p class="text-xs text-gray-500 mt-1">Le chat s'ouvre automatiquement après quelques secondes sur votre site</p>
                 </div>
                 <button
                   @click="handleToggleAndChange(() => localConfig.widget.autoOpen = !localConfig.widget.autoOpen)"
@@ -844,33 +893,11 @@
                 </button>
               </div>
 
-              <!-- Affichage avatar -->
-              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
-                <div class="flex-1">
-                  <h4 class="text-sm font-medium text-gray-900">Afficher l'avatar</h4>
-                  <p class="text-xs text-gray-500 mt-1">Avatar du Vendeur IA dans les conversations</p>
-                </div>
-                <button
-                  @click="handleToggleAndChange(() => localConfig.widget.showAvatar = !localConfig.widget.showAvatar)"
-                  :class="[
-                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                    localConfig.widget.showAvatar ? 'bg-blue-600' : 'bg-gray-200'
-                  ]"
-                >
-                  <span
-                    :class="[
-                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                      localConfig.widget.showAvatar ? 'translate-x-5' : 'translate-x-0'
-                    ]"
-                  ></span>
-                </button>
-              </div>
-
-              <!-- Sons activés -->
+              <!-- Sons de notification -->
               <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div class="flex-1">
                   <h4 class="text-sm font-medium text-gray-900">Sons de notification</h4>
-                  <p class="text-xs text-gray-500 mt-1">Sons pour les nouveaux messages</p>
+                  <p class="text-xs text-gray-500 mt-1">Son émis lors de nouveaux messages du vendeur IA</p>
                 </div>
                 <button
                   @click="handleToggleAndChange(() => localConfig.widget.soundEnabled = !localConfig.widget.soundEnabled)"
@@ -888,26 +915,10 @@
                 </button>
               </div>
 
-              <!-- Optimisation mobile -->
-              <div class="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
-                <div class="flex-1">
-                  <h4 class="text-sm font-medium text-gray-900">Optimisation mobile</h4>
-                  <p class="text-xs text-gray-500 mt-1">Interface adaptée aux smartphones</p>
-                </div>
-                <button
-                  @click="handleToggleAndChange(() => localConfig.widget.mobileOptimized = !localConfig.widget.mobileOptimized)"
-                  :class="[
-                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                    localConfig.widget.mobileOptimized ? 'bg-blue-600' : 'bg-gray-200'
-                  ]"
-                >
-                  <span
-                    :class="[
-                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                      localConfig.widget.mobileOptimized ? 'translate-x-5' : 'translate-x-0'
-                    ]"
-                  ></span>
-                </button>
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p class="text-xs text-blue-800">
+                  <strong>Focus MVP :</strong> Nous avons simplifié les comportements aux 2 fonctionnalités les plus impactantes pour vos conversions.
+                </p>
               </div>
             </div>
           </div>
@@ -1805,6 +1816,79 @@ const testScenarios = [
     message: 'J\'ai un problème avec ma commande'
   }
 ]
+
+// Gestion changement type produit personnalisé
+const handleCustomProductTypeChange = () => {
+  console.log('🔄 Type produit personnalisé changé:', localConfig.value.agent.customProductType)
+  handleConfigChange()
+}
+
+// Gestion effective du type de produit avec description
+const getEffectiveProductTypeDescription = (): string => {
+  const currentType = localConfig.value.agent.productType
+  const customType = localConfig.value.agent.customProductType
+  
+  if (currentType === 'produit' && customType) {
+    return `Type personnalisé : "${customType}" - Le vendeur IA s'adaptera à ce type spécifique`
+  }
+  
+  const option = getProductTypeOptions().find(opt => opt.value === currentType)
+  return option?.description || 'Sélectionnez le type de produit'
+}
+
+// Gestion instructions spécifiques avec validation
+const handleInstructionChange = (index: number) => {
+  if (!isPaidUser.value) {
+    showUpgradeModal('instructions')
+    return
+  }
+  console.log('📝 Instruction modifiée:', index, localConfig.value.agent.config.specificInstructions?.[index])
+}
+
+const validateAndSaveInstruction = (index: number) => {
+  const instruction = localConfig.value.agent.config.specificInstructions?.[index]
+  if (instruction && instruction.trim()) {
+    console.log('✅ Instruction validée:', instruction)
+    triggerAutoSave()
+    
+    // Feedback visuel temporaire
+    successMessage.value = `Instruction ${index + 1} sauvegardée !`
+    setTimeout(() => {
+      successMessage.value = null
+    }, 2000)
+  }
+}
+
+// Aperçu message d'accueil amélioré
+const getPreviewWelcomeMessage = (): string => {
+  if (!localConfig.value.agent.welcomeMessage) return ''
+  
+  const message = localConfig.value.agent.welcomeMessage
+  const agentName = localConfig.value.agent.name || 'Assistant'
+  const agentTitle = localConfig.value.agent.title || getTypeLabel(localConfig.value.agent.type || 'general')
+  const shopName = 'Votre Boutique'
+  const currentTime = new Date().getHours()
+  const greeting = currentTime < 12 ? 'Bonjour' : currentTime < 18 ? 'Bonsoir' : 'Bonsoir'
+  
+  // Utiliser le type personnalisé s'il existe
+  let productType = 'produit'
+  if (localConfig.value.agent.productType === 'produit' && localConfig.value.agent.customProductType) {
+    productType = localConfig.value.agent.customProductType
+  } else if (localConfig.value.agent.productType !== 'auto') {
+    const typeOption = getProductTypeOptions().find(opt => opt.value === localConfig.value.agent.productType)
+    productType = typeOption?.label.replace(/[🎯🎮📚🎓📱💻👗🔧💎📦]/g, '').trim().toLowerCase() || 'produit'
+  }
+  
+  return message
+    .replace(/\$\{agentName\}/g, `<strong class="text-blue-600">${agentName}</strong>`)
+    .replace(/\$\{agentTitle\}/g, `<strong class="text-blue-600">${agentTitle}</strong>`)
+    .replace(/\$\{shopName\}/g, `<strong class="text-blue-600">${shopName}</strong>`)
+    .replace(/\$\{productName\}/g, '<strong class="text-green-600">Nom du Produit</strong>')
+    .replace(/\$\{productType\}/g, `<strong class="text-green-600">${productType}</strong>`)
+    .replace(/\$\{greeting\}/g, `<strong class="text-orange-600">${greeting}</strong>`)
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+    .replace(/\n/g, '<br>')
+}
 
 // ✅ METHODS AVEC TYPES CORRECTS ET CORRECTION SETERROR
 
