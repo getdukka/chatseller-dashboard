@@ -1032,7 +1032,8 @@ function getRequestHeader(event, name) {
 const getHeader = getRequestHeader;
 function getRequestHost(event, opts = {}) {
   if (opts.xForwardedHost) {
-    const xForwardedHost = event.node.req.headers["x-forwarded-host"];
+    const _header = event.node.req.headers["x-forwarded-host"];
+    const xForwardedHost = (_header || "").split(",").shift()?.trim();
     if (xForwardedHost) {
       return xForwardedHost;
     }
@@ -4295,7 +4296,7 @@ function _expandFromEnv(value) {
 const _inlineRuntimeConfig = {
   "app": {
     "baseURL": "/",
-    "buildId": "275960f7-e03b-4848-8f0f-3b337d6dbb00",
+    "buildId": "7a6fb81a-88f0-414d-a7e6-42d79c3ae30a",
     "buildAssetsDir": "/_nuxt/",
     "cdnURL": ""
   },
@@ -4369,9 +4370,7 @@ const _inlineRuntimeConfig = {
           "access-control-allow-methods": "*",
           "access-control-allow-headers": "*",
           "access-control-max-age": "0",
-          "Cache-Control": "public, max-age=300",
-          "Pragma": "no-cache",
-          "Expires": "0"
+          "Cache-Control": "public, max-age=300"
         }
       },
       "/_nuxt/builds/meta/**": {
@@ -4400,7 +4399,7 @@ const _inlineRuntimeConfig = {
     "environment": "production",
     "debug": false
   },
-  "jwtSecret": "dev-secret-key-chatseller-dashboard"
+  "jwtSecret": "your-secure-jwt-secret-here"
 };
 const envOptions = {
   prefix: "NITRO_",

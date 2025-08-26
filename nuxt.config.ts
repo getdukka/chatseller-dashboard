@@ -124,11 +124,15 @@ export default defineNuxtConfig({
 
   imports: {
     dirs: [
-      'composables',
-      'stores',
-      'utils',
-      'types'
-    ]
+      'composables/**',
+      'stores/**',
+      'utils/**',
+      'types/**'
+    ],
+    // ✅ Éviter les imports dupliqués
+    transform: {
+      exclude: [/\bindex\.(js|ts|mjs|mts)$/]
+    }
   },
 
   components: [

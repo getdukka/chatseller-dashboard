@@ -41,9 +41,7 @@
         "access-control-allow-methods": "*",
         "access-control-allow-headers": "*",
         "access-control-max-age": "0",
-        "Cache-Control": "public, max-age=300",
-        "Pragma": "no-cache",
-        "Expires": "0"
+        "Cache-Control": "public, max-age=300"
       },
       "src": "/api/(.*)"
     },

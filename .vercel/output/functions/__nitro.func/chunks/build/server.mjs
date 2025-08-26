@@ -43,7 +43,7 @@ function createNuxtApp(options) {
     globalName: "nuxt",
     versions: {
       get nuxt() {
-        return "3.17.7";
+        return "3.18.1";
       },
       get vue() {
         return nuxtApp.vueApp.version;
@@ -143,7 +143,7 @@ async function applyPlugins(nuxtApp, plugins2) {
   const resolvedPlugins = /* @__PURE__ */ new Set();
   const unresolvedPlugins = [];
   const parallels = [];
-  const errors = [];
+  let error = void 0;
   let promiseDepth = 0;
   async function executePlugin(plugin2) {
     const unresolvedPluginsForThisPlugin = plugin2.dependsOn?.filter((name) => plugins2.some((p) => p._name === name) && !resolvedPlugins.has(name)) ?? [];
@@ -163,9 +163,14 @@ async function applyPlugins(nuxtApp, plugins2) {
             }
           }));
         }
+      }).catch((e) => {
+        if (!plugin2.parallel && !nuxtApp.payload.error) {
+          throw e;
+        }
+        error || (error = e);
       });
       if (plugin2.parallel) {
-        parallels.push(promise.catch((e) => errors.push(e)));
+        parallels.push(promise);
       } else {
         await promise;
       }
@@ -189,8 +194,8 @@ async function applyPlugins(nuxtApp, plugins2) {
       await Promise.all(parallels);
     }
   }
-  if (errors.length) {
-    throw errors[0];
+  if (error) {
+    throw nuxtApp.payload.error || error;
   }
 }
 // @__NO_SIDE_EFFECTS__
@@ -458,7 +463,7 @@ const _routes = [
     name: "products",
     path: "/products",
     meta: { ...__nuxt_page_meta$c || {}, ...{ "middleware": "auth" } },
-    component: () => import('./products-DcKv6s51.mjs')
+    component: () => import('./products-BakL6ccw.mjs')
   },
   {
     name: "register",
@@ -499,7 +504,7 @@ const _routes = [
     name: "onboarding",
     path: "/onboarding",
     meta: __nuxt_page_meta$6 || {},
-    component: () => import('./onboarding-C1dtr1MD.mjs')
+    component: () => import('./onboarding-BiErcSUk.mjs')
   },
   {
     name: "test-route",
@@ -510,13 +515,13 @@ const _routes = [
     name: "vendeurs-ia",
     path: "/vendeurs-ia",
     meta: { ...__nuxt_page_meta$5 || {}, ...{ "middleware": "auth" } },
-    component: () => import('./vendeurs-ia-DkRTJzuM.mjs')
+    component: () => import('./vendeurs-ia-BHkAg8fA.mjs')
   },
   {
     name: "agent-config",
     path: "/agent-config",
     meta: { ...__nuxt_page_meta$4 || {}, ...{ "middleware": "auth" } },
-    component: () => import('./agent-config-CglbTIyw.mjs')
+    component: () => import('./agent-config-C3I6aWAQ.mjs')
   },
   {
     name: "auth-callback",
@@ -542,7 +547,7 @@ const _routes = [
     name: "knowledge-base",
     path: "/knowledge-base",
     meta: { ...__nuxt_page_meta$1 || {}, ...{ "middleware": "auth" } },
-    component: () => import('./knowledge-base-BIwu8iOm.mjs')
+    component: () => import('./knowledge-base-DFlCFW0X.mjs')
   },
   {
     name: "reset-password",
@@ -579,13 +584,13 @@ function isChangingPage(to, from) {
 const routerOptions0 = {
   scrollBehavior(to, from, savedPosition) {
     const nuxtApp = useNuxtApp();
-    const behavior = useRouter().options?.scrollBehaviorType ?? "auto";
+    const hashScrollBehaviour = useRouter().options?.scrollBehaviorType ?? "auto";
     if (to.path === from.path) {
       if (from.hash && !to.hash) {
         return { left: 0, top: 0 };
       }
       if (to.hash) {
-        return { el: to.hash, top: _getHashElementScrollMarginTop(to.hash), behavior };
+        return { el: to.hash, top: _getHashElementScrollMarginTop(to.hash), behavior: hashScrollBehaviour };
       }
       return false;
     }
@@ -596,11 +601,11 @@ const routerOptions0 = {
     const hookToWait = nuxtApp._runningTransition ? "page:transition:finish" : "page:loading:end";
     return new Promise((resolve) => {
       if (from === START_LOCATION) {
-        resolve(_calculatePosition(to, from, savedPosition, behavior));
+        resolve(_calculatePosition(to, from, savedPosition, hashScrollBehaviour));
         return;
       }
       nuxtApp.hooks.hookOnce(hookToWait, () => {
-        requestAnimationFrame(() => resolve(_calculatePosition(to, from, savedPosition, behavior)));
+        requestAnimationFrame(() => resolve(_calculatePosition(to, from, savedPosition, hashScrollBehaviour)));
       });
     });
   }
@@ -615,7 +620,7 @@ function _getHashElementScrollMarginTop(selector) {
   }
   return 0;
 }
-function _calculatePosition(to, from, savedPosition, defaultBehavior) {
+function _calculatePosition(to, from, savedPosition, defaultHashScrollBehaviour) {
   if (savedPosition) {
     return savedPosition;
   }
@@ -624,13 +629,12 @@ function _calculatePosition(to, from, savedPosition, defaultBehavior) {
     return {
       el: to.hash,
       top: _getHashElementScrollMarginTop(to.hash),
-      behavior: isPageNavigation ? defaultBehavior : "instant"
+      behavior: isPageNavigation ? defaultHashScrollBehaviour : "instant"
     };
   }
   return {
     left: 0,
-    top: 0,
-    behavior: isPageNavigation ? defaultBehavior : "instant"
+    top: 0
   };
 }
 const configRouterOptions = {
@@ -1270,6 +1274,7 @@ defineComponent({
   name: "ClientOnly",
   inheritAttrs: false,
   props: ["fallback", "placeholder", "placeholderTag", "fallbackTag"],
+  ...false,
   setup(props, { slots, attrs }) {
     const mounted = shallowRef(false);
     const vm = getCurrentInstance();
@@ -1709,7 +1714,7 @@ const _sfc_main$1 = {
     const statusMessage = _error.statusMessage ?? (is404 ? "Page Not Found" : "Internal Server Error");
     const description = _error.message || _error.toString();
     const stack = void 0;
-    const _Error404 = defineAsyncComponent(() => import('./error-404-Go8yOh3G.mjs'));
+    const _Error404 = defineAsyncComponent(() => import('./error-404-BLNBHwIr.mjs'));
     const _Error = defineAsyncComponent(() => import('./error-500-CJZI5jaE.mjs'));
     const ErrorTemplate = is404 ? _Error404 : _Error;
     return (_ctx, _push, _parent, _attrs) => {

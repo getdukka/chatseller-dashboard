@@ -1,0 +1,1 @@
+import{i as o,a as t,n as e}from"./BIGBsnYa.js";import"./Dp9Ai0YM.js";import"./bq2zsT37.js";const p=o(async(i,s)=>{try{const r=t();if(!r.isLoggedIn)return e("/login");if(!r.user)return e("/login");!!0&&i.path,console.log("✅ Middleware subscription: Abonnement valide")}catch(r){return console.error("❌ Middleware subscription: Erreur:",r),e("/i")}});export{p as default};
