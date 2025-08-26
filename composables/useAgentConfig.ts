@@ -1,4 +1,4 @@
-// composables/useAgentConfig.ts - VERSION CORRIGÉE COMPLÈTE
+// composables/useAgentConfig.ts 
 import { ref, computed, readonly } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
@@ -358,7 +358,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
       name: '${agentName.replace(/'/g, "\\'")}',
       title: '${agentTitle.replace(/'/g, "\\'")}',
       welcomeMessage: ${agentWelcomeMessage ? `'${agentWelcomeMessage.replace(/'/g, "\\'").replace(/\n/g, '\\n')}'` : 'null'},
-      fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre question au Service Client.').replace(/'/g, "\\'")}',
+      fallbackMessage: '${(agentData.fallbackMessage || 'Un instant, je transmets votre message au Service Client.').replace(/'/g, "\\'")}',
       personality: '${agentData.personality || 'friendly'}',
       productType: '${agentData.customProductType || agentData.productType || 'auto'}', 
       shopName: '${agentData.shopName || 'cette boutique en ligne'}',
@@ -639,9 +639,9 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           personality: agentData.data.agent.personality,
           productType: agentData.data.agent.productType || 'auto',
           customProductType: agentData.data.agent.customProductType || '',
-          shopName: shopData?.data?.name || agentData.data.agent.shopName || 'cette boutique',
+          shopName: shopData?.data?.name || agentData.data.agent.shopName || 'cette boutique en ligne',
           description: agentData.data.agent.description,
-          welcomeMessage: agentData.data.agent.welcomeMessage, // ✅ CORRECTION
+          welcomeMessage: agentData.data.agent.welcomeMessage,
           fallbackMessage: agentData.data.agent.fallbackMessage,
           avatar: agentData.data.agent.avatar,
           isActive: agentData.data.agent.isActive,
@@ -659,12 +659,12 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           knowledgeBase: kbData.data || []
         },
         widget: {
-          buttonText: shopData?.data?.widget_config?.buttonText || 'Parler à un conseiller',
+          buttonText: shopData?.data?.widget_config?.buttonText || 'Parler au vendeur',
           primaryColor: shopData?.data?.widget_config?.primaryColor || '#EC4899',
           position: shopData?.data?.widget_config?.position || 'above-cta',
           widgetSize: shopData?.data?.widget_config?.widgetSize || 'medium',
           theme: shopData?.data?.widget_config?.theme || 'modern',
-          borderRadius: shopData?.data?.widget_config?.borderRadius || 'md',
+          borderRadius: shopData?.data?.widget_config?.borderRadius || 'full',
           animation: shopData?.data?.widget_config?.animation || 'fade',
           autoOpen: shopData?.data?.widget_config?.autoOpen || false,
           showAvatar: shopData?.data?.widget_config?.showAvatar !== false,
@@ -810,13 +810,13 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           productType: updates.agent.productType || 'auto',
           customProductType: updates.agent.customProductType || '',
           shopName: updates.agent.shopName || 'cette boutique',
-          welcomeMessage: updates.agent.welcomeMessage || null, // ✅ CORRECTION
+          welcomeMessage: updates.agent.welcomeMessage || null, 
           config: {
             ...updates.agent.config,
             aiProvider: updates.agent.config?.aiProvider || 'openai',
             temperature: updates.agent.config?.temperature || 0.7,
             maxTokens: updates.agent.config?.maxTokens || 1000,
-            specificInstructions: updates.agent.config?.specificInstructions || [] // ✅ CORRECTION
+            specificInstructions: updates.agent.config?.specificInstructions || [] 
           }
         }
         
@@ -844,7 +844,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
         console.log('✅ Agent sauvegardé avec tous les champs')
       }
 
-      // ✅ SAUVEGARDER WIDGET (simplifié selon votre demande)
+      // ✅ SAUVEGARDER WIDGET 
       if (updates.widget) {
         console.log('🎨 Sauvegarde configuration widget...', updates.widget)
         
@@ -856,13 +856,13 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
             theme: updates.widget.theme || 'modern',
             language: updates.widget.language || 'fr',
             widgetSize: updates.widget.widgetSize || 'medium',
-            borderRadius: updates.widget.borderRadius || 'md',
+            borderRadius: updates.widget.borderRadius || 'full',
             animation: updates.widget.animation || 'fade',
             autoOpen: updates.widget.autoOpen || false,
             showAvatar: updates.widget.showAvatar !== false,
-            soundEnabled: updates.widget.soundEnabled !== false, // ✅ GARDER
-            mobileOptimized: true, // ✅ TOUJOURS ACTIF
-            showTypingIndicator: false, // ✅ SUPPRIMÉ
+            soundEnabled: updates.widget.soundEnabled !== false, 
+            mobileOptimized: true, 
+            showTypingIndicator: false, 
             isActive: updates.widget.isActive !== false,
             offlineMessage: updates.widget.offlineMessage || null
           }

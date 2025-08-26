@@ -290,7 +290,7 @@
                     placeholder="Ex: bijou, meuble, cosmétique, jeu..."
                   />
                   <p class="text-xs text-gray-500">
-                    Spécifiez le type de produit exact (ex: "jeu" au lieu de "produit")
+                    Spécifiez le type de produit exact (ex: "livre" au lieu de "produit")
                   </p>
                 </div>
                 
@@ -317,7 +317,7 @@
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:bg-gray-100 disabled:text-gray-500"
                   >
                     <option value="openai">🤖 GPT-4o-mini (Gratuit)</option>
-                    <option value="claude" :disabled="!isPaidUser">🧠 Claude Sonnet (Pro)</option>
+                    <option value="claude" :disabled="!isPaidUser">🧠 Claude 4 (Pro)</option>
                   </select>
                 </div>
                 <div>
@@ -334,7 +334,7 @@
                 </div>
               </div>
               <p v-if="!isPaidUser" class="text-xs text-yellow-600 mt-1">
-                💡 Passez au plan Pro pour accéder à Claude Sonnet et aux paramètres avancés
+                💡 Passez au plan Pro pour accéder aux autres modèles d'IA et aux paramètres avancés
               </p>
             </div>
 
@@ -927,7 +927,6 @@
                 >
                   <option value="fr">🇫🇷 Français</option>
                   <option value="en">🇺🇸 English</option>
-                  <option value="wo">🇸🇳 Wolof</option>
                 </select>
               </div>
 
@@ -1418,7 +1417,7 @@
               
               <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
                 <p class="text-sm text-yellow-800">
-                  💡 <strong>Astuce:</strong> Utilisez un navigateur en mode incognito pour tester comme un vrai visiteur.
+                  💡 <strong>Astuce:</strong> Utilisez un navigateur en mode privé pour tester comme un vrai visiteur.
                 </p>
               </div>
             </div>
