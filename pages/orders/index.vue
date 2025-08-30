@@ -1,4 +1,4 @@
-<!-- pages/orders.vue -->
+<!-- pages/orders/index.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header Modern -->
@@ -531,23 +531,40 @@ const loadOrders = async () => {
   error.value = null
 
   try {
-    console.log('🔄 Chargement commandes via API...')
+    console.log('Chargement commandes via API...')
     
-    const response = await api.orders.list()
+    const response: any = await api.orders.list()
+    console.log('Réponse API brute:', response)
     
-    if (response.success && response.data) {
-      orders.value = response.data
-      console.log('✅ Commandes chargées:', orders.value.length)
+    if (response?.success) {
+      let commandesArray: any[] = []
       
-      // Charger les statistiques
+      if (response.data) {
+        if (Array.isArray(response.data)) {
+          commandesArray = response.data
+          console.log('Structure: tableau direct')
+        } else if (response.data.orders && Array.isArray(response.data.orders)) {
+          commandesArray = response.data.orders
+          console.log('Structure: objet avec orders')
+        } else {
+          console.log('Structure inconnue, tableau vide')
+        }
+      }
+      
+      orders.value = commandesArray
+      console.log('Commandes chargées:', orders.value.length)
+      
       await loadStats()
     } else {
-      throw new Error(response.error || 'Erreur lors du chargement des commandes')
+      const errorMsg = response?.error || 'Erreur lors du chargement des commandes'
+      throw new Error(errorMsg)
     }
     
-  } catch (err: any) {
-    console.error('❌ Erreur chargement commandes:', err)
-    error.value = err.message || 'Erreur lors du chargement des commandes'
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    console.error('Erreur chargement commandes:', errorObj)
+    error.value = errorObj.message || 'Erreur lors du chargement des commandes' 
+    orders.value = []
   } finally {
     loading.value = false
   }

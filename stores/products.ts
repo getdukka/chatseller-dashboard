@@ -1,6 +1,7 @@
 // stores/products.ts - VERSION API PURE
 
 import { defineStore } from 'pinia'
+import { useApi } from '~/composables/useApi'
 
 // ✅ TYPES
 interface Product {
@@ -138,7 +139,7 @@ export const useProducts = defineStore('products', {
           Object.entries(queryParams).filter(([_, value]) => value !== undefined)
         )
         
-        const response = await api.products.list(filteredParams)
+        const response = await api.products.list()
         
         if (!response.success) {
           throw new Error(response.error || 'Erreur lors du chargement des produits')

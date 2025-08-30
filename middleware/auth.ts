@@ -1,4 +1,4 @@
-// middleware/auth.ts - VERSION SIMPLIFIÉE ET ROBUSTE
+// middleware/auth.ts - VERSION CORRIGÉE ET SIMPLIFIÉE
 
 import { useSupabase } from "~~/composables/useSupabase"
 import { useAuthStore } from "~~/stores/auth"
@@ -18,10 +18,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     '/register', 
     '/auth/callback',
     '/auth/reset-password',
-    '/reset-password'
+    '/reset-password',
+    '/auth/confirm'
   ]
   
-  // ✅ ROUTES SEMI-PUBLIQUES - AVEC AUTHENTIFICATION
+  // ✅ ROUTES SEMI-PUBLIQUES - AVEC AUTHENTIFICATION MAIS ACCÈS SPÉCIAL
   const semiPublicRoutes = [
     '/onboarding' 
   ]
@@ -30,8 +31,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const isSemiPublicRoute = semiPublicRoutes.some(route => to.path.startsWith(route))
   
   // ✅ LAISSER PASSER LES ROUTES CALLBACK COMPLÈTEMENT
-  if (to.path.startsWith('/auth/callback')) {
-    console.log('🔗 [AUTH] Route callback - Passage libre total')
+  if (to.path.startsWith('/auth/')) {
+    console.log('🔗 [AUTH] Route auth - Passage libre total')
     return
   }
   
@@ -48,10 +49,30 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const authStore = useAuthStore()
     const supabase = useSupabase()
     
-    // ✅ ÉTAPE 1 : VÉRIFIER SESSION SUPABASE
-    const { data: { user }, error } = await supabase.auth.getUser()
+    // ✅ ÉTAPE 1 : VÉRIFICATION SESSION SUPABASE AVEC RETRY
+    let user = null
+    let sessionError = null
     
-    if (error || !user) {
+    try {
+      const { data: { user: currentUser }, error } = await supabase.auth.getUser()
+      user = currentUser
+      sessionError = error
+    } catch (supabaseError) {
+      console.warn('⚠️ [AUTH] Erreur première tentative Supabase, retry...')
+      
+      // Retry une seule fois
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500)) // Attendre 500ms
+        const { data: { user: retryUser }, error: retryError } = await supabase.auth.getUser()
+        user = retryUser
+        sessionError = retryError
+      } catch (retryError) {
+        console.error('❌ [AUTH] Échec après retry Supabase:', retryError)
+        sessionError = retryError
+      }
+    }
+    
+    if (sessionError || !user) {
       console.log('❌ [AUTH] Pas de session Supabase valide')
       authStore.clearAuth()
       return navigateTo('/login')
@@ -59,61 +80,36 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     console.log('✅ [AUTH] Session Supabase valide pour:', user.email)
     
-    // ✅ ÉTAPE 2 : SYNCHRONISER STORE SI NÉCESSAIRE
+    // ✅ ÉTAPE 2 : SYNCHRONISER STORE SI NÉCESSAIRE (SANS BLOQUER)
     if (!authStore.isAuthenticated || authStore.user?.id !== user.id) {
-      console.log('🔄 [AUTH] Synchronisation store depuis session Supabase')
-      try {
-        await authStore.restoreSession()
-        console.log('✅ [AUTH] Store synchronisé')
-      } catch (storeError) {
-        console.warn('⚠️ [AUTH] Erreur synchronisation store (non bloquante):', storeError)
-        // Continue même si le store a des problèmes
-      }
+      console.log('🔄 [AUTH] Synchronisation store depuis session Supabase (non bloquante)')
+      
+      // ✅ SYNCHRONISATION NON BLOQUANTE
+      authStore.restoreSession().catch(storeError => {
+        console.warn('⚠️ [AUTH] Erreur synchronisation store (ignorée):', storeError)
+        // Continuer même si le store a des problèmes
+      })
     }
 
-    // ✅ ÉTAPE 3 : GESTION INTELLIGENTE ONBOARDING (SIMPLIFIÉE)
+    // ✅ ÉTAPE 3 : GESTION ONBOARDING POUR LES ROUTES SEMI-PUBLIQUES
     if (isSemiPublicRoute) {
       console.log('✅ [AUTH] Route onboarding, accès autorisé')
       return
     }
 
-    // ✅ LOGIQUE ONBOARDING SIMPLIFIÉE ET PERMISSIVE
-    const needsOnboarding = checkIfNeedsOnboarding(user, authStore.user)
-    
-    if (needsOnboarding) {
-      console.log('🚨 [AUTH] Redirection vers onboarding nécessaire')
+    // ✅ VÉRIFICATION EMAIL CONFIRMÉ (SIMPLE)
+    if (!user.email_confirmed_at) {
+      console.log('📧 [AUTH] Email non confirmé, redirection onboarding')
       return navigateTo('/onboarding')
     }
 
     console.log('✅ [AUTH] Accès autorisé à:', to.path)
 
   } catch (error) {
-    console.error('❌ [AUTH] Erreur critique:', error)
+    console.error('❌ [AUTH] Erreur critique middleware:', error)
     
-    // ✅ EN CAS D'ERREUR, AUTORISER L'ACCÈS (PRINCIPE DE RÉSILIENCE)
-    console.log('⚠️ [AUTH] Erreur critique, autorisation d\'accès par défaut')
-    return
+    // ✅ EN CAS D'ERREUR CRITIQUE, REDIRIGER VERS LOGIN PAR SÉCURITÉ
+    console.log('🚨 [AUTH] Erreur critique, redirection login par sécurité')
+    return navigateTo('/login')
   }
 })
-
-// ✅ FONCTION SIMPLIFIÉE POUR VÉRIFIER LE BESOIN D'ONBOARDING
-function checkIfNeedsOnboarding(supabaseUser: any, storeUser: any): boolean {
-  // Si pas de confirmation email, onboarding requis
-  if (!supabaseUser.email_confirmed_at) {
-    console.log('🚨 [AUTH] Email non confirmé')
-    return true
-  }
-  
-  // Si le compte est très récent (moins de 5 minutes) et pas de données, onboarding requis
-  const accountAge = Date.now() - new Date(supabaseUser.created_at).getTime()
-  const isVeryNew = accountAge < 5 * 60 * 1000 // 5 minutes
-  
-  if (isVeryNew && !storeUser?.shop?.name) {
-    console.log('🚨 [AUTH] Compte très récent sans données')
-    return true
-  }
-  
-  // ✅ DANS TOUS LES AUTRES CAS, PAS D'ONBOARDING REQUIS
-  console.log('✅ [AUTH] Onboarding non requis - Accès autorisé')
-  return false
-}

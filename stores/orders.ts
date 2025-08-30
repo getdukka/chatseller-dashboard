@@ -1,6 +1,7 @@
 // stores/orders.ts 
 import { defineStore } from 'pinia'
 import { useAuthStore } from './auth'
+import { useApi } from '~/composables/useApi'
 
 interface Order {
   id: string
@@ -191,7 +192,7 @@ export const useOrdersStore = defineStore('orders', {
       try {
         console.log('🛒 [Orders] Démarrage workflow commande...')
         
-        const api = useApi()
+        const api = useApi() as any  
         const response = await api.orders.startOrder(data)
 
         if (response.success) {
@@ -218,7 +219,7 @@ export const useOrdersStore = defineStore('orders', {
       try {
         console.log('🛒 [Orders] Finalisation commande...')
         
-        const api = useApi()
+        const api = useApi() as any  // ✅ TYPAGE EXPLICITE
         const response = await api.orders.complete(data)
 
         if (response.success && response.data) {

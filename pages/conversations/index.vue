@@ -1,4 +1,4 @@
-<!-- pages/conversations/index.vue  -->
+<!-- pages/conversations/index.vue - VERSION AVEC LIGNES CLIQUABLES -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
@@ -120,9 +120,14 @@
             <h3 class="text-lg font-semibold text-gray-900">
               Conversations récentes
             </h3>
-            <span class="text-sm text-gray-500">
-              {{ conversations.length }} conversation(s)
-            </span>
+            <div class="flex items-center space-x-4">
+              <span class="text-sm text-gray-500">
+                {{ conversations.length }} conversation(s)
+              </span>
+              <div class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                Cliquez sur une ligne pour voir les détails
+              </div>
+            </div>
           </div>
         </div>
 
@@ -163,48 +168,74 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
+              <!-- LIGNE CLIQUABLE - MODIFICATION PRINCIPALE -->
               <tr 
                 v-for="conversation in conversations" 
                 :key="conversation.id"
-                class="hover:bg-gray-50 transition-colors"
+                @click="navigateToConversation(conversation)"
+                class="conversation-row cursor-pointer hover:bg-blue-50 transition-all duration-200 border-l-4 border-transparent hover:border-blue-400"
+                :title="`Cliquer pour voir la conversation #${conversation.id.slice(-8).toUpperCase()}`"
               >
                 <!-- Conversation ID -->
                 <td class="table-cell">
-                  <div class="text-sm font-medium text-gray-900">
-                    #{{ conversation.id.slice(-8).toUpperCase() }}
-                  </div>
-                  <div v-if="conversation.conversion_completed" class="text-xs text-green-600 font-medium">
-                    ✓ Convertie
+                  <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0">
+                      <div class="w-2 h-2 rounded-full" :class="getStatusIndicatorClass(conversation.status)"></div>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">
+                        #{{ conversation.id.slice(-8).toUpperCase() }}
+                      </div>
+                      <div v-if="conversation.conversion_completed" class="text-xs text-green-600 font-medium flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        Convertie
+                      </div>
+                    </div>
                   </div>
                 </td>
                 
                 <!-- Visitor -->
                 <td class="table-cell">
-                  <div class="text-sm text-gray-900">
-                    {{ getVisitorInfo(conversation) }}
-                  </div>
-                  <div v-if="conversation.visitor_ip" class="text-xs text-gray-500">
-                    {{ conversation.visitor_ip }}
+                  <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0 h-8 w-8">
+                      <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span class="text-xs font-medium text-gray-600">
+                          {{ getVisitorInitials(conversation) }}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">
+                        {{ getVisitorInfo(conversation) }}
+                      </div>
+                      <div v-if="conversation.visitor_ip" class="text-xs text-gray-500">
+                        {{ conversation.visitor_ip }}
+                      </div>
+                    </div>
                   </div>
                 </td>
                 
                 <!-- Product -->
                 <td class="table-cell">
-                  <div class="text-sm text-gray-900">
+                  <div class="text-sm text-gray-900 font-medium">
                     {{ conversation.product_name || 'Aucun produit' }}
                   </div>
-                  <div v-if="conversation.product_price" class="text-sm text-gray-500">
+                  <div v-if="conversation.product_price" class="text-sm text-green-600 font-semibold">
                     {{ formatCurrency(conversation.product_price) }}
                   </div>
                 </td>
                 
                 <!-- Messages -->
                 <td class="table-cell">
-                  <div class="text-sm font-medium text-gray-900">
-                    {{ conversation.message_count || 0 }}
-                  </div>
-                  <div class="text-xs text-gray-500">
-                    messages
+                  <div class="flex items-center space-x-2">
+                    <div class="text-sm font-semibold text-gray-900">
+                      {{ conversation.message_count || 0 }}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      message{{ (conversation.message_count || 0) !== 1 ? 's' : '' }}
+                    </div>
                   </div>
                 </td>
                 
@@ -225,26 +256,21 @@
                   </div>
                 </td>
                 
-                <!-- Actions -->
-                <td class="table-cell text-right">
+                <!-- Actions - SIMPLIFIÉES -->
+                <td class="table-cell text-right" @click.stop="">
                   <div class="flex items-center justify-end space-x-2">
-                    <button
-                      @click="viewConversation(conversation)"
-                      class="action-button-primary"
-                      title="Voir les détails"
-                    >
-                      Voir
-                    </button>
-                    <button
-                      v-if="conversation.status === 'active'"
-                      @click="takeOverConversation(conversation)"
-                      class="action-button-secondary"
-                      title="Prendre en charge"
-                    >
+                    <!-- Badge indicateur seulement -->
+                    <div v-if="conversation.status === 'active'" class="flex items-center space-x-1">
+                      <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span class="text-xs text-green-600 font-medium">En cours</span>
+                    </div>
+                    
+                    <!-- Flèche pour indiquer que la ligne est cliquable -->
+                    <div class="flex items-center text-gray-400 group-hover:text-blue-500 transition-colors">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                       </svg>
-                    </button>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -300,17 +326,17 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-// ✅ PAGE META
+// PAGE META
 definePageMeta({
   middleware: 'auth',
   layout: 'default'
 })
 
-// ✅ COMPOSABLES
+// COMPOSABLES
 const authStore = useAuthStore()
 const api = useApi()
 
-// ✅ REACTIVE STATE
+// REACTIVE STATE
 const loading = ref(true)
 const refreshing = ref(false)
 const error = ref<string | null>(null)
@@ -335,14 +361,39 @@ const notification = ref({
   type: 'success' as 'success' | 'error'
 })
 
-// ✅ UTILITY METHODS
+// UTILITY METHODS
 const getVisitorInfo = (conversation: any): string => {
-  if (conversation.customer_data && typeof conversation.customer_data === 'object') {
-    const data = conversation.customer_data
-    if (data.name) return data.name
-    if (data.email) return data.email
+  try {
+    if (!conversation) return 'Visiteur anonyme'
+    
+    if (conversation.customer_data && typeof conversation.customer_data === 'object') {
+      const data = conversation.customer_data
+      if (data.name && typeof data.name === 'string') return data.name
+      if (data.email && typeof data.email === 'string') return data.email
+    }
+    
+    return conversation.visitor_id ? `Visiteur ${conversation.visitor_id.slice(0, 8)}` : 'Visiteur anonyme'
+  } catch (error) {
+    console.warn('Erreur getVisitorInfo:', error)
+    return 'Visiteur anonyme'
   }
-  return conversation.visitor_id ? `Visiteur ${conversation.visitor_id.slice(0, 8)}` : 'Visiteur anonyme'
+}
+
+const getVisitorInitials = (conversation: any): string => {
+  const visitorInfo = getVisitorInfo(conversation)
+  if (visitorInfo.includes('Visiteur')) {
+    return 'V'
+  }
+  return visitorInfo.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)
+}
+
+const getStatusIndicatorClass = (status: string): string => {
+  const classes = {
+    active: 'bg-green-500 animate-pulse',
+    completed: 'bg-blue-500',
+    abandoned: 'bg-gray-400'
+  }
+  return classes[status as keyof typeof classes] || 'bg-gray-400'
 }
 
 const formatTimeAgo = (date: string): string => {
@@ -373,6 +424,8 @@ const formatCurrency = (amount: number): string => {
 }
 
 const getStatusLabel = (status: string): string => {
+  if (!status || typeof status !== 'string') return 'Inconnu'
+  
   const labels = {
     active: 'Active',
     completed: 'Terminée',
@@ -382,6 +435,8 @@ const getStatusLabel = (status: string): string => {
 }
 
 const getStatusBadgeClass = (status: string): string => {
+  if (!status || typeof status !== 'string') return 'bg-gray-100 text-gray-800'
+  
   const classes = {
     active: 'bg-green-100 text-green-800',
     completed: 'bg-blue-100 text-blue-800',
@@ -402,7 +457,44 @@ const showNotification = (message: string, type: 'success' | 'error' = 'success'
   }, 5000)
 }
 
-// ✅ API METHODS UTILISANT LE COMPOSABLE API - VERSION CORRIGÉE
+// NAVIGATION METHOD - VERSION CORRIGÉE
+const navigateToConversation = (conversation: any) => {
+  try {
+    console.log('🔄 Tentative navigation vers conversation:', conversation?.id)
+    
+    // Validation stricte des données
+    if (!conversation) {
+      console.error('❌ Objet conversation null/undefined')
+      showNotification('Erreur: données de conversation manquantes', 'error')
+      return
+    }
+    
+    if (!conversation.id || typeof conversation.id !== 'string') {
+      console.error('❌ ID conversation invalide:', conversation.id)
+      showNotification('Erreur: ID de conversation invalide', 'error')
+      return
+    }
+
+    console.log('✅ Navigation vers conversation ID:', conversation.id)
+    
+    // Navigation simple et directe avec navigateTo (Nuxt 3)
+    navigateTo(`/conversations/${conversation.id}`)
+    
+  } catch (err: any) {
+    console.error('❌ Erreur critique navigation:', err)
+    showNotification('Erreur lors de la navigation', 'error')
+    
+    // Fallback uniquement en cas d'erreur critique
+    if (process.client && conversation?.id) {
+      setTimeout(() => {
+        window.location.href = `/conversations/${conversation.id}`
+      }, 500)
+    }
+  }
+}
+
+
+// API METHODS
 const loadConversations = async () => {
   loading.value = true
   error.value = null
@@ -413,19 +505,15 @@ const loadConversations = async () => {
     const response = await api.conversations.list()
     
     if (response.success && response.data) {
-      // Traiter les données pour assurer la compatibilité
       conversations.value = response.data.map((conv: any) => ({
         ...conv,
-        // S'assurer que les champs sont correctement mappés
         message_count: conv.message_count || (conv.messages ? conv.messages.length : 0),
-        // Assurer la compatibilité des dates
         started_at: conv.started_at || conv.startedAt,
         last_activity: conv.last_activity || conv.lastActivity || conv.started_at
       }))
       
       console.log('Conversations chargées:', conversations.value.length)
       
-      // Calculer les statistiques
       await loadStats()
     } else {
       throw new Error(response.error || 'Erreur lors du chargement des conversations')
@@ -455,7 +543,7 @@ const loadStats = async () => {
       conversionGrowth: 12
     }
   } catch (err) {
-    console.warn('⚠️ Erreur chargement stats:', err)
+    console.warn('Erreur chargement stats:', err)
   }
 }
 
@@ -469,49 +557,19 @@ const refreshConversations = async () => {
   }
 }
 
-// ✅ ACTION METHODS - NAVIGATION CORRIGÉE
-const viewConversation = async (conversation: any) => {
-  try {
-    console.log('🔍 Navigation vers conversation:', conversation.id)
-    
-    // ✅ NAVIGATION AMÉLIORÉE AVEC GESTION D'ERREUR
-    await navigateTo(`/conversations/${conversation.id}`)
-    
-  } catch (err) {
-    console.error('❌ Erreur navigation conversation:', err)
-    showNotification('Erreur lors de la navigation', 'error')
-  }
-}
-
-const takeOverConversation = async (conversation: any) => {
-  try {
-    const response = await api.conversations.takeover(conversation.id)
-    
-    if (response.success) {
-      showNotification('Conversation prise en charge avec succès')
-      await loadConversations()
-    } else {
-      showNotification('Erreur lors de la prise en charge', 'error')
-    }
-  } catch (err) {
-    console.error('Erreur takeover conversation:', err)
-    showNotification('Erreur lors de la prise en charge', 'error')
-  }
-}
-
-// ✅ LIFECYCLE
+// LIFECYCLE
 onMounted(() => {
   loadConversations()
 })
 
-// ✅ SEO
+// SEO
 useHead({
   title: 'Conversations - ChatSeller Dashboard'
 })
 </script>
 
 <style scoped>
-/* ✅ MODERN COMPONENTS */
+/* STYLES MODERNES */
 .card-modern {
   @apply bg-white rounded-xl shadow-sm border border-gray-200;
 }
@@ -536,15 +594,20 @@ useHead({
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
 
-.action-button-primary {
-  @apply text-blue-600 hover:text-blue-900 text-sm font-medium transition-colors;
+/* STYLES POUR LIGNES CLIQUABLES */
+.conversation-row {
+  @apply transition-all duration-200 ease-in-out;
 }
 
-.action-button-secondary {
-  @apply p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors;
+.conversation-row:hover {
+  @apply transform scale-[1.01] shadow-sm;
 }
 
-/* ✅ ANIMATIONS */
+.conversation-row:active {
+  @apply transform scale-[0.99];
+}
+
+/* ANIMATIONS */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -552,5 +615,25 @@ useHead({
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .conversation-row {
+    @apply hover:scale-100;
+  }
 }
 </style>

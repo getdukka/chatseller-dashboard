@@ -1,4 +1,4 @@
-// nuxt.config.ts - Configuration principale de Nuxt 3 pour le projet ChatSeller Dashboard
+// nuxt.config.ts 
 export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_ENV === 'development' },
   

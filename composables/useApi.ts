@@ -1,6 +1,7 @@
-// composables/useApi.ts 
+// composables/useApi.ts - VERSION CORRIGÉE AVEC GESTION ROBUSTE DES TOKENS
 
 import { useAuthStore } from "~~/stores/auth"
+import { useSupabase } from "~~/composables/useSupabase"
 
 export interface ApiResponse<T = any> {
   data?: T
@@ -21,18 +22,46 @@ export const useApi = () => {
   
   const baseURL = getBaseURL()
 
-  // ✅ GET SUPABASE TOKEN - ERREUR TYPESCRIPT CORRIGÉE
-  const getAuthToken = (): string | null => {
-    if (process.client) {
+  // ✅ FONCTION CORRIGÉE : RÉCUPÉRATION TOKEN AVEC FALLBACK SUPABASE
+  const getAuthToken = async (): Promise<string | null> => {
+    if (!process.client) return null
+
+    try {
       const authStore = useAuthStore()
-      // ✅ CORRECTION : Utiliser uniquement authStore.token (pas de .session)
-      return authStore.token || null
+      
+      // ✅ ÉTAPE 1 : ESSAYER LE TOKEN DU STORE
+      if (authStore.token && authStore.isAuthenticated) {
+        console.log('🎫 [API] Token récupéré depuis store')
+        return authStore.token
+      }
+
+      // ✅ ÉTAPE 2 : FALLBACK - RÉCUPÉRER DIRECTEMENT DEPUIS SUPABASE
+      console.log('🔄 [API] Store vide, récupération token depuis Supabase...')
+      const supabase = useSupabase()
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
+      if (error || !session?.access_token) {
+        console.warn('❌ [API] Impossible de récupérer le token Supabase')
+        return null
+      }
+
+      // ✅ SYNCHRONISER LE STORE AVEC LE TOKEN FRAIS
+      if (session.access_token !== authStore.token) {
+        console.log('🔄 [API] Synchronisation token store avec Supabase')
+        authStore.token = session.access_token
+      }
+
+      console.log('✅ [API] Token récupéré depuis Supabase et synchronisé')
+      return session.access_token
+
+    } catch (error) {
+      console.error('❌ [API] Erreur récupération token:', error)
+      return null
     }
-    return null
   }
 
-  const createFetchOptions = (options: any = {}): any => {
-    const token = getAuthToken()
+  const createFetchOptions = async (options: any = {}): Promise<any> => {
+    const token = await getAuthToken()
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -54,25 +83,54 @@ export const useApi = () => {
         console.error('❌ [API] Erreur réponse:', response.status, response.statusText, response._data)
         
         if (response.status === 401) {
-          console.warn('🔐 [API] Token expiré ou invalide, redirection login')
-          const authStore = useAuthStore()
-          authStore.clearAuth()
-          if (process.client) {
-            navigateTo('/login')
-          }
+          console.warn('🔐 [API] Token expiré ou invalide')
+          handleUnauthorized()
         }
       }
     }
   }
 
+  // ✅ NOUVELLE FONCTION : GESTION CENTRALISÉE DES 401
+  const handleUnauthorized = async () => {
+    console.log('🔄 [API] Tentative de rafraîchissement du token...')
+    
+    try {
+      const authStore = useAuthStore()
+      const supabase = useSupabase()
+      
+      // Essayer de rafraîchir le token
+      const { data, error } = await supabase.auth.refreshSession()
+      
+      if (error || !data.session) {
+        throw new Error('Impossible de rafraîchir le token')
+      }
+      
+      // Mettre à jour le store
+      authStore.token = data.session.access_token
+      console.log('✅ [API] Token rafraîchi avec succès')
+      
+      return true
+    } catch (error) {
+      console.error('❌ [API] Échec rafraîchissement token, déconnexion:', error)
+      const authStore = useAuthStore()
+      authStore.clearAuth()
+      
+      if (process.client) {
+        navigateTo('/login')
+      }
+      return false
+    }
+  }
+
   const apiCall = async (
     endpoint: string, 
-    options: any = {}
+    options: any = {},
+    retryCount: number = 0
   ): Promise<ApiResponse<any>> => {
     try {
-      console.log(`🔄 [API] Appel: ${endpoint}`)
+      console.log(`🔄 [API] Appel: ${endpoint} (tentative ${retryCount + 1})`)
       
-      const fetchOptions = createFetchOptions(options)
+      const fetchOptions = await createFetchOptions(options)
       const response = await $fetch(endpoint, fetchOptions) as any
       
       console.log(`✅ [API] Réponse ${endpoint}:`, response)
@@ -97,6 +155,17 @@ export const useApi = () => {
     } catch (error: any) {
       console.error(`❌ [API] Échec ${endpoint}:`, error)
       
+      // ✅ RETRY AUTOMATIQUE EN CAS DE 401 (UNE SEULE FOIS)
+      if (error.status === 401 && retryCount === 0) {
+        console.log('🔄 [API] Erreur 401, tentative de retry après rafraîchissement token')
+        
+        const refreshed = await handleUnauthorized()
+        if (refreshed) {
+          console.log('🔄 [API] Retry de l\'appel après rafraîchissement token')
+          return apiCall(endpoint, options, retryCount + 1)
+        }
+      }
+      
       let errorMessage = 'Une erreur est survenue'
       
       if (error.data?.error) {
@@ -115,190 +184,7 @@ export const useApi = () => {
   }
 
   // =====================================
-  // ORDERS - ✅ AJOUT DU SERVICE MANQUANT
-  // =====================================
-  
-  const orders = {
-    list: async (): Promise<ApiResponse<any[]>> => {
-      return apiCall('/api/v1/orders')
-    },
-
-    get: async (orderId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/orders/${orderId}`)
-    },
-
-    create: async (data: {
-      conversationId: string,
-      productId?: string,
-      productName?: string,
-      productPrice?: number,
-      quantity?: number,
-      customerInfo?: any,
-      orderData?: any
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/orders', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    update: async (orderId: string, data: any): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/orders/${orderId}`, {
-        method: 'PUT',
-        body: data
-      })
-    },
-
-    delete: async (orderId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/orders/${orderId}`, {
-        method: 'DELETE'
-      })
-    },
-
-    startOrder: async (data: {
-      conversationId: string,
-      productInfo?: any,
-      message?: string
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/orders/start', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    complete: async (data: {
-      conversationId: string,
-      orderData: any
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/orders/complete', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    cancel: async (orderId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/orders/${orderId}/cancel`, {
-        method: 'PUT'
-      })
-    },
-
-    stats: async (): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/orders/stats')
-    }
-  }
-
-  // =====================================
-  // PRODUCTS - ✅ AJOUT DU SERVICE MANQUANT
-  // =====================================
-  
-  const products = {
-    list: async (): Promise<ApiResponse<any[]>> => {
-      return apiCall('/api/v1/products')
-    },
-
-    get: async (productId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/products/${productId}`)
-    },
-
-    create: async (data: {
-      name: string,
-      description?: string,
-      price?: number,
-      imageUrl?: string,
-      category?: string,
-      isActive?: boolean,
-      metadata?: any
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/products', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    update: async (productId: string, data: any): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/products/${productId}`, {
-        method: 'PUT',
-        body: data
-      })
-    },
-
-    delete: async (productId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/products/${productId}`, {
-        method: 'DELETE'
-      })
-    },
-
-    sync: async (): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/products/sync', {
-        method: 'POST'
-      })
-    },
-
-    detectFromUrl: async (url: string): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/products/detect', {
-        method: 'POST',
-        body: { url }
-      })
-    }
-  }
-
-  // =====================================
-  // AGENTS
-  // =====================================
-  
-  const agents = {
-    list: async (): Promise<ApiResponse<any[]>> => {
-      return apiCall('/api/v1/agents')
-    },
-
-    create: async (data: {
-      name: string,
-      type: string,
-      personality: string,
-      description?: string,
-      welcomeMessage?: string,
-      fallbackMessage?: string,
-      avatar?: string,
-      isActive?: boolean,
-      config?: any
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/agents', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    update: async (agentId: string, data: any): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/agents/${agentId}`, {
-        method: 'PUT',
-        body: data
-      })
-    },
-
-    delete: async (agentId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/agents/${agentId}`, {
-        method: 'DELETE'
-      })
-    },
-
-    getConfig: async (agentId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/agents/${agentId}/config`)
-    },
-
-    uploadAvatar: async (file: File): Promise<ApiResponse<any>> => {
-      const formData = new FormData()
-      formData.append('avatar', file)
-
-      return apiCall('/api/v1/agents/upload-avatar', {
-        method: 'POST',
-        body: formData,
-        headers: {} // Laisser le navigateur définir le Content-Type pour FormData
-      })
-    }
-  }
-
-  // =====================================
-  // CONVERSATIONS
+  // CONVERSATIONS - VERSION CORRIGÉE
   // =====================================
 
   const conversations = {
@@ -360,7 +246,6 @@ export const useApi = () => {
       })
     },
 
-    // ✅ NOUVELLE MÉTHODE : ÉDITER UN MESSAGE
     updateMessage: async (conversationId: string, messageId: string, data: {
       content: string
     }): Promise<ApiResponse<any>> => {
@@ -381,6 +266,10 @@ export const useApi = () => {
     }
   }
 
+  // =====================================
+  // AUTRES SERVICES (INCHANGÉS)
+  // =====================================
+  
   const shops = {
     get: async (shopId?: string): Promise<ApiResponse<any>> => {
       const authStore = useAuthStore()
@@ -409,6 +298,122 @@ export const useApi = () => {
 
     list: async (): Promise<ApiResponse<any[]>> => {
       return apiCall('/api/v1/shops')
+    }
+  }
+
+  const orders = {
+    list: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/orders/list')
+    },
+
+    get: async (orderId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/orders/details/${orderId}`)
+    },
+
+    create: async (data: {
+      conversationId: string,
+      productId?: string,
+      productName?: string,
+      productPrice?: number,
+      quantity?: number,
+      customerInfo?: any,
+      orderData?: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    update: async (orderId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/orders/status/${orderId}`, {
+        method: 'PATCH',
+        body: data
+      })
+    },
+
+    delete: async (orderId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/orders/${orderId}`, {
+        method: 'DELETE'
+      })
+    }
+  }
+
+  const products = {
+    list: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/products')
+    },
+
+    get: async (productId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}`)
+    },
+
+    create: async (data: {
+      name: string,
+      description?: string,
+      price?: number,
+      imageUrl?: string,
+      category?: string,
+      isActive?: boolean,
+      metadata?: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/products', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    update: async (productId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}`, {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    delete: async (productId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}`, {
+        method: 'DELETE'
+      })
+    }
+  }
+
+  const agents = {
+    list: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/agents')
+    },
+
+    create: async (data: {
+      name: string,
+      type: string,
+      personality: string,
+      description?: string,
+      welcomeMessage?: string,
+      fallbackMessage?: string,
+      avatar?: string,
+      isActive?: boolean,
+      config?: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/agents', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    update: async (agentId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/agents/${agentId}`, {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    delete: async (agentId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/agents/${agentId}`, {
+        method: 'DELETE'
+      })
+    },
+
+    getConfig: async (agentId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/agents/${agentId}/config`)
     }
   }
 
