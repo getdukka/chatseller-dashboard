@@ -1,4 +1,4 @@
-// server/api/vendeurs-ia/test.get.ts - ENDPOINT DE TEST POUR DEBUG
+// server/api/agent-ia/test.get.ts - ENDPOINT DE TEST POUR DEBUG
 export default defineEventHandler(async (event) => {
   console.log('🧪 [TEST] Endpoint de test appelé')
   
@@ -13,9 +13,9 @@ export default defineEventHandler(async (event) => {
       supabaseAnonKey: config.public.supabaseAnonKey ? '✅ Configuré' : '❌ Manquant',
     },
     routes: {
-      testRoute: '/api/vendeurs-ia/test',
-      agentRoute: '/api/vendeurs-ia/[id]',
-      listRoute: '/api/vendeurs-ia/'
+      testRoute: '/api/agent-ia/test',
+      agentRoute: '/api/agent-ia/[id]',
+      listRoute: '/api/agent-ia/'
     }
   }
 })

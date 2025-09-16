@@ -1,4 +1,4 @@
-// server/api/vendeurs-ia/[id].put.ts - VERSION SUPABASE RÉELLE
+// server/api/agent-ia/[id].put.ts - VERSION SUPABASE RÉELLE
 import { createClient } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {

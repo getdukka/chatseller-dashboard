@@ -101,11 +101,11 @@ export default defineNuxtPlugin((nuxtApp) => {
     logInfo('Plugin', 'Fin changement de page')
   })
 
-  // ✅ DIAGNOSTIC SPÉCIAL POUR LES ROUTES VENDEURS-IA
+  // ✅ DIAGNOSTIC SPÉCIAL POUR LES ROUTES agent-ia
   nuxtApp.hook('app:beforeMount', () => {
     const route = useRoute()
     
-    if (route.path.startsWith('/vendeurs-ia/')) {
+    if (route.path.startsWith('/agent-ia/')) {
       const agentId = route.params.id as string
       const { checkVendeurIA } = useDebug()
       

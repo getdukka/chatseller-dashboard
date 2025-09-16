@@ -1,4 +1,4 @@
-// middleware/auth.ts - VERSION CORRIGÉE ET SIMPLIFIÉE
+// middleware/auth.ts 
 
 import { useSupabase } from "~~/composables/useSupabase"
 import { useAuthStore } from "~~/stores/auth"

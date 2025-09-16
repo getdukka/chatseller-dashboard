@@ -1,76 +1,34 @@
-// composables/useAgentConfig.ts - CORRIGÉ
+// composables/useAgentConfig.ts 
 import { ref, computed, readonly } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useAgentConfigStore } from '~/stores/agentConfig'
 
-export interface AgentConfig {
-  agent: {
-    id: string
-    name: string
-    title?: string 
-    type: 'general' | 'product_specialist' | 'support' | 'upsell'
-    personality: 'professional' | 'friendly' | 'expert' | 'casual'
-    productType?: 'auto' | 'jeu' | 'livre' | 'formation' | 'smartphone' | 'ordinateur' | 'vêtement' | 'service' | 'bijou' | 'produit' 
-    customProductType?: string 
-    shopName?: string
-    description: string | null
-    welcomeMessage: string | null
-    fallbackMessage: string | null
-    avatar: string | null
-    isActive: boolean
-    config: {
-      collectName?: boolean
-      collectPhone?: boolean
-      collectEmail?: boolean
-      collectAddress?: boolean
-      collectPayment?: boolean
-      upsellEnabled?: boolean
-      urgencyEnabled?: boolean
-      specificInstructions?: string[]
-      linkedKnowledgeBase?: string[]
-      aiProvider?: 'openai' | 'claude'
-      temperature?: number
-      maxTokens?: number
-      systemPrompt?: string
-      tone?: string
-    }
-    stats: {
-      conversations: number
-      conversions: number
-    }
-    knowledgeBase?: Array<{
-      id: string
-      title: string
-      contentType: string
-      isActive: boolean
-      tags: string[]
-    }>
-  }
-  widget: {
-    buttonText: string
-    primaryColor: string
-    position: 'above-cta' | 'below-cta' | 'beside-cta' | 'bottom-right' | 'bottom-left'
-    widgetSize: 'small' | 'medium' | 'large'
-    theme: 'modern' | 'minimal' | 'brand_adaptive'
-    borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'full'
-    animation: 'fade' | 'slide' | 'bounce' | 'none'
-    autoOpen: boolean
-    showAvatar: boolean
-    soundEnabled: boolean
-    mobileOptimized: boolean
-    showTypingIndicator?: boolean
-    offlineMessage?: string
-    isActive: boolean
-    language: 'fr' | 'en' | 'wo'
-  }
-  knowledgeBase: Array<{
-    id: string
-    title: string
-    contentType: string
-    isActive: boolean
-    tags: string[]
-  }>
-}
+// ✅ IMPORT TYPES CENTRALISÉS BEAUTÉ
+import type {
+  AgentType,
+  BeautyAgentType,
+  PersonalityType,
+  ProductRange,
+  WidgetTheme,
+  WidgetPosition,
+  WidgetLanguage,
+  AgentConfig,
+  Agent,
+  WidgetConfig
+} from '~/types/beauty'
+
+// ✅ RE-EXPORT AgentConfig pour compatibilité
+export type { AgentConfig, Agent, WidgetConfig } from '~/types/beauty'
+
+import {
+  BEAUTY_AGENT_TYPES,
+  PRODUCT_RANGE_OPTIONS,
+  PRODUCT_TYPE_OPTIONS,
+  getTypeLabel,
+  getProductTypeLabel,
+  getProductRangeLabel,
+  getDefaultWelcomeTemplate
+} from '~/types/beauty'
 
 export const useAgentConfig = () => {
   const authStore = useAuthStore()
@@ -82,7 +40,7 @@ export const useAgentConfig = () => {
   const saving = ref(false)
   const error = ref<string | null>(null)
   const agentConfig = ref<AgentConfig | null>(null)
-  const localConfig = ref<AgentConfig | null>(null)
+  const localConfig = ref<Partial<AgentConfig> | null>(null)
   const widgetSyncStatus = ref<'idle' | 'syncing' | 'synced' | 'error'>('idle')
 
   // NOUVEAU : État pour sauvegarde automatique
@@ -156,131 +114,39 @@ export const useAgentConfig = () => {
     })
   }
 
-  // HELPER POUR LES LABELS DE TYPE
-  const getTypeLabel = (type: string): string => {
-    const labels = {
-      general: 'Conseiller commercial',
-      product_specialist: 'Spécialiste produit', 
-      support: 'Conseiller support',
-      upsell: 'Conseiller premium'
-    }
-    return labels[type as keyof typeof labels] || 'Vendeur IA' 
-  }
-
-  // HELPERS POUR TYPE DE PRODUIT AVEC CUSTOM
-  const getProductTypeOptions = () => [
-    { value: 'auto', label: '🎯 Détection automatique', description: 'Le système détecte automatiquement le type' },
-    { value: 'jeu', label: '🎮 Jeu', description: 'Jeux de société, cartes, etc.' },
-    { value: 'livre', label: '📚 Livre', description: 'Livres, romans, manuels' },
-    { value: 'formation', label: '🎓 Formation', description: 'Cours en ligne, formations' },
-    { value: 'smartphone', label: '📱 Smartphone', description: 'Téléphones, accessoires mobiles' },
-    { value: 'ordinateur', label: '💻 Ordinateur', description: 'PC, laptops, composants' },
-    { value: 'vêtement', label: '👗 Vêtement', description: 'Mode, accessoires vestimentaires' },
-    { value: 'service', label: '🔧 Service', description: 'Consultations, prestations' },
-    { value: 'bijou', label: '💎 Bijou', description: 'Bijoux, montres, accessoires' },
-    { value: 'produit', label: '📦 Autre produit', description: 'Spécifiez votre type de produit' } 
-  ]
-
-  const getProductTypeLabel = (type: string, customType?: string): string => {
-    // Si c'est un type personnalisé, utiliser la valeur personnalisée
-    if (type === 'produit' && customType) {
-      return customType
-    }
-    
-    const option = getProductTypeOptions().find(opt => opt.value === type)
-    return option ? option.label : '🎯 Détection automatique'
-  }
-
-  // TEMPLATE PAR DÉFAUT INTELLIGENT
-  const getDefaultWelcomeTemplate = () => {
-    return `\${greeting} 👋 Je suis \${agentName}, \${agentTitle} chez \${shopName}.
-
-Je vois que vous vous intéressez à notre \${productType} "\${productName}". Excellent choix ! ✨
-
-Comment puis-je vous aider avec ce \${productType} ? 😊`
-  }
-
   // ✅ CORRECTION MAJEURE : Prévisualisation du message d'accueil CORRIGÉE
   const previewWelcomeMessage = computed(() => {
     const message = localConfig.value?.agent?.welcomeMessage || agentConfig.value?.agent?.welcomeMessage
     if (!message) return ''
     
     const agentName = localConfig.value?.agent?.name || agentConfig.value?.agent?.name || 'Assistant'
-    const agentTitle = localConfig.value?.agent?.title || agentConfig.value?.agent?.title || getTypeLabel(localConfig.value?.agent?.type || 'general')
+    const agentTitle = localConfig.value?.agent?.title || agentConfig.value?.agent?.title || getTypeLabel(localConfig.value?.agent?.type || 'beauty_expert')
     const shopName = localConfig.value?.agent?.shopName || agentConfig.value?.agent?.shopName || 'Votre Boutique'
     const currentTime = new Date().getHours()
     const greeting = currentTime < 12 ? 'Bonjour' : currentTime < 18 ? 'Bonsoir' : 'Bonsoir'
     
-    // Utiliser le type personnalisé s'il existe
-    let productType = 'produit'
-    const currentProductType = localConfig.value?.agent?.productType || agentConfig.value?.agent?.productType
-    const currentCustomType = localConfig.value?.agent?.customProductType || agentConfig.value?.agent?.customProductType
+    // ✅ Utiliser productRange pour la beauté
+    let productType = 'produit beauté'
+    const currentProductRange = localConfig.value?.agent?.productRange || agentConfig.value?.agent?.productRange
+    const currentCustomRange = localConfig.value?.agent?.customProductRange || agentConfig.value?.agent?.customProductRange
     
-    if (currentProductType === 'produit' && currentCustomType) {
-      productType = currentCustomType
-    } else if (currentProductType !== 'auto') {
-      const typeOption = getProductTypeOptions().find(opt => opt.value === currentProductType)
-      productType = typeOption?.label.replace(/[🎯🎮📚🎓📱💻👗🔧💎📦]/g, '').trim().toLowerCase() || 'produit'
+    if (currentProductRange === 'custom' && currentCustomRange) {
+      productType = currentCustomRange
+    } else if (currentProductRange) {
+      const rangeOption = PRODUCT_RANGE_OPTIONS.find(opt => opt.value === currentProductRange)
+      productType = rangeOption?.label.replace(/[💎🛍️🌿🐰⏰🤲🎯]/g, '').trim().toLowerCase() || 'produit beauté'
     }
     
     return message
-      .replace(/\$\{agentName\}/g, `<strong>${agentName}</strong>`)
-      .replace(/\$\{agentTitle\}/g, `<strong>${agentTitle}</strong>`)
-      .replace(/\$\{shopName\}/g, `<strong>${shopName}</strong>`)
-      .replace(/\$\{productName\}/g, '<strong>Nom du Produit</strong>')
-      .replace(/\$\{productType\}/g, `<strong>${productType}</strong>`)
-      .replace(/\$\{greeting\}/g, `<strong>${greeting}</strong>`)
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\$\{agentName\}/g, `${agentName}`)
+      .replace(/\$\{agentTitle\}/g, `${agentTitle}`)
+      .replace(/\$\{shopName\}/g, `${shopName}`)
+      .replace(/\$\{productName\}/g, 'Nom du Produit')
+      .replace(/\$\{productType\}/g, `${productType}`)
+      .replace(/\$\{greeting\}/g, `${greeting}`)
+      .replace(/\*\*(.*?)\*\*/g, '$1')
       .replace(/\n/g, '<br>')
   })
-
-  // ✅ CORRECTION : Test spécifique du message d'accueil
-  const testWelcomeMessage = async (agentId: string) => {
-    try {
-      console.log('🧪 [testWelcomeMessage] Test message d\'accueil avec vraie API...')
-      
-      if (!agentId) {
-        throw new Error('Agent ID manquant')
-      }
-
-      // Appeler l'API publique pour obtenir le vrai message d'accueil
-      const response = await $fetch('/api/v1/public/chat', {
-        method: 'POST',
-        baseURL: config.public.apiBaseUrl,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: {
-          message: 'Bonjour',
-          shopId: authStore.user?.id || authStore.userShopId || 'demo-shop',
-          conversationId: null,
-          productInfo: {
-            name: localConfig.value?.agent?.customProductType || 'Produit de test',
-            price: 29900,
-            id: 'test-product-123'
-          },
-          visitorId: `test-visitor-${Date.now()}`,
-          isFirstMessage: true
-        }
-      })
-
-      if (response.success) {
-        return {
-          success: true,
-          message: response.data.message,
-          isWelcome: response.data.isWelcomeMessage || true
-        }
-      } else {
-        throw new Error(response.error || 'Erreur lors du test du message d\'accueil')
-      }
-    } catch (error: any) {
-      console.error('❌ Erreur test message d\'accueil:', error)
-      return {
-        success: false,
-        error: error.response?.data?.error || error.message || 'Erreur lors du test du message d\'accueil'
-      }
-    }
-  }
 
   // ✅ NOUVELLE FONCTION : Nettoyer l'URL avatar - CORRIGÉE
   const getCleanAvatarUrl = (avatar: string | null | undefined): string => {
@@ -288,7 +154,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     if (!avatar || avatar.startsWith('data:image/') || avatar.length > 200) {
       // ✅ CORRECTION: Utiliser les références correctes
       const currentAgentName = localConfig.value?.agent?.name || agentConfig.value?.agent?.name || 'Agent'
-      const currentPrimaryColor = localConfig.value?.widget?.primaryColor || agentConfig.value?.widget?.primaryColor || '#8B5CF6'
+      const currentPrimaryColor = localConfig.value?.widget?.primaryColor || agentConfig.value?.widget?.primaryColor || '#E91E63'
       
       const name = encodeURIComponent(currentAgentName)
       const color = currentPrimaryColor.replace('#', '')
@@ -300,542 +166,80 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
 
   // ✅ CORRECTION MAJEURE : Code d'intégration CORRIGÉ avec welcomeMessage
   const integrationCode = computed(() => {
-  // Configuration de base
-  const shopId = authStore.user?.id || 'demo-shop'
-  const agentId = agentConfig.value?.agent?.id || localConfig.value?.agent?.id || 'b5caf159-bb0d-4dc7-9def-7c4167ec3e17'
-  const agentName = agentConfig.value?.agent?.name || localConfig.value?.agent?.name || 'Rose'
-  const agentTitle = agentConfig.value?.agent?.title || localConfig.value?.agent?.title || 'Commerciale'
-  const buttonText = agentConfig.value?.widget?.buttonText || localConfig.value?.widget?.buttonText || 'Parler à la commerciale'
-  const primaryColor = agentConfig.value?.widget?.primaryColor || localConfig.value?.widget?.primaryColor || '#EF4444'
-  const position = agentConfig.value?.widget?.position || localConfig.value?.widget?.position || 'below-cta'
-  const borderRadius = agentConfig.value?.widget?.borderRadius || localConfig.value?.widget?.borderRadius || 'full'
-  const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
-  
-  // Message d'accueil avec gestion des variables
-  let welcomeMessage = agentConfig.value?.agent?.welcomeMessage || localConfig.value?.agent?.welcomeMessage
-  if (welcomeMessage) {
-    const currentTime = new Date().getHours()
-    const greeting = currentTime < 12 ? 'Bonjour' : 'Bonsoir'
-    const shopName = agentConfig.value?.agent?.shopName || localConfig.value?.agent?.shopName || 'cette boutique'
+    // Configuration de base
+    const shopId = authStore.user?.id || 'demo-shop'
+    const agentId = agentConfig.value?.agent?.id || localConfig.value?.agent?.id || 'b5caf159-bb0d-4dc7-9def-7c4167ec3e17'
+    const agentName = agentConfig.value?.agent?.name || localConfig.value?.agent?.name || 'Rose'
+    const agentTitle = agentConfig.value?.agent?.title || localConfig.value?.agent?.title || 'Commerciale'
+    const buttonText = agentConfig.value?.widget?.buttonText || localConfig.value?.widget?.buttonText || 'Parler à la commerciale'
+    const primaryColor = agentConfig.value?.widget?.primaryColor || localConfig.value?.widget?.primaryColor || '#E91E63'
+    const position = agentConfig.value?.widget?.position || localConfig.value?.widget?.position || 'above-cta'
+    const borderRadius = agentConfig.value?.widget?.borderRadius || localConfig.value?.widget?.borderRadius || 'full'
+    const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
     
-    let productType = 'produit'
-    const agentProductType = agentConfig.value?.agent?.productType || localConfig.value?.agent?.productType
-    const customProductType = agentConfig.value?.agent?.customProductType || localConfig.value?.agent?.customProductType
-    
-    if (agentProductType === 'produit' && customProductType) {
-      productType = customProductType
-    } else if (agentProductType && agentProductType !== 'auto') {
-      const typeOption = getProductTypeOptions().find(opt => opt.value === agentProductType)
-      productType = typeOption?.label.replace(/[🎯🎮📚🎓📱💻👗🔧💎📦]/g, '').trim().toLowerCase() || 'produit'
+    // Message d'accueil avec gestion des variables
+    let welcomeMessage = agentConfig.value?.agent?.welcomeMessage || localConfig.value?.agent?.welcomeMessage
+    if (welcomeMessage) {
+      const currentTime = new Date().getHours()
+      const greeting = currentTime < 12 ? 'Bonjour' : 'Bonsoir'
+      const shopName = agentConfig.value?.agent?.shopName || localConfig.value?.agent?.shopName || 'cette boutique'
+      
+      // ✅ Utiliser productRange pour la beauté
+      let productType = 'produit beauté'
+      const agentProductRange = agentConfig.value?.agent?.productRange || localConfig.value?.agent?.productRange
+      const customProductRange = agentConfig.value?.agent?.customProductRange || localConfig.value?.agent?.customProductRange
+      
+      if (agentProductRange === 'custom' && customProductRange) {
+        productType = customProductRange
+      } else if (agentProductRange) {
+        const rangeOption = PRODUCT_RANGE_OPTIONS.find(opt => opt.value === agentProductRange)
+        productType = rangeOption?.label.replace(/[💎🛍️🌿🐰⏰🤲🎯]/g, '').trim().toLowerCase() || 'produit beauté'
+      }
+      
+      welcomeMessage = welcomeMessage
+        .replace(/\$\{agentName\}/g, agentName)
+        .replace(/\$\{agentTitle\}/g, agentTitle)
+        .replace(/\$\{shopName\}/g, shopName)
+        .replace(/\$\{productName\}/g, '${productName}')
+        .replace(/\$\{productType\}/g, productType)
+        .replace(/\$\{greeting\}/g, greeting)
     }
     
-    welcomeMessage = welcomeMessage
-      .replace(/\$\{agentName\}/g, agentName)
-      .replace(/\$\{agentTitle\}/g, agentTitle)
-      .replace(/\$\{shopName\}/g, shopName)
-      .replace(/\$\{productName\}/g, '${productName}')
-      .replace(/\$\{productType\}/g, productType)
-      .replace(/\$\{greeting\}/g, greeting)
-  }
-  
-  // ✅ CALCUL BORDER RADIUS
-  let borderRadiusValue = '12px'
-  if (borderRadius === 'none') borderRadiusValue = '0px'
-  else if (borderRadius === 'sm') borderRadiusValue = '6px'  
-  else if (borderRadius === 'md') borderRadiusValue = '12px'
-  else if (borderRadius === 'lg') borderRadiusValue = '16px'
-  else if (borderRadius === 'full') borderRadiusValue = '50px'
+    // ✅ CALCUL BORDER RADIUS
+    let borderRadiusValue = '12px'
+    if (borderRadius === 'none') borderRadiusValue = '0px'
+    else if (borderRadius === 'sm') borderRadiusValue = '6px'  
+    else if (borderRadius === 'md') borderRadiusValue = '12px'
+    else if (borderRadius === 'lg') borderRadiusValue = '16px'
+    else if (borderRadius === 'full') borderRadiusValue = '50px'
 
-  return `<!-- ChatSeller Widget Hybride Amélioré -->
-  <script>
-  (function() {
-    console.log('🚀 ChatSeller Hybride v2 - Démarrage avec fallbacks robustes');
-    
-    // ✅ CONFIGURATION COMPLÈTE
-    window.ChatSellerConfig = {
-      shopId: '${shopId}',
-      agentId: '${agentId}',
-      apiUrl: '${apiUrl}',
-      buttonText: '${buttonText.replace(/'/g, "\\'")}',
+    return `<!-- ChatSeller Widget Beauté -->
+<script>
+(function() {
+  window.chatSellerConfig = {
+    shopId: '${shopId}',
+    agentId: '${agentId}',
+    apiUrl: '${apiUrl}',
+    position: '${position}',
+    widget: {
+      buttonText: '${buttonText}',
       primaryColor: '${primaryColor}',
-      position: '${position}',
-      theme: 'modern',
-      language: 'fr',
-      borderRadius: '${borderRadius}',
-      autoDetectProduct: true,
-      debug: true,
-      forceDisplay: true,
-      agentConfig: {
-        id: '${agentId}',
-        name: '${agentName.replace(/'/g, "\\'")}',
-        title: '${agentTitle.replace(/'/g, "\\'")}',
-        welcomeMessage: ${welcomeMessage ? `'${welcomeMessage.replace(/'/g, "\\'").replace(/\n/g, '\\n')}'` : 'null'},
-        personality: 'friendly',
-        avatar: '${getCleanAvatarUrl(agentConfig.value?.agent?.avatar || localConfig.value?.agent?.avatar)}'
-      }
-    };
-    
-    // ✅ VARIABLES ES5 POUR COMPATIBILITÉ
-    var shopId = '${shopId}';
-    var agentName = '${agentName.replace(/'/g, "\\'")}';
-    var agentTitle = '${agentTitle.replace(/'/g, "\\'")}';  
-    var buttonText = '${buttonText.replace(/'/g, "\\'")}';
-    var primaryColor = '${primaryColor}';
-    var position = '${position}';
-    var borderRadius = '${borderRadiusValue}';
-    var apiUrl = '${apiUrl}';
-    
-    // ✅ FLAGS DE CONTRÔLE
-    var realWidgetLoaded = false;
-    var realWidgetAttempted = false;
-    var hybridWidgetCreated = false;
-    
-    // ✅ UTILITAIRES
-    function hexToRgb(hex) {
-      var result = /^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec(hex);
-      if (result) {
-        return parseInt(result[1], 16) + ', ' + parseInt(result[2], 16) + ', ' + parseInt(result[3], 16);
-      }
-      return '239, 68, 68';
+      borderRadius: '${borderRadiusValue}',
+      agentName: '${agentName}',
+      agentTitle: '${agentTitle}',
+      welcomeMessage: \`${welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?'}\`
     }
-    
-    // ✅ CRÉATION WIDGET HYBRIDE AMÉLIORÉ
-    function createHybridWidget() {
-      if (hybridWidgetCreated) {
-        console.log('⚠️ Widget hybride déjà créé, ignore');
-        return null;
-      }
-      
-      console.log('🎨 Création widget hybride amélioré...');
-      
-      var container = document.createElement('div');
-      container.id = 'chatseller-widget-hybrid';
-      container.style.cssText = 'margin: 12px 0; width: 100%; position: relative; z-index: 999999;';
-      
-      var rgbColor = hexToRgb(primaryColor);
-      
-      container.innerHTML = '<button id="cs-btn-hybrid" style="width: 100%; padding: 16px 24px; background: ' + primaryColor + '; color: white; border: none; border-radius: ' + borderRadius + '; font-size: 15px; font-weight: 600; cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; box-shadow: 0 8px 25px rgba(' + rgbColor + ', 0.3); transition: all 0.3s ease;">' +
-        '<svg style="width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; flex-shrink: 0;" viewBox="0 0 24 24">' +
-        '<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-4.906-1.479L3 21l2.521-5.094A8.955 8.955 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
-        '</svg>' +
-        '<span>' + buttonText + '</span>' +
-        '</button>';
-      
-      // ✅ EVENT LISTENERS ROBUSTES
-      var button = container.querySelector('#cs-btn-hybrid');
-      if (button) {
-        button.onclick = function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('🖱️ Clic widget hybride détecté');
-          openHybridChat();
-        };
-        
-        // ✅ EFFETS VISUELS
-        button.onmouseenter = function() {
-          this.style.transform = 'translateY(-2px)';
-          this.style.boxShadow = '0 12px 35px rgba(' + rgbColor + ', 0.4)';
-        };
-        
-        button.onmouseleave = function() {
-          this.style.transform = 'translateY(0)';
-          this.style.boxShadow = '0 8px 25px rgba(' + rgbColor + ', 0.3)';
-        };
-      }
-      
-      hybridWidgetCreated = true;
-      return container;
-    }
-    
-    // ✅ OUVERTURE CHAT INTELLIGENTE
-    function openHybridChat() {
-      console.log('💬 Tentative ouverture chat hybride...');
-      
-      // Essayer d'abord le vrai widget si disponible
-      if (window.ChatSeller && typeof window.ChatSeller.init === 'function' && realWidgetLoaded) {
-        console.log('✅ Utilisation du vrai ChatSeller');
-        try {
-          if (window.ChatSeller.openChat) {
-            window.ChatSeller.openChat();
-            return;
-          }
-        } catch (error) {
-          console.log('⚠️ Erreur avec le vrai widget, utilisation fallback:', error);
-        }
-      }
-      
-      // Fallback sur le chat amélioré
-      console.log('🔄 Utilisation du chat fallback amélioré');
-      openEnhancedChat();
-    }
-    
-    // ✅ CHAT FALLBACK AVEC API RÉELLE
-    function openEnhancedChat() {
-      // Supprimer modal existant
-      var existingModal = document.getElementById('cs-modal-enhanced');
-      if (existingModal) {
-        existingModal.remove();
-      }
-      
-      var modal = document.createElement('div');
-      modal.id = 'cs-modal-enhanced';
-      modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 2147483647; display: flex; align-items: center; justify-content: center; padding: 20px;';
-      
-      modal.innerHTML = '<div style="background: white; border-radius: 16px; padding: 24px; max-width: 450px; width: 100%; text-align: center; font-family: -apple-system, BlinkMacSystemFont, sans-serif; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);">' +
-        '<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">' +
-        '<h3 style="margin: 0; color: ' + primaryColor + '; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">' +
-        '<svg style="width: 24px; height: 24px; stroke: ' + primaryColor + '; fill: none;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/></svg>' +
-        agentName + ' - ' + agentTitle + '</h3>' +
-        '<button id="cs-close-enhanced" style="background: #f3f4f6; color: #6b7280; border: none; border-radius: 50%; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">×</button>' +
-        '</div>' +
-        '<div id="cs-messages-enhanced" style="margin: 16px 0; text-align: left; max-height: 350px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; background: linear-gradient(to bottom, #f9fafb, #ffffff);"></div>' +
-        '<div style="display: flex; gap: 8px; margin-top: 16px;">' +
-        '<input id="cs-input-enhanced" type="text" placeholder="Tapez votre message..." style="flex: 1; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 25px; outline: none; font-size: 14px; transition: border-color 0.2s;" />' +
-        '<button id="cs-send-enhanced" style="padding: 12px 20px; background: ' + primaryColor + '; color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; min-width: 80px;">Envoyer</button>' +
-        '</div>' +
-        '</div>';
-      
-      document.body.appendChild(modal);
-      
-      // ✅ EVENT LISTENERS
-      var closeBtn = modal.querySelector('#cs-close-enhanced');
-      var sendBtn = modal.querySelector('#cs-send-enhanced');
-      var input = modal.querySelector('#cs-input-enhanced');
-      
-      if (closeBtn) {
-        closeBtn.onclick = function() {
-          modal.remove();
-          console.log('❌ Chat fermé');
-        };
-      }
-      
-      if (sendBtn) {
-        sendBtn.onclick = function() {
-          sendEnhancedMessage();
-        };
-      }
-      
-      if (input) {
-        input.focus();
-        input.onkeypress = function(e) {
-          if (e.key === 'Enter' || e.keyCode === 13) {
-            sendEnhancedMessage();
-          }
-        };
-        
-        input.onfocus = function() {
-          this.style.borderColor = primaryColor;
-        };
-        
-        input.onblur = function() {
-          this.style.borderColor = '#e5e7eb';
-        };
-      }
-      
-      // Fermer en cliquant à l'extérieur
-      modal.onclick = function(e) {
-        if (e.target === modal) {
-          modal.remove();
-        }
-      };
-      
-      // ✅ MESSAGE D'ACCUEIL IMMÉDIAT
-      console.log('👋 Envoi message d\\'accueil via API...');
-      callChatAPI('', true).then(function(welcomeMsg) {
-        addEnhancedMessage('agent', welcomeMsg);
-      });
-    }
-    
-    // ✅ APPEL API CHATSELLER RÉEL
-    function callChatAPI(message, isWelcome) {
-      console.log('🌐 Appel API ChatSeller:', { message: message, isWelcome: isWelcome });
-      
-      // Détection produit Shopify
-      var productInfo = { name: null, price: null, url: window.location.href };
-      if (window.ShopifyAnalytics && window.ShopifyAnalytics.meta && window.ShopifyAnalytics.meta.product) {
-        var sp = window.ShopifyAnalytics.meta.product;
-        productInfo.name = sp.title;
-        productInfo.price = sp.price / 100;
-      }
-      
-      // ✅ CORRECTION CRITIQUE : S'assurer que c'est bien POST
-      var requestOptions = {
-        method: 'POST', // ✅ EXPLICITEMENT POST
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          shopId: shopId,
-          message: isWelcome ? 'Bonjour' : message,
-          conversationId: null,
-          productInfo: productInfo,
-          visitorId: 'visitor_' + Date.now(),
-          isFirstMessage: isWelcome || false
-        })
-      };
-      
-      console.log('🌐 [DEBUG] Options de requête:', requestOptions);
-      console.log('🌐 [DEBUG] URL complète:', apiUrl + '/api/v1/public/chat');
-      
-      return fetch(apiUrl + '/api/v1/public/chat', requestOptions)
-        .then(function(response) {
-          console.log('📥 [DEBUG] Réponse reçue:', response.status, response.statusText);
-          if (!response.ok) {
-            throw new Error('HTTP ' + response.status + ' - ' + response.statusText);
-          }
-          return response.json();
-        })
-        .then(function(data) {
-          console.log('✅ Réponse API reçue:', data);
-          return data.success ? data.data.message : 'Bonjour ! Je suis ' + agentName + ', ' + agentTitle + '. Comment puis-je vous aider ?';
-        })
-        .catch(function(error) {
-          console.error('❌ Erreur API ChatSeller détaillée:', error);
-          if (isWelcome) {
-            return ${welcomeMessage ? `'${welcomeMessage.replace(/'/g, "\\'").replace(/\n/g, '\\n')}'` : `'Bonjour ! Je suis ' + agentName + ', ' + agentTitle + '. Comment puis-je vous aider ?'`};
-          }
-          return 'Merci pour votre message ! Un conseiller va vous recontacter rapidement.';
-        });
-    }
-    
-    // ✅ ENVOI MESSAGE
-    function sendEnhancedMessage() {
-      var input = document.getElementById('cs-input-enhanced');
-      if (!input || !input.value.trim()) return;
-      
-      var message = input.value.trim();
-      input.value = '';
-      
-      addEnhancedMessage('user', message);
-      
-      callChatAPI(message, false).then(function(response) {
-        addEnhancedMessage('agent', response);
-      });
-    }
-    
-    // ✅ AJOUT MESSAGE
-    function addEnhancedMessage(type, content) {
-      var container = document.getElementById('cs-messages-enhanced');
-      if (!container) return;
-      
-      var msg = document.createElement('div');
-      msg.style.cssText = 'margin: 12px 0; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; max-width: 85%; animation: fadeIn 0.3s ease;';
-      
-      if (type === 'user') {
-        msg.style.cssText += 'background: ' + primaryColor + '; color: white; margin-left: auto; text-align: right; box-shadow: 0 2px 8px rgba(' + hexToRgb(primaryColor) + ', 0.3);';
-        msg.textContent = content;
-      } else {
-        msg.style.cssText += 'background: white; color: #374151; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);';
-        msg.innerHTML = '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></div><strong style="color: ' + primaryColor + ';">' + agentName + '</strong></div>' + content.replace(/\\\\n/g, '<br>');
-      }
-      
-      container.appendChild(msg);
-      container.scrollTop = container.scrollHeight;
-    }
-    
-    // ✅ INSERTION WIDGET AVEC SÉLECTEURS ÉTENDUS
-    function insertHybridWidget(widget) {
-      console.log('📍 Insertion widget hybride, position:', position);
-      
-      var targetElement = null;
-      
-      // ✅ SÉLECTEURS CTA ÉTENDUS (repris de nos corrections embed.ts)
-      var ctaSelectors = [
-        // Shopify modernes
-        'form[action*="/cart/add"] button[type="submit"]',
-        'form[action*="/cart/add"] [name="add"]',
-        '.product-form__cart button',
-        '.product-form__buttons button[name="add"]',
-        '.product-form__buttons .btn--add-to-cart',
-        '.product-single__add-to-cart',
-        '.shopify-payment-button__button',
-        'button[name="add"]:not([name="add-to-cart"])',
-        '[data-shopify-add-to-cart]',
-        '.product-form button[type="submit"]',
-        
-        // Thèmes Shopify populaires
-        '.btn--add-to-cart',
-        '.product__add-to-cart',
-        '.product-single__cart-submit',
-        '.product-form-cart__submit',
-        '.cart-submit',
-        
-        // WooCommerce
-        '.single_add_to_cart_button',
-        'button[name="add-to-cart"]',
-        '.wc-add-to-cart',
-        '.add_to_cart_button',
-        
-        // Génériques
-        'button[class*="add-to-cart"]',
-        'button[class*="add-cart"]',
-        'button[class*="buy"]',
-        'button[class*="purchase"]',
-        '.buy-button',
-        '.purchase-button',
-        '.add-to-basket',
-        '[data-add-to-cart]'
-      ];
-      
-      // ✅ CHERCHER LE PREMIER CTA VISIBLE
-      for (var i = 0; i < ctaSelectors.length; i++) {
-        var element = document.querySelector(ctaSelectors[i]);
-        if (element && isElementVisible(element)) {
-          targetElement = element;
-          console.log('✅ CTA trouvé:', ctaSelectors[i]);
-          break;
-        }
-      }
-      
-      // ✅ INSERTION SELON POSITION
-      if (targetElement && targetElement.parentNode) {
-        var parent = targetElement.parentNode;
-        
-        try {
-          if (position === 'above-cta') {
-            parent.insertBefore(widget, targetElement);
-            console.log('✅ Widget inséré AVANT le CTA');
-          } else if (position === 'below-cta') {
-            if (targetElement.nextSibling) {
-              parent.insertBefore(widget, targetElement.nextSibling);
-            } else {
-              parent.appendChild(widget);
-            }
-            console.log('✅ Widget inséré APRÈS le CTA');
-          } else if (position === 'beside-cta') {
-            var flexDiv = document.createElement('div');
-            flexDiv.style.cssText = 'display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap;';
-            parent.insertBefore(flexDiv, targetElement);
-            flexDiv.appendChild(targetElement);
-            flexDiv.appendChild(widget);
-            console.log('✅ Widget inséré À CÔTÉ du CTA');
-          } else {
-            parent.insertBefore(widget, targetElement);
-            console.log('✅ Widget inséré par défaut');
-          }
-          return; // Succès
-        } catch (insertError) {
-          console.warn('⚠️ Erreur insertion près CTA:', insertError);
-        }
-      }
-      
-      // ✅ FALLBACKS ROBUSTES
-      var fallbackSelectors = [
-        '.product-form', '.product-single', '.product__info',
-        '.product-details', '.woocommerce-product', '.product',
-        '[data-product]', 'main', '.main-content'
-      ];
-      
-      for (var j = 0; j < fallbackSelectors.length; j++) {
-        var container = document.querySelector(fallbackSelectors[j]);
-        if (container) {
-          container.appendChild(widget);
-          console.log('✅ Widget inséré dans fallback:', fallbackSelectors[j]);
-          return;
-        }
-      }
-      
-      // ✅ DERNIER RECOURS : BODY
-      document.body.appendChild(widget);
-      widget.style.position = 'fixed';
-      widget.style.bottom = '20px';
-      widget.style.right = '20px';
-      widget.style.maxWidth = '300px';
-      widget.style.zIndex = '999999';
-      console.log('⚠️ Widget inséré dans body (dernier recours)');
-    }
-    
-    // ✅ HELPER : VÉRIFIER VISIBILITÉ
-    function isElementVisible(element) {
-      if (!element) return false;
-      var style = window.getComputedStyle(element);
-      return style.display !== 'none' && 
-            style.visibility !== 'hidden' && 
-            style.opacity !== '0' &&
-            element.offsetWidth > 0 && 
-            element.offsetHeight > 0;
-    }
-    
-    // ✅ CHARGEMENT VRAI WIDGET EN ARRIÈRE-PLAN
-    function loadRealWidget() {
-      if (realWidgetAttempted) return;
-      realWidgetAttempted = true;
-      
-      console.log('🔄 Tentative chargement vrai widget...');
-      
-      var script = document.createElement('script');
-      script.src = 'https://widget.chatseller.app/embed.js?v=2.0&t=' + Date.now();
-      script.async = true;
-      
-      script.onload = function() {
-        console.log('✅ Vrai widget chargé avec succès');
-        if (window.ChatSeller && typeof window.ChatSeller.init === 'function') {
-          try {
-            window.ChatSeller.init(window.ChatSellerConfig);
-            realWidgetLoaded = true;
-            console.log('✅ Vrai widget initialisé');
-            
-            // Masquer le widget hybride si le vrai fonctionne
-            var hybridWidget = document.getElementById('chatseller-widget-hybrid');
-            if (hybridWidget && window.ChatSeller.isReady) {
-              hybridWidget.style.display = 'none';
-              console.log('🔄 Widget hybride masqué, vrai widget actif');
-            }
-          } catch (error) {
-            console.log('⚠️ Erreur initialisation vrai widget:', error);
-          }
-        }
-      };
-      
-      script.onerror = function() {
-        console.log('❌ Échec chargement vrai widget, mode fallback uniquement');
-      };
-      
-      document.head.appendChild(script);
-    }
-    
-    // ✅ INITIALISATION PRINCIPALE
-    function initHybridWidget() {
-      console.log('🚀 Initialisation widget hybride...');
-      
-      try {
-        var widget = createHybridWidget();
-        if (widget) {
-          insertHybridWidget(widget);
-          console.log('✅ Widget hybride créé et inséré avec succès !');
-          
-          // Charger le vrai widget en arrière-plan après 2s
-          setTimeout(loadRealWidget, 2000);
-        } else {
-          console.error('❌ Échec création widget hybride');
-        }
-      } catch (error) {
-        console.error('❌ Erreur initialisation widget hybride:', error);
-      }
-    }
-    
-    // ✅ DÉMARRAGE ROBUSTE
-    function startWidget() {
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-          setTimeout(initHybridWidget, 100);
-        });
-      } else {
-        setTimeout(initHybridWidget, 100);
-      }
-    }
-    
-    // ✅ LANCEMENT
-    startWidget();
-    
-    console.log('✅ ChatSeller Hybride v2 configuré et prêt');
-    
-  })();
-  </script>`
+  };
+  
+  var script = document.createElement('script');
+  script.src = 'https://widget.chatseller.app/widget.js';
+  script.async = true;
+  document.head.appendChild(script);
+})();
+</script>`
   })
 
-  // HELPER: Headers avec authentification 
+  // Helper: Headers avec authentification 
   const getAuthHeaders = () => {
     if (!authStore.token) {
       throw new Error('Token d\'authentification manquant. Veuillez vous reconnecter.')
@@ -847,13 +251,13 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     }
   }
 
-  // ✅ RÉCUPÉRER LA CONFIGURATION
+  // ✅ RÉCUPÉRER LA CONFIGURATION BEAUTÉ
   const fetchAgentConfig = async (agentId: string) => {
     loading.value = true
     error.value = null
 
     try {
-      console.log('🔍 [useAgentConfig] Récupération configuration agent:', agentId)
+      console.log('🔍 [useAgentConfig] Récupération configuration agent beauté:', agentId)
       
       if (!agentId || agentId === 'undefined' || agentId === 'null') {
         throw new Error('ID agent invalide')
@@ -887,25 +291,28 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
         throw new Error('Erreur lors de la récupération de l\'agent: ' + agentResponse.reason.message)
       }
 
-      const agentData = agentResponse.value
+      const agentData = agentResponse.value as any
       if (!agentData.success) {
         throw new Error(agentData.error || 'Erreur lors de la récupération de la configuration agent')
       }
 
-      const shopData = shopResponse.status === 'fulfilled' ? shopResponse.value : null
-      const kbData = kbResponse.status === 'fulfilled' ? kbResponse.value : { success: true, data: [] }
+      const shopData = shopResponse.status === 'fulfilled' ? shopResponse.value as any : null
+      const kbData = kbResponse.status === 'fulfilled' ? kbResponse.value as any : { success: true, data: [] }
 
-      // ✅ CONSTRUIRE CONFIG COMPLÈTE AVEC NOUVEAUX CHAMPS
+      // ✅ CONSTRUIRE CONFIG COMPLÈTE BEAUTÉ
       const completeConfig: AgentConfig = {
         agent: {
           id: agentData.data.agent.id,
           name: agentData.data.agent.name,
-          title: agentData.data.agent.title || getTypeLabel(agentData.data.agent.type || 'general'),
-          type: agentData.data.agent.type,
-          personality: agentData.data.agent.personality,
+          title: agentData.data.agent.title || getTypeLabel(agentData.data.agent.type || 'beauty_expert'),
+          type: agentData.data.agent.type as AgentType,
+          personality: agentData.data.agent.personality as PersonalityType,
           productType: agentData.data.agent.productType || 'auto',
           customProductType: agentData.data.agent.customProductType || '',
-          shopName: shopData?.data?.name || agentData.data.agent.shopName || 'cette boutique en ligne',
+          // ✅ NOUVELLES PROPRIÉTÉS BEAUTÉ
+          productRange: (agentData.data.agent.productRange as ProductRange) || 'premium',
+          customProductRange: agentData.data.agent.customProductRange || '',
+          shopName: shopData?.data?.name || agentData.data.agent.shopName || 'cette boutique beauté',
           description: agentData.data.agent.description,
           welcomeMessage: agentData.data.agent.welcomeMessage,
           fallbackMessage: agentData.data.agent.fallbackMessage,
@@ -913,6 +320,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           isActive: agentData.data.agent.isActive,
           config: {
             ...agentData.data.agent.config,
+            collectBeautyProfile: agentData.data.agent.config?.collectBeautyProfile ?? true, 
             linkedKnowledgeBase: kbData.data?.map((kb: any) => kb.id) || [],
             aiProvider: agentData.data.agent.config?.aiProvider || 'openai',
             temperature: agentData.data.agent.config?.temperature || 0.7,
@@ -922,15 +330,18 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
             conversations: agentData.data.agent.totalConversations || 0,
             conversions: agentData.data.agent.totalConversions || 0
           },
-          knowledgeBase: kbData.data || []
+          knowledgeBase: kbData.data || [],
+          createdAt: agentData.data.agent.createdAt || new Date().toISOString(),
+          updatedAt: agentData.data.agent.updatedAt || new Date().toISOString()
         },
         widget: {
-          buttonText: shopData?.data?.widget_config?.buttonText || 'Parler au vendeur',
-          primaryColor: shopData?.data?.widget_config?.primaryColor || '#EC4899',
-          position: shopData?.data?.widget_config?.position || 'above-cta',
+          buttonText: shopData?.data?.widget_config?.buttonText || 'Parler à votre conseillère beauté',
+          primaryColor: shopData?.data?.widget_config?.primaryColor || '#E91E63',
+          position: (shopData?.data?.widget_config?.position as WidgetPosition) || 'above-cta',
+          floatingPosition: (shopData?.data?.widget_config?.floatingPosition as 'bottom-right' | 'bottom-left') || 'bottom-right',
           widgetSize: shopData?.data?.widget_config?.widgetSize || 'medium',
-          theme: shopData?.data?.widget_config?.theme || 'modern',
-          borderRadius: shopData?.data?.widget_config?.borderRadius || 'full',
+          theme: (shopData?.data?.widget_config?.theme as WidgetTheme) || 'beauty_modern',
+          borderRadius: shopData?.data?.widget_config?.borderRadius || 'lg',
           animation: shopData?.data?.widget_config?.animation || 'fade',
           autoOpen: shopData?.data?.widget_config?.autoOpen || false,
           showAvatar: shopData?.data?.widget_config?.showAvatar !== false,
@@ -939,20 +350,22 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           showTypingIndicator: shopData?.data?.widget_config?.showTypingIndicator !== false,
           offlineMessage: shopData?.data?.widget_config?.offlineMessage,
           isActive: shopData?.data?.widget_config?.isActive !== false,
-          language: shopData?.data?.widget_config?.language || 'fr'
+          language: (shopData?.data?.widget_config?.language as WidgetLanguage) || 'fr'
         },
         knowledgeBase: kbData.data || []
       }
 
       agentConfig.value = completeConfig
-      console.log('✅ [useAgentConfig] Configuration chargée:', {
+      console.log('✅ [useAgentConfig] Configuration beauté chargée:', {
         agent: completeConfig.agent.name,
         title: completeConfig.agent.title,
-        productType: completeConfig.agent.productType,
-        customProductType: completeConfig.agent.customProductType,
+        type: completeConfig.agent.type,
+        productRange: completeConfig.agent.productRange,
+        customProductRange: completeConfig.agent.customProductRange,
         shopName: completeConfig.agent.shopName,
         welcomeMessage: !!completeConfig.agent.welcomeMessage,
-        widget: completeConfig.widget.buttonText
+        widget: completeConfig.widget.buttonText,
+        theme: completeConfig.widget.theme
       })
       return { success: true, data: completeConfig }
 
@@ -966,10 +379,10 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     }
   }
 
-  // ✅ CORRECTION MAJEURE : Test IA réel
+  // ✅ CORRECTION MAJEURE : Test IA réel beauté
   const testAIMessage = async (message: string, agentId: string, isWelcomeTest = false) => {
     try {
-      console.log('🧪 [testAIMessage] Test cohérent avec Widget:', { message, agentId, isWelcomeTest })
+      console.log('🧪 [testAIMessage] Test cohérent avec Widget beauté:', { message, agentId, isWelcomeTest })
       
       if (!message.trim() && !isWelcomeTest) {
         throw new Error('Message vide')
@@ -979,12 +392,13 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
         throw new Error('Agent ID manquant')
       }
 
-      // Utiliser le type de produit personnalisé dans la payload
+      // Utiliser productRange pour la beauté
       const getEffectiveProductType = () => {
-        if (localConfig.value?.agent?.productType === 'produit' && localConfig.value?.agent?.customProductType) {
-          return localConfig.value.agent.customProductType
+        if (localConfig.value?.agent?.productRange === 'custom' && localConfig.value?.agent?.customProductRange) {
+          return localConfig.value.agent.customProductRange
         }
-        return getProductTypeLabel(localConfig.value?.agent?.productType || 'auto')
+        const rangeOption = PRODUCT_RANGE_OPTIONS.find(opt => opt.value === (localConfig.value?.agent?.productRange || 'premium'))
+        return rangeOption?.label || 'produit beauté'
       }
 
       // Utiliser la vraie API publique comme le Widget
@@ -999,14 +413,14 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           shopId: authStore.user?.id || authStore.userShopId || 'demo-shop',
           conversationId: null,
           productInfo: {
-            name: `Produit de test ${getEffectiveProductType()}`,
+            name: `Produit beauté ${getEffectiveProductType()}`,
             price: 29900,
             id: 'test-product-123'
           },
           visitorId: `test-visitor-${Date.now()}`,
           isFirstMessage: isWelcomeTest 
         }
-      })
+      }) as any
 
       if (response.success) {
         return {
@@ -1028,7 +442,55 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     }
   }
 
-  // ✅ CORRECTION MAJEURE : SAUVEGARDER CONFIGURATION COMPLÈTE
+  // ✅ Test spécifique du message d'accueil
+  const testWelcomeMessage = async (agentId: string) => {
+    try {
+      console.log('🧪 [testWelcomeMessage] Test message d\'accueil avec vraie API...')
+      
+      if (!agentId) {
+        throw new Error('Agent ID manquant')
+      }
+
+      // Appeler l'API publique pour obtenir le vrai message d'accueil
+      const response = await $fetch('/api/v1/public/chat', {
+        method: 'POST',
+        baseURL: config.public.apiBaseUrl,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: {
+          message: 'Bonjour',
+          shopId: authStore.user?.id || authStore.userShopId || 'demo-shop',
+          conversationId: null,
+          productInfo: {
+            name: localConfig.value?.agent?.customProductRange || 'Produit beauté de test',
+            price: 29900,
+            id: 'test-product-123'
+          },
+          visitorId: `test-visitor-${Date.now()}`,
+          isFirstMessage: true
+        }
+      }) as any
+
+      if (response.success) {
+        return {
+          success: true,
+          message: response.data.message,
+          isWelcome: response.data.isWelcomeMessage || true
+        }
+      } else {
+        throw new Error(response.error || 'Erreur lors du test du message d\'accueil')
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur test message d\'accueil:', error)
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Erreur lors du test du message d\'accueil'
+      }
+    }
+  }
+
+  // ✅ CORRECTION MAJEURE : SAUVEGARDER CONFIGURATION BEAUTÉ COMPLÈTE
   const saveCompleteConfig = async (agentId: string, updates: Partial<AgentConfig>, isAutoSave = false) => {
     if (!isAutoSave) saving.value = true
     widgetSyncStatus.value = 'syncing'
@@ -1048,37 +510,45 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
         throw new Error('Shop ID manquant')
       }
 
-      console.log('💾 [saveCompleteConfig] Début sauvegarde:', {
+      console.log('💾 [saveCompleteConfig] Début sauvegarde beauté:', {
         agentId,
         shopId,
         hasAgentUpdates: !!updates.agent,
         hasWidgetUpdates: !!updates.widget,
         agentTitle: updates.agent?.title,
-        productType: updates.agent?.productType,
-        customProductType: updates.agent?.customProductType,
+        agentType: updates.agent?.type,
+        productRange: updates.agent?.productRange,
+        customProductRange: updates.agent?.customProductRange,
         welcomeMessage: !!updates.agent?.welcomeMessage,
+        widgetTheme: updates.widget?.theme,
         isAutoSave
       })
 
-      // ✅ SAUVEGARDER AGENT AVEC TOUS LES CHAMPS CORRIGÉS
+      // ✅ SAUVEGARDER AGENT BEAUTÉ AVEC TOUS LES CHAMPS CORRIGÉS
       if (updates.agent) {
-        console.log('💾 Sauvegarde configuration agent avec champs complets...', {
+        console.log('💾 Sauvegarde configuration agent beauté avec champs complets...', {
           title: updates.agent.title,
-          productType: updates.agent.productType,
-          customProductType: updates.agent.customProductType,
+          type: updates.agent.type,
+          productRange: updates.agent.productRange,
+          customProductRange: updates.agent.customProductRange,
           welcomeMessage: !!updates.agent.welcomeMessage,
           specificInstructions: updates.agent.config?.specificInstructions
         })
         
         const agentPayload = {
           ...updates.agent,
-          title: updates.agent.title || getTypeLabel(updates.agent.type || 'general'),
+          title: updates.agent.title || getTypeLabel(updates.agent.type || 'beauty_expert'),
+          type: updates.agent.type || 'beauty_expert',
           productType: updates.agent.productType || 'auto',
           customProductType: updates.agent.customProductType || '',
-          shopName: updates.agent.shopName || 'cette boutique',
+          // ✅ NOUVELLES PROPRIÉTÉS BEAUTÉ
+          productRange: updates.agent.productRange || 'premium',
+          customProductRange: updates.agent.customProductRange || '',
+          shopName: updates.agent.shopName || 'cette boutique beauté',
           welcomeMessage: updates.agent.welcomeMessage || null, 
           config: {
             ...updates.agent.config,
+            collectBeautyProfile: updates.agent.config?.collectBeautyProfile ?? true,
             aiProvider: updates.agent.config?.aiProvider || 'openai',
             temperature: updates.agent.config?.temperature || 0.7,
             maxTokens: updates.agent.config?.maxTokens || 1000,
@@ -1086,13 +556,14 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           }
         }
         
-        console.log('📤 [AGENT SAVE] Payload complet:', {
+        console.log('📤 [AGENT SAVE] Payload complet beauté:', {
           name: agentPayload.name,
           title: agentPayload.title,
           type: agentPayload.type,
-          productType: agentPayload.productType,
-          customProductType: agentPayload.customProductType,
+          productRange: agentPayload.productRange,
+          customProductRange: agentPayload.customProductRange,
           welcomeMessage: !!agentPayload.welcomeMessage,
+          collectBeautyProfile: agentPayload.config.collectBeautyProfile,
           specificInstructionsCount: agentPayload.config.specificInstructions?.length || 0
         })
         
@@ -1101,28 +572,32 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           baseURL: config.public.apiBaseUrl,
           headers: getAuthHeaders(),
           body: agentPayload
-        })
+        }) as any
 
         if (!agentResult.success) {
           throw new Error(`Erreur agent: ${agentResult.error}`)
         }
 
-        console.log('✅ Agent sauvegardé avec tous les champs')
+        console.log('✅ Agent beauté sauvegardé avec tous les champs')
       }
 
-      // ✅ SAUVEGARDER WIDGET 
+      // ✅ SAUVEGARDER WIDGET BEAUTÉ
       if (updates.widget) {
-        console.log('🎨 Sauvegarde configuration widget...', updates.widget)
+        console.log('🎨 Sauvegarde configuration widget beauté...', {
+          theme: updates.widget.theme,
+          buttonText: updates.widget.buttonText,
+          position: updates.widget.position
+        })
         
         const widgetPayload = {
           widget_config: {
-            buttonText: updates.widget.buttonText || 'Parler au vendeur',
-            primaryColor: updates.widget.primaryColor || '#EC4899',
+            buttonText: updates.widget.buttonText || 'Parler à votre conseillère beauté',
+            primaryColor: updates.widget.primaryColor || '#E91E63',
             position: updates.widget.position || 'above-cta',
-            theme: updates.widget.theme || 'modern',
+            theme: updates.widget.theme || 'beauty_modern',
             language: updates.widget.language || 'fr',
             widgetSize: updates.widget.widgetSize || 'medium',
-            borderRadius: updates.widget.borderRadius || 'full',
+            borderRadius: updates.widget.borderRadius || 'lg',
             animation: updates.widget.animation || 'fade',
             autoOpen: updates.widget.autoOpen || false,
             showAvatar: updates.widget.showAvatar !== false,
@@ -1134,41 +609,41 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           }
         }
 
-        console.log('📤 [saveCompleteConfig] Payload widget:', widgetPayload)
+        console.log('📤 [saveCompleteConfig] Payload widget beauté:', widgetPayload)
         
         const widgetResult = await $fetch(`/api/v1/shops/${shopId}`, {
           method: 'PUT',
           baseURL: config.public.apiBaseUrl,
           headers: getAuthHeaders(),
           body: widgetPayload
-        })
+        }) as any
 
         if (!widgetResult.success) {
           console.error('❌ Erreur API widget:', widgetResult)
           throw new Error(`Erreur widget: ${widgetResult.error}`)
         }
 
-        console.log('✅ Widget sauvegardé:', widgetResult.data?.widget_config)
+        console.log('✅ Widget beauté sauvegardé:', widgetResult.data?.widget_config)
       }
 
-      // METTRE À JOUR CONFIG LOCALE
+      // METTRE À JOUR CONFIG LOCALE BEAUTÉ
       if (agentConfig.value) {
         if (updates.agent) {
           agentConfig.value.agent = { ...agentConfig.value.agent, ...updates.agent }
           if (!agentConfig.value.agent.title && agentConfig.value.agent.type) {
             agentConfig.value.agent.title = getTypeLabel(agentConfig.value.agent.type)
           }
-          if (!agentConfig.value.agent.productType) {
-            agentConfig.value.agent.productType = 'auto'
+          if (!agentConfig.value.agent.productRange) {
+            agentConfig.value.agent.productRange = 'premium'
           }
           if (!agentConfig.value.agent.shopName) {
-            agentConfig.value.agent.shopName = 'cette boutique'
+            agentConfig.value.agent.shopName = 'cette boutique beauté'
           }
-          console.log('✅ Config locale agent mise à jour')
+          console.log('✅ Config locale agent beauté mise à jour')
         }
         if (updates.widget) {
           agentConfig.value.widget = { ...agentConfig.value.widget, ...updates.widget }
-          console.log('✅ Widget config locale mise à jour')
+          console.log('✅ Widget config beauté locale mise à jour')
         }
       }
 
@@ -1179,11 +654,11 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
       }
 
       widgetSyncStatus.value = 'synced'
-      console.log('✅ Configuration complète sauvegardée et synchronisée')
+      console.log('✅ Configuration beauté complète sauvegardée et synchronisée')
       return { success: true, message: isAutoSave ? 'Sauvegarde automatique effectuée' : 'Configuration sauvegardée avec succès' }
 
     } catch (err: any) {
-      console.error('❌ [useAgentConfig] Erreur saveCompleteConfig:', err)
+      console.error('❌ [useAgentConfig] Erreur saveCompleteConfig beauté:', err)
       const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de la sauvegarde'
       error.value = errorMessage
       widgetSyncStatus.value = 'error'
@@ -1213,7 +688,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     // Programmer une nouvelle sauvegarde dans 2 minutes
     autoSaveTimeout = setTimeout(async () => {
       if (hasUnsavedChanges.value && localConfig.value && agentConfig.value) {
-        console.log('💾 [AUTO-SAVE] Déclenchement sauvegarde automatique...')
+        console.log('💾 [AUTO-SAVE] Déclenchement sauvegarde automatique beauté...')
         try {
           await saveCompleteConfig(
             agentConfig.value.agent.id,
@@ -1223,7 +698,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
             },
             true // isAutoSave = true
           )
-          console.log('✅ [AUTO-SAVE] Sauvegarde automatique réussie')
+          console.log('✅ [AUTO-SAVE] Sauvegarde automatique beauté réussie')
         } catch (error) {
           console.error('❌ [AUTO-SAVE] Erreur sauvegarde automatique:', error)
         }
@@ -1231,13 +706,13 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     }, 120000) // 2 minutes
   }
 
-  // LIER DOCUMENTS À LA BASE DE CONNAISSANCES
+  // LIER DOCUMENTS À LA BASE DE CONNAISSANCES BEAUTÉ
   const linkKnowledgeBaseDocuments = async (agentId: string, documentIds: string[]) => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('🔗 [linkKnowledgeBaseDocuments] Liaison documents:', { agentId, documentIds })
+      console.log('🔗 [linkKnowledgeBaseDocuments] Liaison documents beauté:', { agentId, documentIds })
 
       if (!agentId) {
         throw new Error('Agent ID manquant')
@@ -1263,7 +738,7 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
           }
         }
 
-        console.log('✅ Documents liés avec succès')
+        console.log('✅ Documents beauté liés avec succès')
         return { success: true, data: response.data }
       } else {
         throw new Error(response.error || 'Erreur lors de la liaison des documents')
@@ -1319,15 +794,18 @@ Comment puis-je vous aider avec ce \${productType} ? 😊`
     integrationCode,
     previewWelcomeMessage,
 
-    // Helpers
-    getProductTypeOptions,
+    // Helpers importés de types/beauty.ts
+    getProductTypeOptions: () => PRODUCT_TYPE_OPTIONS,
+    getProductRangeOptions: () => PRODUCT_RANGE_OPTIONS, 
     getProductTypeLabel,
+    getProductRangeLabel,
     getTypeLabel,
     getBorderRadiusValue,
     hexToRgb,
     adjustColor,
     formatTime,
     getDefaultWelcomeTemplate,
+    getCleanAvatarUrl,
 
     // Actions
     fetchAgentConfig,

@@ -1,4 +1,4 @@
-// composables/useSupabase.ts - VERSION AUTH SEULEMENT (PAS D'ACCÈS DONNÉES)
+// composables/useSupabase.ts 
 
 import { createClient } from '@supabase/supabase-js'
 

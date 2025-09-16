@@ -80,7 +80,7 @@ export default defineNuxtConfig({
       ssr: false,
       headers: { 'X-Robots-Tag': 'noindex' }
     },
-    '/vendeurs-ia/**': { 
+    '/agent-ia/**': { 
       prerender: false, 
       ssr: process.env.NODE_ENV === 'production'
     },

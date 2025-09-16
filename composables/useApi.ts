@@ -1,14 +1,30 @@
-// composables/useApi.ts - VERSION CORRIGÉE AVEC GESTION ROBUSTE DES TOKENS
-
+// composables/useApi.ts - VERSION COMPLÈTE CORRIGÉE
 import { useAuthStore } from "~~/stores/auth"
 import { useSupabase } from "~~/composables/useSupabase"
 
-export interface ApiResponse<T = any> {
-  data?: T
-  success: boolean
-  error?: string
+export interface ApiSuccessResponse<T = any> {
+  success: true
+  data: T
+  meta?: {
+    totalPagesDiscovered?: number
+    totalDocumentsCreated?: number
+    baseUrl?: string
+    indexationType?: string
+    processedAt?: string
+    [key: string]: any
+  }
   message?: string
+  error?: never
 }
+
+export interface ApiErrorResponse {
+  success: false
+  error: string
+  data?: never
+  meta?: never
+}
+
+export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
 
 export const useApi = () => {
   const config = useRuntimeConfig()
@@ -184,6 +200,62 @@ export const useApi = () => {
   }
 
   // =====================================
+  // SHOPS - VERSION CORRIGÉE AVEC getUsage
+  // =====================================
+  
+  const shops = {
+    get: async (shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}`)
+    },
+
+    // ✅ NOUVELLE MÉTHODE : getUsage pour les quotas
+    getUsage: async (shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      console.log('📊 [API] Récupération usage quotas pour shop:', targetShopId)
+      return apiCall(`/api/v1/shops/${targetShopId}/usage`)
+    },
+
+    create: async (data: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/shops', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/shops/${shopId}`, {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    list: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/shops')
+    },
+
+    // ✅ NOUVELLE MÉTHODE : updateUsage pour mettre à jour les quotas
+    updateUsage: async (shopId: string, usage: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/shops/${shopId}/usage`, {
+        method: 'PUT',
+        body: usage
+      })
+    }
+  }
+
+  // =====================================
   // CONVERSATIONS - VERSION CORRIGÉE
   // =====================================
 
@@ -267,40 +339,9 @@ export const useApi = () => {
   }
 
   // =====================================
-  // AUTRES SERVICES (INCHANGÉS)
+  // ORDERS - VERSION AMÉLIORÉE
   // =====================================
   
-  const shops = {
-    get: async (shopId?: string): Promise<ApiResponse<any>> => {
-      const authStore = useAuthStore()
-      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
-      
-      if (!targetShopId) {
-        return { success: false, error: 'Shop ID manquant' }
-      }
-      
-      return apiCall(`/api/v1/shops/${targetShopId}`)
-    },
-
-    create: async (data: any): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/shops', {
-        method: 'POST',
-        body: data
-      })
-    },
-
-    update: async (shopId: string, data: any): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/shops/${shopId}`, {
-        method: 'PUT',
-        body: data
-      })
-    },
-
-    list: async (): Promise<ApiResponse<any[]>> => {
-      return apiCall('/api/v1/shops')
-    }
-  }
-
   const orders = {
     list: async (): Promise<ApiResponse<any[]>> => {
       return apiCall('/api/v1/orders/list')
@@ -336,9 +377,61 @@ export const useApi = () => {
       return apiCall(`/api/v1/orders/${orderId}`, {
         method: 'DELETE'
       })
+    },
+
+    // ✅ NOUVELLES MÉTHODES POUR WORKFLOW COMMANDES
+    startOrder: async (data: {
+      conversationId: string,
+      productInfo?: any,
+      message?: string
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders/start-order', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    processStep: async (data: {
+      conversationId: string,
+      step: string,
+      data: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders/process-step', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    complete: async (data: {
+      conversationId: string,
+      orderData: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders/complete', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    analyzeIntent: async (data: {
+      message: string,
+      conversationId: string,
+      productInfo?: any
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/orders/analyze-intent', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    getWorkflow: async (conversationId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/orders/workflow/${conversationId}`)
     }
   }
 
+  // =====================================
+  // PRODUCTS - VERSION COMPLÈTE BEAUTÉ
+  // =====================================
+  
   const products = {
     list: async (): Promise<ApiResponse<any[]>> => {
       return apiCall('/api/v1/products')
@@ -373,6 +466,64 @@ export const useApi = () => {
     delete: async (productId: string): Promise<ApiResponse<any>> => {
       return apiCall(`/api/v1/products/${productId}`, {
         method: 'DELETE'
+      })
+    },
+
+    // ✅ NOUVELLES MÉTHODES BEAUTÉ
+    sync: async (platform: string, credentials: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/products/sync', {
+        method: 'POST',
+        body: { platform, credentials }
+      })
+    },
+
+    enrich: async (productId: string, beautyData: any): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}/enrich`, {
+        method: 'POST',
+        body: beautyData
+      })
+    },
+
+    getBeautyInsights: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/products/beauty-insights')
+    },
+
+    aiAnalyze: async (productData: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/products/ai-analyze', {
+        method: 'POST', 
+        body: productData
+      })
+    },
+
+    getPerformanceMetrics: async (productId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}/metrics`)
+    },
+
+    getAIInsights: async (productId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}/ai-insights`)
+    },
+
+    toggleRecommendation: async (productId: string, recommend: boolean): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}/ai-recommend`, {
+        method: 'PATCH',
+        body: { recommend }
+      })
+    },
+
+    getStats: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/products/stats')
+    },
+
+    duplicate: async (productId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}/duplicate`, {
+        method: 'POST'
+      })
+    },
+
+    toggle: async (productId: string, field: 'is_active' | 'is_visible' | 'available_for_sale'): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/products/${productId}/toggle`, {
+        method: 'PATCH',
+        body: { field }
       })
     }
   }
@@ -417,6 +568,10 @@ export const useApi = () => {
     }
   }
 
+  // =====================================
+  // ANALYTICS - VERSION COMPLÈTE BEAUTÉ
+  // =====================================
+  
   const analytics = {
     dashboard: async (): Promise<ApiResponse<any>> => {
       return apiCall('/api/v1/analytics/dashboard')
@@ -428,41 +583,163 @@ export const useApi = () => {
       const queryString = new URLSearchParams(params).toString()
       const endpoint = queryString ? `/api/v1/analytics/detailed?${queryString}` : '/api/v1/analytics/detailed'
       return apiCall(endpoint)
+    },
+
+    // ✅ NOUVELLES MÉTHODES ANALYTICS BEAUTÉ
+    getConversions: async (filters: {
+      timeRange?: string,
+      attributionMethod?: string
+    } = {}): Promise<ApiResponse<any[]>> => {
+      const queryString = new URLSearchParams()
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryString.append(key, value)
+      })
+      const endpoint = queryString.toString() 
+        ? `/api/v1/analytics/conversions?${queryString.toString()}`
+        : '/api/v1/analytics/conversions'
+      return apiCall(endpoint)
+    },
+
+    getTopProducts: async (): Promise<ApiResponse<any[]>> => {
+      return apiCall('/api/v1/analytics/top-products')
+    },
+
+    getBeautyInsights: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/analytics/beauty-insights')
+    },
+
+    analyzeConversion: async (conversionId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/analytics/conversions/${conversionId}/analyze`)
+    },
+
+    getROIData: async (period: string = 'month'): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/analytics/roi?period=${period}`)
+    },
+
+    getFunnelData: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/analytics/funnel')
+    },
+
+    getROICalculator: async (timeframe: string = 'month'): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/analytics/roi-calculator?timeframe=${timeframe}`)
+    },
+
+    getConversionAttribution: async (filters: any = {}): Promise<ApiResponse<any>> => {
+      const params = new URLSearchParams(filters).toString()
+      return apiCall(`/api/v1/analytics/attribution${params ? '?' + params : ''}`)
+    },
+
+    getBeautyTrends: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/analytics/beauty-trends')
     }
   }
 
   const knowledgeBase = {
-    list: async (): Promise<ApiResponse<any[]>> => {
-      return apiCall('/api/v1/knowledge-base')
-    },
+  list: async (): Promise<ApiResponse<any[]>> => {
+    console.log('📋 [API] Récupération documents base de connaissances beauté')
+    return apiCall('/api/v1/knowledge-base')
+  },
 
-    upload: async (file: File): Promise<ApiResponse<any>> => {
-      const formData = new FormData()
-      formData.append('file', file)
+  get: async (documentId: string): Promise<ApiResponse<any>> => {
+    console.log('🔍 [API] Récupération document beauté:', documentId)
+    return apiCall(`/api/v1/knowledge-base/${documentId}`)
+  },
 
-      return apiCall('/api/v1/knowledge-base/upload', {
-        method: 'POST',
-        body: formData,
-        headers: {}
-      })
-    },
+  create: async (data: {
+    title: string
+    content: string
+    contentType: 'manual' | 'file' | 'url' | 'website'
+    sourceFile?: string
+    sourceUrl?: string
+    tags?: string[]
+    isActive?: boolean
+    metadata?: any
+    beautyCategory?: string
+    productType?: string
+  }): Promise<ApiResponse<any>> => {
+    console.log('🏗️ [API] Création document beauté:', data.title)
+    return apiCall('/api/v1/knowledge-base', {
+      method: 'POST',
+      body: data
+    })
+  },
 
-    addManual: async (data: {
-      title: string
-      content: string
-    }): Promise<ApiResponse<any>> => {
-      return apiCall('/api/v1/knowledge-base', {
-        method: 'POST',
-        body: data
-      })
-    },
+  update: async (documentId: string, data: any): Promise<ApiResponse<any>> => {
+    console.log('📝 [API] Mise à jour document beauté:', documentId)
+    return apiCall(`/api/v1/knowledge-base/${documentId}`, {
+      method: 'PUT',
+      body: data
+    })
+  },
 
-    delete: async (documentId: string): Promise<ApiResponse<any>> => {
-      return apiCall(`/api/v1/knowledge-base/${documentId}`, {
-        method: 'DELETE'
-      })
-    }
+  delete: async (documentId: string): Promise<ApiResponse<any>> => {
+    console.log('🗑️ [API] Suppression document beauté:', documentId)
+    return apiCall(`/api/v1/knowledge-base/${documentId}`, {
+      method: 'DELETE'
+    })
+  },
+
+  toggle: async (documentId: string, isActive: boolean): Promise<ApiResponse<any>> => {
+    console.log(`🔄 [API] Toggle document beauté: ${documentId} -> ${isActive}`)
+    return apiCall(`/api/v1/knowledge-base/${documentId}/toggle`, {
+      method: 'PATCH',
+      body: { isActive }
+    })
+  },
+
+  upload: async (file: File, metadata?: any): Promise<ApiResponse<any>> => {
+    console.log('📤 [API] Upload fichier beauté:', file.name)
+    
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    if (metadata?.title) formData.append('title', metadata.title)
+    if (metadata?.beautyCategory) formData.append('beautyCategory', metadata.beautyCategory)
+    if (metadata?.tags) formData.append('tags', JSON.stringify(metadata.tags))
+
+    return apiCall('/api/v1/knowledge-base/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {} // Pas de Content-Type pour FormData
+    })
+  },
+
+  processWebsite: async (data: {
+    url: string
+    title?: string
+    tags?: string[]
+    beautyCategory?: string
+    maxPages?: number
+  }): Promise<ApiResponse<any>> => {
+    console.log('🌐 [API] Traitement site beauté:', data.url)
+    return apiCall('/api/v1/knowledge-base/website', {
+      method: 'POST',
+      body: data
+    })
+  },
+
+  extractUrl: async (data: {
+    url: string
+    title?: string
+    beautyCategory?: string
+  }): Promise<ApiResponse<any>> => {
+    console.log('🔗 [API] Extraction URL beauté:', data.url)
+    return apiCall('/api/v1/knowledge-base/extract-url', {
+      method: 'POST',
+      body: data
+    })
+  },
+
+  getStats: async (): Promise<ApiResponse<any>> => {
+    console.log('📊 [API] Récupération statistiques base de connaissances beauté')
+    return apiCall('/api/v1/knowledge-base/stats')
+  },
+
+  checkHealth: async (): Promise<ApiResponse<any>> => {
+    console.log('🏥 [API] Vérification santé API base de connaissances')
+    return apiCall('/api/v1/knowledge-base/health')
   }
+}
 
   const billing = {
     subscriptionStatus: async (): Promise<ApiResponse<any>> => {
@@ -495,6 +772,193 @@ export const useApi = () => {
     }
   }
 
+  // =====================================
+  // SETTINGS - NOUVEAU SERVICE
+  // =====================================
+  
+  const settings = {
+    get: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/settings')
+    },
+
+    update: async (data: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/settings', {
+        method: 'PUT',
+        body: data
+      })
+    },
+
+    updateAttribution: async (config: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/settings/attribution', {
+        method: 'PUT',
+        body: config
+      })
+    },
+
+    getAttribution: async (): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/settings/attribution')
+    },
+
+    updateNotifications: async (config: any): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/settings/notifications', {
+        method: 'PUT',
+        body: config
+      })
+    }
+  }
+
+  // =====================================
+  // FEEDBACK - NOUVEAUX SERVICES
+  // =====================================
+  
+  const feedback = {
+    list: async (params: {
+      agentId?: string
+      feedbackType?: string
+      limit?: number
+      offset?: number
+      startDate?: string
+      endDate?: string
+      rating?: number
+    } = {}): Promise<ApiResponse<any[]>> => {
+      const queryString = new URLSearchParams()
+      
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryString.append(key, value.toString())
+        }
+      })
+      
+      const endpoint = queryString.toString() 
+        ? `/api/v1/feedback?${queryString.toString()}`
+        : '/api/v1/feedback'
+      
+      return apiCall(endpoint)
+    },
+
+    create: async (data: {
+      messageId: string
+      agentId: string
+      conversationId: string
+      originalResponse: string
+      correctedResponse?: string
+      feedbackType: 'correction' | 'improvement' | 'validation' | 'negative'
+      feedbackRating?: number
+      feedbackComment?: string
+      feedbackTags?: string[]
+      userCorrection?: string
+      isPublic?: boolean
+      beautyCategory?: string
+    }): Promise<ApiResponse<any>> => {
+      return apiCall('/api/v1/feedback', {
+        method: 'POST',
+        body: data
+      })
+    },
+
+    getStats: async (params: {
+      agentId?: string
+      days?: number
+    } = {}): Promise<ApiResponse<any>> => {
+      const queryString = new URLSearchParams()
+      
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryString.append(key, value.toString())
+        }
+      })
+      
+      const endpoint = queryString.toString()
+        ? `/api/v1/feedback/stats?${queryString.toString()}`
+        : '/api/v1/feedback/stats'
+      
+      return apiCall(endpoint)
+    },
+
+    delete: async (feedbackId: string): Promise<ApiResponse<any>> => {
+      return apiCall(`/api/v1/feedback/${feedbackId}`, {
+        method: 'DELETE'
+      })
+    },
+
+    getTags: async (category?: string): Promise<ApiResponse<any[]>> => {
+      const endpoint = category 
+        ? `/api/v1/feedback/tags?category=${category}`
+        : '/api/v1/feedback/tags'
+      
+      return apiCall(endpoint)
+    }
+  }
+
+  // ============================
+  // QUOTAS - NOUVEAUX SERVICES
+  // ============================
+  
+  const quotas = {
+    get: async (shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}/quotas`)
+    },
+
+    increment: async (quota: 'aiResponses' | 'knowledgeDocuments' | 'indexablePages' | 'agents', amount: number = 1, shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}/quotas/increment`, {
+        method: 'POST',
+        body: { quota, amount }
+      })
+    },
+
+    reset: async (shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}/quotas/reset`, {
+        method: 'POST'
+      })
+    },
+
+    updatePlan: async (newPlan: 'starter' | 'growth' | 'performance', shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}/quotas/plan`, {
+        method: 'PUT',
+        body: { newPlan }
+      })
+    },
+
+    calculateCosts: async (shopId?: string): Promise<ApiResponse<any>> => {
+      const authStore = useAuthStore()
+      const targetShopId = shopId || authStore.userShopId || authStore.user?.id
+      
+      if (!targetShopId) {
+        return { success: false, error: 'Shop ID manquant' }
+      }
+      
+      return apiCall(`/api/v1/shops/${targetShopId}/quotas/costs`)
+    }
+  }
+
   const utils = {
     healthCheck: async (): Promise<ApiResponse<any>> => {
       return apiCall('/health')
@@ -515,6 +979,9 @@ export const useApi = () => {
     analytics,
     knowledgeBase,
     billing,
+    feedback, 
+    quotas,
+    settings, 
     utils
   }
 }

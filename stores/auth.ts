@@ -1,9 +1,9 @@
-// stores/auth.ts
+// stores/auth.ts - VERSION CORRIGÉE COMPLÈTE
 
 import { defineStore } from 'pinia'
 import { useSupabase } from '~~/composables/useSupabase'
+import { BEAUTY_PLANS, type PlanFeatures, checkQuotaUsage, type PlanQuotas, getPlanDetails } from '~/types/plans'
 
-// ✅ TYPES AMÉLIORÉS
 interface User {
   id: string
   email: string
@@ -14,7 +14,7 @@ interface User {
   shop_id?: string
   avatar?: string
   role?: 'admin' | 'user'
-  subscription_plan?: "free" | "starter" | "pro" | "professional" | "enterprise"
+  subscription_plan?: "free" | "starter" | "growth" | "performance"
   createdAt?: string
   updatedAt?: string
   shop?: any
@@ -25,6 +25,7 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   loading: boolean
+  quotasUsage: PlanQuotas
 }
 
 interface LoginCredentials {
@@ -38,22 +39,8 @@ interface RegisterData extends LoginCredentials {
   lastName?: string
   company?: string
   platform?: string
+  beautyCategory?: string
   newsletter?: boolean
-}
-
-// ✅ INTERFACE POUR DÉTAILS DU PLAN
-interface PlanDetails {
-  name: string
-  code: string
-  agentLimit: number
-  knowledgeBaseLimit: number
-  conversationLimit: number
-  features: string[]
-  isActive: boolean
-  isTrial: boolean
-  trialDaysLeft: number
-  trialEndDate: Date | null
-  hasExpired: boolean
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -61,7 +48,14 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     token: null,
     isAuthenticated: false,
-    loading: false
+    loading: false,
+    quotasUsage: {
+      aiResponses: 0,
+      knowledgeDocuments: 0,
+      indexablePages: 0,
+      agents: 0,
+      additionalAgentCost: 0
+    }
   }),
 
   getters: {
@@ -120,141 +114,300 @@ export const useAuthStore = defineStore('auth', {
       return 'U'
     },
 
-    // ✅ NOUVEAU GETTER: DÉTAILS COMPLETS DU PLAN - CORRIGÉ
-    planDetails: (state): PlanDetails => {
-      const user = state.user
-      if (!user?.shop) {
-        return {
-          name: 'Aucun plan',
-          code: 'none',
-          agentLimit: 0,
-          knowledgeBaseLimit: 0,
-          conversationLimit: 0,
-          features: [],
-          isActive: false,
-          isTrial: false,
-          trialDaysLeft: 0,
-          trialEndDate: null,
-          hasExpired: true
+    // ✅ GETTER CORRIGÉ : planDetails avec gestion d'erreur robuste
+    planDetails: (state): PlanFeatures & {
+      quotasStatus: ReturnType<typeof checkQuotaUsage>
+      trialDaysLeft: number
+      trialEndDate: Date | null
+      hasExpired: boolean
+    } => {
+      try {
+        const user = state.user
+        const subscriptionPlan = user?.shop?.subscription_plan || 'starter'
+        
+        // ✅ CORRECTION : Normaliser le plan avant utilisation
+        let normalizedPlan = subscriptionPlan.toLowerCase()
+        
+        // ✅ Mapper les anciens plans vers les nouveaux
+        const planMapping: Record<string, string> = {
+          'free': 'starter',
+          'basic': 'starter', 
+          'pro': 'growth',
+          'professional': 'growth',
+          'enterprise': 'performance'
         }
-      }
-
-      const shop = user.shop
-      const subscriptionPlan = shop.subscription_plan || 'free'
-      const createdAt = new Date(shop.createdAt || shop.created_at || Date.now())
-      const now = new Date()
-      const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
-      const trialDaysLeft = Math.max(0, 7 - daysSinceCreation)
-      const trialEndDate = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000)
-
-      // ✅ LOGIQUE STRICTE SELON LES SPÉCIFICATIONS
-      switch (subscriptionPlan) {
-        case 'free':
+        
+        if (planMapping[normalizedPlan]) {
+          console.log(`🔄 [Auth Store] Migration plan ${subscriptionPlan} → ${planMapping[normalizedPlan]}`)
+          normalizedPlan = planMapping[normalizedPlan]
+        }
+        
+        // ✅ Utiliser getPlanDetails avec fallback sécurisé
+        const plan = getPlanDetails(normalizedPlan)
+        
+        if (!plan) {
+          console.warn(`⚠️ [Auth Store] Plan non trouvé: ${subscriptionPlan}, fallback vers starter`)
           return {
-            name: 'Essai Gratuit',
-            code: 'free',
-            agentLimit: 1,
-            knowledgeBaseLimit: 10,
-            conversationLimit: 1000,
-            features: ['7 jours gratuit', '1 agent IA', '1000 conversations/mois', '10 documents max'],
-            isActive: trialDaysLeft > 0,
-            isTrial: true,
-            trialDaysLeft,
-            trialEndDate,
-            hasExpired: trialDaysLeft <= 0
-          }
-
-        case 'starter':
-          return {
-            name: 'Starter',
-            code: 'starter', 
-            agentLimit: 1,
-            knowledgeBaseLimit: 10,
-            conversationLimit: 1000,
-            features: ['1 Vendeur IA spécialisé', '1000 conversations/mois', '10 documents max', 'Analytics de base', 'Support email'],
-            isActive: true,
-            isTrial: false,
-            trialDaysLeft: 0,
-            trialEndDate: null,
+            ...BEAUTY_PLANS.starter,
+            quotasStatus: {
+              aiResponses: { used: 0, limit: 1000, exceeded: false },
+              knowledgeDocuments: { used: 0, limit: 50, exceeded: false },
+              indexablePages: { used: 0, limit: 500, exceeded: false },
+              agents: { used: 0, limit: -1, exceeded: false, additionalCost: 0 }
+            },
+            trialDaysLeft: 14,
+            trialEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
             hasExpired: false
           }
-
-        case 'pro':
-        case 'professional':
-          return {
-            name: 'Pro',
-            code: 'pro',
-            agentLimit: 3,
-            knowledgeBaseLimit: 50,
-            conversationLimit: -1, // Illimité
-            features: ['3 Vendeurs IA', 'Conversations illimitées', '50 documents max', 'Analytics avancées & ROI', 'Upsell & FOMO', 'Support prioritaire'],
-            isActive: true,
-            isTrial: false,
-            trialDaysLeft: 0,
-            trialEndDate: null,
-            hasExpired: false
+        }
+        
+        // ✅ Calcul sécurisé des dates d'essai
+        let createdAt: Date
+        try {
+          createdAt = new Date(user?.shop?.createdAt || user?.shop?.created_at || Date.now())
+        } catch {
+          createdAt = new Date()
+        }
+        
+        const now = new Date()
+        const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+        const trialDaysLeft = Math.max(0, plan.trialDays - daysSinceCreation)
+        const trialEndDate = new Date(createdAt.getTime() + plan.trialDays * 24 * 60 * 60 * 1000)
+        
+        // ✅ Calcul sécurisé du statut des quotas
+        let quotasStatus
+        try {
+          quotasStatus = checkQuotaUsage(normalizedPlan, state.quotasUsage)
+        } catch (quotaError) {
+          console.warn('⚠️ [Auth Store] Erreur checkQuotaUsage, utilisation des valeurs par défaut:', quotaError)
+          quotasStatus = {
+            aiResponses: { used: state.quotasUsage.aiResponses || 0, limit: plan.quotas.aiResponses, exceeded: false },
+            knowledgeDocuments: { used: state.quotasUsage.knowledgeDocuments || 0, limit: plan.quotas.knowledgeDocuments, exceeded: false },
+            indexablePages: { used: state.quotasUsage.indexablePages || 0, limit: plan.quotas.indexablePages, exceeded: false },
+            agents: { used: state.quotasUsage.agents || 0, limit: plan.quotas.agents, exceeded: false, additionalCost: 0 }
           }
-
-        case 'enterprise':
-          return {
-            name: 'Enterprise',
-            code: 'enterprise',
-            agentLimit: -1, // Illimité
-            knowledgeBaseLimit: -1,
-            conversationLimit: -1, // Illimité
-            features: ['Vendeurs IA illimités', 'Documents illimités', 'Analytics complètes', 'White-label', 'Support dédié', 'API avancée'],
-            isActive: true,
-            isTrial: false,
-            trialDaysLeft: 0,
-            trialEndDate: null,
-            hasExpired: false
-          }
-
-        default:
-          return {
-            name: 'Plan inconnu',
-            code: 'unknown',
-            agentLimit: 0,
-            knowledgeBaseLimit: 0,
-            conversationLimit: 0,
-            features: [],
-            isActive: false,
-            isTrial: false,
-            trialDaysLeft: 0,
-            trialEndDate: null,
-            hasExpired: true
-          }
+        }
+        
+        return {
+          ...plan,
+          quotasStatus,
+          trialDaysLeft,
+          trialEndDate,
+          hasExpired: normalizedPlan === 'starter' && trialDaysLeft <= 0
+        }
+        
+      } catch (error) {
+        console.error('❌ [Auth Store] Erreur critique dans planDetails:', error)
+        
+        // ✅ Fallback complet en cas d'erreur critique
+        return {
+          ...BEAUTY_PLANS.starter,
+          quotasStatus: {
+            aiResponses: { used: 0, limit: 1000, exceeded: false },
+            knowledgeDocuments: { used: 0, limit: 50, exceeded: false },
+            indexablePages: { used: 0, limit: 500, exceeded: false },
+            agents: { used: 0, limit: -1, exceeded: false, additionalCost: 0 }
+          },
+          trialDaysLeft: 14,
+          trialEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          hasExpired: false
+        }
       }
     },
 
-    // ✅ GETTERS SIMPLIFIÉS
+    // ✅ GETTER CORRIGÉ : currentPlan avec fallback
     currentPlan: (state): string => {
-      return state.user?.shop?.subscription_plan || 'free'
+      const plan = state.user?.shop?.subscription_plan || 'starter'
+      
+      // Mapper les anciens plans
+      const planMapping: Record<string, string> = {
+        'free': 'starter',
+        'basic': 'starter',
+        'pro': 'growth', 
+        'professional': 'growth',
+        'enterprise': 'performance'
+      }
+      
+      return planMapping[plan.toLowerCase()] || plan
     },
 
     isPaidUser: (state): boolean => {
       const plan = state.user?.shop?.subscription_plan
-      return plan === 'starter' || plan === 'pro' || plan === 'professional' || plan === 'enterprise'
+      return plan === 'starter' || plan === 'growth' || plan === 'performance'
     },
 
     hasActiveAccess: (state): boolean => {
       const details = (state as any).planDetails
-      return details.isActive && !details.hasExpired
+      return !details.hasExpired
     },
 
     trialExpired: (state): boolean => {
       const details = (state as any).planDetails
-      return details.isTrial && details.hasExpired
+      return details.hasExpired
     }
   },
 
   actions: {
-    // ✅ ACTION LOGIN INCHANGÉE
+    // ✅ ACTION : resetPassword
+    async resetPassword(email: string) {
+      try {
+        console.log('🔄 [Auth Store] Reset password pour:', email)
+        
+        const supabase = useSupabase()
+        const { error } = await supabase.auth.resetPasswordForEmail(email)
+        
+        if (error) {
+          throw new Error(error.message)
+        }
+        
+        console.log('✅ [Auth Store] Email de reset envoyé')
+        return { success: true }
+        
+      } catch (error: any) {
+        console.error('❌ [Auth Store] Erreur reset password:', error)
+        return { 
+          success: false, 
+          error: error.message || 'Erreur lors de l\'envoi de l\'email de récupération' 
+        }
+      }
+    },
+
+    // ✅ ACTION : updateProfile
+    async updateProfile(data: Partial<any>) {
+      try {
+        console.log('🔄 [Auth Store] Mise à jour profil:', data)
+        
+        const supabase = useSupabase()
+        const { error } = await supabase.auth.updateUser({
+          data: data
+        })
+        
+        if (error) {
+          throw new Error(error.message)
+        }
+        
+        // Mettre à jour les données locales
+        if (this.user) {
+          this.user = { ...this.user, ...data }
+        }
+        
+        console.log('✅ [Auth Store] Profil mis à jour')
+        return { success: true }
+        
+      } catch (error: any) {
+        console.error('❌ [Auth Store] Erreur mise à jour profil:', error)
+        return { 
+          success: false, 
+          error: error.message || 'Erreur lors de la mise à jour du profil' 
+        }
+      }
+    },
+
+    // ✅ ACTION : refreshToken
+    async refreshToken() {
+      try {
+        console.log('🔄 [Auth Store] Rafraîchissement token')
+        
+        const supabase = useSupabase()
+        const { data, error } = await supabase.auth.refreshSession()
+        
+        if (error || !data.session) {
+          throw new Error(error?.message || 'Impossible de rafraîchir le token')
+        }
+        
+        // Mettre à jour le token
+        this.token = data.session.access_token
+        
+        console.log('✅ [Auth Store] Token rafraîchi')
+        return { success: true, token: data.session.access_token }
+        
+      } catch (error: any) {
+        console.error('❌ [Auth Store] Erreur refresh token:', error)
+        
+        // Déconnecter l'utilisateur si le refresh échoue
+        this.clearAuth()
+        
+        return { 
+          success: false, 
+          error: error.message || 'Session expirée, veuillez vous reconnecter' 
+        }
+      }
+    },
+
+    // ✅ MÉTHODE : syncQuotasFromAPI
+    async syncQuotasFromAPI() {
+      try {
+        if (!this.user?.id || !this.token) return
+
+        const api = useApi()
+        const response = await api.shops.get(this.user.id)
+        
+        if (response.success && response.data) {
+          // Extraire les quotas depuis les données du shop
+          const shopData = response.data
+          this.quotasUsage = {
+            aiResponses: shopData.quotas_usage?.aiResponses || 0,
+            knowledgeDocuments: shopData.quotas_usage?.knowledgeDocuments || 0,
+            indexablePages: shopData.quotas_usage?.indexablePages || 0,
+            agents: shopData.quotas_usage?.agents || 0,
+            additionalAgentCost: 0
+          }
+          console.log('✅ Quotas synchronisés depuis API')
+        }
+      } catch (error) {
+        console.error('❌ Erreur sync quotas API:', error)
+      }
+    },
+
+    async updateQuotasUsage(usage: Partial<PlanQuotas>) {
+      this.quotasUsage = {
+        ...this.quotasUsage,
+        ...usage
+      }
+      
+      try {
+        if (this.user?.id && this.token) {
+          const api = useApi()
+          await api.shops.update(this.user.id, {
+            quotas_usage: this.quotasUsage,
+            updated_at: new Date().toISOString()
+          })
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur sauvegarde quotas usage:', error)
+      }
+    },
+
+    async incrementAIUsage() {
+      await this.updateQuotasUsage({
+        aiResponses: (this.quotasUsage.aiResponses || 0) + 1
+      })
+    },
+
+    async incrementKnowledgeDocuments(count: number = 1) {
+      await this.updateQuotasUsage({
+        knowledgeDocuments: (this.quotasUsage.knowledgeDocuments || 0) + count
+      })
+    },
+
+    async incrementIndexablePages(count: number = 1) {
+      await this.updateQuotasUsage({
+        indexablePages: (this.quotasUsage.indexablePages || 0) + count
+      })
+    },
+
+    async updateAgentsCount(count: number) {
+      await this.updateQuotasUsage({
+        agents: count
+      })
+    },
+
+    // ✅ ACTION : login
     async login(credentials: LoginCredentials) {
       this.loading = true
       
       try {
-        console.log('🔐 Store Supabase: Tentative de login pour:', credentials.email)
+        console.log('🔐 Store Beauté: Tentative de login pour:', credentials.email)
         
         const supabase = useSupabase()
         
@@ -274,6 +427,8 @@ export const useAuthStore = defineStore('auth', {
           const userData = await this.fetchCompleteUserDataViaAPI(authData.user, authData.session?.access_token || '')
           
           this.setUser(userData, authData.session?.access_token || '')
+          
+          await this.syncQuotasFromAPI()
           
           return { 
             success: true, 
@@ -296,262 +451,140 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // ✅ FONCTION CORRIGÉE : RÉCUPÉRATION DONNÉES VIA API AVEC RETRY
-    async fetchCompleteUserDataViaAPI(authUser: any, token: string, forceRefresh: boolean = false): Promise<User> {
-    try {
-      console.log('📡 [Store] Récupération données utilisateur via API...', forceRefresh ? '(FORCE REFRESH)' : '')
-      
-      // ✅ TENTATIVE D'APPEL API AVEC TIMEOUT COURT
-      const api = useApi()
+    // ✅ ACTION : register
+    async register(data: RegisterData) {
+      this.loading = true
       
       try {
-        // ✅ TIMEOUT COURT POUR ÉVITER LES BLOCAGES
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout API')), 5000)
-        )
+        console.log('📝 Store Beauté: Tentative d\'inscription pour:', data.email)
         
-        const apiPromise = api.shops.get(authUser.id)
+        const supabase = useSupabase()
         
-        const shopResponse = await Promise.race([apiPromise, timeoutPromise]) as any
-
-        if (shopResponse?.success && shopResponse?.data) {
-          const shopData = shopResponse.data
-          console.log('✅ [Store] Données shop récupérées via API:', {
-            id: shopData.id,
-            email: shopData.email,
-            plan: shopData.subscription_plan,
-            isActive: shopData.is_active,
-            onboarding_completed: shopData.onboarding_completed
-          })
-
-          // ✅ ASSEMBLAGE UTILISATEUR AVEC DONNÉES COMPLÈTES
-          const user: User = {
-            id: authUser.id,
-            email: authUser.email!,
-            firstName: authUser.user_metadata?.first_name || shopData.first_name || null,
-            lastName: authUser.user_metadata?.last_name || shopData.last_name || null,
-            name: authUser.user_metadata?.name || 
-                  (authUser.user_metadata?.first_name && authUser.user_metadata?.last_name 
-                    ? `${authUser.user_metadata.first_name} ${authUser.user_metadata.last_name}` 
-                    : null) ||
-                  shopData.name ||
-                  authUser.email?.split('@')[0],
-            shopId: authUser.id,
-            shop_id: authUser.id,
-            avatar: authUser.user_metadata?.avatar_url,
-            role: 'user',
-            createdAt: authUser.created_at,
-            shop: shopData
-          }
-
-          console.log('✅ [Store] Données utilisateur complètes assemblées via API')
-          return user
-
-        } else {
-          console.warn('⚠️ [Store] API retourné mais pas de données shop valides')
-          throw new Error('Pas de données shop')
-        }
-
-      } catch (apiError: any) {
-        console.warn('⚠️ [Store] Erreur appel API shops:', apiError.message)
+        const nameParts = data.name.trim().split(' ')
+        const firstName = nameParts[0] || data.firstName || ''
+        const lastName = nameParts.slice(1).join(' ') || data.lastName || ''
         
-        // ✅ SI L'API ÉCHOUE, UTILISER SUPABASE DIRECTEMENT
-        console.log('🔄 [Store] Fallback: Tentative récupération via Supabase direct')
-        
-        try {
-          const supabase = useSupabase()
-          
-          // Utiliser le service client pour lire la table shops
-          const { data: shopDataSupabase, error: supabaseError } = await supabase
-            .from('shops')
-            .select('*')
-            .eq('id', authUser.id)
-            .single()
-          
-          if (!supabaseError && shopDataSupabase) {
-            console.log('✅ [Store] Données shop récupérées via Supabase direct')
-            
-            const user: User = {
-              id: authUser.id,
-              email: authUser.email!,
-              firstName: authUser.user_metadata?.first_name || shopDataSupabase.first_name || null,
-              lastName: authUser.user_metadata?.last_name || shopDataSupabase.last_name || null,
-              name: authUser.user_metadata?.name || shopDataSupabase.name || authUser.email?.split('@')[0],
-              shopId: authUser.id,
-              shop_id: authUser.id,
-              avatar: authUser.user_metadata?.avatar_url,
-              role: 'user',
-              createdAt: authUser.created_at,
-              shop: shopDataSupabase
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              name: data.name,
+              first_name: firstName,
+              last_name: lastName,
+              company: data.company || '',
+              platform: data.platform || '',
+              beauty_category: data.beautyCategory || 'multi'
             }
-            
-            return user
-          } else {
-            console.warn('⚠️ [Store] Supabase direct échoué aussi:', supabaseError)
-            throw new Error('Shop non trouvé via Supabase')
           }
+        })
+
+        if (authError) {
+          console.error('❌ Supabase signup error:', authError)
+          throw new Error(authError.message)
+        }
+
+        if (authData.user) {
+          console.log('✅ Supabase signup success:', authData.user.id)
           
-        } catch (supabaseError: any) {
-          console.warn('⚠️ [Store] Erreur Supabase direct:', supabaseError.message)
-          throw supabaseError
-        }
-      }
-
-    } catch (error: any) {
-      console.warn('⚠️ [Store] Toutes les tentatives ont échoué, utilisation données fallback')
-      
-      // ✅ FALLBACK ROBUSTE - CRÉER UN UTILISATEUR AVEC LES DONNÉES AUTH SEULEMENT
-      const fallbackUser: User = {
-        id: authUser.id,
-        email: authUser.email!,
-        name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
-        firstName: authUser.user_metadata?.first_name || null,
-        lastName: authUser.user_metadata?.last_name || null,
-        shopId: authUser.id,
-        shop_id: authUser.id,
-        avatar: authUser.user_metadata?.avatar_url,
-        role: 'user',
-        createdAt: authUser.created_at,
-        shop: {
-          id: authUser.id,
-          name: authUser.user_metadata?.name || `Shop de ${authUser.email?.split('@')[0]}`,
-          email: authUser.email,
-          subscription_plan: 'free',
-          is_active: true,
-          onboarding_completed: true, // ✅ IMPORTANT: Par défaut true pour éviter la boucle onboarding
-          created_at: authUser.created_at
-        }
-      }
-      
-      console.log('⚠️ [Store] Utilisation des données fallback robustes')
-      return fallbackUser
-    }
-  },
-
-    // ✅ ACTION REGISTER INCHANGÉE
-    async register(data: RegisterData) {
-    this.loading = true
-    
-    try {
-      console.log('📝 Store Supabase: Tentative d\'inscription pour:', data.email)
-      
-      const supabase = useSupabase()
-      
-      const nameParts = data.name.trim().split(' ')
-      const firstName = nameParts[0] || data.firstName || ''
-      const lastName = nameParts.slice(1).join(' ') || data.lastName || ''
-      
-      // ✅ ÉTAPE 1 : Créer l'utilisateur dans Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            name: data.name,
-            first_name: firstName,
-            last_name: lastName,
-            company: data.company || '',
-            platform: data.platform || ''
-          }
-        }
-      })
-
-      if (authError) {
-        console.error('❌ Supabase signup error:', authError)
-        throw new Error(authError.message)
-      }
-
-      if (authData.user) {
-        console.log('✅ Supabase signup success:', authData.user.id)
-        
-        // ✅ CORRECTION CRITIQUE : NE PAS ESSAYER DE CRÉER LE SHOP SI PAS DE SESSION
-        if (authData.session) {
-          console.log('✅ Session créée, création du shop...')
-          
-          try {
-            const config = useRuntimeConfig()
-            const baseURL = config.public.apiBaseUrl
+          if (authData.session) {
+            console.log('✅ Session créée, création du shop beauté...')
             
-            const shopCreateResponse = await $fetch('/api/v1/shops', {
-              method: 'POST',
-              baseURL,
-              headers: {
-                'Authorization': `Bearer ${authData.session.access_token}`,
-                'Content-Type': 'application/json'
-              },
-              body: {
-                id: authData.user.id,
-                name: data.company || `Shop de ${firstName}`,
-                email: data.email,
-                subscription_plan: 'free',
-                is_active: true,
-                widget_config: {
-                  theme: 'modern',
-                  primaryColor: '#E91E63',
-                  position: 'bottom-right',
-                  buttonText: 'Parler au vendeur',
-                  language: 'fr'
+            try {
+              const config = useRuntimeConfig()
+              const baseURL = config.public.apiBaseUrl
+              
+              const shopCreateResponse = await $fetch('/api/v1/shops', {
+                method: 'POST',
+                baseURL,
+                headers: {
+                  'Authorization': `Bearer ${authData.session.access_token}`,
+                  'Content-Type': 'application/json'
                 },
-                agent_config: {
-                  name: 'Rose',
-                  avatar: 'https://ui-avatars.com/api/?name=Rose&background=E91E63&color=fff',
-                  welcomeMessage: 'Bonjour ! Je suis votre assistante d\'achat. Comment puis-je vous aider ?',
-                  fallbackMessage: 'Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt.',
-                  collectPaymentMethod: true,
-                  upsellEnabled: false
+                body: {
+                  id: authData.user.id,
+                  name: data.company || `${firstName} Beauté`,
+                  email: data.email,
+                  subscription_plan: 'starter', // ✅ CORRIGÉ : Nouveau plan par défaut
+                  beauty_category: data.beautyCategory || 'multi',
+                  is_active: true,
+                  quotas: {
+                    aiResponses: 1000,
+                    knowledgeDocuments: 50,
+                    indexablePages: 500,
+                    agents: -1,
+                    additionalAgentCost: 10
+                  },
+                  quotas_usage: {
+                    aiResponses: 0,
+                    knowledgeDocuments: 0,
+                    indexablePages: 0,
+                    agents: 0
+                  },
+                  widget_config: {
+                    theme: 'beauty_modern',
+                    primaryColor: '#E91E63',
+                    position: 'above-cta',
+                    buttonText: 'Parler à votre conseillère beauté',
+                    language: 'fr'
+                  },
+                  agent_config: {
+                    name: 'Rose',
+                    title: 'Conseillère Beauté IA',
+                    type: 'beauty_expert',
+                    avatar: 'https://ui-avatars.com/api/?name=Rose&background=E91E63&color=fff',
+                    welcomeMessage: 'Bonjour ! Je suis Rose, votre conseillère beauté. Comment puis-je vous aider ?',
+                    fallbackMessage: 'Je transmets votre question à notre équipe beauté.',
+                    collectBeautyProfile: true,
+                    upsellEnabled: true
+                  }
                 }
-              }
-            }) as any
+              }) as any
 
-            console.log('✅ Shop créé via API:', shopCreateResponse)
-            
-            // ✅ RÉCUPÉRER LES DONNÉES COMPLÈTES ET CONNECTER
-            const userData = await this.fetchCompleteUserDataViaAPI(authData.user, authData.session.access_token)
-            this.setUser(userData, authData.session.access_token)
-            
-          } catch (apiError) {
-            console.warn('⚠️ Erreur création shop via API (non bloquante):', apiError)
+              console.log('✅ Shop beauté créé via API:', shopCreateResponse)
+              
+              const userData = await this.fetchCompleteUserDataViaAPI(authData.user, authData.session.access_token)
+              this.setUser(userData, authData.session.access_token)
+              
+            } catch (apiError) {
+              console.warn('⚠️ Erreur création shop beauté via API:', apiError)
+            }
+          }
+
+          console.log('✅ Inscription beauté terminée')
+          return { 
+            success: true, 
+            data: { 
+              user: authData.user,
+              session: authData.session,
+              needsEmailConfirmation: !authData.session
+            } 
           }
         } else {
-          console.log('⚠️ Pas de session immédiate - email confirmation requis')
-          // ✅ NE PAS CONNECTER L'UTILISATEUR, JUSTE INDIQUER LE SUCCÈS
+          throw new Error('Erreur lors de la création du compte beauté')
         }
-
-        console.log('✅ Inscription terminée - confirmation email requise')
+      } catch (error: any) {
+        console.error('❌ Store: Erreur register beauté:', error)
         return { 
-          success: true, 
-          data: { 
-            user: authData.user,
-            session: authData.session,
-            needsEmailConfirmation: !authData.session // ✅ IMPORTANT FLAG
-          } 
+          success: false, 
+          error: error.message || 'Erreur lors de l\'inscription' 
         }
-      } else {
-        throw new Error('Erreur lors de la création du compte')
+      } finally {
+        this.loading = false
       }
-    } catch (error: any) {
-      console.error('❌ Store: Erreur register:', error)
-      return { 
-        success: false, 
-        error: error.message || 'Erreur lors de l\'inscription' 
-      }
-    } finally {
-      this.loading = false
-    }
-  },
+    },
 
-    // ✅ ACTION RESTORE SESSION CORRIGÉE AVEC FORCE REFRESH
+    // ✅ ACTION : restoreSession
     async restoreSession(forceRefresh: boolean = false) {
       if (!process.client) return { success: false }
 
       try {
-        console.log('🔄 Store: Tentative de restauration de session Supabase + API', forceRefresh ? '(FORCE REFRESH)' : '')
+        console.log('🔄 Store: Restauration session avec quotas beauté')
         
         const supabase = useSupabase()
         const { data: { user }, error } = await supabase.auth.getUser()
         
         if (error || !user) {
-          console.log('❌ Store: Pas de session Supabase valide')
           this.clearAuth()
           return { success: false }
         }
@@ -560,17 +593,17 @@ export const useAuthStore = defineStore('auth', {
         const token = session?.access_token || ''
 
         if (!token) {
-          console.log('❌ Store: Pas de token de session')
           this.clearAuth()
           return { success: false }
         }
 
-        // ✅ UTILISER LE FORCE REFRESH POUR RÉCUPÉRER LES DONNÉES FRAÎCHES
         const userData = await this.fetchCompleteUserDataViaAPI(user, token, forceRefresh)
-
         this.setUser(userData, token)
-        console.log('✅ Store: Session Supabase + API restaurée avec succès')
-        console.log('📋 Plan utilisateur:', this.planDetails.name, `(${this.planDetails.trialDaysLeft} jours restants si essai)`)
+        
+        await this.syncQuotasFromAPI()
+        
+        console.log('✅ Session beauté restaurée avec quotas')
+        console.log('📋 Plan:', this.planDetails.name, '- Quotas:', this.quotasUsage)
         
         return { success: true }
         
@@ -581,107 +614,60 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // ✅ NOUVELLE ACTION: FORCER LA SYNCHRONISATION DES DONNÉES
-    async forceDataSync() {
-      console.log('🔄 [Store] FORCE SYNC: Synchronisation forcée des données utilisateur...')
-      
+    // ✅ ACTION : fetchCompleteUserDataViaAPI
+    async fetchCompleteUserDataViaAPI(authUser: any, token: string, forceRefresh: boolean = false): Promise<User> {
       try {
-        if (!this.isAuthenticated || !this.token) {
-          console.warn('⚠️ [Store] Pas d\'utilisateur authentifié pour la synchronisation')
-          return { success: false }
-        }
+        const api = useApi()
+        const shopResponse = await api.shops.get(authUser.id)
 
-        // Forcer un refresh complet des données
-        const result = await this.restoreSession(true)
-        
-        if (result.success) {
-          console.log('✅ [Store] Synchronisation forcée réussie')
-          console.log('📋 [Store] Nouveau plan:', this.currentPlan)
+        if (shopResponse?.success && shopResponse?.data) {
+          const shopData = shopResponse.data
+          
+          const user: User = {
+            id: authUser.id,
+            email: authUser.email!,
+            firstName: authUser.user_metadata?.first_name || shopData.first_name || null,
+            lastName: authUser.user_metadata?.last_name || shopData.last_name || null,
+            name: authUser.user_metadata?.name || shopData.name || authUser.email?.split('@')[0],
+            shopId: authUser.id,
+            shop_id: authUser.id,
+            avatar: authUser.user_metadata?.avatar_url,
+            role: 'user',
+            createdAt: authUser.created_at,
+            shop: shopData
+          }
+
+          return user
         } else {
-          console.error('❌ [Store] Échec de la synchronisation forcée')
+          throw new Error('Pas de données shop')
         }
-        
-        return result
-      } catch (error) {
-        console.error('❌ [Store] Erreur lors de la synchronisation forcée:', error)
-        return { success: false }
-      }
-    },
 
-    // ✅ NOUVELLE ACTION: ATTENDRE LA MISE À JOUR DU PLAN
-    async waitForPlanUpdate(expectedPlan: string, maxRetries: number = 5, retryDelay: number = 3000): Promise<boolean> {
-      console.log(`⏳ [Store] Attente de la mise à jour du plan vers: ${expectedPlan}`)
-      
-      for (let i = 0; i < maxRetries; i++) {
-        console.log(`🔄 [Store] Tentative ${i + 1}/${maxRetries}...`)
-        
-        // Forcer la synchronisation
-        await this.forceDataSync()
-        
-        // Vérifier si le plan a été mis à jour
-        if (this.currentPlan === expectedPlan) {
-          console.log(`✅ [Store] Plan mis à jour avec succès vers: ${expectedPlan}`)
-          return true
-        }
-        
-        // Attendre avant le prochain retry
-        if (i < maxRetries - 1) {
-          console.log(`⏳ [Store] Plan actuel: ${this.currentPlan}, retry dans ${retryDelay/1000}s...`)
-          await new Promise(resolve => setTimeout(resolve, retryDelay))
-        }
-      }
-      
-      console.warn(`⚠️ [Store] Échec de la mise à jour du plan après ${maxRetries} tentatives`)
-      return false
-    },
-
-    // ✅ AUTRES ACTIONS INCHANGÉES
-    async resetPassword(email: string) {
-      this.loading = true
-      
-      try {
-        const supabase = useSupabase()
-        
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/reset-password`
-        })
-        
-        if (error) {
-          throw new Error(error.message)
-        }
-        
-        return { 
-          success: true, 
-          message: 'Email de réinitialisation envoyé' 
-        }
       } catch (error: any) {
-        console.error('❌ Store: Erreur reset password:', error)
-        return { 
-          success: false, 
-          error: error.message || 'Erreur lors de l\'envoi' 
+        const fallbackUser: User = {
+          id: authUser.id,
+          email: authUser.email!,
+          name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
+          shopId: authUser.id,
+          shop_id: authUser.id,
+          avatar: authUser.user_metadata?.avatar_url,
+          role: 'user',
+          createdAt: authUser.created_at,
+          shop: {
+            id: authUser.id,
+            name: `${authUser.user_metadata?.name || authUser.email?.split('@')[0]} Beauté`,
+            email: authUser.email,
+            subscription_plan: 'starter', // ✅ CORRIGÉ : Plan par défaut
+            beauty_category: 'multi',
+            is_active: true,
+            created_at: authUser.created_at
+          }
         }
-      } finally {
-        this.loading = false
+        
+        return fallbackUser
       }
     },
 
-    async logout() {
-      try {
-        console.log('🚪 Store: Déconnexion en cours...')
-        
-        const supabase = useSupabase()
-        const { error } = await supabase.auth.signOut()
-        
-        if (error) {
-          console.warn('⚠️ Erreur logout Supabase:', error)
-        }
-      } catch (error) {
-        console.warn('❌ Store: Erreur lors du logout:', error)
-      } finally {
-        this.clearAuth()
-      }
-    },
-
+    // ✅ ACTION : setUser
     setUser(user: User, token: string) {
       const normalizedUser: User = {
         ...user,
@@ -693,117 +679,40 @@ export const useAuthStore = defineStore('auth', {
       this.token = token
       this.isAuthenticated = true
       
-      console.log('✅ Store: Utilisateur connecté (API):', {
+      console.log('✅ Store: Utilisateur connecté (Beauté):', {
         id: normalizedUser.id,
         email: normalizedUser.email,
-        plan: normalizedUser.shop?.subscription_plan || 'none'
+        plan: normalizedUser.shop?.subscription_plan || 'starter',
+        beautyCategory: normalizedUser.shop?.beauty_category || 'multi'
       })
-      console.log('📋 Plan actuel:', this.planDetails.name)
-      console.log('⏰ Essai expiré:', this.trialExpired)
     },
 
+    // ✅ ACTION : clearAuth
     clearAuth() {
       this.user = null
       this.token = null
       this.isAuthenticated = false
-      
-      console.log('🧹 Store: Session nettoyée')
-    },
-
-    async updateProfile(data: Partial<User>) {
-      this.loading = true
-      
-      try {
-        const supabase = useSupabase()
-        
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: {
-            name: data.name,
-            first_name: data.firstName,
-            last_name: data.lastName,
-            avatar_url: data.avatar
-          }
-        })
-        
-        if (updateError) {
-          throw new Error(updateError.message)
-        }
-
-        if (data.firstName || data.lastName) {
-          try {
-            const api = useApi()
-            await api.shops.update(this.user?.id || '', {
-              name: data.name,
-              updated_at: new Date().toISOString()
-            })
-          } catch (apiError) {
-            console.warn('⚠️ Erreur mise à jour shop via API:', apiError)
-          }
-        }
-
-        if (this.user) {
-          this.user = { ...this.user, ...data }
-          console.log('✅ Store: Profil mis à jour:', this.user)
-        }
-        
-        return { success: true }
-      } catch (error: any) {
-        console.error('❌ Store: Erreur update profile:', error)
-        return { 
-          success: false, 
-          error: error.message || 'Erreur mise à jour profil' 
-        }
-      } finally {
-        this.loading = false
+      this.quotasUsage = {
+        aiResponses: 0,
+        knowledgeDocuments: 0,
+        indexablePages: 0,
+        agents: 0,
+        additionalAgentCost: 0
       }
+      
+      console.log('🧹 Store: Session beauté nettoyée')
     },
 
-    async refreshToken() {
+    // ✅ ACTION : logout
+    async logout() {
       try {
         const supabase = useSupabase()
-        const { data, error } = await supabase.auth.refreshSession()
-        
-        if (error || !data.session) {
-          throw new Error('Impossible de rafraîchir le token')
-        }
-        
-        this.token = data.session.access_token
-        return { success: true }
+        const { error } = await supabase.auth.signOut()
+        if (error) console.warn('⚠️ Erreur logout:', error)
       } catch (error) {
-        console.error('❌ Store: Erreur refresh token:', error)
+        console.warn('❌ Erreur logout:', error)
+      } finally {
         this.clearAuth()
-        return { success: false }
-      }
-    },
-
-    // ✅ ACTION MISE À JOUR PLAN VIA API - INCHANGÉE
-    async updateSubscriptionPlan(newPlan: string) {
-      if (!this.user?.shop) {
-        console.error('❌ Pas de shop pour mettre à jour le plan')
-        return { success: false, error: 'Shop manquant' }
-      }
-
-      try {
-        const api = useApi()
-        
-        const response = await api.shops.update(this.user.shop.id, {
-          subscription_plan: newPlan,
-          updated_at: new Date().toISOString()
-        })
-
-        if (!response.success) {
-          throw new Error(response.error || 'Erreur mise à jour plan')
-        }
-
-        if (this.user.shop) {
-          this.user.shop.subscription_plan = newPlan
-          console.log('✅ Plan mis à jour vers:', newPlan)
-        }
-
-        return { success: true, data: response.data }
-      } catch (error: any) {
-        console.error('❌ Erreur mise à jour plan:', error)
-        return { success: false, error: error.message }
       }
     }
   }

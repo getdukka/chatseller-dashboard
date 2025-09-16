@@ -1,5 +1,5 @@
 // composables/useDebounce.ts - DEBOUNCE COMPOSABLE
-import { ref } from 'vue'
+import { ref, readonly } from 'vue'
 
 /**
  * Creates a debounced version of a function
@@ -232,6 +232,3 @@ export function useDebouncedAsync<T extends (...args: any[]) => Promise<any>>(
     cancel
   }
 }
-
-// Export readonly for better type safety
-import { readonly } from 'vue'

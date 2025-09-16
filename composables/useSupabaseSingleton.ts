@@ -1,4 +1,4 @@
-// composables/useSupabaseSingleton.ts - COMPOSABLE SINGLETON POUR ÉVITER CONFLITS
+// composables/useSupabaseSingleton.ts 
 
 import { createClient } from '@supabase/supabase-js'
 

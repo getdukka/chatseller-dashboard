@@ -140,8 +140,8 @@ export const useDebug = () => {
       routePath: route.path,
       routeParams: route.params,
       routeQuery: route.query,
-      expectedPattern: '/vendeurs-ia/[id]',
-      matchesPattern: route.path.startsWith('/vendeurs-ia/') && route.path.split('/').length === 3
+      expectedPattern: '/agent-ia/[id]',
+      matchesPattern: route.path.startsWith('/agent-ia/') && route.path.split('/').length === 3
     }
 
     logInfo('VendeurIA', 'Check spécifique Vendeur IA', vendeurIAInfo)

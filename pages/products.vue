@@ -1,36 +1,36 @@
-<!-- pages/products.vue - VERSION 100% FONCTIONNELLE CORRIGÉE -->
+<!-- pages/products.vue -->
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
+  <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
+    <!-- Header Beauté -->
     <div class="bg-white shadow-sm border-b border-gray-200">
       <div class="px-8 py-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900">Catalogue Produits</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Catalogue Intelligent</h1>
             <p class="mt-2 text-gray-600">
-              Gérez votre catalogue pour que votre Vendeur IA connaisse vos produits
+              Gérez vos produits beauté et optimisez les recommandations de votre {{ getAgentTypeName() }}
             </p>
           </div>
           
           <div class="flex items-center space-x-4">
             <button
-              @click="showConnectModal = true"
+              @click="showSyncModal = true"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              Connecter une boutique
+              Synchroniser boutique
             </button>
             
             <button
-              @click="openCreateModal"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              @click="openEnrichmentModal"
+              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
-              Ajouter un produit
+              Enrichir un produit
             </button>
           </div>
         </div>
@@ -39,187 +39,182 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Manual Products -->
-        <div class="card-modern">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <div class="p-2 bg-purple-100 rounded-lg mr-3">
-                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">Produits manuels</h3>
-                <p class="text-sm text-gray-500">Ajoutés directement</p>
-              </div>
-            </div>
-          </div>
+      <!-- Stats Cards Spécialisées Beauté -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Produits Synchronisés -->
+        <div class="card-beauty-gradient from-blue-500 to-blue-600">
           <div class="flex items-center justify-between">
-            <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats?.bySource.manual || 0 }}</p>
-              <p class="text-xs text-gray-500">produits</p>
+            <div class="text-white">
+              <p class="text-blue-100 text-sm font-medium">Produits synchronisés</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.synchronized }}</p>
+              <p class="text-blue-100 text-sm mt-1">
+                <span class="text-white font-medium">{{ stats.lastSync }}</span> dernière sync
+              </p>
             </div>
-            <button
-              @click="openCreateModal"
-              class="text-purple-600 hover:text-purple-700 text-sm font-medium"
-            >
-              Ajouter →
-            </button>
+            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </div>
           </div>
         </div>
 
-        <!-- Shopify Connection -->
-        <div class="card-modern">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <div class="p-2 bg-green-100 rounded-lg mr-3">
-                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">Shopify</h3>
-                <p class="text-sm text-gray-500">
-                  <span v-if="connectionStatus.shopify.connected" class="text-green-600">Connecté</span>
-                  <span v-else class="text-gray-400">Non connecté</span>
-                </p>
-              </div>
-            </div>
-            <div v-if="connectionStatus.shopify.connected" class="w-3 h-3 bg-green-500 rounded-full"></div>
-          </div>
+        <!-- Produits Enrichis -->
+        <div class="card-beauty-gradient from-purple-500 to-purple-600">
           <div class="flex items-center justify-between">
-            <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats?.bySource.shopify || 0 }}</p>
-              <p class="text-xs text-gray-500">produits synchronisés</p>
+            <div class="text-white">
+              <p class="text-purple-100 text-sm font-medium">Fiches enrichies</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.enriched }}</p>
+              <p class="text-purple-100 text-sm mt-1">
+                <span class="text-white font-medium">{{ Math.round((stats.enriched / stats.total) * 100) }}%</span> complétées
+              </p>
             </div>
-            <button
-              @click="handleShopifyAction"
-              :disabled="syncing"
-              class="text-green-600 hover:text-green-700 text-sm font-medium disabled:opacity-50"
-            >
-              {{ syncing ? 'Sync...' : (connectionStatus.shopify.connected ? 'Synchroniser' : 'Connecter') }} →
-            </button>
+            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
           </div>
         </div>
 
-        <!-- WooCommerce Connection -->
-        <div class="card-modern">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <div class="p-2 bg-blue-100 rounded-lg mr-3">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">WooCommerce</h3>
-                <p class="text-sm text-gray-500">
-                  <span v-if="connectionStatus.woocommerce.connected" class="text-blue-600">Connecté</span>
-                  <span v-else class="text-gray-400">Non connecté</span>
-                </p>
-              </div>
-            </div>
-            <div v-if="connectionStatus.woocommerce.connected" class="w-3 h-3 bg-blue-500 rounded-full"></div>
-          </div>
+        <!-- Recommandations IA -->
+        <div class="card-beauty-gradient from-green-500 to-green-600">
           <div class="flex items-center justify-between">
-            <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats?.bySource.woocommerce || 0 }}</p>
-              <p class="text-xs text-gray-500">produits synchronisés</p>
+            <div class="text-white">
+              <p class="text-green-100 text-sm font-medium">Recommandations IA</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.aiRecommendations }}</p>
+              <p class="text-green-100 text-sm mt-1">
+                <span class="text-white font-medium">{{ stats.conversionRate }}%</span> conversion
+              </p>
             </div>
-            <button
-              @click="handleWooCommerceAction"
-              :disabled="syncing"
-              class="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
-            >
-              {{ syncing ? 'Sync...' : (connectionStatus.woocommerce.connected ? 'Synchroniser' : 'Connecter') }} →
-            </button>
+            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Catégorie -->
+        <div class="card-beauty-gradient from-rose-500 to-pink-600">
+          <div class="flex items-center justify-between">
+            <div class="text-white">
+              <p class="text-rose-100 text-sm font-medium">{{ getTopCategoryLabel() }}</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.topCategoryValue }}</p>
+              <p class="text-rose-100 text-sm mt-1">
+                <span class="text-white font-medium">{{ stats.topCategoryPercentage }}%</span> du catalogue
+              </p>
+            </div>
+            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {{ getCategoryIcon() }}
+              </svg>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Sync Status Banner -->
-      <div v-if="syncing" class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+      <div v-if="syncing" class="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6">
         <div class="flex items-center">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gradient-to-r from-blue-600 to-purple-600 mr-4"></div>
           <div class="flex-1">
-            <h3 class="text-sm font-medium text-blue-800">Synchronisation en cours...</h3>
-            <p class="text-sm text-blue-700">
-              Importation des produits depuis votre boutique connectée.
+            <h3 class="text-lg font-semibold text-blue-900">Synchronisation en cours...</h3>
+            <p class="text-blue-700 mt-1">
+              Importation et enrichissement automatique des produits depuis votre boutique {{ platformName }}.
             </p>
+            <div class="mt-3 bg-white rounded-full h-2 overflow-hidden">
+              <div 
+                class="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                :style="{ width: syncProgress + '%' }"
+              ></div>
+            </div>
+            <p class="text-sm text-blue-600 mt-2">{{ syncProgress }}% - {{ syncCurrentStep }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Filters and Search -->
+      <!-- Filters and Search Beauté -->
       <div class="card-modern mb-6">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <!-- Search -->
-          <div class="flex-1 max-w-lg">
-            <div class="relative">
-              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-              <input
-                v-model="filters.search"
-                @input="debouncedSearch"
-                type="text"
-                placeholder="Rechercher un produit..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+        <div class="p-6">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <!-- Search Intelligent -->
+            <div class="flex-1 max-w-lg">
+              <div class="relative">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input
+                  v-model="filters.search"
+                  @input="debouncedSearch"
+                  type="text"
+                  :placeholder="getSearchPlaceholder()"
+                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
+                >
+              </div>
+            </div>
+            
+            <!-- Filters Spécialisés Beauté -->
+            <div class="flex flex-wrap items-center space-x-4">
+              <select 
+                v-model="filters.beautyCategory" 
+                @change="applyFilters"
+                class="input-beauty"
               >
+                <option value="">{{ getBeautyCategoryFilterLabel() }}</option>
+                <option v-for="category in beautyCategories" :key="category.value" :value="category.value">
+                  {{ category.label }}
+                </option>
+              </select>
+              
+              <select 
+                v-model="filters.enrichmentStatus" 
+                @change="applyFilters"
+                class="input-beauty"
+              >
+                <option value="">Tous les statuts</option>
+                <option value="enriched">Fiches enrichies</option>
+                <option value="basic">Fiches basiques</option>
+                <option value="needs_enrichment">À enrichir</option>
+              </select>
+              
+              <select 
+                v-model="filters.aiPerformance" 
+                @change="applyFilters"
+                class="input-beauty"
+              >
+                <option value="">Performance IA</option>
+                <option value="high_conversion">Forte conversion</option>
+                <option value="frequently_recommended">Souvent recommandé</option>
+                <option value="needs_optimization">À optimiser</option>
+              </select>
+              
+              <button
+                @click="handleIntelligentExport"
+                :disabled="!hasProducts"
+                class="text-rose-600 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
+              >
+                Export intelligent
+              </button>
             </div>
           </div>
-          
-          <!-- Filters -->
-          <div class="flex items-center space-x-4">
-            <select 
-              v-model="filters.source" 
-              @change="applyFilters"
-              class="input-modern"
-            >
-              <option value="">Toutes les sources</option>
-              <option value="manual">Manuel</option>
-              <option value="shopify">Shopify</option>
-              <option value="woocommerce">WooCommerce</option>
-            </select>
-            
-            <select 
-              v-model="filters.category" 
-              @change="applyFilters"
-              class="input-modern"
-            >
-              <option value="">Toutes les catégories</option>
-              <option v-for="category in availableCategories" :key="category.name" :value="category.name">
-                {{ category.name }} ({{ category.count }})
-              </option>
-            </select>
-            
-            <button
-              @click="handleExport"
-              :disabled="!hasProducts"
-              class="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
-            >
-              Exporter CSV
-            </button>
-          </div>
         </div>
       </div>
 
-      <!-- Products List -->
+      <!-- Products Grid Enrichi -->
       <div class="card-modern">
         <div class="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">
-            Catalogue produits
+            Catalogue intelligent beauté
           </h2>
           <div class="flex items-center space-x-4">
             <span class="text-sm text-gray-500">
-              {{ stats?.total || 0 }} produit(s)
+              {{ filteredProducts.length }} produit(s)
             </span>
             <button
-              @click="refreshProducts"
+              @click="refreshCatalog"
               :disabled="loading"
-              class="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
+              class="text-rose-600 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
             >
               {{ loading ? 'Actualisation...' : 'Actualiser' }}
             </button>
@@ -229,66 +224,88 @@
         <!-- Loading State -->
         <div v-if="loading" class="p-12">
           <div class="flex items-center justify-center">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span class="ml-3 text-gray-600">Chargement des produits...</span>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+            <span class="ml-3 text-gray-600">Chargement du catalogue intelligent...</span>
           </div>
         </div>
 
-        <!-- Error State -->
-        <div v-else-if="error" class="p-12 text-center">
-          <div class="text-red-500 mb-4">
-            <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
-          <p class="text-gray-500 mb-4">{{ error }}</p>
-          <button
-            @click="refreshProducts"
-            class="btn-primary"
-          >
-            Réessayer
-          </button>
-        </div>
-
-        <!-- Products Grid -->
+        <!-- Products Grid avec données enrichies -->
         <div v-else-if="hasProducts" class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <div
-              v-for="product in products"
+              v-for="product in filteredProducts"
               :key="product.id"
-              class="product-card"
+              class="product-card-beauty"
             >
-              <!-- Product Image -->
-              <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+              <!-- Product Image avec overlay enrichissement -->
+              <div class="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
                 <img
-                  v-if="product.featured_image || product.images?.[0]"
-                  :src="product.featured_image || product.images[0]"
+                  v-if="product.featured_image"
+                  :src="product.featured_image"
                   :alt="product.name"
                   class="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                  @error="handleImageError"
                 >
                 <div v-else class="w-full h-full flex items-center justify-center">
                   <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                   </svg>
                 </div>
+                
+                <!-- Enrichment Status Badge -->
+                <div class="absolute top-2 right-2">
+                  <span :class="getEnrichmentBadgeClass(product)" class="enrichment-badge">
+                    {{ getEnrichmentStatus(product) }}
+                  </span>
+                </div>
+
+                <!-- AI Performance Indicator -->
+                <div v-if="product.ai_stats?.recommendations > 0" class="absolute bottom-2 left-2">
+                  <div class="bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    {{ product.ai_stats.recommendations }}
+                  </div>
+                </div>
               </div>
 
-              <!-- Product Info -->
+              <!-- Product Info Enrichie -->
               <div class="flex-1">
                 <div class="flex items-start justify-between mb-2">
                   <h3 class="text-sm font-medium text-gray-900 line-clamp-2">
                     {{ product.name }}
                   </h3>
-                  <span :class="getSourceBadgeClass(product.source)" class="source-badge ml-2">
-                    {{ getSourceLabel(product.source) }}
+                  <span :class="getBeautyCategoryBadgeClass(product.beauty_category)" class="beauty-category-badge ml-2">
+                    {{ getBeautyCategoryLabel(product.beauty_category) }}
                   </span>
                 </div>
                 
-                <p v-if="product.description" class="text-xs text-gray-500 line-clamp-2 mb-2">
-                  {{ product.description }}
-                </p>
+                <!-- Données Beauté Enrichies -->
+                <div v-if="product.beauty_data" class="mb-3">
+                  <div v-if="product.beauty_data.skin_types" class="mb-1">
+                    <span class="text-xs text-gray-500">Types de peau:</span>
+                    <div class="flex flex-wrap gap-1 mt-1">
+                      <span 
+                        v-for="skinType in product.beauty_data.skin_types.slice(0, 2)" 
+                        :key="skinType"
+                        class="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded"
+                      >
+                        {{ skinType }}
+                      </span>
+                      <span v-if="product.beauty_data.skin_types.length > 2" class="text-xs text-gray-400">
+                        +{{ product.beauty_data.skin_types.length - 2 }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div v-if="product.beauty_data.key_ingredients" class="mb-1">
+                    <span class="text-xs text-gray-500">Ingrédients clés:</span>
+                    <p class="text-xs text-gray-700 line-clamp-1">
+                      {{ product.beauty_data.key_ingredients.slice(0, 2).join(', ') }}
+                      <span v-if="product.beauty_data.key_ingredients.length > 2">...</span>
+                    </p>
+                  </div>
+                </div>
                 
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex flex-col">
@@ -300,87 +317,84 @@
                     </span>
                   </div>
                   <div class="text-right">
-                    <span v-if="product.category" class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded block mb-1">
-                      {{ product.category }}
-                    </span>
-                    <span v-if="product.track_inventory" class="text-xs" :class="getStockClass(product.inventory_quantity)">
-                      {{ getStockLabel(product.inventory_quantity) }}
+                    <span v-if="product.ai_stats?.conversion_rate" class="text-xs text-green-600 font-medium">
+                      {{ product.ai_stats.conversion_rate }}% conv.
                     </span>
                   </div>
                 </div>
 
-                <!-- Product Status -->
-                <div class="mb-3">
-                  <span 
-                    :class="product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                  >
-                    {{ product.is_active ? 'Actif' : 'Inactif' }}
-                  </span>
+                <!-- Performance IA -->
+                <div v-if="product.ai_stats" class="mb-3">
+                  <div class="flex items-center justify-between text-xs text-gray-500">
+                    <span>Recommandations: {{ product.ai_stats.recommendations || 0 }}</span>
+                    <span>Conversions: {{ product.ai_stats.conversions || 0 }}</span>
+                  </div>
                 </div>
 
-                <!-- Product Actions -->
-                <div class="flex items-center space-x-2">
-                  <button
-                    @click="editProduct(product)"
-                    class="flex-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
-                  >
-                    Modifier
-                  </button>
-                  <button
-                    @click="handleDuplicate(product)"
-                    class="text-xs bg-gray-50 text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
-                    title="Dupliquer"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                  </button>
-                  <button
-                    @click="handleDelete(product)"
-                    :disabled="product.source !== 'manual'"
-                    class="text-xs bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Supprimer"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                  </button>
+                <!-- Actions Enrichies -->
+                <div class="flex flex-col space-y-2">
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click="enrichProduct(product)"
+                      class="flex-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 px-3 py-2 rounded-lg transition-colors"
+                    >
+                      {{ product.is_enriched ? 'Modifier enrichissement' : 'Enrichir fiche' }}
+                    </button>
+                    <button
+                      @click="viewAIInsights(product)"
+                      class="text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 px-3 py-2 rounded-lg transition-colors"
+                      title="Analytics IA"
+                    >
+                      📊
+                    </button>
+                  </div>
+                  
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click="toggleAIRecommendation(product)"
+                      :class="product.ai_recommend ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-700'"
+                      class="flex-1 text-xs hover:bg-opacity-80 px-3 py-2 rounded-lg transition-colors"
+                    >
+                      {{ product.ai_recommend ? '✅ Recommandé par IA' : 'Activer recommandation IA' }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Empty State -->
+        <!-- Empty State Intelligent -->
         <div v-else class="text-center py-12">
-          <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-          </svg>
-          <h3 class="mt-4 text-lg font-medium text-gray-900">
-            {{ hasFilters ? 'Aucun produit trouvé' : 'Aucun produit dans votre catalogue' }}
+          <div class="w-20 h-20 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h4a1 1 0 011 1v2M7 7h10"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">
+            {{ hasFilters ? 'Aucun produit trouvé' : 'Catalogue vide' }}
           </h3>
-          <p class="mt-2 text-gray-500">
+          <p class="text-gray-500 mb-6">
             {{ hasFilters
-              ? 'Aucun produit ne correspond à vos critères de recherche'
-              : 'Commencez par ajouter des produits manuellement ou connecter votre boutique'
+              ? 'Aucun produit ne correspond à vos critères'
+              : 'Synchronisez votre boutique pour créer votre catalogue intelligent'
             }}
           </p>
-          <div class="mt-6">
+          <div class="space-x-4">
             <button
               v-if="!hasFilters"
-              @click="openCreateModal"
-              class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              @click="showSyncModal = true"
+              class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-semibold rounded-xl hover:from-rose-700 hover:to-pink-700 transition-all"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              Ajouter votre premier produit
+              Synchroniser ma boutique
             </button>
             <button
               v-else
               @click="clearFilters"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-200 transition-colors"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg transition-colors"
             >
               Effacer les filtres
             </button>
@@ -389,35 +403,12 @@
       </div>
     </div>
 
-    <!-- Product Form Modal -->
-    <ProductFormModal
-      v-if="showProductModal"
-      :product="editingProduct"
-      @close="closeProductModal"
-      @success="handleProductSuccess"
-    />
+    <!-- Modals -->
+    <SyncModal v-if="showSyncModal" @close="showSyncModal = false" @sync="handleSync" />
+    <EnrichmentModal v-if="showEnrichmentModal" :product="selectedProduct" @close="closeEnrichmentModal" @save="handleEnrichmentSave" />
+    <AIInsightsModal v-if="showAIInsightsModal" :product="selectedProduct" @close="showAIInsightsModal = false" />
 
-    <!-- Connection Modals -->
-    <ConnectionModal
-      v-if="showConnectModal"
-      @close="showConnectModal = false"
-      @connect-shopify="openShopifyModal"
-      @connect-woocommerce="openWooCommerceModal"
-    />
-
-    <ShopifyConnectionModal
-      v-if="showShopifyModal"
-      @close="showShopifyModal = false"
-      @success="handleShopifyConnected"
-    />
-
-    <WooCommerceConnectionModal
-      v-if="showWooCommerceModal"
-      @close="showWooCommerceModal = false"
-      @success="handleWooCommerceConnected"
-    />
-
-    <!-- Success Notification -->
+    <!-- Notification -->
     <NotificationToast
       :show="showNotification"
       :message="notificationMessage"
@@ -429,315 +420,332 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useProducts } from '~~/composables/useProducts'
+import { useAuthStore } from '~/stores/auth'
 import { useDebounce } from '~~/composables/useDebounce'
 
-// ✅ IMPORTS DES COMPOSANTS
-import ProductFormModal from '~~/components/ProductFormModal.vue'
-import ConnectionModal from '~~/components/ConnectionModal.vue'
-import ShopifyConnectionModal from '~~/components/ShopifyConnectionModal.vue'
-import WooCommerceConnectionModal from '~~/components/WooCommerceConnectionModal.vue'
-import NotificationToast from '~~/components/NotificationToast.vue'
-
-// ✅ PAGE META
 definePageMeta({
   middleware: 'auth',
   layout: 'default'
 })
 
-// ✅ COMPOSABLES
-const {
-  products,
-  stats,
-  loading,
-  saving,
-  syncing,
-  error,
-  hasProducts,
-  fetchProducts,
-  fetchStats,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  duplicateProduct,
-  syncProducts,
-  clearError,
-  formatPrice,
-  getSourceLabel,
-  getSourceBadgeClass
-} = useProducts()
+// COMPOSABLES
+const authStore = useAuthStore()
+const api = useApi()
 
-// ✅ REACTIVE STATE
-const showProductModal = ref(false)
-const showConnectModal = ref(false)
-const showShopifyModal = ref(false)
-const showWooCommerceModal = ref(false)
+// REACTIVE STATE
+const loading = ref(true)
+const syncing = ref(false)
+const syncProgress = ref(0)
+const syncCurrentStep = ref('')
+const showSyncModal = ref(false)
+const showEnrichmentModal = ref(false)
+const showAIInsightsModal = ref(false)
 const showNotification = ref(false)
 const notificationMessage = ref('')
 const notificationType = ref<'success' | 'error'>('success')
 
-const editingProduct = ref(null)
+const selectedProduct = ref(null)
+const platformName = ref('Shopify') // Ou WooCommerce selon la boutique
+
+const products = ref([])
+const stats = ref({
+  total: 0,
+  synchronized: 0,
+  enriched: 0,
+  aiRecommendations: 0,
+  conversionRate: 0,
+  lastSync: 'Jamais',
+  topCategoryValue: 'Skincare',
+  topCategoryPercentage: 45
+})
 
 // Filters
 const filters = ref({
   search: '',
-  category: '',
-  source: ''
+  beautyCategory: '',
+  enrichmentStatus: '',
+  aiPerformance: ''
 })
 
-// ✅ CONNECTION STATUS - LIEN AVEC LES VRAIES DONNÉES
-const connectionStatus = ref({
-  shopify: {
-    connected: false,
-    credentials: null,
-    lastSync: null
-  },
-  woocommerce: {
-    connected: false,
-    credentials: null,
-    lastSync: null
+// COMPUTED
+const hasProducts = computed(() => products.value.length > 0)
+const hasFilters = computed(() => Object.values(filters.value).some(f => f !== ''))
+
+const filteredProducts = computed(() => {
+  let filtered = products.value
+
+  if (filters.value.search) {
+    const query = filters.value.search.toLowerCase()
+    filtered = filtered.filter(p => 
+      p.name.toLowerCase().includes(query) ||
+      p.beauty_data?.key_ingredients?.some(i => i.toLowerCase().includes(query))
+    )
   }
+
+  if (filters.value.beautyCategory) {
+    filtered = filtered.filter(p => p.beauty_category === filters.value.beautyCategory)
+  }
+
+  if (filters.value.enrichmentStatus) {
+    filtered = filtered.filter(p => {
+      if (filters.value.enrichmentStatus === 'enriched') return p.is_enriched
+      if (filters.value.enrichmentStatus === 'basic') return !p.is_enriched && !p.needs_enrichment
+      if (filters.value.enrichmentStatus === 'needs_enrichment') return p.needs_enrichment
+      return true
+    })
+  }
+
+  return filtered
 })
 
-// ✅ COMPUTED
-const hasFilters = computed(() => {
-  return !!(filters.value.search || filters.value.category || filters.value.source)
+const beautyCategories = computed(() => {
+  const categories = {
+    'skincare': { label: '✨ Soins visage', value: 'skincare' },
+    'makeup': { label: '💄 Maquillage', value: 'makeup' },
+    'fragrance': { label: '🌸 Parfums', value: 'fragrance' },
+    'haircare': { label: '💇‍♀️ Soins cheveux', value: 'haircare' },
+    'bodycare': { label: '🧴 Soins corps', value: 'bodycare' }
+  }
+  
+  return Object.values(categories)
 })
 
-const availableCategories = computed(() => {
-  return stats.value?.categories || []
-})
-
-// ✅ DEBOUNCED SEARCH
-const debouncedSearch = useDebounce(() => {
-  applyFilters()
-}, 300)
-
-// ✅ METHODS
-const refreshProducts = async () => {
-  clearError()
-  await fetchProducts(filters.value)
-  await fetchStats()
-}
-
-const applyFilters = async () => {
-  clearError()
-  await fetchProducts(filters.value)
-}
-
-const clearFilters = () => {
-  filters.value = {
-    search: '',
-    category: '',
-    source: ''
+// BEAUTY-SPECIFIC METHODS
+const getAgentTypeName = () => {
+  const user = authStore.user
+  const beautyCategory = user?.shop?.beauty_category || 'multi'
+  
+  const types = {
+    'skincare': 'Esthéticienne IA',
+    'makeup': 'Experte Makeup IA',
+    'fragrance': 'Conseillère Parfums IA',
+    'haircare': 'Experte Capillaire IA',
+    'bodycare': 'Experte Soins Corps IA',
+    'multi': 'Conseillère Beauté IA'
   }
-  applyFilters()
+  
+  return types[beautyCategory] || types.multi
 }
 
-// ✅ PRODUCT ACTIONS
-const openCreateModal = () => {
-  editingProduct.value = null
-  showProductModal.value = true
-}
-
-const editProduct = (product: any) => {
-  editingProduct.value = product
-  showProductModal.value = true
-}
-
-const closeProductModal = () => {
-  showProductModal.value = false
-  editingProduct.value = null
-}
-
-const handleProductSuccess = (message: string) => {
-  showNotification.value = true
-  notificationMessage.value = message
-  notificationType.value = 'success'
-  refreshProducts()
-}
-
-const handleDuplicate = async (product: any) => {
-  const result = await duplicateProduct(product.id)
-  if (result.success) {
-    showNotification.value = true
-    notificationMessage.value = 'Produit dupliqué avec succès!'
-    notificationType.value = 'success'
-    refreshProducts()
-  } else {
-    showNotification.value = true
-    notificationMessage.value = result.error || 'Erreur lors de la duplication'
-    notificationType.value = 'error'
+const getSearchPlaceholder = () => {
+  const user = authStore.user
+  const beautyCategory = user?.shop?.beauty_category || 'multi'
+  
+  const placeholders = {
+    'skincare': 'Rechercher par nom, type de peau, ingrédient...',
+    'makeup': 'Rechercher par nom, couleur, occasion...',
+    'fragrance': 'Rechercher par nom, famille olfactive...',
+    'haircare': 'Rechercher par nom, type de cheveux...',
+    'bodycare': 'Rechercher par nom, zone corporelle...',
+    'multi': 'Rechercher un produit beauté...'
   }
+  
+  return placeholders[beautyCategory] || placeholders.multi
 }
 
-const handleDelete = async (product: any) => {
-  if (product.source !== 'manual') {
-    showNotification.value = true
-    notificationMessage.value = 'Seuls les produits manuels peuvent être supprimés'
-    notificationType.value = 'error'
-    return
-  }
+const getBeautyCategoryFilterLabel = () => {
+  return 'Toutes les catégories beauté'
+}
 
-  if (confirm(`Êtes-vous sûr de vouloir supprimer "${product.name}" ?`)) {
-    const result = await deleteProduct(product.id)
-    if (result.success) {
-      showNotification.value = true
-      notificationMessage.value = 'Produit supprimé avec succès!'
-      notificationType.value = 'success'
-      refreshProducts()
-    } else {
-      showNotification.value = true
-      notificationMessage.value = result.error || 'Erreur lors de la suppression'
-      notificationType.value = 'error'
+const getTopCategoryLabel = () => {
+  return 'Catégorie dominante'
+}
+
+const getCategoryIcon = () => {
+  return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>'
+}
+
+// UTILITY METHODS
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR'
+  }).format(price)
+}
+
+const getEnrichmentStatus = (product) => {
+  if (product.is_enriched) return '✅'
+  if (product.needs_enrichment) return '⚠️'
+  return '📝'
+}
+
+const getEnrichmentBadgeClass = (product) => {
+  if (product.is_enriched) return 'bg-green-500 text-white'
+  if (product.needs_enrichment) return 'bg-orange-500 text-white'
+  return 'bg-gray-500 text-white'
+}
+
+const getBeautyCategoryLabel = (category) => {
+  const labels = {
+    'skincare': 'Soin',
+    'makeup': 'Makeup',
+    'fragrance': 'Parfum',
+    'haircare': 'Cheveux',
+    'bodycare': 'Corps'
+  }
+  return labels[category] || 'Beauté'
+}
+
+const getBeautyCategoryBadgeClass = (category) => {
+  const classes = {
+    'skincare': 'bg-rose-100 text-rose-700',
+    'makeup': 'bg-purple-100 text-purple-700',
+    'fragrance': 'bg-violet-100 text-violet-700',
+    'haircare': 'bg-amber-100 text-amber-700',
+    'bodycare': 'bg-teal-100 text-teal-700'
+  }
+  return classes[category] || 'bg-gray-100 text-gray-700'
+}
+
+// ACTION METHODS
+const refreshCatalog = async () => {
+  loading.value = true
+  try {
+    // Charger les produits depuis l'API
+    const response = await api.products.list()
+    if (response.success) {
+      products.value = response.data || []
+      await calculateStats()
     }
+  } catch (error) {
+    console.error('Erreur refresh catalog:', error)
+  } finally {
+    loading.value = false
   }
 }
 
-// ✅ CONNECTION ACTIONS
-const handleShopifyAction = () => {
-  if (connectionStatus.value.shopify.connected) {
-    handleShopifySync()
-  } else {
-    openShopifyModal()
+const calculateStats = async () => {
+  const total = products.value.length
+  const enriched = products.value.filter(p => p.is_enriched).length
+  const aiRecommendations = products.value.reduce((sum, p) => sum + (p.ai_stats?.recommendations || 0), 0)
+  const conversions = products.value.reduce((sum, p) => sum + (p.ai_stats?.conversions || 0), 0)
+  
+  stats.value = {
+    total,
+    synchronized: total,
+    enriched,
+    aiRecommendations,
+    conversionRate: aiRecommendations > 0 ? Math.round((conversions / aiRecommendations) * 100) : 0,
+    lastSync: 'Il y a 2h',
+    topCategoryValue: 'Skincare',
+    topCategoryPercentage: 45
   }
 }
 
-const handleWooCommerceAction = () => {
-  if (connectionStatus.value.woocommerce.connected) {
-    handleWooCommerceSync()
-  } else {
-    openWooCommerceModal()
-  }
-}
-
-const openShopifyModal = () => {
-  showConnectModal.value = false
-  showShopifyModal.value = true
-}
-
-const openWooCommerceModal = () => {
-  showConnectModal.value = false
-  showWooCommerceModal.value = true
-}
-
-const handleShopifyConnected = async () => {
-  // ✅ RÉCUPÉRER LES DONNÉES DE CONNEXION DEPUIS LE STOCKAGE
-  const connectionData = JSON.parse(localStorage.getItem('shopify_connection') || '{}')
+const handleSync = async (platform, credentials) => {
+  syncing.value = true
+  syncProgress.value = 0
   
-  connectionStatus.value.shopify = {
-    connected: true,
-    credentials: connectionData,
-    lastSync: null
-  }
-  
-  showNotification.value = true
-  notificationMessage.value = 'Boutique Shopify connectée avec succès!'
-  notificationType.value = 'success'
-  
-  // Auto-sync after connection
-  setTimeout(() => {
-    handleShopifySync()
-  }, 1000)
-}
-
-const handleWooCommerceConnected = async () => {
-  // ✅ RÉCUPÉRER LES DONNÉES DE CONNEXION DEPUIS LE STOCKAGE
-  const connectionData = JSON.parse(localStorage.getItem('woocommerce_connection') || '{}')
-  
-  connectionStatus.value.woocommerce = {
-    connected: true,
-    credentials: connectionData,
-    lastSync: null
-  }
-  
-  showNotification.value = true
-  notificationMessage.value = 'Boutique WooCommerce connectée avec succès!'
-  notificationType.value = 'success'
-  
-  // Auto-sync after connection
-  setTimeout(() => {
-    handleWooCommerceSync()
-  }, 1000)
-}
-
-const handleShopifySync = async () => {
-  if (!connectionStatus.value.shopify.credentials) {
+  try {
+    // Simulation sync avec étapes
+    const steps = [
+      'Connexion à la boutique...',
+      'Récupération des produits...',
+      'Analyse des catégories beauté...',
+      'Enrichissement automatique...',
+      'Finalisation...'
+    ]
+    
+    for (let i = 0; i < steps.length; i++) {
+      syncCurrentStep.value = steps[i]
+      syncProgress.value = ((i + 1) / steps.length) * 100
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+    
+    // Appel API réel
+    const response = await api.products.sync(platform, credentials)
+    
+    if (response.success) {
+      showNotification.value = true
+      notificationMessage.value = `${response.data.imported} produits synchronisés avec succès !`
+      notificationType.value = 'success'
+      await refreshCatalog()
+    }
+    
+  } catch (error) {
+    console.error('Erreur sync:', error)
     showNotification.value = true
-    notificationMessage.value = 'Aucune configuration Shopify trouvée'
+    notificationMessage.value = 'Erreur lors de la synchronisation'
     notificationType.value = 'error'
-    return
+  } finally {
+    syncing.value = false
+    showSyncModal.value = false
   }
+}
 
-  const result = await syncProducts('shopify', connectionStatus.value.shopify.credentials)
-  
-  if (result.success) {
-    connectionStatus.value.shopify.lastSync = new Date().toISOString()
+const enrichProduct = (product) => {
+  selectedProduct.value = product
+  showEnrichmentModal.value = true
+}
+
+const openEnrichmentModal = () => {
+  selectedProduct.value = null
+  showEnrichmentModal.value = true
+}
+
+const closeEnrichmentModal = () => {
+  showEnrichmentModal.value = false
+  selectedProduct.value = null
+}
+
+const handleEnrichmentSave = async (enrichmentData) => {
+  try {
+    const response = await api.products.enrich(selectedProduct.value.id, enrichmentData)
+    
+    if (response.success) {
+      showNotification.value = true
+      notificationMessage.value = 'Fiche produit enrichie avec succès !'
+      notificationType.value = 'success'
+      await refreshCatalog()
+    }
+    
+  } catch (error) {
+    console.error('Erreur enrichissement:', error)
     showNotification.value = true
-    notificationMessage.value = 'Synchronisation Shopify terminée!'
-    notificationType.value = 'success'
-    refreshProducts()
-  } else {
-    showNotification.value = true
-    notificationMessage.value = result.error || 'Erreur de synchronisation'
+    notificationMessage.value = 'Erreur lors de l\'enrichissement'
     notificationType.value = 'error'
+  } finally {
+    closeEnrichmentModal()
   }
 }
 
-const handleWooCommerceSync = async () => {
-  if (!connectionStatus.value.woocommerce.credentials) {
-    showNotification.value = true
-    notificationMessage.value = 'Aucune configuration WooCommerce trouvée'
-    notificationType.value = 'error'
-    return
-  }
+const viewAIInsights = (product) => {
+  selectedProduct.value = product
+  showAIInsightsModal.value = true
+}
 
-  const result = await syncProducts('woocommerce', connectionStatus.value.woocommerce.credentials)
+const toggleAIRecommendation = async (product) => {
+  try {
+    const response = await api.products.toggleRecommendation(product.id, !product.ai_recommend)
+    
+    if (response.success) {
+      product.ai_recommend = !product.ai_recommend
+      showNotification.value = true
+      notificationMessage.value = product.ai_recommend ? 'Produit ajouté aux recommandations IA' : 'Produit retiré des recommandations IA'
+      notificationType.value = 'success'
+    }
+    
+  } catch (error) {
+    console.error('Erreur toggle recommendation:', error)
+  }
+}
+
+const handleIntelligentExport = () => {
+  // Export avec données enrichies beauté
+  const headers = [
+    'Nom', 'Catégorie Beauté', 'Prix', 'Types de Peau', 'Ingrédients Clés', 
+    'Recommandations IA', 'Taux Conversion', 'Statut Enrichissement'
+  ]
   
-  if (result.success) {
-    connectionStatus.value.woocommerce.lastSync = new Date().toISOString()
-    showNotification.value = true
-    notificationMessage.value = 'Synchronisation WooCommerce terminée!'
-    notificationType.value = 'success'
-    refreshProducts()
-  } else {
-    showNotification.value = true
-    notificationMessage.value = result.error || 'Erreur de synchronisation'
-    notificationType.value = 'error'
-  }
-}
-
-// ✅ UTILITY METHODS
-const handleImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement
-  target.style.display = 'none'
-}
-
-const getStockClass = (quantity: number) => {
-  if (quantity <= 0) return 'text-red-600'
-  if (quantity <= 10) return 'text-orange-600'
-  return 'text-green-600'
-}
-
-const getStockLabel = (quantity: number) => {
-  if (quantity <= 0) return 'Rupture'
-  if (quantity <= 10) return 'Stock faible'
-  return `${quantity} en stock`
-}
-
-const handleExport = () => {
-  if (!hasProducts.value) return
-  
-  // Create CSV content
-  const headers = ['Nom', 'Prix', 'Catégorie', 'Source', 'SKU', 'Stock', 'Statut']
-  const csvData = products.value.map((p: any) => [
+  const csvData = filteredProducts.value.map(p => [
     p.name,
+    getBeautyCategoryLabel(p.beauty_category),
     p.price,
-    p.category || '',
-    getSourceLabel(p.source),
-    p.sku || '',
-    p.track_inventory ? p.inventory_quantity : 'Non suivi',
-    p.is_active ? 'Actif' : 'Inactif'
+    p.beauty_data?.skin_types?.join('; ') || '',
+    p.beauty_data?.key_ingredients?.join('; ') || '',
+    p.ai_stats?.recommendations || 0,
+    p.ai_stats?.conversion_rate || 0,
+    getEnrichmentStatus(p)
   ])
   
   const csvContent = [
@@ -749,85 +757,80 @@ const handleExport = () => {
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `produits-chatseller-${new Date().toISOString().split('T')[0]}.csv`
+  a.download = `catalogue-intelligent-${new Date().toISOString().split('T')[0]}.csv`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   window.URL.revokeObjectURL(url)
   
   showNotification.value = true
-  notificationMessage.value = `${products.value.length} produit(s) exporté(s) avec succès!`
+  notificationMessage.value = 'Catalogue exporté avec succès !'
   notificationType.value = 'success'
 }
 
-// ✅ LOAD EXISTING CONNECTIONS
-const loadExistingConnections = () => {
-  try {
-    // ✅ CHARGER SHOPIFY
-    const shopifyConnection = localStorage.getItem('shopify_connection')
-    if (shopifyConnection) {
-      const data = JSON.parse(shopifyConnection)
-      connectionStatus.value.shopify = {
-        connected: true,
-        credentials: data,
-        lastSync: data.lastSync || null
-      }
-    }
+const applyFilters = () => {
+  // Les filtres sont appliqués automatiquement via le computed filteredProducts
+}
 
-    // ✅ CHARGER WOOCOMMERCE
-    const wooConnection = localStorage.getItem('woocommerce_connection')
-    if (wooConnection) {
-      const data = JSON.parse(wooConnection)
-      connectionStatus.value.woocommerce = {
-        connected: true,
-        credentials: data,
-        lastSync: data.lastSync || null
-      }
-    }
-  } catch (error) {
-    console.warn('Erreur lors du chargement des connexions:', error)
+const clearFilters = () => {
+  filters.value = {
+    search: '',
+    beautyCategory: '',
+    enrichmentStatus: '',
+    aiPerformance: ''
   }
 }
 
-// ✅ LIFECYCLE
+const debouncedSearch = useDebounce(() => {
+  // La recherche est appliquée automatiquement via le computed
+}, 300)
+
+// LIFECYCLE
 onMounted(async () => {
-  await refreshProducts()
-  loadExistingConnections()
+  await refreshCatalog()
 })
 
-// ✅ SEO
+// SEO
 useHead({
-  title: 'Produits - ChatSeller Dashboard'
+  title: 'Catalogue Intelligent - ChatSeller Dashboard',
+  meta: [
+    { name: 'description', content: 'Gérez votre catalogue beauté intelligent avec enrichissement IA et analytics de performance' }
+  ]
 })
 </script>
 
 <style scoped>
-/* ✅ MODERN COMPONENTS */
 .card-modern {
   @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
 }
 
-.input-modern {
-  @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm;
+.card-beauty-gradient {
+  @apply bg-gradient-to-br rounded-xl shadow-lg p-6 text-white;
 }
 
-.btn-primary {
-  @apply px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors;
+.input-beauty {
+  @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors text-sm;
 }
 
-.btn-secondary {
-  @apply px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors;
+.product-card-beauty {
+  @apply bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-rose-200 transition-all duration-200;
 }
 
-.product-card {
-  @apply bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow;
+.enrichment-badge {
+  @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium;
 }
 
-.source-badge {
+.beauty-category-badge {
   @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0;
 }
 
-/* ✅ TEXT UTILS */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -835,18 +838,6 @@ useHead({
   overflow: hidden;
 }
 
-/* ✅ RESPONSIVE */
-@media (max-width: 768px) {
-  .card-modern {
-    @apply p-4;
-  }
-  
-  .product-card {
-    @apply p-3;
-  }
-}
-
-/* ✅ ANIMATIONS */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

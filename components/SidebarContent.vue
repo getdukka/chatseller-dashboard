@@ -5,9 +5,13 @@
     <!-- Header sidebar -->
     <div class="flex h-16 items-center justify-between px-6 border-b border-gray-100">
       <div class="flex items-center space-x-3">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg">
-          <span class="text-sm font-bold text-white">CS</span>
-        </div>
+        <div class="flex h-12 w-12 items-center justify-center bg-transparent">
+              <img 
+                src="/assets/images/logos/fav.svg" 
+                alt="ChatSeller" 
+                class="w-10 h-10"
+              />
+            </div>
         <span class="text-xl font-bold text-gray-900">ChatSeller</span>
       </div>
       
@@ -37,10 +41,10 @@
       />
 
       <SidebarLink
-        to="/vendeurs-ia"
-        :isActive="$route.path.startsWith('/vendeurs-ia')"
+        to="/agent-ia"
+        :isActive="$route.path.startsWith('/agent-ia')"
         icon="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-        label="Vendeurs IA"
+        label="Conseillères IA"
         @click="handleNavClick"
       />
 
@@ -112,7 +116,7 @@
         @click="handleUpgradeClick('starter')"
         :disabled="upgradingToPlan === 'starter'"
         type="button"
-        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+        class="w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
       >
         <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -160,7 +164,7 @@
         <span>{{ upgradingToPlan === 'pro' ? 'Redirection...' : 'Passer au Pro' }}</span>
       </button>
 
-      <!-- Plan Pro + Actif : Badge statique "Plan Pro Actif" -->
+      <!-- Plan Growth + Actif : Badge statique "Plan Growth Actif" -->
       <div
         v-else-if="userSubscriptionPlan === 'pro' && userSubscriptionActive"
         class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 mb-3"
@@ -168,7 +172,7 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
-        <span>Plan Pro Actif</span>
+        <span>Plan Growth Actif</span>
       </div>
 
       <!-- Plan Starter + Inactif : Bouton "Réactiver Starter" -->
@@ -189,7 +193,7 @@
         <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver Starter' }}</span>
       </button>
 
-      <!-- Plan Pro + Inactif : Bouton "Réactiver Pro" -->
+      <!-- Plan Growth + Inactif : Bouton "Réactiver Pro" -->
       <button
         v-else-if="userSubscriptionPlan === 'pro' && !userSubscriptionActive"
         @click="handleUpgradeClick('pro')"
@@ -210,13 +214,13 @@
       <!-- Affichage des jours d'essai restants -->
       <div 
         v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0" 
-        class="text-center text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-lg py-2 px-3"
+        class="text-center text-xs text-gray-500 bg-rose-50 border border-rose-200 rounded-lg py-2 px-3"
       >
         <div class="flex items-center justify-center space-x-1">
-          <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <span class="font-medium text-blue-700">{{ trialDaysLeft }} jour(s) d'essai</span>
+          <span class="font-medium text-rose-700">{{ trialDaysLeft }} jour(s) d'essai</span>
         </div>
       </div>
 
@@ -240,10 +244,10 @@
         <button 
           @click="handleToggleProfile"
           type="button"
-          class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-rose-500"
         >
           <!-- Avatar dynamique -->
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-rose-600 shadow-md">
             <span class="text-sm font-semibold text-white">
               {{ userInitials }}
             </span>
@@ -316,9 +320,10 @@
 </template>
 
 <script setup lang="ts">
+// components/SidebarContent.vue - SECTION <script setup> SIMPLIFIÉE
 import { ref } from 'vue'
 
-// Types
+// ✅ TYPES SIMPLIFIÉS
 type SubscriptionPlan = 'free' | 'starter' | 'pro'
 
 interface Props {
@@ -333,7 +338,7 @@ interface Props {
   trialDaysLeft?: number
 }
 
-// Props et emits
+// ✅ PROPS ET EMITS SIMPLIFIÉS
 const props = withDefaults(defineProps<Props>(), {
   isMobile: false,
   userSubscriptionPlan: 'free',
@@ -349,59 +354,40 @@ const emit = defineEmits<{
   'upgrade-to-plan': [plan: 'starter' | 'pro']
 }>()
 
-// State pour les boutons upgrade
+// ✅ STATE MINIMAL
 const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
 
-// GESTION NAVIGATION SIMPLIFIÉE ET ROBUSTE
+// ✅ GESTIONNAIRES SIMPLIFIÉS - PAS DE LOGS EXCESSIFS
 const handleNavClick = () => {
-  console.log('[SidebarContent] Navigation click détecté')
-  
-  // FERMER IMMÉDIATEMENT LE MENU MOBILE SI NÉCESSAIRE
+  // Fermer menus immédiatement lors navigation
   if (props.isMobile) {
-    console.log('[SidebarContent] Fermeture menu mobile')
     emit('close-mobile')
   }
-  
-  // FERMER LE MENU PROFIL SI OUVERT
   if (props.showProfileMenu) {
     emit('close-profile')
   }
 }
 
-// GESTION DES ACTIONS MOBILE/PROFIL
 const handleCloseMobile = () => {
-  console.log('[SidebarContent] Close mobile trigger')
   emit('close-mobile')
 }
 
 const handleToggleProfile = () => {
-  console.log('[SidebarContent] Toggle profile menu')
   emit('toggle-profile')
 }
 
 const handleCloseProfile = () => {
-  console.log('[SidebarContent] Close profile menu')
   emit('close-profile')
 }
 
 const handleLogout = () => {
-  console.log('[SidebarContent] Logout trigger')
   emit('logout')
 }
 
-// GESTION UPGRADE
-const handleUpgradeClick = async (targetPlan: 'starter' | 'pro') => {
-  console.log(`[SidebarContent] Upgrade click vers ${targetPlan}`)
-  
+// ✅ UPGRADE SIMPLIFIÉ SANS TRY/CATCH COMPLEXE
+const handleUpgradeClick = (targetPlan: 'starter' | 'pro') => {
   upgradingToPlan.value = targetPlan
-  
-  try {
-    emit('upgrade-to-plan', targetPlan)
-    console.log(`[SidebarContent] Événement upgrade émis pour ${targetPlan}`)
-  } catch (error) {
-    console.error('[SidebarContent] Erreur upgrade:', error)
-    upgradingToPlan.value = null
-  }
+  emit('upgrade-to-plan', targetPlan)
 }
 </script>
 

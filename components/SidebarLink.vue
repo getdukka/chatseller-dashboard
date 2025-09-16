@@ -1,16 +1,16 @@
-<!-- components/SidebarLink.vue -->
+<!-- components/SidebarLink.vue - VERSION SIMPLIFIÉE CORRIGÉE -->
 <template>
   <NuxtLink
     :to="to"
-    class="sidebar-link group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200"
+    class="clickable-element sidebar-link group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative"
     :class="linkClasses"
-    @click="handleClick"
     :tabindex="0"
     :aria-current="isActive ? 'page' : undefined"
+    @click="handleLinkClick"
   >
     <!-- Icon -->
     <svg 
-      class="sidebar-icon mr-3 h-5 w-5 transition-colors duration-200" 
+      class="no-pointer-events mr-3 h-5 w-5 transition-colors duration-200" 
       :class="iconClasses"
       fill="none" 
       viewBox="0 0 24 24" 
@@ -21,12 +21,12 @@
     </svg>
 
     <!-- Label -->
-    <span class="sidebar-label flex-1">{{ label }}</span>
+    <span class="no-pointer-events flex-1 font-medium">{{ label }}</span>
 
-    <!-- Badge (notifications, etc.) -->
+    <!-- Badge (notifications) -->
     <span 
-      v-if="badge" 
-      class="sidebar-badge ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full min-w-[20px] h-5"
+      v-if="badge && badge > 0" 
+      class="no-pointer-events ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full min-w-[20px] h-5 animate-pulse"
       :aria-label="`${badge} notification${badge > 1 ? 's' : ''}`"
     >
       {{ badge > 99 ? '99+' : badge }}
@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Props
+// ✅ INTERFACE PROPS SIMPLIFIÉE
 interface Props {
   to: string
   icon: string
@@ -48,123 +48,102 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Emits
+// ✅ ÉMIT SIMPLIFIÉ
 const emit = defineEmits<{
   click: [event: Event]
 }>()
 
-// Computed classes
+// ✅ COMPUTED CLASSES OPTIMISÉES
 const linkClasses = computed(() => {
-  const baseClasses = 'relative cursor-pointer'
+  const baseClasses = 'w-full min-h-[44px] hover:scale-[1.02] active:scale-[0.98]'
   
-  return props.isActive
-    ? `${baseClasses} bg-blue-50 text-blue-700 shadow-sm border border-blue-100`
-    : `${baseClasses} text-gray-600 hover:bg-gray-50 hover:text-gray-900`
+  if (props.isActive) {
+    return `${baseClasses} bg-gradient-to-r from-rose-50 to-pink-50 text-rose-700 shadow-sm border border-rose-200 ring-1 ring-rose-100`
+  }
+  
+  return `${baseClasses} text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm`
 })
 
 const iconClasses = computed(() => {
-  return props.isActive
-    ? 'text-blue-600'
-    : 'text-gray-400 group-hover:text-gray-600'
+  if (props.isActive) {
+    return 'text-rose-600'
+  }
+  
+  return 'text-gray-400 group-hover:text-gray-600'
 })
 
-// ✅ CLICK HANDLER SIMPLIFIÉ ET ROBUSTE
-const handleClick = (event: Event) => {
-  console.log('🔗 [SidebarLink] Navigation vers:', props.label, props.to)
+// ✅ GESTIONNAIRE CLICK ROBUSTE ET SIMPLE
+const handleLinkClick = (event: Event) => {
+  // ✅ LOG POUR DEBUG
+  console.log(`🔗 [SidebarLink] Navigation: ${props.label} → ${props.to}`)
   
-  // ✅ NE PAS EMPÊCHER LA PROPAGATION - Laisser Vue Router gérer
-  // ✅ NE PAS faire de preventDefault - Le NuxtLink s'en charge
-  
-  // Émettre l'événement pour informer les parents (pour fermeture menus)
+  // ✅ ÉMETTRE L'ÉVÉNEMENT POUR FERMER LES MENUS
   emit('click', event)
   
-  console.log('✅ [SidebarLink] Navigation initiée pour:', props.to)
+  // ✅ LAISSER NUXT ROUTER GÉRER LA NAVIGATION
+  // Pas de preventDefault() ni stopPropagation()
 }
 </script>
 
 <style scoped>
-/* ✅ STYLES SIMPLIFIÉS POUR ÉVITER LES CONFLITS */
+/* ✅ STYLES SIMPLIFIÉS ET ROBUSTES */
 .sidebar-link {
   display: flex !important;
   align-items: center !important;
-  width: 100% !important;
-  min-height: 44px !important;
   text-decoration: none !important;
-  position: relative !important;
-  z-index: 1 !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
-/* ✅ ASSURER LA CLIQUABILITÉ */
+/* ✅ HOVER ET ACTIVE STATES */
 .sidebar-link:hover {
   text-decoration: none !important;
+  transform: translateY(-1px);
 }
 
-/* ✅ LES ENFANTS NE CAPTENT PAS LES ÉVÉNEMENTS */
-.sidebar-icon,
-.sidebar-label,
-.sidebar-badge {
-  pointer-events: none !important;
+.sidebar-link:active {
+  transform: translateY(0);
+}
+
+/* ✅ FOCUS ACCESSIBLE */
+.sidebar-link:focus {
+  outline: 2px solid rgb(244 63 94) !important;
+  outline-offset: 2px !important;
 }
 
 /* ✅ TRANSITIONS FLUIDES */
 .transition-all {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ✅ BADGE ANIMATION */
-.bg-red-500 {
-  animation: pulse-badge 2s infinite;
-}
-
-@keyframes pulse-badge {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-
-/* ✅ HOVER STATES */
-.group:hover .group-hover\:text-gray-600 {
-  color: rgb(75 85 99) !important;
-}
-
-/* ✅ FOCUS STATES POUR ACCESSIBILITÉ */
-.sidebar-link:focus {
-  outline: 2px solid rgb(59 130 246) !important;
-  outline-offset: 2px !important;
-  border-radius: 0.75rem !important;
-}
-
-/* ✅ MOBILE TOUCH TARGETS */
+/* ✅ MOBILE OPTIMISATION */
 @media (max-width: 1023px) {
   .sidebar-link {
     min-height: 48px !important;
-    margin-bottom: 2px !important;
+    padding: 0.875rem 1rem !important;
   }
 }
 
-/* ✅ ÉVITER LA SÉLECTION DE TEXTE */
-.sidebar-link {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-/* ✅ HIGH CONTRAST SUPPORT */
-@media (prefers-contrast: high) {
-  .sidebar-link {
-    border: 1px solid transparent;
+/* ✅ RÉDUIRE ANIMATIONS SI NÉCESSAIRE */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-link,
+  .transition-all {
+    transition: none !important;
+    transform: none !important;
   }
   
   .sidebar-link:hover {
-    border-color: currentColor;
+    transform: none !important;
   }
 }
 
-/* ✅ REDUCED MOTION SUPPORT */
-@media (prefers-reduced-motion: reduce) {
-  .sidebar-link,
-  .sidebar-icon {
-    transition: none !important;
-  }
+/* ✅ BADGE ANIMATION */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

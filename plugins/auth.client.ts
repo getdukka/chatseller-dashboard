@@ -1,4 +1,4 @@
-// plugins/auth.client.ts - VERSION CORRIGÉE COMPATIBLE
+// plugins/auth.client.ts 
 
 import { useSupabase } from "~~/composables/useSupabase"
 import { useAuthStore } from "~~/stores/auth"

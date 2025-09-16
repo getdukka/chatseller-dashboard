@@ -2,8 +2,11 @@
 
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useQuotas } from '~/composables/useQuotas'
+import { BEAUTY_CATEGORIES, validateBeautyFile } from '../constants/beauty'
+import type { ApiErrorResponse, ApiResponse } from '~/composables/useApi'
 
-// ✅ TYPES PARFAITEMENT DÉFINIS
+// ✅ TYPES COMPLETS (restaurés)
 export interface KnowledgeBaseDocument {
   id: string
   title: string
@@ -24,9 +27,11 @@ export interface KnowledgeBaseDocument {
     lastProcessed?: string
     storagePath?: string
     originalFileName?: string
+    beautyCategory?: string
+    productType?: string
+    [key: string]: any
   }
 }
-
 
 export interface CreateKnowledgeBaseData {
   title: string
@@ -37,148 +42,159 @@ export interface CreateKnowledgeBaseData {
   tags?: string[]
   isActive?: boolean
   metadata?: Partial<KnowledgeBaseDocument['metadata']>
+  beautyCategory?: string
+  productType?: string
 }
 
 export interface UpdateKnowledgeBaseData extends Partial<CreateKnowledgeBaseData> {}
 
-// ✅ TYPES DE RETOUR GÉNÉRIQUES
-export interface ApiSuccessResponse<T = any> {
-  success: true
-  data: T
-  meta?: {
-    totalPagesDiscovered?: number
-    totalDocumentsCreated?: number
-    baseUrl?: string
-    indexationType?: string
-    processedAt?: string
-    [key: string]: any
-  }
-  error?: never
+// ✅ INTERFACE PLAN DETAILS COMPLÈTE (restaurée)
+interface PlanLimits {
+  knowledgeDocuments: number // 50, 200, -1
+  indexablePages: number // 500, 2000, -1
+  aiResponses: number // 1000, 10000, -1
+  agents: number // -1 (illimité pour tous)
 }
 
-export interface ApiErrorResponse {
-  success: false
-  error: string
-  data?: never
-  meta?: never
-}
-
-export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
-
-// ✅ INTERFACES CORRIGÉES POUR LES RÉPONSES
-interface KnowledgeBaseSuccessResponse {
-  success: true
-  data: KnowledgeBaseDocument[]
-  meta?: {
-    total: number
-    activeCount: number
-    planLimit: number
-    canUpload: boolean
-  }
-  error?: never
-}
-
-interface KnowledgeBaseErrorResponse {
-  success: false
-  error: string
-  data?: never
-  meta?: never
-}
-
-type KnowledgeBaseResponse = KnowledgeBaseSuccessResponse | KnowledgeBaseErrorResponse
-
-// ✅ INTERFACE POUR LES RÉPONSES DE CRÉATION/MODIFICATION
-interface DocumentSuccessResponse {
-  success: true
-  data: KnowledgeBaseDocument
-  error?: never
-}
-
-interface DocumentErrorResponse {
-  success: false
-  error: string
-  data?: never
-}
-
-type DocumentResponse = DocumentSuccessResponse | DocumentErrorResponse
-
-// ✅ INTERFACE PLAN DETAILS CORRIGÉE
 interface PlanDetails {
-  name: string
-  knowledgeBaseLimit: number
+  name: 'starter' | 'growth' | 'performance'
+  limits: PlanLimits
+  quotasStatus: ReturnType<typeof import('~/types/plans').checkQuotaUsage>
+  trialDaysLeft: number
+  trialEndDate: Date | null
   hasExpired: boolean
-  fileSizeLimit?: number  
+  fileSizeLimit?: number
 }
 
-// ✅ INTERFACE POUR LES RÉPONSES DE TOGGLE
-interface ToggleSuccessResponse {
-  success: true
-  data: {
-    updatedAt: string
-  }
-  error?: never
-}
-
-interface ToggleErrorResponse {
-  success: false
-  error: string
-  data?: never
-}
-
-type ToggleResponse = ToggleSuccessResponse | ToggleErrorResponse
-
-// ✅ COMPOSABLE PRINCIPAL AVEC GESTION D'ERREURS ULTRA-ROBUSTE
 export const useKnowledgeBase = () => {
   const authStore = useAuthStore()
-  const config = useRuntimeConfig()
+  const { checkQuotaBeforeAction, incrementQuota } = useQuotas()
+  const api = useApi()
 
-  // ✅ STATE RÉACTIF AVEC INITIALISATION SÉCURISÉE
+  // ✅ STATE RÉACTIF (restauré)
   const documents = ref<KnowledgeBaseDocument[]>([])
   const loading = ref(false)
   const saving = ref(false)
   const error = ref<string | null>(null)
   const uploadProgress = ref(0)
 
-  // ✅ COMPUTED POUR GESTION DES LIMITES DE PLAN AVEC FALLBACKS
-  const planDetails = computed(() => {
+  // ✅ COMPUTED PLAN DETAILS COMPLET (restauré de l'original)
+  const planDetails = computed((): PlanDetails => {
     try {
-      return authStore.planDetails || {
-        name: 'free',
-        knowledgeBaseLimit: 10,
-        hasExpired: false
+      const user = authStore.user
+      const subscriptionPlan = user?.shop?.subscription_plan || 'starter'
+      
+      // ✅ CORRECTION : Normaliser le plan avant utilisation
+      let normalizedPlan = subscriptionPlan.toLowerCase()
+      
+      // ✅ Mapper les anciens plans vers les nouveaux
+      const planMapping: Record<string, string> = {
+        'free': 'starter',
+        'basic': 'starter', 
+        'pro': 'growth',
+        'professional': 'growth',
+        'enterprise': 'performance'
       }
-    } catch (err) {
-      console.warn('⚠️ Erreur planDetails, utilisation fallback:', err)
+      
+      if (planMapping[normalizedPlan]) {
+        console.log(`🔄 [useKnowledgeBase] Migration plan ${subscriptionPlan} → ${planMapping[normalizedPlan]}`)
+        normalizedPlan = planMapping[normalizedPlan]
+      }
+      
+      // ✅ DÉFINIR LES LIMITES SELON LE PLAN
+      const planLimits: PlanLimits = {
+        knowledgeDocuments: normalizedPlan === 'starter' ? 50 : 
+                           normalizedPlan === 'growth' ? 200 : -1,
+        indexablePages: normalizedPlan === 'starter' ? 500 : 
+                       normalizedPlan === 'growth' ? 2000 : -1,
+        aiResponses: normalizedPlan === 'starter' ? 1000 : 
+                    normalizedPlan === 'growth' ? 10000 : -1,
+        agents: -1 // Tous les plans ont agents illimités
+      }
+      
+      // ✅ Calcul sécurisé des dates d'essai
+      let createdAt: Date
+      try {
+        createdAt = new Date(user?.shop?.createdAt || user?.shop?.created_at || Date.now())
+      } catch {
+        createdAt = new Date()
+      }
+      
+      const now = new Date()
+      const trialDays = 14 // Essai de 14 jours pour starter
+      const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+      const trialDaysLeft = Math.max(0, trialDays - daysSinceCreation)
+      const trialEndDate = new Date(createdAt.getTime() + trialDays * 24 * 60 * 60 * 1000)
+      
+      // ✅ Calcul sécurisé du statut des quotas
+      let quotasStatus
+      try {
+        const { checkQuotaUsage } = require('~/types/plans')
+        quotasStatus = checkQuotaUsage(normalizedPlan, authStore.quotasUsage)
+      } catch (quotaError) {
+        console.warn('⚠️ [useKnowledgeBase] Erreur checkQuotaUsage, utilisation des valeurs par défaut:', quotaError)
+        quotasStatus = {
+          aiResponses: { used: authStore.quotasUsage.aiResponses || 0, limit: planLimits.aiResponses, exceeded: false },
+          knowledgeDocuments: { used: authStore.quotasUsage.knowledgeDocuments || 0, limit: planLimits.knowledgeDocuments, exceeded: false },
+          indexablePages: { used: authStore.quotasUsage.indexablePages || 0, limit: planLimits.indexablePages, exceeded: false },
+          agents: { used: authStore.quotasUsage.agents || 0, limit: planLimits.agents, exceeded: false, additionalCost: 0 }
+        }
+      }
+      
       return {
-        name: 'free',
-        knowledgeBaseLimit: 10,
-        hasExpired: false
+        name: normalizedPlan as 'starter' | 'growth' | 'performance',
+        limits: planLimits,
+        quotasStatus,
+        trialDaysLeft,
+        trialEndDate,
+        hasExpired: normalizedPlan === 'starter' && trialDaysLeft <= 0,
+        fileSizeLimit: 10 * 1024 * 1024 // 10MB pour tous les plans
+      }
+      
+    } catch (error) {
+      console.error('❌ [useKnowledgeBase] Erreur critique dans planDetails:', error)
+      
+      // ✅ Fallback complet en cas d'erreur critique
+      return {
+        name: 'starter',
+        limits: {
+          knowledgeDocuments: 50,
+          indexablePages: 500,
+          aiResponses: 1000,
+          agents: -1
+        },
+        quotasStatus: {
+          aiResponses: { used: 0, limit: 1000, exceeded: false },
+          knowledgeDocuments: { used: 0, limit: 50, exceeded: false },
+          indexablePages: { used: 0, limit: 500, exceeded: false },
+          agents: { used: 0, limit: -1, exceeded: false, additionalCost: 0 }
+        },
+        trialDaysLeft: 14,
+        trialEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        hasExpired: false,
+        fileSizeLimit: 10 * 1024 * 1024
       }
     }
   })
 
-  const currentDocumentCount = computed(() => {
-    return documents.value?.length || 0
-  })
-
+  const currentDocumentCount = computed(() => documents.value?.length || 0)
   const documentLimit = computed(() => {
     try {
-      return planDetails.value?.knowledgeBaseLimit || 10
+      return planDetails.value.limits.knowledgeDocuments
     } catch (err) {
       console.warn('⚠️ Erreur documentLimit, fallback:', err)
-      return 10
+      return 50
     }
   })
 
   const canUploadDocument = computed(() => {
     try {
-      // ✅ VÉRIFICATIONS STRICTES SELON LES SPÉCIFICATIONS
-      if (planDetails.value?.hasExpired) {
+      if (planDetails.value.hasExpired) {
         return false // Essai expiré
       }
 
       if (documentLimit.value === -1) {
-        return true // Plan Enterprise - illimité
+        return true // Plan Performance - illimité
       }
 
       return currentDocumentCount.value < documentLimit.value
@@ -210,7 +226,7 @@ export const useKnowledgeBase = () => {
     }
   })
 
-  // ✅ GETTERS AVEC PROTECTION CONTRE LES ERREURS
+  // ✅ COMPUTED EXISTANTS (restaurés)
   const activeDocuments = computed(() => {
     try {
       return documents.value?.filter(doc => doc?.isActive) || []
@@ -244,69 +260,58 @@ export const useKnowledgeBase = () => {
     }
   })
 
-  // ✅ HELPER: Headers avec authentification SÉCURISÉE
-  const getAuthHeaders = () => {
-    try {
-      if (!authStore.token) {
-        console.warn('⚠️ [useKnowledgeBase] Pas de token disponible')
-        return {
-          'Content-Type': 'application/json'
-        }
-      }
-      
-      return {
-        'Authorization': `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json'
-      }
-    } catch (err) {
-      console.error('❌ [useKnowledgeBase] Erreur getAuthHeaders:', err)
-      return {
-        'Content-Type': 'application/json'
-      }
-    }
-  }
-
-  // ✅ HELPER: Gestion des erreurs API ULTRA-ROBUSTE
+  // ✅ HELPER: Gestion des erreurs API ULTRA-ROBUSTE (restaurée)
   const handleApiError = (err: any, defaultMessage: string): ApiErrorResponse => {
-  console.error('❌ KB API Error:', err)
-  
-  let errorMessage = defaultMessage
-  
-  try {
-    // ✅ GESTION SÉCURISÉE DES ERREURS
-    if (err?.data?.error && typeof err.data.error === 'string') {
-      errorMessage = err.data.error
-    } else if (err?.response?.data?.error && typeof err.response.data.error === 'string') {
-      errorMessage = err.response.data.error
-    } else if (err?.message && typeof err.message === 'string') {
-      errorMessage = err.message
-    } else if (err?.statusText && typeof err.statusText === 'string') {
-      errorMessage = `Erreur ${err.status || 'API'}: ${err.statusText}`
+    console.error('❌ KB API Error:', err)
+    
+    let errorMessage = defaultMessage
+    
+    try {
+      if (err?.data?.error && typeof err.data.error === 'string') {
+        errorMessage = err.data.error
+      } else if (err?.response?.data?.error && typeof err.response.data.error === 'string') {
+        errorMessage = err.response.data.error
+      } else if (err?.message && typeof err.message === 'string') {
+        errorMessage = err.message
+      } else if (err?.statusText && typeof err.statusText === 'string') {
+        errorMessage = `Erreur ${err.status || 'API'}: ${err.statusText}`
+      }
+    } catch (parseError) {
+      console.warn('⚠️ Erreur parsing error message:', parseError)
     }
-  } catch (parseError) {
-    console.warn('⚠️ Erreur parsing error message:', parseError)
+    
+    error.value = errorMessage
+    return { success: false, error: errorMessage }
   }
-  
-  error.value = errorMessage
-  return { success: false, error: errorMessage }
-}
 
-  // ✅ VÉRIFICATION DES LIMITES AVANT ACTION AVEC PROTECTION
+  // ✅ VÉRIFICATION DES LIMITES AVANT ACTION (restaurée)
   const checkLimitsBeforeAction = (action: string): boolean => {
     try {
-      if (planDetails.value?.hasExpired) {
-        error.value = '❌ Votre essai gratuit de 7 jours est terminé. Passez au plan Starter pour ajouter des documents à votre base de connaissances.'
+      if (planDetails.value.hasExpired) {
+        error.value = '❌ Votre période d\'essai est terminée. Passez au plan Starter pour continuer à utiliser la base de connaissances.'
         return false
       }
 
       if (action === 'create' && !canUploadDocument.value) {
-        const limitText = documentLimit.value === -1 ? 'illimitée' : `${documentLimit.value} documents maximum`
-        error.value = `❌ Limite de votre plan atteinte (${limitText}). Vous avez déjà ${currentDocumentCount.value} documents. Passez au plan supérieur pour ajouter plus de documents.`
-        return false
-      }
-
-      if (['update', 'delete', 'toggle'].includes(action) && planDetails.value?.hasExpired) {
-        error.value = '❌ Votre essai gratuit est terminé. Passez au plan Starter pour gérer vos documents.'
+        const plan = planDetails.value.name
+        const limit = documentLimit.value
+        
+        let limitText = ''
+        let upgradeText = ''
+        
+        if (limit === -1) {
+          limitText = 'illimitée'
+        } else {
+          limitText = `${limit} documents maximum`
+          
+          if (plan === 'starter') {
+            upgradeText = ' Passez au plan Growth (200 documents) ou Performance (illimité).'
+          } else if (plan === 'growth') {
+            upgradeText = ' Passez au plan Performance pour un nombre illimité de documents.'
+          }
+        }
+        
+        error.value = `❌ Limite de votre plan ${plan} atteinte (${limitText}). Vous avez déjà ${currentDocumentCount.value} documents.${upgradeText}`
         return false
       }
 
@@ -318,155 +323,116 @@ export const useKnowledgeBase = () => {
     }
   }
 
-  // ✅ RÉCUPÉRER TOUS LES DOCUMENTS VIA API AVEC GESTION D'ERREURS ROBUSTE
-  const fetchDocuments = async (): Promise<ApiResponse<KnowledgeBaseDocument[]>> => {
-  loading.value = true
-  error.value = null
-
-  try {
-    console.log('🔍 [useKnowledgeBase] Récupération des documents via API...')
-    
-    if (!config?.public?.apiBaseUrl) {
-      throw new Error('Configuration API manquante')
-    }
-
-    const response = await $fetch('/api/v1/knowledge-base', {
-      baseURL: config.public.apiBaseUrl,
-      headers: getAuthHeaders(),
-      timeout: 10000
-    }) as KnowledgeBaseResponse
-
-    // ✅ VÉRIFICATION TYPE-SAFE
-    if (response.success && response.data) {
-      const validDocuments = response.data.filter(doc => doc && doc.id)
-      documents.value = validDocuments
-      console.log(`✅ [useKnowledgeBase] ${validDocuments.length} documents récupérés via API`)
-      return { success: true, data: validDocuments }
-    } else {
-      // TypeScript sait maintenant que response.error existe
-      throw new Error(response.error || 'Réponse API invalide')
-    }
-
-  } catch (err: any) {
-    console.error('❌ [useKnowledgeBase] Erreur API:', err)
-    
-    // Fallback avec données demo
-    const fallbackDocuments: KnowledgeBaseDocument[] = []
-    
+  // ✅ MÉTHODE DE VALIDATION DES URLs BEAUTÉ (restaurée)
+  const validateBeautyUrl = (url: string): { valid: boolean; error?: string } => {
     try {
-      if (!planDetails.value?.hasExpired) {
-        const baseMockDocuments: KnowledgeBaseDocument[] = [
-          {
-            id: 'kb_demo_001',
-            title: 'Guide Produits (Mode Démo)',
-            content: 'Contenu de démonstration pour tester les fonctionnalités de base de connaissances.',
-            contentType: 'manual',
-            tags: ['demo', 'test', 'produits'],
-            isActive: true,
-            shopId: authStore.userShopId || 'demo-shop',
-            linkedAgents: [],
-            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString(),
-            metadata: {
-              wordCount: 25,
-              lastProcessed: new Date().toISOString()
-            }
-          }
-        ]
-
-        if (documentLimit.value !== -1) {
-          fallbackDocuments.push(...baseMockDocuments.slice(0, documentLimit.value))
-        } else {
-          fallbackDocuments.push(...baseMockDocuments)
-        }
+      const urlObj = new URL(url)
+      
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        return { valid: false, error: 'URL doit commencer par http:// ou https://' }
       }
-    } catch (fallbackError) {
-      console.warn('⚠️ Erreur création fallback:', fallbackError)
+      
+      if (['localhost', '127.0.0.1', '0.0.0.0'].some(local => urlObj.hostname.includes(local))) {
+        return { valid: false, error: 'URLs locales non autorisées' }
+      }
+      
+      if (/\.(pdf|exe|zip|rar|dmg)$/i.test(urlObj.pathname)) {
+        return { valid: false, error: 'URL doit pointer vers une page web, pas un fichier' }
+      }
+      
+      return { valid: true }
+    } catch {
+      return { valid: false, error: 'Format d\'URL invalide' }
     }
-    
-    documents.value = fallbackDocuments
-    console.log(`⚠️ [useKnowledgeBase] Mode fallback: ${fallbackDocuments.length} documents`)
-    
-    return handleApiError(err, 'Erreur lors de la récupération des documents')
-    
-  } finally {
-    loading.value = false
   }
-}
 
-  // ✅ CRÉER UN DOCUMENT VIA API AVEC PROTECTION COMPLÈTE
+  // ✅ RÉCUPÉRER TOUS LES DOCUMENTS VIA API (corrigée avec useApi)
+  const fetchDocuments = async (): Promise<ApiResponse<KnowledgeBaseDocument[]>> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      console.log('🔍 [useKnowledgeBase] Récupération des documents via useApi()')
+      
+      const response = await api.knowledgeBase.list()
+
+      if (response.success && response.data) {
+        const validDocuments = response.data.filter(doc => doc && doc.id)
+        documents.value = validDocuments
+        console.log(`✅ [useKnowledgeBase] ${validDocuments.length} documents récupérés via API`)
+        return { success: true, data: validDocuments }
+      } else {
+        throw new Error(response.error || 'Réponse API invalide')
+      }
+
+    } catch (err: any) {
+      console.error('❌ [useKnowledgeBase] Erreur API:', err)
+      return handleApiError(err, 'Erreur lors de la récupération des documents')
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // ✅ CRÉER UN DOCUMENT VIA API (corrigée)
   const createDocument = async (data: CreateKnowledgeBaseData): Promise<ApiResponse<KnowledgeBaseDocument>> => {
-  saving.value = true
-  error.value = null
+    saving.value = true
+    error.value = null
 
-  try {
-    if (!data || !data.title || !data.content) {
-      throw new Error('Données de document invalides')
-    }
-    
-    if (!checkLimitsBeforeAction('create')) {
-      return { success: false, error: error.value || 'Limite atteinte' }
-    }
-    
-    const response = await $fetch('/api/v1/knowledge-base', {
-      method: 'POST',
-      baseURL: config.public.apiBaseUrl,
-      headers: getAuthHeaders(),
-      timeout: 15000,
-      body: {
-        ...data,
-        shopId: authStore.userShopId || 'demo-shop',
-        isActive: data.isActive ?? true,
-        tags: data.tags || []
+    try {
+      if (!data || !data.title || !data.content) {
+        throw new Error('Données de document invalides')
       }
-    }) as DocumentResponse
+      
+      const quotaCheck = checkQuotaBeforeAction('knowledgeDocuments', 1)
+      if (!quotaCheck.allowed) {
+        return { success: false, error: quotaCheck.error || 'Quota documents atteint' }
+      }
+      
+      if (!checkLimitsBeforeAction('create')) {
+        return { success: false, error: error.value || 'Limite atteinte' }
+      }
+      
+      const response = await api.knowledgeBase.create({
+        ...data,
+        tags: data.tags || [],
+        isActive: data.isActive ?? true
+      })
 
-    // ✅ VÉRIFICATION TYPE-SAFE
-    if (response.success && response.data) {
-      documents.value.unshift(response.data)
-      console.log(`✅ Document KB créé via API: ${response.data.id}`)
-      return { success: true, data: response.data }
-    } else {
-      // TypeScript sait maintenant que response.error existe
-      throw new Error(response.error || 'Réponse API invalide')
+      if (response.success && response.data) {
+        documents.value.unshift(response.data)
+        await incrementQuota('knowledgeDocuments', 1)
+        console.log(`✅ Document KB créé via API: ${response.data.id}`)
+        return { success: true, data: response.data }
+      } else {
+        throw new Error(response.error || 'Réponse API invalide')
+      }
+
+    } catch (err: any) {
+      return handleApiError(err, 'Erreur lors de la création du document')
+    } finally {
+      saving.value = false
     }
-
-  } catch (err: any) {
-    return handleApiError(err, 'Erreur lors de la création du document')
-  } finally {
-    saving.value = false
   }
-}
 
-  // ✅ METTRE À JOUR UN DOCUMENT VIA API AVEC PROTECTION
+  // ✅ METTRE À JOUR UN DOCUMENT VIA API
   const updateDocument = async (id: string, data: UpdateKnowledgeBaseData): Promise<ApiResponse<KnowledgeBaseDocument>> => {
-  saving.value = true
-  error.value = null
+    saving.value = true
+    error.value = null
 
-  try {
-    console.log('📝 Modification du document KB via API:', id)
-    
-    if (!id || !data) {
-      throw new Error('ID ou données manquants')
-    }
-    
-    if (!checkLimitsBeforeAction('update')) {
-      return { success: false, error: error.value || 'Accès limité' }
-    }
-    
-    // ✅ TYPAGE EXPLICIT POUR ÉVITER L'ERREUR
-    const response = await $fetch(`/api/v1/knowledge-base/${id}`, {
-      method: 'PUT',
-      baseURL: config.public.apiBaseUrl,
-      headers: getAuthHeaders(),
-      timeout: 15000,
-      body: data
-    }) as DocumentResponse // ← Type explicite
+    try {
+      console.log('📝 Modification du document KB via API:', id)
+      
+      if (!id || !data) {
+        throw new Error('ID ou données manquants')
+      }
+      
+      if (!checkLimitsBeforeAction('update')) {
+        return { success: false, error: error.value || 'Accès limité' }
+      }
+      
+      const response = await api.knowledgeBase.update(id, data)
 
-    // ✅ VÉRIFICATION TYPE-SAFE AVEC DISTINCTION CLAIRE
-    if (response.success) {
-      // TypeScript sait maintenant que response.data existe
-      if (response.data) {
+      if (response.success && response.data) {
         const index = documents.value.findIndex(doc => doc?.id === id)
         if (index !== -1) {
           documents.value[index] = { ...documents.value[index], ...response.data }
@@ -474,21 +440,17 @@ export const useKnowledgeBase = () => {
         console.log(`✅ Document KB modifié via API: ${id}`)
         return { success: true, data: response.data }
       } else {
-        throw new Error('Données de réponse manquantes')
+        throw new Error(response.error || 'Réponse API invalide')
       }
-    } else {
-      // TypeScript sait maintenant que response.error existe
-      throw new Error(response.error || 'Réponse API invalide')
+
+    } catch (err: any) {
+      return handleApiError(err, 'Erreur lors de la modification du document')
+    } finally {
+      saving.value = false
     }
-
-  } catch (err: any) {
-    return handleApiError(err, 'Erreur lors de la modification du document')
-  } finally {
-    saving.value = false
   }
-}
 
-  // ✅ SUPPRIMER UN DOCUMENT VIA API AVEC PROTECTION
+  // ✅ SUPPRIMER UN DOCUMENT VIA API
   const deleteDocument = async (id: string): Promise<ApiResponse<null>> => {
     saving.value = true
     error.value = null
@@ -496,27 +458,19 @@ export const useKnowledgeBase = () => {
     try {
       console.log('🗑️ Suppression du document KB via API:', id)
       
-      // ✅ VALIDATION ID
       if (!id) {
         throw new Error('ID document manquant')
       }
       
-      // ✅ VÉRIFIER LES LIMITES
       if (!checkLimitsBeforeAction('delete')) {
         return { success: false, error: error.value || 'Accès limité' }
       }
       
-      const response = await $fetch(`/api/v1/knowledge-base/${id}`, {
-        method: 'DELETE',
-        baseURL: config.public.apiBaseUrl,
-        headers: getAuthHeaders(),
-        timeout: 10000
-      }) as { success: boolean }
+      const response = await api.knowledgeBase.delete(id)
 
-      if (response?.success) {
+      if (response.success) {
         documents.value = documents.value.filter(doc => doc?.id !== id)
         console.log(`✅ Document KB supprimé via API: ${id}`)
-        console.log(`📊 Nouveau total: ${currentDocumentCount.value}/${documentLimit.value === -1 ? '∞' : documentLimit.value}`)
         return { success: true, data: null }
       } else {
         throw new Error('Erreur lors de la suppression')
@@ -529,7 +483,7 @@ export const useKnowledgeBase = () => {
     }
   }
 
-  // ✅ ACTIVER/DÉSACTIVER UN DOCUMENT VIA API AVEC PROTECTION
+  // ✅ ACTIVER/DÉSACTIVER UN DOCUMENT VIA API
   const toggleDocumentStatus = async (id: string, isActive: boolean): Promise<ApiResponse<null>> => {
     saving.value = true
     error.value = null
@@ -537,29 +491,21 @@ export const useKnowledgeBase = () => {
     try {
       console.log(`🔄 ${isActive ? 'Activation' : 'Désactivation'} du document KB via API:`, id)
       
-      // ✅ VALIDATION PARAMÈTRES
       if (!id || typeof isActive !== 'boolean') {
         throw new Error('Paramètres invalides')
       }
       
-      // ✅ VÉRIFIER LES LIMITES
       if (!checkLimitsBeforeAction('toggle')) {
         return { success: false, error: error.value || 'Accès limité' }
       }
       
-      const response = await $fetch(`/api/v1/knowledge-base/${id}/toggle`, {
-        method: 'PATCH',
-        baseURL: config.public.apiBaseUrl,
-        headers: getAuthHeaders(),
-        timeout: 10000,
-        body: { isActive }
-      }) as { success: boolean; data: { updatedAt: string } }
+      const response = await api.knowledgeBase.toggle(id, isActive)
 
-      if (response?.success) {
+      if (response.success) {
         const index = documents.value.findIndex(doc => doc?.id === id)
         if (index !== -1) {
           documents.value[index].isActive = isActive
-          documents.value[index].updatedAt = response.data?.updatedAt || new Date().toISOString()
+          documents.value[index].updatedAt = new Date().toISOString()
         }
         console.log(`✅ Statut document KB modifié via API: ${id} -> ${isActive ? 'actif' : 'inactif'}`)
         return { success: true, data: null }
@@ -574,7 +520,167 @@ export const useKnowledgeBase = () => {
     }
   }
 
-  // ✅ MÉTHODES UTILITAIRES AVEC PROTECTION
+  // ✅ MÉTHODE UPLOAD FICHIER AVEC VALIDATION BEAUTÉ (restaurée)
+  const uploadFile = async (file: File): Promise<ApiResponse<KnowledgeBaseDocument>> => {
+    saving.value = true
+    error.value = null
+    uploadProgress.value = 0
+
+    try {
+      const user = authStore.user
+      if (!user) {
+        throw new Error('Utilisateur non connecté')
+      }
+
+      // ✅ VALIDATION BEAUTÉ CÔTÉ CLIENT (restaurée)
+      const plan = authStore.currentPlan
+      const validation = validateBeautyFile(file, plan)
+      
+      if (!validation.valid) {
+        throw new Error(validation.error || 'Fichier invalide')
+      }
+
+      console.log(`📤 Upload fichier beauté validé: ${file.name} (catégorie: ${validation.category})`)
+
+      // ✅ VÉRIFIER LES QUOTAS AVANT UPLOAD
+      const quotaCheck = checkQuotaBeforeAction('knowledgeDocuments', 1)
+      if (!quotaCheck.allowed) {
+        throw new Error(quotaCheck.error || 'Quota documents atteint')
+      }
+
+      const response = await api.knowledgeBase.upload(file, {
+        title: file.name,
+        beautyCategory: validation.category || 'multi',
+        tags: [
+          'fichier', 
+          'upload', 
+          'beaute', 
+          validation.category || 'multi',
+          plan
+        ]
+      })
+
+      if (response.success && response.data) {
+        documents.value.unshift(response.data)
+        await incrementQuota('knowledgeDocuments', 1)
+        console.log(`✅ Fichier beauté uploadé: ${response.data.id}`)
+        return { success: true, data: response.data }
+      } else {
+        throw new Error(response.error || 'Erreur lors de l\'upload')
+      }
+
+    } catch (err: any) {
+      console.error('❌ Erreur upload fichier beauté:', err)
+      const errorMessage = err.message || 'Erreur lors de l\'upload du fichier beauté'
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
+    } finally {
+      saving.value = false
+      uploadProgress.value = 0
+    }
+  }
+
+  // ✅ MÉTHODE TRAITEMENT SITE WEB AVEC VALIDATION (restaurée)
+  const processWebsite = async (
+    url: string, 
+    title?: string, 
+    tags?: string[]
+  ): Promise<ApiResponse<KnowledgeBaseDocument[]>> => {
+    saving.value = true
+    error.value = null
+
+    try {
+      console.log('🌐 Validation et traitement site beauté:', url)
+      
+      // ✅ VALIDATION URL CÔTÉ CLIENT
+      const urlValidation = validateBeautyUrl(url)
+      if (!urlValidation.valid) {
+        throw new Error(urlValidation.error || 'URL invalide')
+      }
+      
+      // ✅ VÉRIFIER LES QUOTAS AVANT TRAITEMENT
+      const quotaCheck = checkQuotaBeforeAction('knowledgeDocuments', 1)
+      if (!quotaCheck.allowed) {
+        throw new Error(quotaCheck.error || 'Quota documents atteint')
+      }
+      
+      // ✅ VÉRIFIER LES LIMITES DU PLAN BEAUTÉ
+      if (!canUploadDocument.value) {
+        const plan = planDetails.value.name
+        const limit = documentLimit.value === -1 ? 'illimitée' : `${documentLimit.value} documents maximum`
+        let upgradeMsg = ''
+        
+        if (plan === 'starter') {
+          upgradeMsg = ' Passez au plan Growth (200 documents) ou Performance (illimité).'
+        } else if (plan === 'growth') {
+          upgradeMsg = ' Passez au plan Performance pour un nombre illimité de documents.'
+        }
+        
+        throw new Error(`Limite de votre plan ${plan} atteinte (${limit}). Vous avez déjà ${currentDocumentCount.value} documents.${upgradeMsg}`)
+      }
+
+      // ✅ DÉTECTER LA CATÉGORIE BEAUTÉ DEPUIS L'URL
+      let beautyCategory = 'multi'
+      const urlLower = url.toLowerCase()
+      
+      for (const [category, config] of Object.entries(BEAUTY_CATEGORIES)) {
+        if (config.keywords.some(keyword => urlLower.includes(keyword))) {
+          beautyCategory = category
+          break
+        }
+      }
+      
+      console.log(`🎯 Catégorie beauté détectée: ${beautyCategory}`)
+
+      const response = await api.knowledgeBase.processWebsite({
+        url: url.trim(),
+        title: title?.trim(),
+        tags: tags || ['website', 'indexation-beaute', beautyCategory],
+        beautyCategory: beautyCategory,
+        maxPages: planDetails.value.limits.indexablePages
+      })
+
+      if (response.success && response.data) {
+        const createdDocuments = Array.isArray(response.data) ? response.data : [response.data]
+        
+        createdDocuments.forEach(doc => {
+          documents.value.unshift(doc)
+        })
+        
+        // ✅ INCRÉMENTER LE QUOTA POUR CHAQUE DOCUMENT CRÉÉ
+        await incrementQuota('knowledgeDocuments', createdDocuments.length)
+        
+        console.log(`✅ Site beauté traité: ${createdDocuments.length} document(s), catégorie: ${beautyCategory}`)
+        
+        return { 
+          success: true, 
+          data: createdDocuments,
+          meta: {
+            ...response.meta,
+            beautyCategory: beautyCategory
+          }
+        }
+      } else {
+        throw new Error(response.error || 'Erreur lors du traitement du site beauté')
+      }
+
+    } catch (err: any) {
+      console.error('❌ Erreur traitement site beauté:', err)
+      
+      let errorMessage = 'Erreur lors du traitement du site beauté'
+      
+      if (err.message) {
+        errorMessage = err.message
+      }
+      
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
+    } finally {
+      saving.value = false
+    }
+  }
+
+  // ✅ MÉTHODES UTILITAIRES (restaurées, inchangées)
   const searchDocuments = (query: string) => {
     try {
       if (!query?.trim()) return documents.value || []
@@ -642,160 +748,11 @@ export const useKnowledgeBase = () => {
     }
   }
 
-  // ✅ MÉTHODE UPLOAD FICHIER
-const uploadFile = async (file: File): Promise<ApiResponse<KnowledgeBaseDocument>> => {
-  saving.value = true
-  error.value = null
-  uploadProgress.value = 0
-
-  try {
-    console.log('📤 Upload fichier KB:', file.name, file.type, file.size)
-    
-    const user = authStore.user
-    if (!user) {
-      throw new Error('Utilisateur non connectifié')
-    }
-    
-    // ✅ VÉRIFIER LES LIMITES DU PLAN
-    if (!canUploadDocument.value) {
-      const limit = documentLimit.value === -1 ? 'illimitée' : `${documentLimit.value} documents maximum`
-      throw new Error(`Limite de votre plan atteinte (${limit}). Vous avez déjà ${currentDocumentCount.value} documents. Passez au plan supérieur pour ajouter plus de documents.`)
-    }
-
-    // ✅ VÉRIFIER LA TAILLE DU FICHIER
-    const maxSize = (planDetails.value as any)?.fileSizeLimit || 5 * 1024 * 1024 // 5MB par défaut
-    if (file.size > maxSize) {
-      throw new Error(`Fichier trop volumineux. Taille maximum : ${Math.round(maxSize / 1024 / 1024)}MB`)
-    }
-
-    // ✅ VÉRIFIER LE TYPE DE FICHIER
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'text/csv']
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error('Type de fichier non supporté. Formats acceptés : PDF, DOC, DOCX, TXT, CSV')
-    }
-
-    // ✅ CRÉER FORMDATA
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('title', file.name)
-    formData.append('contentType', 'file')
-    formData.append('tags', JSON.stringify(['fichier', 'upload']))
-
-    // ✅ UPLOAD AVEC PROGRESS
-    const response = await $fetch('/api/v1/knowledge-base/upload', {
-      baseURL: config.public.apiBaseUrl,
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`
-      },
-      body: formData,
-      onUploadProgress: (progress) => {
-        uploadProgress.value = Math.round((progress.loaded / progress.total) * 100)
-      }
-    })
-
-    if (response.success) {
-      // Ajouter le nouveau document à la liste
-      documents.value.unshift(response.data)
-      console.log(`✅ Fichier uploadé avec succès: ${response.data.id}`)
-      return { success: true, data: response.data }
-    } else {
-      throw new Error(response.error || 'Erreur lors de l\'upload')
-    }
-
-  } catch (err: any) {
-    console.error('❌ Erreur upload fichier:', err)
-    const errorMessage = err.response?.data?.error || err.message || 'Erreur lors de l\'upload du fichier'
-    error.value = errorMessage
-    return { success: false, error: errorMessage }
-  } finally {
-    saving.value = false
-    uploadProgress.value = 0
-  }
-}
-
-// ✅ MÉTHODE TRAITEMENT SITE WEB 
-const processWebsite = async (
-  url: string, 
-  title?: string, 
-  tags?: string[]
-): Promise<ApiResponse<KnowledgeBaseDocument[]>> => {
-  saving.value = true
-  error.value = null
-
-  try {
-    console.log('🌐 Traitement complet du site web:', url)
-    
-    if (!url || !url.startsWith('http')) {
-      throw new Error('URL invalide')
-    }
-    
-    // ✅ VÉRIFIER LES LIMITES DU PLAN
-    if (!canUploadDocument.value) {
-      const limit = documentLimit.value === -1 ? 'illimitée' : `${documentLimit.value} documents maximum`
-      throw new Error(`Limite de votre plan atteinte (${limit}). Vous avez déjà ${currentDocumentCount.value} documents. Passez au plan supérieur pour ajouter plus de documents.`)
-    }
-
-    const response = await $fetch('/api/v1/knowledge-base/website', {
-      baseURL: config.public.apiBaseUrl,
-      method: 'POST',
-      headers: getAuthHeaders(),
-      timeout: 60000, // ✅ TIMEOUT PLUS LONG POUR TRAITEMENT MULTIPLE
-      body: {
-        url: url.trim(),
-        title: title?.trim(),
-        tags: tags || ['website', 'indexation-complete']
-      }
-    })
-
-    if (response.success) {
-      // ✅ AJOUTER TOUS LES DOCUMENTS CRÉÉS À LA LISTE
-      const createdDocuments = Array.isArray(response.data) ? response.data : [response.data]
-      
-      createdDocuments.forEach(doc => {
-        documents.value.unshift(doc)
-      })
-      
-      console.log(`✅ Site web traité avec succès: ${createdDocuments.length} document(s) créé(s)`)
-      
-      return { 
-        success: true, 
-        data: createdDocuments,
-        meta: response.meta 
-      }
-    } else {
-      throw new Error(response.error || 'Erreur lors du traitement du site web')
-    }
-
-  } catch (err: any) {
-    console.error('❌ Erreur traitement site web:', err)
-    
-    let errorMessage = 'Erreur lors du traitement du site web'
-    
-    if (err.response?.data?.error) {
-      errorMessage = err.response.data.error
-    } else if (err.message) {
-      errorMessage = err.message
-    }
-    
-    // ✅ GESTION SPÉCIFIQUE DES ERREURS DE PLAN
-    if (err.response?.data?.requiresUpgrade) {
-      errorMessage += ' Passez au plan supérieur pour indexer plus de pages.'
-    }
-    
-    error.value = errorMessage
-    return { success: false, error: errorMessage }
-  } finally {
-    saving.value = false
-  }
-}
-
-  // ✅ RÉINITIALISER L'ERREUR
   const clearError = () => {
     error.value = null
   }
 
-  // ✅ RETOURNER TOUTES LES MÉTHODES ET PROPRIÉTÉS AVEC PROTECTION READONLY
+  // ✅ RETOURNER TOUTES LES MÉTHODES ET PROPRIÉTÉS (interface identique)
   return {
     // State
     documents: readonly(documents),
@@ -804,7 +761,7 @@ const processWebsite = async (
     error: readonly(error),
     uploadProgress: readonly(uploadProgress),
 
-    // ✅ COMPUTED POUR GESTION PLAN - MAINTENANT EXPORTÉS
+    // Computed pour gestion plan
     planDetails: readonly(planDetails),
     currentDocumentCount,
     documentLimit,

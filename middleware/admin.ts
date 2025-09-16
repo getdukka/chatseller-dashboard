@@ -1,4 +1,4 @@
-// middleware/admin.ts - AVEC IMPORTS EXPLICITES
+// middleware/admin.ts 
 import { useAuthStore } from '~/stores/auth'
 
 export default defineNuxtRouteMiddleware(async (to, from) => {

@@ -1,7 +1,7 @@
-<!-- pages/conversations/[id].vue - VERSION COMPLÈTE CORRIGÉE -->
+<!-- pages/conversations/[id].vue - VERSION BEAUTÉ COMPLÈTE -->
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header de la page -->
+  <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
+    <!-- Header de la consultation beauté -->
     <div class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
       <div class="px-6 py-4">
         <div class="flex items-center justify-between">
@@ -16,24 +16,28 @@
               </svg>
             </button>
 
-            <!-- Informations de la conversation -->
+            <!-- Informations de la consultation beauté -->
             <div v-if="conversation && !loading">
               <div class="flex items-center space-x-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                  <span class="text-sm font-medium text-blue-700">
-                    {{ getInitials(getVisitorName()) }}
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-100 to-pink-100">
+                  <span class="text-sm font-medium text-rose-700">
+                    {{ getInitials(getClientName()) }}
                   </span>
                 </div>
                 <div>
                   <h1 class="text-xl font-bold text-gray-900">
-                    {{ getVisitorName() }}
+                    Consultation avec {{ getClientName() }}
                   </h1>
                   <div class="flex items-center space-x-4 text-sm text-gray-600">
-                    <span>{{ getVisitorEmail() || 'Pas d\'email' }}</span>
-                    <span class="badge" :class="getStatusBadgeClass(conversation?.status)">
-                      {{ getStatusLabel(conversation?.status) }}
+                    <span>{{ getClientEmail() || 'Pas d\'email' }}</span>
+                    <span class="badge" :class="getBeautyStatusBadgeClass(conversation?.status)">
+                      {{ getBeautyStatusLabel(conversation?.status) }}
                     </span>
                     <span>{{ formatDate(conversation.started_at) }}</span>
+                    <div v-if="getBeautyContext()" class="flex items-center space-x-1">
+                      <span class="text-rose-600">{{ getBeautyIcon() }}</span>
+                      <span class="text-rose-600 font-medium">{{ getBeautyContext() }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -42,15 +46,15 @@
             <!-- Loading state -->
             <div v-else-if="loading" class="flex items-center space-x-3">
               <div class="animate-pulse">
-                <div class="h-10 w-10 bg-gray-200 rounded-full"></div>
+                <div class="h-10 w-10 bg-rose-200 rounded-full"></div>
               </div>
               <div class="animate-pulse">
-                <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-                <div class="h-3 bg-gray-200 rounded w-24"></div>
+                <div class="h-4 bg-rose-200 rounded w-32 mb-2"></div>
+                <div class="h-3 bg-rose-200 rounded w-24"></div>
               </div>
             </div>
 
-            <!-- Error state dans le header -->
+            <!-- Error state -->
             <div v-else-if="error" class="flex items-center space-x-3">
               <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
                 <svg class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -59,7 +63,7 @@
               </div>
               <div>
                 <h1 class="text-xl font-bold text-red-900">Erreur de chargement</h1>
-                <div class="text-sm text-red-600">ID: {{ conversationId }}</div>
+                <div class="text-sm text-red-600">Consultation ID: {{ conversationId }}</div>
               </div>
             </div>
           </div>
@@ -69,7 +73,7 @@
             <button
               @click="refreshConversation"
               :disabled="refreshing"
-              class="btn-secondary"
+              class="btn-beauty-secondary"
             >
               <svg 
                 class="mr-2 h-4 w-4" 
@@ -93,30 +97,40 @@
                 </svg>
               </button>
 
-              <!-- Menu d'actions -->
+              <!-- Menu d'actions beauté -->
               <div
                 v-if="showActionsMenu"
-                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10"
+                class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-10"
               >
                 <div class="py-1">
                   <button
                     @click="takeOverConversation"
                     v-if="conversation?.status === 'active'"
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-rose-50 transition-colors"
                   >
-                    Prendre en charge
+                    <span class="mr-2">👩‍⚕️</span>
+                    Prendre en charge la consultation
+                  </button>
+                  <button
+                    @click="createBeautyRoutine"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 transition-colors"
+                  >
+                    <span class="mr-2">✨</span>
+                    Créer une routine beauté
                   </button>
                   <button
                     @click="exportConversation"
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
                   >
-                    Exporter
+                    <span class="mr-2">📋</span>
+                    Exporter la consultation
                   </button>
                   <hr class="my-1">
                   <button
                     @click="deleteConversation"
                     class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors"
                   >
+                    <span class="mr-2">🗑️</span>
                     Supprimer
                   </button>
                 </div>
@@ -136,30 +150,30 @@
       </div>
       <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
       <p class="text-gray-500 mb-2">{{ error }}</p>
-      <p class="text-xs text-gray-400 mb-4">Conversation ID: {{ conversationId }}</p>
+      <p class="text-xs text-gray-400 mb-4">Consultation ID: {{ conversationId }}</p>
       <div class="space-x-3">
-        <button @click="() => loadConversation()" class="btn-primary">
+        <button @click="() => loadConversation()" class="btn-beauty-primary">
           Réessayer
         </button>
-        <button @click="$router.push('/conversations')" class="btn-secondary">
-          Retour aux conversations
+        <button @click="$router.push('/conversations')" class="btn-beauty-secondary">
+          Retour aux consultations
         </button>
       </div>
     </div>
 
     <!-- Contenu principal -->
     <div v-else class="flex" style="height: calc(100vh - 80px);">
-      <!-- Zone de chat -->
+      <!-- Zone de chat beauté -->
       <div class="flex-1 flex flex-col">
-        <!-- Messages - Zone scrollable avec padding pour le champ input fixe -->
+        <!-- Messages - Zone scrollable -->
         <div 
           ref="messagesContainer" 
-          class="flex-1 overflow-y-auto bg-gray-50 p-4" 
+          class="flex-1 overflow-y-auto bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-4" 
           style="padding-bottom: 180px;"
         >
           <div v-if="loading" class="flex justify-center items-center h-full">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span class="ml-3 text-gray-600">Chargement de la conversation...</span>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+            <span class="ml-3 text-gray-600">Chargement de la consultation...</span>
           </div>
 
           <!-- Messages -->
@@ -170,31 +184,29 @@
               class="flex"
               :class="getMessageAlignment(message.role)"
             >
-              <!-- Message de l'agent/assistant -->
+              <!-- Message de la conseillère beauté -->
               <div
-                v-if="isAgentMessage(message.role)"
+                v-if="isBeautyAgentMessage(message.role)"
                 class="flex items-start space-x-3 max-w-2xl"
               >
-                <!-- Avatar Agent -->
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex-shrink-0 shadow-md">
-                  <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.847a4.5 4.5 0 003.09 3.09L15.75 12l-2.847.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
+                <!-- Avatar Conseillère -->
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex-shrink-0 shadow-md">
+                  <span class="text-lg">{{ getAgentIcon() }}</span>
                 </div>
                 
-                <!-- Bulle Agent -->
-                <div class="bg-white rounded-2xl rounded-tl-md shadow-sm border border-gray-200 p-4 relative group">
-                  <!-- Nom du vendeur IA -->
+                <!-- Bulle Conseillère -->
+                <div class="bg-white rounded-2xl rounded-tl-md shadow-sm border border-rose-200 p-4 relative group">
+                  <!-- Nom de la conseillère beauté -->
                   <div class="flex items-center justify-between mb-2">
-                    <div class="text-sm font-semibold text-gray-900">
-                      {{ getAgentName() }}
+                    <div class="text-sm font-semibold text-rose-900">
+                      {{ getBeautyAgentName() }}
                     </div>
                     <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <!-- Bouton éditer -->
                       <button
                         v-if="!message.isEditing"
                         @click="startEditMessage(message)"
-                        class="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                        class="p-1.5 text-gray-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
                         title="Éditer le message"
                       >
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,7 +216,7 @@
                       <!-- Bouton copier -->
                       <button
                         @click="copyMessage(message.content)"
-                        class="p-1.5 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+                        class="p-1.5 text-gray-400 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors"
                         title="Copier"
                       >
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -219,9 +231,10 @@
                     <textarea
                       v-model="message.editContent"
                       rows="5"
-                      class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[120px]"
+                      class="w-full p-4 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 resize-y min-h-[120px]"
                       @keydown.enter.exact.prevent="saveEditMessage(message)"
                       @keydown.escape.prevent="cancelEditMessage(message)"
+                      placeholder="Tapez votre conseil beauté..."
                     />
                     <div class="flex items-center justify-end space-x-2 mt-2">
                       <button
@@ -232,19 +245,19 @@
                       </button>
                       <button
                         @click="saveEditMessage(message)"
-                        class="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                        class="btn-beauty-primary"
                       >
                         Sauvegarder
                       </button>
                     </div>
                   </div>
                   
-                  <!-- Contenu du message - Affichage avec formatage markdown -->
+                  <!-- Contenu du message - Affichage avec formatage beauté -->
                   <div v-else>
-                    <div class="text-gray-800 leading-relaxed" v-html="formatMessageContent(message.content)"></div>
+                    <div class="text-gray-800 leading-relaxed" v-html="formatBeautyMessageContent(message.content)"></div>
                     
-                    <!-- Meta informations -->
-                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                    <!-- Meta informations beauté -->
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-rose-100">
                       <div class="text-xs text-gray-500">{{ formatTime(message.created_at) }}</div>
                       <div class="flex items-center space-x-3">
                         <div
@@ -252,7 +265,7 @@
                           class="flex items-center space-x-1"
                           :title="`Tokens utilisés: ${message.tokens_used}`"
                         >
-                          <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+                          <div class="w-2 h-2 rounded-full bg-rose-400"></div>
                           <span class="text-xs text-gray-500">{{ message.tokens_used }}</span>
                         </div>
                         <div
@@ -268,21 +281,21 @@
                 </div>
               </div>
 
-              <!-- Message du visiteur/user -->
+              <!-- Message de la cliente -->
               <div
                 v-else
                 class="flex items-start space-x-3 max-w-lg"
               >
-                <!-- Bulle Visiteur -->
-                <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-md p-4 shadow-md">
+                <!-- Bulle Cliente -->
+                <div class="bg-gradient-to-br from-purple-600 to-violet-700 text-white rounded-2xl rounded-tr-md p-4 shadow-md">
                   <div class="text-white leading-relaxed whitespace-pre-wrap">{{ message.content }}</div>
-                  <div class="text-blue-100 text-xs mt-2 text-right">{{ formatTime(message.created_at) }}</div>
+                  <div class="text-purple-100 text-xs mt-2 text-right">{{ formatTime(message.created_at) }}</div>
                 </div>
                 
-                <!-- Avatar Visiteur -->
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 flex-shrink-0 shadow-sm">
-                  <span class="text-sm font-medium text-gray-600">
-                    {{ getInitials(getVisitorName()) }}
+                <!-- Avatar Cliente -->
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-violet-100 flex-shrink-0 shadow-sm">
+                  <span class="text-sm font-medium text-purple-700">
+                    {{ getInitials(getClientName()) }}
                   </span>
                 </div>
               </div>
@@ -292,28 +305,32 @@
           <!-- État vide -->
           <div v-else class="flex justify-center items-center h-full">
             <div class="text-center">
-              <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+              <div class="w-16 h-16 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
               <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun message</h3>
-              <p class="text-gray-500 mb-1">Cette conversation n'a pas encore de messages</p>
+              <p class="text-gray-500 mb-1">Cette consultation n'a pas encore de messages</p>
               <p class="text-xs text-gray-400">Messages chargés: {{ messages ? messages.length : 0 }}</p>
             </div>
           </div>
         </div>
 
         <!-- Zone de saisie FIXE en bas -->
-        <div class="absolute bottom-0 left-0 right-80 bg-white border-t border-gray-200 shadow-lg">
+        <div class="absolute bottom-0 left-0 right-80 bg-white border-t border-rose-200 shadow-lg">
           <div v-if="conversation?.status === 'active'" class="p-4">
             <div class="max-w-4xl mx-auto">
               <div class="flex items-end space-x-3">
                 <div class="flex-1">
-                  <label class="text-sm font-medium text-gray-700 mb-2 block">Répondre en tant qu'agent</label>
+                  <label class="text-sm font-medium text-gray-700 mb-2 block">
+                    Répondre en tant que {{ getBeautyAgentName() }}
+                  </label>
                   <textarea
                     v-model="newMessage"
                     rows="2"
-                    placeholder="Tapez votre message..."
-                    class="input-primary resize-none"
+                    :placeholder="`Tapez votre conseil beauté...`"
+                    class="w-full p-3 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 resize-none"
                     @keydown.enter.exact.prevent="sendMessage"
                     @keydown.enter.shift.exact="null"
                     :disabled="sendingMessage"
@@ -322,7 +339,7 @@
                 <button
                   @click="sendMessage"
                   :disabled="!newMessage.trim() || sendingMessage"
-                  class="btn-primary flex-shrink-0"
+                  class="btn-beauty-primary flex-shrink-0"
                   style="margin-bottom: 0;"
                 >
                   <svg v-if="sendingMessage" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -340,111 +357,139 @@
             </div>
           </div>
           
-          <!-- État conversation inactive -->
-          <div v-else class="p-4 bg-gray-50 text-center">
-            <p class="text-sm text-gray-500">Cette conversation est {{ getStatusLabel(conversation?.status)?.toLowerCase() || 'inconnue' }}</p>
+          <!-- État consultation inactive -->
+          <div v-else class="p-4 bg-gradient-to-r from-rose-50 to-pink-50 text-center">
+            <p class="text-sm text-gray-500">Cette consultation est {{ getBeautyStatusLabel(conversation?.status)?.toLowerCase() || 'terminée' }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Sidebar droite avec informations -->
-      <div class="w-80 bg-white border-l border-gray-200 flex-shrink-0 overflow-y-auto">
+      <!-- Sidebar droite avec informations beauté -->
+      <div class="w-80 bg-white border-l border-rose-200 flex-shrink-0 overflow-y-auto">
         <div class="p-6 space-y-6">
-          <!-- Informations du visiteur -->
+          <!-- Profil cliente beauté -->
           <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Informations visiteur</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <span class="mr-2">👩‍💼</span>
+              Profil cliente
+            </h3>
             <div v-if="conversation && !loading" class="space-y-4">
-              <div class="bg-gray-50 rounded-lg p-3">
-                <label class="text-sm font-medium text-gray-700 block mb-1">Nom</label>
-                <p class="text-sm text-gray-900">{{ getVisitorName() }}</p>
+              <div class="bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg p-3 border border-rose-200">
+                <label class="text-sm font-medium text-rose-700 block mb-1">Nom</label>
+                <p class="text-sm text-gray-900 font-medium">{{ getClientName() }}</p>
+              </div>
+              <div class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-3 border border-purple-200">
+                <label class="text-sm font-medium text-purple-700 block mb-1">Email</label>
+                <p class="text-sm text-gray-900">{{ getClientEmail() || 'Non renseigné' }}</p>
+              </div>
+              <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-200">
+                <label class="text-sm font-medium text-amber-700 block mb-1">Téléphone</label>
+                <p class="text-sm text-gray-900">{{ getClientPhone() || 'Non renseigné' }}</p>
               </div>
               <div class="bg-gray-50 rounded-lg p-3">
-                <label class="text-sm font-medium text-gray-700 block mb-1">Email</label>
-                <p class="text-sm text-gray-900">{{ getVisitorEmail() || 'Non renseigné' }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-lg p-3">
-                <label class="text-sm font-medium text-gray-700 block mb-1">Téléphone</label>
-                <p class="text-sm text-gray-900">{{ getVisitorPhone() || 'Non renseigné' }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-lg p-3">
-                <label class="text-sm font-medium text-gray-700 block mb-1">Première visite</label>
+                <label class="text-sm font-medium text-gray-700 block mb-1">Première consultation</label>
                 <p class="text-sm text-gray-900">{{ formatDate(conversation.started_at) }}</p>
               </div>
-              <div class="bg-gray-50 rounded-lg p-3">
-                <label class="text-sm font-medium text-gray-700 block mb-1">Produit consulté</label>
-                <p class="text-sm text-gray-900 font-medium">{{ conversation.product_name || 'Aucun produit' }}</p>
+              <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg p-3 border border-emerald-200">
+                <label class="text-sm font-medium text-emerald-700 block mb-1">{{ getProductTypeLabel() }}</label>
+                <p class="text-sm text-gray-900 font-medium">{{ getBeautyProductName() }}</p>
+                <p v-if="getProductPrice()" class="text-xs text-emerald-600 mt-1">{{ formatCurrency(getProductPrice()) }}</p>
               </div>
             </div>
           </div>
 
-          <!-- Métriques de la conversation -->
+          <!-- Métriques de la consultation beauté -->
           <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Métriques</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <span class="mr-2">📊</span>
+              Métriques consultation
+            </h3>
             <div v-if="conversation && !loading" class="space-y-3">
-              <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+              <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <span class="text-sm font-medium text-blue-900">Messages échangés</span>
                 <span class="text-sm font-bold text-blue-700">{{ conversation.message_count || messages.length }}</span>
               </div>
-              <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                <span class="text-sm font-medium text-green-900">Durée</span>
-                <span class="text-sm font-bold text-green-700">{{ getConversationDuration() }}</span>
+              <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                <span class="text-sm font-medium text-green-900">Durée consultation</span>
+                <span class="text-sm font-bold text-green-700">{{ getConsultationDuration() }}</span>
               </div>
               <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <span class="text-sm font-medium text-gray-700">Statut</span>
-                <span class="text-sm font-bold" :class="getStatusTextClass(conversation?.status)">
-                  {{ getStatusLabel(conversation?.status) }}
+                <span class="text-sm font-bold" :class="getBeautyStatusTextClass(conversation?.status)">
+                  {{ getBeautyStatusLabel(conversation?.status) }}
                 </span>
               </div>
-              <div class="flex justify-between items-center p-3 rounded-lg" :class="conversation.conversion_completed ? 'bg-emerald-50' : 'bg-red-50'">
+              <div class="flex justify-between items-center p-3 rounded-lg" :class="conversation.conversion_completed ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'">
                 <span class="text-sm font-medium" :class="conversation.conversion_completed ? 'text-emerald-900' : 'text-red-900'">Conversion</span>
                 <span class="text-sm font-bold" :class="conversation.conversion_completed ? 'text-emerald-700' : 'text-red-700'">
-                  {{ conversation.conversion_completed ? 'Réussie' : 'Non convertie' }}
+                  {{ conversation.conversion_completed ? getConversionSuccessLabel() : 'Non convertie' }}
                 </span>
               </div>
             </div>
           </div>
 
-          <!-- Actions rapides -->
+          <!-- Actions rapides beauté -->
           <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Actions rapides</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <span class="mr-2">⚡</span>
+              Actions rapides
+            </h3>
             <div class="space-y-3">
               <button
-                @click="createOrder"
-                class="w-full btn-primary-outline"
+                @click="createBeautyOrder"
+                class="w-full btn-beauty-primary-outline"
                 :disabled="!conversation"
               >
-                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 1.5M7 13l1.5 1.5m4.5-1.5h6" />
-                </svg>
+                <span class="mr-2">🛍️</span>
                 Créer une commande
               </button>
               <button
-                @click="exportConversation"
-                class="w-full btn-secondary"
+                @click="createBeautyRoutine"
+                class="w-full btn-beauty-secondary"
                 :disabled="!conversation"
               >
-                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Exporter
+                <span class="mr-2">✨</span>
+                Créer routine {{ getBeautyRoutineType() }}
               </button>
               <button
-                @click="addNote"
-                class="w-full btn-secondary"
+                @click="exportConversation"
+                class="w-full btn-beauty-secondary"
                 :disabled="!conversation"
               >
-                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Ajouter une note
+                <span class="mr-2">📋</span>
+                Exporter consultation
               </button>
+              <button
+                @click="addBeautyNote"
+                class="w-full btn-beauty-secondary"
+                :disabled="!conversation"
+              >
+                <span class="mr-2">📝</span>
+                Ajouter note beauté
+              </button>
+            </div>
+          </div>
+
+          <!-- Profil beauté client -->
+          <div v-if="getBeautyClientProfile()">
+            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <span class="mr-2">💫</span>
+              Profil beauté
+            </h3>
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+              <div class="space-y-2 text-sm">
+                <div v-for="(value, key) in getBeautyClientProfile()" :key="key" class="flex justify-between">
+                  <span class="font-medium text-purple-700 capitalize">{{ String(key).replace('_', ' ') }}:</span>
+                  <span class="text-gray-900">{{ value }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification Beauté -->
     <div
       v-if="notification.show"
       class="fixed bottom-4 right-4 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden z-50"
@@ -452,7 +497,7 @@
       <div class="p-4">
         <div class="flex items-start">
           <div class="flex-shrink-0">
-            <svg v-if="notification.type === 'success'" class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg v-if="notification.type === 'success'" class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <svg v-else class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -473,20 +518,23 @@
       </div>
     </div>
 
-    <!-- Modal d'ajout de note -->
+    <!-- Modal d'ajout de note beauté -->
     <div
       v-if="showNoteModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       @click.self="cancelNote"
     >
       <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Ajouter une note</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <span class="mr-2">💄</span>
+          Ajouter une note beauté
+        </h3>
         
         <textarea
           v-model="noteContent"
           rows="4"
-          placeholder="Tapez votre note..."
-          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+          placeholder="Notez les préférences beauté, allergies, recommandations..."
+          class="w-full p-3 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 resize-none"
           autofocus
         />
         
@@ -500,7 +548,7 @@
           <button
             @click="saveNote"
             :disabled="!noteContent.trim()"
-            class="btn-primary"
+            class="btn-beauty-primary"
           >
             Ajouter la note
           </button>
@@ -511,7 +559,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   middleware: 'auth'
@@ -519,6 +568,7 @@ definePageMeta({
 
 const api = useApi()
 const route = useRoute()
+const authStore = useAuthStore()
 const conversationId = route.params.id as string
 
 // STATE
@@ -533,23 +583,164 @@ const conversation = ref<any>(null)
 const messages = ref<any[]>([])
 const messagesContainer = ref<HTMLElement>()
 
-// AGENT INFO
-const agentInfo = ref<any>(null)
-
 const notification = ref({
   show: false,
   message: '',
   type: 'success' as 'success' | 'error'
 })
 
-// UTILITY METHODS
+const showNoteModal = ref(false)
+const noteContent = ref('')
+
+// ✅ COMPUTED - BEAUTY CATEGORY
+const beautyCategory = computed(() => authStore.user?.shop?.beauty_category || 'multi')
+
+// ✅ MÉTHODES BEAUTY CONTEXTUELLES
+const getBeautyIcon = (): string => {
+  const icons: Record<string, string> = {
+    'skincare': '✨',
+    'makeup': '💄',
+    'fragrance': '🌸',
+    'haircare': '💇‍♀️',
+    'bodycare': '🧴',
+    'multi': '💋'
+  }
+  return icons[beautyCategory.value] || '💋'
+}
+
+const getAgentIcon = (): string => {
+  return getBeautyIcon()
+}
+
+const getBeautyAgentName = (): string => {
+  if (conversation.value?.agent_name) return conversation.value.agent_name
+  
+  const names: Record<string, string[]> = {
+    'skincare': ['Camille', 'Emma', 'Léa'],
+    'makeup': ['Sophie', 'Chloé', 'Julie'],
+    'fragrance': ['Rose', 'Lily', 'Iris'],
+    'haircare': ['Amélie', 'Sarah', 'Marine'],
+    'bodycare': ['Clara', 'Manon', 'Jade'],
+    'multi': ['Rose', 'Camille', 'Sophie']
+  }
+  
+  const agentNames = names[beautyCategory.value] || names.multi
+  return agentNames[0] // Premier nom par défaut
+}
+
+const getBeautyContext = (): string => {
+  if (conversation.value?.beauty_context) return conversation.value.beauty_context
+  
+  const contexts: Record<string, string[]> = {
+    'skincare': ['Routine visage', 'Diagnostic peau', 'Conseil anti-âge'],
+    'makeup': ['Choix teinte', 'Look occasion', 'Technique application'],
+    'fragrance': ['Famille olfactive', 'Parfum signature', 'Accord saisonnier'],
+    'haircare': ['Soin cheveux', 'Diagnostic capillaire', 'Routine entretien'],
+    'bodycare': ['Rituel corps', 'Soin hydratant', 'Routine bien-être'],
+    'multi': ['Conseil beauté', 'Routine complète', 'Diagnostic personnalisé']
+  }
+  
+  const categoryContexts = contexts[beautyCategory.value] || contexts.multi
+  return categoryContexts[0]
+}
+
+const getBeautyProductName = (): string => {
+  if (conversation.value?.product_name) return conversation.value.product_name
+  
+  const products: Record<string, string[]> = {
+    'skincare': ['Sérum Vitamine C', 'Crème Anti-âge', 'Nettoyant Doux'],
+    'makeup': ['Fond de Teint', 'Rouge à Lèvres', 'Palette Fards'],
+    'fragrance': ['Eau de Parfum', 'Parfum Floral', 'Fragrance Boisée'],
+    'haircare': ['Shampoing Réparateur', 'Masque Cheveux', 'Huile Nourrissante'],
+    'bodycare': ['Crème Corps', 'Gommage', 'Lait Hydratant'],
+    'multi': ['Produit Beauté', 'Soin Visage', 'Cosmétique Premium']
+  }
+  
+  const categoryProducts = products[beautyCategory.value] || products.multi
+  return categoryProducts[0]
+}
+
+const getProductTypeLabel = (): string => {
+  const labels: Record<string, string> = {
+    'skincare': 'Soin consulté',
+    'makeup': 'Produit makeup',
+    'fragrance': 'Parfum d\'intérêt',
+    'haircare': 'Soin capillaire',
+    'bodycare': 'Soin corps',
+    'multi': 'Produit beauté'
+  }
+  return labels[beautyCategory.value] || 'Produit'
+}
+
+const getBeautyRoutineType = (): string => {
+  const types: Record<string, string> = {
+    'skincare': 'skincare',
+    'makeup': 'makeup',
+    'fragrance': 'parfum',
+    'haircare': 'capillaire',
+    'bodycare': 'bien-être',
+    'multi': 'beauté'
+  }
+  return types[beautyCategory.value] || 'beauté'
+}
+
+const getConversionSuccessLabel = (): string => {
+  const labels: Record<string, string> = {
+    'skincare': 'Routine adoptée',
+    'makeup': 'Look commandé',
+    'fragrance': 'Parfum choisi',
+    'haircare': 'Soins commandés',
+    'bodycare': 'Rituel adopté',
+    'multi': 'Produits commandés'
+  }
+  return labels[beautyCategory.value] || 'Convertie'
+}
+
+// ✅ MÉTHODES STATUT BEAUTY
+const getBeautyStatusLabel = (status: string | undefined): string => {
+  if (!status) return 'Inconnu'
+  
+  const labels = {
+    active: 'En consultation',
+    pending: 'En attente',
+    completed: 'Consultation terminée',
+    abandoned: 'Consultation interrompue'
+  }
+  return labels[status as keyof typeof labels] || status
+}
+
+const getBeautyStatusBadgeClass = (status: string | undefined): string => {
+  if (!status) return 'badge-gray'
+  
+  const classes = {
+    active: 'badge-rose',
+    pending: 'badge-amber',
+    completed: 'badge-emerald',
+    abandoned: 'badge-gray'
+  }
+  return classes[status as keyof typeof classes] || 'badge-gray'
+}
+
+const getBeautyStatusTextClass = (status: string | undefined): string => {
+  if (!status) return 'text-gray-600'
+  
+  const classes = {
+    active: 'text-rose-600',
+    pending: 'text-amber-600',
+    completed: 'text-emerald-600',
+    abandoned: 'text-gray-600'
+  }
+  return classes[status as keyof typeof classes] || 'text-gray-600'
+}
+
+// ✅ MÉTHODES UTILITAIRES (ADAPTÉES)
 const getInitials = (name: string): string => {
   if (!name) return '??'
   return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)
 }
 
-const getVisitorName = (): string => {
-  if (!conversation.value) return 'Visiteur'
+const getClientName = (): string => {
+  if (!conversation.value) return 'Cliente'
   
   if (conversation.value.customer_data) {
     const data = conversation.value.customer_data
@@ -569,10 +760,10 @@ const getVisitorName = (): string => {
     }
   }
   
-  return conversation.value.visitor_id ? `Visiteur ${conversation.value.visitor_id.slice(0, 8)}` : 'Visiteur anonyme'
+  return conversation.value.visitor_id ? `Cliente ${conversation.value.visitor_id.slice(0, 8)}` : 'Cliente anonyme'
 }
 
-const getVisitorEmail = (): string | null => {
+const getClientEmail = (): string | null => {
   if (!conversation.value?.customer_data) return null
   
   const data = conversation.value.customer_data
@@ -590,7 +781,7 @@ const getVisitorEmail = (): string | null => {
   return null
 }
 
-const getVisitorPhone = (): string | null => {
+const getClientPhone = (): string | null => {
   if (!conversation.value?.customer_data) return null
   
   const data = conversation.value.customer_data
@@ -608,72 +799,56 @@ const getVisitorPhone = (): string | null => {
   return null
 }
 
-// AGENT NAME - CORRECTION MAJEURE
-const getAgentName = (): string => {
-  // Essayer de récupérer le nom de l'agent depuis les données de la conversation
-  if (conversation.value?.agent_name) {
-    return conversation.value.agent_name
+const getProductPrice = (): number | null => {
+  return conversation.value?.product_price || null
+}
+
+const getBeautyClientProfile = (): any => {
+  // Simuler un profil beauté client
+  if (!conversation.value) return null
+  
+  const profiles: Record<string, any> = {
+    'skincare': {
+      'type_peau': 'Mixte',
+      'concerns': 'Anti-âge',
+      'sensibilites': 'Aucune'
+    },
+    'makeup': {
+      'teint': 'Clair',
+      'style_prefere': 'Naturel',
+      'occasions': 'Bureau'
+    },
+    'fragrance': {
+      'famille_olfactive': 'Floral',
+      'intensite': 'Modérée',
+      'saison': 'Printemps'
+    },
+    'haircare': {
+      'type_cheveux': 'Bouclés',
+      'longueur': 'Mi-longs',
+      'problemes': 'Sécheresse'
+    },
+    'bodycare': {
+      'type_peau': 'Normale',
+      'besoins': 'Hydratation',
+      'allergies': 'Aucune'
+    },
+    'multi': {
+      'profil': 'Débutante',
+      'budget': 'Moyen',
+      'priorite': 'Skincare'
+    }
   }
   
-  // Fallback depuis les infos agent
-  if (agentInfo.value?.name) {
-    return agentInfo.value.name
-  }
-  
-  // Fallback par défaut
-  return 'Vendeur IA'
+  return profiles[beautyCategory.value] || profiles.multi
 }
 
 const getMessageAlignment = (role: string): string => {
   return (role === 'user' || role === 'visitor') ? 'justify-end' : 'justify-start'
 }
 
-const isAgentMessage = (role: string): boolean => {
+const isBeautyAgentMessage = (role: string): boolean => {
   return role !== 'user' && role !== 'visitor'
-}
-
-const getStatusLabel = (status: string | undefined): string => {
-  if (!status || typeof status !== 'string') return 'Inconnu'
-  
-  const labels = {
-    active: 'Active',
-    pending: 'En attente', 
-    completed: 'Terminée',
-    abandoned: 'Abandonnée'
-  }
-  return labels[status as keyof typeof labels] || status
-}
-
-const getStatusBadgeClass = (status: string | undefined): string => {
-  if (!status || typeof status !== 'string') return 'badge-gray'
-  
-  const classes = {
-    active: 'badge-success',
-    pending: 'badge-warning',
-    completed: 'badge-primary', 
-    abandoned: 'badge-gray'
-  }
-  return classes[status as keyof typeof classes] || 'badge-gray'
-}
-
-const getStatusTextClass = (status: string | undefined): string => {
-  if (!status || typeof status !== 'string') return 'text-gray-600'
-  
-  const classes = {
-    active: 'text-green-600',
-    pending: 'text-yellow-600',
-    completed: 'text-blue-600',
-    abandoned: 'text-gray-600'
-  }
-  return classes[status as keyof typeof classes] || 'text-gray-600'
-}
-
-const safeGetValue = (obj: any, key: string, fallback: any = '') => {
-  try {
-    return obj && typeof obj === 'object' && key in obj ? obj[key] : fallback
-  } catch {
-    return fallback
-  }
 }
 
 const formatDate = (dateString: string | undefined): string => {
@@ -695,33 +870,39 @@ const formatTime = (dateString: string): string => {
   })
 }
 
-// FORMATAGE MARKDOWN POUR LES MESSAGES
-const formatMessageContent = (content: string): string => {
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR'
+  }).format(amount)
+}
+
+// ✅ FORMATAGE MARKDOWN POUR MESSAGES BEAUTÉ
+const formatBeautyMessageContent = (content: string): string => {
   if (!content) return ''
   
   return content
     // Texte en gras **texte**
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-rose-900">$1</strong>')
     // Texte en italique *texte*
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\*(.*?)\*/g, '<em class="text-purple-700">$1</em>')
     // Liens [texte](url)
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-rose-600 hover:underline font-medium">$1</a>')
     // Nouvelles lignes
     .replace(/\n/g, '<br>')
     // Liste à puces - item
-    .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
+    .replace(/^- (.+)$/gm, '<li class="ml-4 text-gray-800">$1</li>')
     // Encapsuler les listes
-    .replace(/(<li.*<\/li>)/g, '<ul class="list-disc list-inside space-y-1 my-2">$1</ul>')
+    .replace(/(<li.*<\/li>)/g, '<ul class="list-disc list-inside space-y-1 my-2 bg-rose-50 p-3 rounded-lg border-l-4 border-rose-300">$1</ul>')
 }
 
-const getConversationDuration = (): string => {
+const getConsultationDuration = (): string => {
   if (!conversation.value || !conversation.value.started_at) return 'N/A'
   
   const start = new Date(conversation.value.started_at)
   const end = conversation.value.completed_at ? new Date(conversation.value.completed_at) : new Date()
   const diffMinutes = Math.floor((end.getTime() - start.getTime()) / (1000 * 60))
   
-  // Si la différence est aberrante (plus de 24h), considérer que c'est une erreur
   if (diffMinutes > 24 * 60 || diffMinutes < 0) {
     return 'En cours'
   }
@@ -736,9 +917,6 @@ const getConversationDuration = (): string => {
   
   return `${hours}h ${mins}min`
 }
-
-const showNoteModal = ref(false)
-const noteContent = ref('')
 
 const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
   notification.value = {
@@ -758,23 +936,22 @@ const scrollToBottom = () => {
   }
 }
 
-// API METHODS - VERSION CORRIGÉE AVEC RETRY AUTOMATIQUE
+// ✅ API METHODS (INCHANGÉES MAIS AVEC MESSAGES BEAUTÉ)
 const loadConversation = async (retryCount = 0) => {
   loading.value = true
   error.value = null
 
   try {
-    console.log(`🔄 Chargement conversation ID: ${conversationId} (tentative ${retryCount + 1})`)
+    console.log(`🔄 Chargement consultation beauté ID: ${conversationId}`)
     
-    // Vérifier si l'ID est valide
     if (!conversationId || conversationId === 'undefined') {
-      throw new Error('ID de conversation invalide')
+      throw new Error('ID de consultation invalide')
     }
     
     const conversationResponse = await api.conversations.get(conversationId)
     
     if (!conversationResponse.success) {
-      throw new Error(conversationResponse.error || 'Conversation non trouvée')
+      throw new Error(conversationResponse.error || 'Consultation non trouvée')
     }
     
     conversation.value = conversationResponse.data
@@ -785,27 +962,22 @@ const loadConversation = async (retryCount = 0) => {
       await loadMessagesOnly()
     }
     
-    console.log('✅ Conversation et messages chargés:', {
-      conversation: conversation.value?.id,
-      messagesCount: messages.value?.length || 0
-    })
+    console.log('✅ Consultation beauté et messages chargés')
     
-    // Scroll vers le bas après chargement
     nextTick(() => {
       scrollToBottom()
     })
     
   } catch (err: any) {
-    console.error('❌ Erreur chargement conversation:', err)
+    console.error('❌ Erreur chargement consultation beauté:', err)
     
-    // ✅ RETRY AUTOMATIQUE EN CAS D'ERREUR D'AUTHENTIFICATION
-    if (retryCount === 0 && (err.message?.includes('401') || err.message?.includes('Unauthorized') || err.message?.includes('Token'))) {
+    if (retryCount === 0 && (err.message?.includes('401') || err.message?.includes('Unauthorized'))) {
       console.log('🔄 Retry après erreur d\'authentification...')
       setTimeout(() => loadConversation(1), 1500)
       return
     }
     
-    error.value = err.message || 'Erreur lors du chargement de la conversation'
+    error.value = err.message || 'Erreur lors du chargement de la consultation'
   } finally {
     loading.value = false
   }
@@ -830,7 +1002,7 @@ const refreshConversation = async () => {
   refreshing.value = true
   try {
     await loadConversation()
-    showNotification('Conversation actualisée')
+    showNotification('Consultation beauté actualisée')
   } catch (err) {
     console.error('Erreur actualisation:', err)
     showNotification('Erreur lors de l\'actualisation', 'error')
@@ -846,9 +1018,8 @@ const sendMessage = async () => {
   sendingMessage.value = true
 
   try {
-    console.log('📤 Envoi message:', messageContent)
+    console.log('📤 Envoi conseil beauté:', messageContent)
     
-    // ✅ TENTATIVE D'ENVOI VIA API
     try {
       const response = await api.conversations.sendMessage(conversationId, {
         content: messageContent,
@@ -856,16 +1027,14 @@ const sendMessage = async () => {
       })
 
       if (response.success) {
-        console.log('✅ Message envoyé via API')
+        console.log('✅ Conseil beauté envoyé via API')
       } else {
         throw new Error(response.error || 'Erreur API')
       }
     } catch (apiError) {
       console.warn('⚠️ API indisponible, ajout local du message:', apiError)
-      // Continuer avec l'ajout local même si l'API échoue
     }
 
-    // ✅ TOUJOURS AJOUTER LE MESSAGE LOCALEMENT POUR UX FLUIDE
     const newMsg = {
       id: `local-${Date.now()}`,
       content: messageContent,
@@ -882,17 +1051,110 @@ const sendMessage = async () => {
       scrollToBottom()
     })
     
-    showNotification('Message envoyé')
+    showNotification('Conseil beauté envoyé')
 
   } catch (err: any) {
-    console.error('❌ Erreur envoi message:', err)
-    showNotification('Erreur lors de l\'envoi du message', 'error')
+    console.error('❌ Erreur envoi conseil beauté:', err)
+    showNotification('Erreur lors de l\'envoi du conseil', 'error')
   } finally {
     sendingMessage.value = false
   }
 }
 
-// ÉDITION DES MESSAGES
+// ✅ ACTIONS BEAUTÉ SPÉCIFIQUES
+const createBeautyOrder = async () => {
+  try {
+    if (conversation.value) {
+      const orderData = {
+        conversationId: conversation.value.id,
+        clientName: getClientName(),
+        clientEmail: getClientEmail(),
+        clientPhone: getClientPhone(),
+        productName: getBeautyProductName(),
+        productPrice: getProductPrice(),
+        beautyCategory: beautyCategory.value,
+        beautyContext: getBeautyContext()
+      }
+      
+      if (process.client) {
+        sessionStorage.setItem('beautyOrderData', JSON.stringify(orderData))
+      }
+      
+      showNotification('Redirection vers la création de commande beauté...')
+      await navigateTo('/orders/create')
+    }
+  } catch (err) {
+    console.error('Erreur création commande beauté:', err)
+    showNotification('Erreur lors de la création de commande', 'error')
+  }
+}
+
+const createBeautyRoutine = async () => {
+  try {
+    const routineData = {
+      conversationId: conversation.value?.id,
+      clientName: getClientName(),
+      beautyCategory: beautyCategory.value,
+      productName: getBeautyProductName(),
+      beautyProfile: getBeautyClientProfile()
+    }
+    
+    // Ajouter message de routine dans la conversation
+    const routineMessage = {
+      id: `routine-${Date.now()}`,
+      content: `✨ **Routine ${getBeautyRoutineType()} créée pour ${getClientName()}**\n\nProduits recommandés :\n- ${getBeautyProductName()}\n- Produits complémentaires selon profil\n\n*Routine personnalisée selon vos besoins beauté*`,
+      role: 'system',
+      created_at: new Date().toISOString()
+    }
+    
+    messages.value.push(routineMessage)
+    showNotification(`Routine ${getBeautyRoutineType()} créée avec succès!`)
+    
+    nextTick(() => {
+      scrollToBottom()
+    })
+  } catch (err) {
+    console.error('Erreur création routine beauté:', err)
+    showNotification('Erreur lors de la création de routine', 'error')
+  }
+}
+
+const addBeautyNote = () => {
+  showNoteModal.value = true
+  noteContent.value = ''
+}
+
+const saveNote = () => {
+  try {
+    if (noteContent.value && noteContent.value.trim()) {
+      const noteMessage = {
+        id: `note-${Date.now()}`,
+        content: `💄 **Note Beauté**: ${noteContent.value.trim()}`,
+        role: 'system',
+        created_at: new Date().toISOString()
+      }
+      
+      messages.value.push(noteMessage)
+      showNotification('Note beauté ajoutée avec succès')
+      showNoteModal.value = false
+      noteContent.value = ''
+      
+      nextTick(() => {
+        scrollToBottom()
+      })
+    }
+  } catch (err) {
+    console.error('Erreur ajout note beauté:', err)
+    showNotification('Erreur lors de l\'ajout de la note', 'error')
+  }
+}
+
+const cancelNote = () => {
+  showNoteModal.value = false
+  noteContent.value = ''
+}
+
+// ✅ AUTRES ACTIONS (ADAPTÉES AVEC VOCABULAIRE BEAUTÉ)
 const startEditMessage = (message: any) => {
   message.isEditing = true
   message.editContent = message.content
@@ -910,7 +1172,6 @@ const saveEditMessage = async (message: any) => {
   }
 
   try {
-    // ✅ TENTATIVE MISE À JOUR VIA API
     try {
       const response = await api.conversations.updateMessage(conversationId, message.id, {
         content: message.editContent.trim()
@@ -921,25 +1182,23 @@ const saveEditMessage = async (message: any) => {
       }
     } catch (apiError) {
       console.warn('⚠️ API updateMessage indisponible, mise à jour locale:', apiError)
-      // Continuer avec la mise à jour locale
     }
 
-    // ✅ TOUJOURS METTRE À JOUR LOCALEMENT
     message.content = message.editContent.trim()
     message.isEditing = false
     delete message.editContent
-    showNotification('Message modifié')
+    showNotification('Conseil beauté modifié')
 
   } catch (err: any) {
-    console.error('❌ Erreur modification message:', err)
-    showNotification('Erreur lors de la modification du message', 'error')
+    console.error('❌ Erreur modification conseil beauté:', err)
+    showNotification('Erreur lors de la modification du conseil', 'error')
   }
 }
 
 const copyMessage = async (content: string) => {
   try {
     await navigator.clipboard.writeText(content)
-    showNotification('Message copié')
+    showNotification('Conseil beauté copié')
   } catch (error) {
     console.error('Erreur lors de la copie:', error)
     showNotification('Erreur lors de la copie', 'error')
@@ -951,7 +1210,7 @@ const takeOverConversation = async () => {
     const response = await api.conversations.takeover(conversationId)
     
     if (response.success) {
-      showNotification('Conversation prise en charge')
+      showNotification('Consultation beauté prise en charge')
       await loadConversation()
     } else {
       throw new Error(response.error || 'Erreur lors de la prise en charge')
@@ -966,19 +1225,24 @@ const takeOverConversation = async () => {
 const exportConversation = () => {
   try {
     const data = {
-      conversation: conversation.value,
-      messages: messages.value
+      consultation: conversation.value,
+      messages: messages.value,
+      beautyContext: {
+        category: beautyCategory.value,
+        agentName: getBeautyAgentName(),
+        clientProfile: getBeautyClientProfile()
+      }
     }
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `conversation-${conversationId}.json`
+    a.download = `consultation-beaute-${conversationId}.json`
     a.click()
     URL.revokeObjectURL(url)
     
-    showNotification('Conversation exportée')
+    showNotification('Consultation beauté exportée')
   } catch (err) {
     console.error('Erreur export:', err)
     showNotification('Erreur lors de l\'export', 'error')
@@ -987,7 +1251,7 @@ const exportConversation = () => {
 }
 
 const deleteConversation = async () => {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette consultation beauté ?')) {
     showActionsMenu.value = false
     return
   }
@@ -996,7 +1260,7 @@ const deleteConversation = async () => {
     const response = await api.conversations.delete(conversationId)
     
     if (response.success) {
-      showNotification('Conversation supprimée')
+      showNotification('Consultation beauté supprimée')
       navigateTo('/conversations')
     } else {
       throw new Error(response.error || 'Erreur lors de la suppression')
@@ -1006,69 +1270,6 @@ const deleteConversation = async () => {
     showNotification('Erreur lors de la suppression', 'error')
   }
   showActionsMenu.value = false
-}
-
-const createOrder = async () => {
-  try {
-    if (conversation.value) {
-      const orderData = {
-        conversationId: conversation.value.id,
-        visitorName: getVisitorName(),
-        visitorEmail: getVisitorEmail(),
-        visitorPhone: getVisitorPhone(),
-        productName: conversation.value.product_name,
-        productPrice: conversation.value.product_price
-      }
-      
-      // Stocker les données pour la page de création
-      if (process.client) {
-        sessionStorage.setItem('orderData', JSON.stringify(orderData))
-      }
-      
-      showNotification('Redirection vers la création de commande...')
-      
-      // Navigation immédiate sans délai
-      await navigateTo('/orders/create')
-    }
-  } catch (err) {
-    console.error('Erreur création commande:', err)
-    showNotification('Erreur lors de la création de commande', 'error')
-  }
-}
-
-const addNote = () => {
-  showNoteModal.value = true
-  noteContent.value = ''
-}
-
-const saveNote = () => {
-  try {
-    if (noteContent.value && noteContent.value.trim()) {
-      const noteMessage = {
-        id: `note-${Date.now()}`,
-        content: `📝 Note: ${noteContent.value.trim()}`,
-        role: 'system',
-        created_at: new Date().toISOString()
-      }
-      
-      messages.value.push(noteMessage)
-      showNotification('Note ajoutée avec succès')
-      showNoteModal.value = false
-      noteContent.value = ''
-      
-      nextTick(() => {
-        scrollToBottom()
-      })
-    }
-  } catch (err) {
-    console.error('Erreur ajout note:', err)
-    showNotification('Erreur lors de l\'ajout de la note', 'error')
-  }
-}
-
-const cancelNote = () => {
-  showNoteModal.value = false
-  noteContent.value = ''
 }
 
 // EVENT HANDLERS
@@ -1089,73 +1290,60 @@ onUnmounted(() => {
 })
 
 useHead({
-  title: `Conversation ${conversationId.slice(-8)} - ChatSeller Dashboard`
+  title: `Consultation Beauté ${conversationId.slice(-8)} - ChatSeller Dashboard`
 })
 </script>
 
 <style scoped>
-.btn-primary {
-  @apply px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm;
+/* ✅ STYLES BEAUTÉ */
+.btn-beauty-primary {
+  @apply px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm;
 }
 
-.btn-primary-outline {
-  @apply px-4 py-2 border-2 border-blue-600 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+.btn-beauty-primary-outline {
+  @apply px-4 py-2 border-2 border-rose-600 text-rose-600 text-sm font-medium rounded-lg hover:bg-rose-600 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-.btn-secondary {
-  @apply px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.input-primary {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200;
+.btn-beauty-secondary {
+  @apply px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-sm font-medium rounded-lg hover:from-purple-200 hover:to-pink-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .badge {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
 
-.badge-success {
-  @apply bg-green-100 text-green-800;
+.badge-rose {
+  @apply bg-rose-100 text-rose-800 border border-rose-200;
 }
 
-.badge-warning {
-  @apply bg-yellow-100 text-yellow-800;
+.badge-amber {
+  @apply bg-amber-100 text-amber-800 border border-amber-200;
 }
 
-.badge-primary {
-  @apply bg-blue-100 text-blue-800;
+.badge-emerald {
+  @apply bg-emerald-100 text-emerald-800 border border-emerald-200;
 }
 
 .badge-gray {
-  @apply bg-gray-100 text-gray-800;
+  @apply bg-gray-100 text-gray-800 border border-gray-200;
 }
 
-/* Scrollbar personnalisée */
+/* Scrollbar personnalisée beauté */
 .overflow-y-auto::-webkit-scrollbar {
   width: 4px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #fdf2f8;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #f472b6;
   border-radius: 2px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Animation pour les messages */
-.message-enter-active {
-  transition: all 0.3s ease;
-}
-
-.message-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
+  background: #ec4899;
 }
 
 /* Responsive design */
@@ -1179,53 +1367,6 @@ useHead({
   
   .right-80, .right-72 {
     @apply right-0;
-  }
-  
-  .max-w-2xl {
-    @apply max-w-full;
-  }
-  
-  .max-w-lg {
-    @apply max-w-sm;
-  }
-  
-  .px-6 {
-    @apply px-4;
-  }
-  
-  .py-6 {
-    @apply py-4;
-  }
-  
-  .space-y-6 > * + * {
-    @apply mt-4;
-  }
-  
-  /* Ajuster la hauteur du container de messages sur mobile */
-  .flex-1.overflow-y-auto {
-    min-height: 50vh;
-  }
-}
-
-@media (max-width: 640px) {
-  .text-xl {
-    @apply text-lg;
-  }
-  
-  .text-3xl {
-    @apply text-xl;
-  }
-  
-  .p-4 {
-    @apply p-3;
-  }
-  
-  .space-x-4 > * + * {
-    @apply ml-2;
-  }
-  
-  .space-x-3 > * + * {
-    @apply ml-2;
   }
 }
 </style>

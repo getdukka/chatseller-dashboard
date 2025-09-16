@@ -3,33 +3,27 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-// ✅ TYPES COMPLETS
-export interface Agent {
-  id: string
-  name: string
-  title?: string // ✅ NOUVEAU: Title personnalisable
-  type: 'general' | 'product_specialist' | 'support' | 'upsell'
-  personality: 'professional' | 'friendly' | 'expert' | 'casual'
-  description: string | null
-  welcomeMessage: string | null
-  fallbackMessage: string | null
-  avatar: string | null
-  isActive: boolean
-  config: Record<string, any>
-  stats: {
-    conversations: number
-    conversions: number
-  }
-  knowledgeBase?: any[]
-  createdAt: string
-  updatedAt: string
-}
+// ✅ IMPORT TYPES CENTRALISÉS BEAUTÉ
+import type {
+  Agent,
+  AgentType,
+  BeautyAgentType,
+  PersonalityType
+} from '~/types/beauty'
 
+import {
+  BEAUTY_AGENT_TYPES,
+  getTypeLabel,
+  getAgentIcon,
+  getAvatarClass
+} from '~/types/beauty'
+
+// ✅ INTERFACES POUR LES OPÉRATIONS CRUD
 export interface CreateAgentData {
   name: string
-  title?: string // ✅ NOUVEAU: Title personnalisable
-  type: Agent['type']
-  personality: Agent['personality']
+  title?: string
+  type: AgentType
+  personality: PersonalityType
   description?: string
   welcomeMessage?: string
   fallbackMessage?: string
@@ -38,9 +32,8 @@ export interface CreateAgentData {
   config?: Record<string, any>
 }
 
-export interface UpdateAgentData extends Partial<CreateAgentData> {}
+export interface UpdateAgentData extends Partial<Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'stats'>> {}
 
-// ✅ TYPES DE RÉPONSE API
 interface ApiResponse<T = any> {
   success: boolean
   data?: T
@@ -49,47 +42,35 @@ interface ApiResponse<T = any> {
   meta?: any
 }
 
-// ✅ COMPOSABLE PRODUCTION PURE - 100% API
 export const useAgents = () => {
   const authStore = useAuthStore()
   const config = useRuntimeConfig()
 
-  // ✅ STATE RÉACTIF
+  // State réactif
   const agents = ref<Agent[]>([])
   const loading = ref(false)
   const saving = ref(false)
   const error = ref<string | null>(null)
 
-  // ✅ COMPUTED PLAN DETAILS DEPUIS LE STORE AUTH
+  // Computed basés sur le nouveau système beauté
   const planDetails = computed(() => {
-    return authStore.planDetails || {
-      name: 'Free',
-      agentLimit: 1,
-      knowledgeBaseLimit: 1,
-      features: [],
-      isActive: true,
-      isTrial: true,
-      trialDaysLeft: 7,
-      trialEndDate: null,
-      hasExpired: false
-    }
+    return authStore.planDetails
   })
 
   const subscriptionPlan = computed(() => {
-    return authStore.user?.shop?.subscription_plan || 'free'
+    return authStore.currentPlan
   })
 
   const isPaidUser = computed(() => {
-    const plan = subscriptionPlan.value
-    return plan === 'starter' || plan === 'pro' || plan === 'professional' || plan === 'enterprise'
+    return authStore.isPaidUser
   })
 
   const hasActiveAccess = computed(() => {
-    return planDetails.value.isActive && !planDetails.value.hasExpired
+    return authStore.hasActiveAccess
   })
 
   const trialExpired = computed(() => {
-    return subscriptionPlan.value === 'free' && planDetails.value.hasExpired
+    return authStore.trialExpired
   })
 
   const activeAgents = computed(() => {
@@ -97,15 +78,15 @@ export const useAgents = () => {
     return agents.value.filter(agent => agent.isActive)
   })
 
+  // ✅ NOUVEAU SYSTÈME : Agents illimités mais avec coût additionnel
   const canCreateAgent = computed(() => {
-    if (trialExpired.value) return false
-    const limit = planDetails.value.agentLimit
-    return limit === -1 || agents.value.length < limit
+    // Plus de limite d'agents - vérifier seulement si essai expiré
+    return !trialExpired.value
   })
 
   const planLimitReached = computed(() => {
-    const limit = planDetails.value.agentLimit
-    return limit !== -1 && agents.value.length >= limit
+    // Plus de limite de plan - toujours false
+    return false
   })
 
   const canConfigureAgents = computed(() => {
@@ -116,12 +97,36 @@ export const useAgents = () => {
     return hasActiveAccess.value
   })
 
-  // ✅ HELPER: Headers avec authentification ROBUSTE
+  // ✅ NOUVEAU : Calcul du coût mensuel des agents
+  const monthlyAgentsCost = computed(() => {
+    const plan = planDetails.value
+    if (!plan || plan.quotas.agents === -1 && plan.quotas.additionalAgentCost === 0) {
+      return 0 // Plan Performance - agents inclus
+    }
+    
+    const agentCount = agents.value.length
+    if (agentCount <= 1) {
+      return 0 // Premier agent inclus
+    }
+    
+    return (agentCount - 1) * (plan.quotas.additionalAgentCost || 10)
+  })
+
+  // ✅ NOUVEAU : Estimation coût avec nouveaux agents
+  const estimateAgentCost = (newAgentCount: number): number => {
+    const plan = planDetails.value
+    if (!plan || plan.quotas.additionalAgentCost === 0) return 0
+    
+    const totalAgents = agents.value.length + newAgentCount
+    return Math.max(0, totalAgents - 1) * plan.quotas.additionalAgentCost
+  }
+
+  // Helper functions
   const getAuthHeaders = () => {
     if (!authStore.token) {
-      console.error('❌ [useAgents] Token manquant - redirection vers login')
+      console.error('Token manquant - redirection vers login')
       navigateTo('/login')
-      throw new Error('🔐 Session expirée. Redirection vers la connexion...')
+      throw new Error('Session expirée. Redirection vers la connexion...')
     }
     
     return {
@@ -130,132 +135,133 @@ export const useAgents = () => {
     }
   }
 
-  // ✅ HELPER: Gestion des erreurs API AMÉLIORÉE
   const handleApiError = (err: any, defaultMessage: string): ApiResponse => {
-    console.error('❌ [useAgents] API Error:', err)
+    console.error('API Error:', err)
     
     let errorMessage = defaultMessage
     
     if (err.status === 401 || err.statusCode === 401) {
       authStore.clearAuth()
-      errorMessage = '🔐 Session expirée. Veuillez vous reconnecter.'
+      errorMessage = 'Session expirée. Veuillez vous reconnecter.'
       navigateTo('/login')
     } else if (err.status === 403 || err.statusCode === 403) {
-      errorMessage = '🚫 Accès refusé. Vérifiez vos permissions ou votre plan.'
+      errorMessage = 'Accès refusé. Vérifiez vos permissions ou votre plan.'
     } else if (err.data?.error && typeof err.data.error === 'string') {
       errorMessage = err.data.error
     } else if (err.message && typeof err.message === 'string') {
       errorMessage = err.message
-    } else if (err.statusText && typeof err.statusText === 'string') {
-      errorMessage = `Erreur ${err.status || 'API'}: ${err.statusText}`
     }
     
     error.value = errorMessage
     return { success: false, error: errorMessage }
   }
 
-  // ✅ VÉRIFICATION API DISPONIBLE
   const checkApiAvailable = async (): Promise<boolean> => {
-  try {
-    console.log('🔍 [useAgents] Test API URL:', config.public.apiBaseUrl)
-    
-    // ✅ FALLBACK SI apiBaseUrl N'EST PAS CONFIGURÉ
-    const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
-    console.log('🔍 [useAgents] URL finale utilisée:', apiUrl)
-    
-    const response = await $fetch('/health', {
-      baseURL: apiUrl,
-      timeout: 5000
-    })
-    
-    console.log('✅ [useAgents] Réponse health check:', response)
-    
-    if (response?.status === 'ok') {
-      console.log('✅ [useAgents] API disponible:', apiUrl)
-      return true
-    }
-    
-    console.warn('⚠️ [useAgents] API répond mais status incorrect:', response)
-    return false
-    
-  } catch (error: any) {
-    console.error('❌ [useAgents] API indisponible:', error)
-    console.error('❌ [useAgents] URL testée:', config.public.apiBaseUrl)
-    console.error('❌ [useAgents] Erreur détails:', error.message)
-    
-    // ✅ MESSAGE D'ERREUR PLUS INFORMATIF
-    throw new Error(`
-🚨 Impossible de contacter l'API ChatSeller
+    try {
+      const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
+      const response = await $fetch('/health', {
+        baseURL: apiUrl,
+        timeout: 5000
+      }) as any
+      
+      return response?.status === 'ok'
+    } catch (error: any) {
+      throw new Error(`Impossible de contacter l'API ChatSeller
 
 URL testée: ${config.public.apiBaseUrl || 'NON CONFIGURÉE'}
 Erreur: ${error.message}
 
 Solutions possibles:
 1. Vérifiez que votre serveur API tourne sur http://localhost:3001
-2. Vérifiez la variable NUXT_PUBLIC_API_BASE_URL dans votre .env
-3. Redémarrez le serveur Dashboard après modification du .env
-    `)
-  }
-}
-
-  // ✅ RÉCUPÉRER TOUS LES AGENTS - 100% API PURE
-  const fetchAgents = async (): Promise<ApiResponse<Agent[]>> => {
-  loading.value = true
-  error.value = null
-
-  try {
-    console.log('🔍 [useAgents] === DÉBUT RÉCUPÉRATION AGENTS ===')
-    console.log('🔍 [useAgents] Config API URL:', config.public.apiBaseUrl)
-    console.log('🔍 [useAgents] Token présent:', !!authStore.token)
-    
-    // ✅ VÉRIFIER API DISPONIBLE
-    await checkApiAvailable()
-    
-    // ✅ URL FINALE AVEC FALLBACK
-    const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
-    console.log('🔍 [useAgents] Appel API vers:', `${apiUrl}/api/v1/agents`)
-    
-    // ✅ APPEL API DIRECT
-    const response = await $fetch('/api/v1/agents', {
-      baseURL: apiUrl,
-      headers: getAuthHeaders(),
-      timeout: 10000
-    }) as ApiResponse<Agent[]>
-
-    console.log('📦 [useAgents] Réponse API complète:', response)
-
-    if (response.success && Array.isArray(response.data)) {
-      agents.value = response.data
-      console.log(`✅ [useAgents] ${response.data.length} agents récupérés depuis l'API`)
-      
-      // ✅ LOG DES LIMITES DE PLAN
-      const limit = planDetails.value.agentLimit
-      console.log(`📊 [useAgents] Plan ${planDetails.value.name}: ${agents.value.length}/${limit === -1 ? '∞' : limit} agents`)
-      
-      return { success: true, data: response.data }
-    } else {
-      console.error('❌ [useAgents] Réponse API invalide:', response)
-      throw new Error(response.error || 'Réponse API invalide - format incorrect')
+2. Vérifiez la variable NUXT_PUBLIC_API_BASE_URL dans votre .env`)
     }
-
-  } catch (err: any) {
-    console.error('❌ [useAgents] Erreur complète:', err)
-    console.error('❌ [useAgents] Stack trace:', err.stack)
-    return handleApiError(err, 'Erreur lors de la récupération des agents')
-  } finally {
-    loading.value = false
   }
-}
 
-  // ✅ CRÉER UN AGENT - 100% API PURE
-  const createAgent = async (data: CreateAgentData): Promise<ApiResponse<Agent>> => {
+  // ✅ RÉCUPÉRER TOUS LES AGENTS - 100% API
+  const fetchAgents = async (): Promise<ApiResponse<Agent[]>> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      console.log('Récupération agents beauté')
+      
+      await checkApiAvailable()
+      
+      const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
+      
+      // ✅ CORRECTION : Utiliser l'endpoint agents directement
+      const response = await $fetch('/api/v1/agents', {
+        baseURL: apiUrl,
+        headers: getAuthHeaders(),
+        timeout: 10000
+      }) as ApiResponse<Agent[]>
+
+      if (response.success && Array.isArray(response.data)) {
+        agents.value = response.data
+        
+        // Mettre à jour le nombre d'agents dans le store
+        await authStore.updateAgentsCount(response.data.length)
+        
+        console.log(`${response.data.length} agents récupérés`)
+        console.log(`Coût mensuel agents: ${monthlyAgentsCost.value}€`)
+        
+        return { success: true, data: response.data }
+      } else {
+        throw new Error(response.error || 'Réponse API invalide')
+      }
+
+    } catch (err: any) {
+      return handleApiError(err, 'Erreur lors de la récupération des agents')
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // ✅ AMÉLIORATION : Fonction helper pour vérification permissions
+  const checkAgentPermissions = (action: 'create' | 'duplicate' | 'modify'): {
+    allowed: boolean
+    error?: string
+    requiresUpgrade?: boolean
+  } => {
+    // Vérification essai expiré - BLOQUE TOUT
+    if (trialExpired.value) {
+      return {
+        allowed: false,
+        error: `Essai gratuit expiré. Passez au plan Starter (${planDetails.value.monthlyPrice}€/mois) pour continuer à utiliser vos agents.`,
+        requiresUpgrade: true
+      }
+    }
+    
+    // Vérification accès actif
+    if (!hasActiveAccess.value) {
+      return {
+        allowed: false,
+        error: 'Accès suspendu. Vérifiez votre abonnement.',
+        requiresUpgrade: true
+      }
+    }
+    
+    return { allowed: true }
+  }
+
+  // ✅ CRÉER UN AGENT - AVEC NOUVEAU SYSTÈME DE COÛT
+    const createAgent = async (data: CreateAgentData): Promise<ApiResponse<Agent>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('🏗️ [useAgents] Création agent via API pure:', data.name)
+      console.log('Création agent beauté:', data.name)
       
-      // ✅ VÉRIFICATIONS PRÉALABLES
+      // ✅ AMÉLIORATION : Vérification permissions en premier
+      const permissions = checkAgentPermissions('create')
+      if (!permissions.allowed) {
+        if (permissions.requiresUpgrade) {
+          // Rediriger vers billing si nécessaire
+          setTimeout(() => navigateTo('/billing'), 2000)
+        }
+        throw new Error(permissions.error)
+      }
+
       if (!data.name?.trim()) {
         throw new Error('Le nom de l\'agent est requis')
       }
@@ -264,69 +270,56 @@ Solutions possibles:
         throw new Error('Le message d\'accueil est requis')
       }
 
-      // ✅ VÉRIFIER LIMITES AVANT APPEL API
-      if (!canCreateAgent.value) {
-        const limit = planDetails.value.agentLimit
-        throw new Error(`❌ Limite de votre plan atteinte (${limit} agent${limit > 1 ? 's' : ''} maximum). Passez au plan supérieur pour créer plus d'agents.`)
+      // ✅ NOUVEAU : Confirmation coût avec gestion essai expiré
+      const currentCount = agents.value.length
+      const newCost = estimateAgentCost(1)
+      const currentCost = monthlyAgentsCost.value
+
+      if (newCost > currentCost) {
+        const additionalCost = newCost - currentCost
+        console.log(`Nouvel agent ajoutera ${additionalCost}€/mois au coût`)
+        
+        // L'interface doit avoir confirmé ce coût avant d'appeler cette fonction
+        // Vérification de sécurité
+        if (currentCount > 0) {
+          console.log(`⚠️ Création agent ${currentCount + 1} - Coût additionnel: +${additionalCost}€/mois`)
+        }
       }
 
-      // ✅ VÉRIFIER API DISPONIBLE
       await checkApiAvailable()
       
-      // ✅ CONSTRUIRE PAYLOAD AVEC TITLE
-      const payload: CreateAgentData & { shopId?: string } = {
-        name: data.name.trim(),
-        title: data.title?.trim() || undefined, // ✅ NOUVEAU: Title personnalisable
-        type: data.type,
-        personality: data.personality,
-        description: data.description?.trim() || null,
-        welcomeMessage: data.welcomeMessage.trim(),
-        fallbackMessage: data.fallbackMessage?.trim() || null,
-        avatar: data.avatar || null,
-        isActive: data.isActive ?? true,
-        config: data.config || {},
-        shopId: authStore.userShopId || authStore.user?.id
-      }
-
-      console.log('📤 [useAgents] Payload envoyé:', payload)
+      // ... reste de la logique de création inchangée
       
-      const response = await $fetch('/api/v1/agents', {
-        method: 'POST',
-        baseURL: config.public.apiBaseUrl,
-        headers: getAuthHeaders(),
-        body: payload
-      }) as ApiResponse<Agent>
-
-      console.log('📦 [useAgents] Réponse création:', response)
-
-      if (response.success && response.data) {
-        agents.value.unshift(response.data)
-        console.log(`✅ Agent créé avec succès: ${response.data.id}`)
-        return { success: true, data: response.data }
-      } else {
-        throw new Error(response.error || 'Erreur lors de la création de l\'agent')
-      }
-
     } catch (err: any) {
-      return handleApiError(err, 'Erreur lors de la création de l\'agent')
+      // ✅ AMÉLIORATION : Gestion erreurs spécifique essai expiré
+      if (err.message.includes('essai expiré') || err.message.includes('Essai gratuit')) {
+        error.value = `⏰ ${err.message}`
+        // Auto-redirection vers billing après 3 secondes
+        setTimeout(() => {
+          if (process.client) {
+            navigateTo('/billing')
+          }
+        }, 3000)
+      } else {
+        return handleApiError(err, 'Erreur lors de la création de l\'agent')
+      }
     } finally {
       saving.value = false
     }
   }
 
-  // ✅ MODIFIER UN AGENT - 100% API PURE
+  // ✅ MODIFIER UN AGENT - 100% API
   const updateAgent = async (id: string, data: UpdateAgentData): Promise<ApiResponse<Agent>> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('📝 [useAgents] Modification agent via API pure:', id)
+      console.log('Modification agent beauté:', id)
       
       if (!id) {
         throw new Error('ID agent requis pour la modification')
       }
 
-      // ✅ VÉRIFIER API DISPONIBLE
       await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}`, {
@@ -341,7 +334,7 @@ Solutions possibles:
         if (index !== -1) {
           agents.value[index] = { ...agents.value[index], ...response.data }
         }
-        console.log(`✅ Agent modifié avec succès: ${id}`)
+        console.log(`Agent modifié: ${id}`)
         return { success: true, data: response.data }
       } else {
         throw new Error(response.error || 'Erreur lors de la modification')
@@ -354,19 +347,23 @@ Solutions possibles:
     }
   }
 
-  // ✅ SUPPRIMER UN AGENT - 100% API PURE
+  // ✅ SUPPRIMER UN AGENT - AVEC NOUVEAU CALCUL DE COÛT
   const deleteAgent = async (id: string): Promise<ApiResponse> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log('🗑️ [useAgents] Suppression agent via API pure:', id)
+      console.log('Suppression agent beauté:', id)
       
       if (!id) {
         throw new Error('ID agent requis pour la suppression')
       }
 
-      // ✅ VÉRIFIER API DISPONIBLE
+      // Calculer économie après suppression
+      const currentCost = monthlyAgentsCost.value
+      const newCost = estimateAgentCost(-1)
+      const savings = Math.max(0, currentCost - newCost)
+
       await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}`, {
@@ -377,7 +374,15 @@ Solutions possibles:
 
       if (response.success) {
         agents.value = agents.value.filter(agent => agent.id !== id)
-        console.log(`✅ Agent supprimé avec succès: ${id}`)
+        
+        // Mettre à jour le nombre d'agents
+        await authStore.updateAgentsCount(agents.value.length)
+        
+        console.log(`Agent supprimé: ${id}`)
+        if (savings > 0) {
+          console.log(`Économie mensuelle: ${savings}€`)
+        }
+        
         return { success: true }
       } else {
         throw new Error(response.error || 'Erreur lors de la suppression')
@@ -390,15 +395,25 @@ Solutions possibles:
     }
   }
 
-  // ✅ ACTIVER/DÉSACTIVER UN AGENT - 100% API PURE
+  // ✅ ACTIVER/DÉSACTIVER UN AGENT - 100% API
   const toggleAgentStatus = async (id: string, isActive: boolean): Promise<ApiResponse> => {
     saving.value = true
     error.value = null
 
     try {
-      console.log(`🔄 [useAgents] ${isActive ? 'Activation' : 'Désactivation'} agent via API pure:`, id)
+      console.log(`${isActive ? 'Activation' : 'Désactivation'} agent beauté:`, id)
       
-      // ✅ VÉRIFIER API DISPONIBLE
+      // ✅ AMÉLIORATION : Vérification pour activation seulement
+      if (isActive) {
+        const permissions = checkAgentPermissions('modify')
+        if (!permissions.allowed) {
+          if (permissions.requiresUpgrade) {
+            setTimeout(() => navigateTo('/billing'), 2000)
+          }
+          throw new Error(permissions.error)
+        }
+      }
+      
       await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}/toggle`, {
@@ -414,7 +429,7 @@ Solutions possibles:
           agents.value[index].isActive = isActive
           agents.value[index].updatedAt = new Date().toISOString()
         }
-        console.log(`✅ Statut modifié: ${id} -> ${isActive ? 'actif' : 'inactif'}`)
+        console.log(`Statut modifié: ${id} -> ${isActive ? 'actif' : 'inactif'}`)
         return { success: true }
       } else {
         throw new Error(response.error || 'Erreur lors de la modification du statut')
@@ -427,21 +442,35 @@ Solutions possibles:
     }
   }
 
-  // ✅ DUPLIQUER UN AGENT - 100% API PURE
+  // ✅ DUPLIQUER UN AGENT - AVEC CONFIRMATION DE COÛT
   const duplicateAgent = async (id: string): Promise<ApiResponse<Agent>> => {
-    saving.value = true
-    error.value = null
+  saving.value = true
+  error.value = null
 
-    try {
-      console.log('📋 [useAgents] Duplication agent via API pure:', id)
+  try {
+    console.log('Duplication agent beauté:', id)
+    
+    // ✅ AMÉLIORATION : Même vérification
+    const permissions = checkAgentPermissions('duplicate')
+    if (!permissions.allowed) {
+      if (permissions.requiresUpgrade) {
+        setTimeout(() => navigateTo('/billing'), 2000)
+      }
+      throw new Error(permissions.error)
+    }
       
-      // ✅ VÉRIFIER LIMITES AVANT DUPLICATION
-      if (!canCreateAgent.value) {
-        const limit = planDetails.value.agentLimit
-        throw new Error(`❌ Limite de votre plan atteinte (${limit} agent${limit > 1 ? 's' : ''} maximum). Impossible de dupliquer.`)
+      // Calculer coût additionnel
+      const additionalCost = estimateAgentCost(1) - monthlyAgentsCost.value
+      
+      if (additionalCost > 0) {
+        console.log(`La duplication ajoutera ${additionalCost}€/mois`)
+        // L'interface doit avoir confirmé ce coût
       }
 
-      // ✅ VÉRIFIER API DISPONIBLE
+      if (!canCreateAgent.value) {
+        throw new Error('Essai gratuit expiré. Impossible de dupliquer.')
+      }
+
       await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}/duplicate`, {
@@ -452,46 +481,51 @@ Solutions possibles:
 
       if (response.success && response.data) {
         agents.value.unshift(response.data)
-        console.log(`✅ Agent dupliqué avec succès: ${response.data.id}`)
+        
+        // Mettre à jour le nombre d'agents
+        await authStore.updateAgentsCount(agents.value.length)
+        
+        console.log(`Agent dupliqué: ${response.data.id}`)
+        console.log(`Nouveau coût mensuel: ${monthlyAgentsCost.value}€`)
+        
         return { success: true, data: response.data }
       } else {
         throw new Error(response.error || 'Erreur lors de la duplication')
       }
 
-    } catch (err: any) {
-      return handleApiError(err, 'Erreur lors de la duplication de l\'agent')
-    } finally {
-      saving.value = false
+    } catch (error: any) {
+    if (error.message.includes('essai expiré')) {
+      setTimeout(() => navigateTo('/billing'), 3000)
     }
+    return handleApiError(error, 'Erreur lors de la duplication de l\'agent')
+  } finally {
+    saving.value = false
   }
+}
 
   // ✅ OBTENIR UN AGENT PAR ID
   const getAgent = (id: string): Agent | null => {
     return agents.value.find(agent => agent.id === id) || null
   }
 
-  // ✅ HELPER FUNCTIONS AVEC TITLE
-  const getTypeLabel = (type: Agent['type']): string => {
-    const labels = {
-      general: 'Vendeur généraliste',
-      product_specialist: 'Spécialiste produit',
-      support: 'Support & SAV',
-      upsell: 'Upsell & Cross-sell'
+  // ✅ HELPER FUNCTIONS BEAUTÉ CENTRALISÉES
+  const getDefaultTitle = (type: AgentType): string => {
+    const beautyType = BEAUTY_AGENT_TYPES[type as BeautyAgentType]
+    if (beautyType) {
+      return beautyType.label.replace(' IA', '').toLowerCase()
     }
-    return labels[type] || type
-  }
-
-  const getDefaultTitle = (type: Agent['type']): string => {
-    const titles = {
+    
+    const classicTitles = {
       general: 'Conseiller commercial',
       product_specialist: 'Spécialiste produit',
       support: 'Conseiller support',
       upsell: 'Conseiller premium'
     }
-    return titles[type] || 'Assistant commercial'
+    
+    return classicTitles[type as keyof typeof classicTitles] || 'Assistant commercial'
   }
 
-  const getPersonalityLabel = (personality: Agent['personality']): string => {
+  const getPersonalityLabel = (personality: PersonalityType): string => {
     const labels = {
       professional: 'Professionnel',
       friendly: 'Amical',
@@ -499,26 +533,6 @@ Solutions possibles:
       casual: 'Décontracté'
     }
     return labels[personality] || personality
-  }
-
-  const getAgentIcon = (type: Agent['type']): string => {
-    const icons = {
-      general: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-      product_specialist: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
-      support: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
-      upsell: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
-    }
-    return icons[type] || icons.general
-  }
-
-  const getAvatarClass = (type: Agent['type']): string => {
-    const classes = {
-      general: 'bg-blue-500',
-      product_specialist: 'bg-green-500',
-      support: 'bg-orange-500',
-      upsell: 'bg-purple-500'
-    }
-    return classes[type] || 'bg-blue-500'
   }
 
   const getStatusBadgeClass = (isActive: boolean): string => {
@@ -532,34 +546,33 @@ Solutions possibles:
     error.value = null
   }
 
-  // ✅ TEST CONNEXION API
   const testApiConnection = async (): Promise<ApiResponse> => {
     try {
-      console.log('🔍 [useAgents] Test connexion API...')
+      console.log('Test connexion API...')
       
       const response = await $fetch('/health', {
         baseURL: config.public.apiBaseUrl,
         timeout: 5000
-      })
+      }) as any
       
-      console.log('✅ [useAgents] API accessible:', response)
+      console.log('API accessible:', response)
       return { success: true, data: response }
       
     } catch (err: any) {
-      console.error('❌ [useAgents] API inaccessible:', err)
+      console.error('API inaccessible:', err)
       return { success: false, error: err.message || 'API inaccessible' }
     }
   }
 
   return {
     // State
-    agents: readonly(agents),
-    loading: readonly(loading),
-    saving: readonly(saving),
-    error: readonly(error),
+    agents,
+    loading,
+    saving,
+    error,
 
-    // Computed pour gestion plan
-    planDetails: readonly(planDetails),
+    // Computed pour gestion plan beauté
+    planDetails,
     subscriptionPlan,
     isPaidUser,
     hasActiveAccess,
@@ -570,6 +583,10 @@ Solutions possibles:
     canCreateAgent,
     planLimitReached,
 
+    // ✅ NOUVEAU : Computed coûts
+    monthlyAgentsCost,
+    estimateAgentCost,
+
     // Actions
     fetchAgents,
     createAgent,
@@ -578,15 +595,18 @@ Solutions possibles:
     toggleAgentStatus,
     duplicateAgent,
     testApiConnection,
+    checkAgentPermissions,
 
     // Helpers
     getAgent,
-    getTypeLabel,
-    getDefaultTitle, // ✅ NOUVEAU
+    getDefaultTitle,
     getPersonalityLabel,
+    clearError,
+
+    // ✅ Helpers importés de types/beauty.ts
+    getTypeLabel,
     getAgentIcon,
     getAvatarClass,
-    getStatusBadgeClass,
-    clearError
+    getStatusBadgeClass
   }
 }

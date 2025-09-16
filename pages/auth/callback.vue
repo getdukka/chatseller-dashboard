@@ -1,13 +1,13 @@
 <!-- pages/auth/callback.vue - VERSION AMÉLIORÉE UX -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+  <div class="min-h-screen bg-gradient-to-br from-rose-50 via-white to-rose-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
       
       <!-- Loading State -->
       <div v-if="loading" class="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
         <div class="flex justify-center mb-4">
-          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            <svg class="animate-spin w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+          <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center">
+            <svg class="animate-spin w-8 h-8 text-rose-600" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -36,7 +36,7 @@
         <!-- Progress bar -->
         <div class="mt-4 w-full bg-gray-200 rounded-full h-2">
           <div 
-            class="bg-blue-600 h-2 rounded-full transition-all duration-500"
+            class="bg-rose-600 h-2 rounded-full transition-all duration-500"
             :style="{ width: `${progressPercent}%` }"
           ></div>
         </div>
@@ -58,8 +58,8 @@
         <p class="text-gray-600 mb-4">
           Votre compte ChatSeller est maintenant activé
         </p>
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p class="text-blue-800 text-sm">
+        <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6">
+          <p class="text-rose-800 text-sm">
             <strong>Prochaine étape :</strong> Configurons ensemble votre espace de vente IA
           </p>
         </div>
@@ -68,7 +68,7 @@
         <div class="mb-6">
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div 
-              class="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all duration-100 ease-linear"
+              class="bg-gradient-to-r from-rose-600 to-green-600 h-2 rounded-full transition-all duration-100 ease-linear"
               :style="{ width: `${countdownProgress}%` }"
             ></div>
           </div>
@@ -80,7 +80,7 @@
         <!-- Action button -->
         <button
           @click="redirectToOnboarding"
-          class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-green-700 transition-all shadow-lg transform hover:scale-105"
+          class="w-full bg-gradient-to-r from-rose-600 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-rose-700 hover:to-green-700 transition-all shadow-lg transform hover:scale-105"
         >
           Configurer mon espace maintenant
         </button>
@@ -105,7 +105,7 @@
         <div class="space-y-3">
           <NuxtLink
             to="/register"
-            class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            class="w-full inline-flex justify-center items-center px-4 py-2 bg-rose-600 text-white font-medium rounded-lg hover:bg-rose-700 transition-colors"
           >
             Créer un nouveau compte
           </NuxtLink>

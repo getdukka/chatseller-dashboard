@@ -1,4 +1,4 @@
-// server/api/vendeurs-ia/index.get.ts - ENDPOINT POUR LISTE DES AGENTS
+// server/api/agent-ia/index.get.ts - ENDPOINT POUR LISTE DES AGENTS
 export default defineEventHandler(async (event) => {
   try {
     console.log('🔍 [API] Récupération liste des agents')

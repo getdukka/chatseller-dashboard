@@ -1,24 +1,28 @@
-// stores/billing.ts - VERSION API PURE
+// stores/billing.ts - VERSION ADAPTÉE NOUVEAUX PLANS
 
 import { defineStore } from 'pinia'
 import { useAuthStore } from './auth'
 
-// ✅ TYPES
+// ✅ TYPES ADAPTÉS
 interface BillingPlan {
   id: string
   name: string
-  code: 'free' | 'starter' | 'pro' | 'enterprise'
+  code: 'starter' | 'growth' | 'performance'
   price: number
+  priceAnnual?: number
   currency: string
   interval: 'month' | 'year'
   features: string[]
   limits: {
     agents: number
-    conversations: number
-    knowledgeBase: number
+    aiResponses: number
+    knowledgeDocuments: number
+    indexablePages: number
   }
   isActive: boolean
   isPopular?: boolean
+  additionalAgentCost: number
+  trialDays?: number
 }
 
 interface Subscription {
@@ -49,12 +53,14 @@ interface Invoice {
 interface UsageStats {
   period: string
   agents_used: number
-  conversations_used: number
-  knowledge_base_used: number 
+  ai_responses_used: number
+  knowledge_documents_used: number
+  indexable_pages_used: number
   plan_limits: {
     agents: number
-    conversations: number
-    knowledgeBase: number   
+    aiResponses: number
+    knowledgeDocuments: number
+    indexablePages: number
   }
 }
 
@@ -67,8 +73,8 @@ interface BillingState {
   error: string | null
 }
 
-// ✅ STORE BILLING
-export const useBilling = defineStore('billing', {
+// ✅ STORE BILLING ADAPTÉ
+export const useBillingStore = defineStore('billing', {
   state: (): BillingState => ({
     plans: [],
     currentSubscription: null,
@@ -120,26 +126,71 @@ export const useBilling = defineStore('billing', {
     },
 
     // ✅ UTILISATION EN %
-    usagePercentage: (state): { agents: number; conversations: number; knowledgeBase: number } => {
-  if (!state.usageStats) {
-    return { agents: 0, conversations: 0, knowledgeBase: 0 }
-  }
+    usagePercentage: (state): { 
+      agents: number
+      aiResponses: number
+      knowledgeDocuments: number
+      indexablePages: number
+    } => {
+      if (!state.usageStats) {
+        return { agents: 0, aiResponses: 0, knowledgeDocuments: 0, indexablePages: 0 }
+      }
 
-  const { agents_used, conversations_used, knowledge_base_used, plan_limits } = state.usageStats
-  
-  return {
-    agents: plan_limits.agents === -1 ? 0 : Math.round((agents_used / plan_limits.agents) * 100),
-    conversations: plan_limits.conversations === -1 ? 0 : Math.round((conversations_used / plan_limits.conversations) * 100),
-    knowledgeBase: plan_limits.knowledgeBase === -1 ? 0 : Math.round((knowledge_base_used / plan_limits.knowledgeBase) * 100) 
-  }
-},
+      const { 
+        agents_used, 
+        ai_responses_used, 
+        knowledge_documents_used, 
+        indexable_pages_used, 
+        plan_limits 
+      } = state.usageStats
+      
+      return {
+        agents: plan_limits.agents === -1 ? 0 : Math.round((agents_used / plan_limits.agents) * 100),
+        aiResponses: plan_limits.aiResponses === -1 ? 0 : Math.round((ai_responses_used / plan_limits.aiResponses) * 100),
+        knowledgeDocuments: plan_limits.knowledgeDocuments === -1 ? 0 : Math.round((knowledge_documents_used / plan_limits.knowledgeDocuments) * 100),
+        indexablePages: plan_limits.indexablePages === -1 ? 0 : Math.round((indexable_pages_used / plan_limits.indexablePages) * 100)
+      }
+    },
 
     // ✅ FACTURES PAR STATUT
     invoicesByStatus: (state) => ({
       paid: state.invoices.filter(inv => inv.status === 'paid'),
       pending: state.invoices.filter(inv => inv.status === 'pending'),
       failed: state.invoices.filter(inv => inv.status === 'failed')
-    })
+    }),
+
+    // ✅ COÛT TOTAL AVEC AGENTS
+    totalMonthlyCost(): { 
+      baseCost: number
+      agentCost: number
+      totalCost: number
+      agentCount: number
+    } {
+      const currentPlan = this.currentPlan
+      const agentCount = this.usageStats?.agents_used || 1
+      
+      if (!currentPlan) {
+        return { baseCost: 0, agentCost: 0, totalCost: 0, agentCount: 0 }
+      }
+      
+      const baseCost = currentPlan.price
+      let agentCost = 0
+      
+      // Performance: agents inclus
+      if (currentPlan.code === 'performance') {
+        agentCost = 0
+      } else {
+        // Starter & Growth: 10€ par agent supplémentaire
+        agentCost = Math.max(0, agentCount - 1) * currentPlan.additionalAgentCost
+      }
+      
+      return {
+        baseCost,
+        agentCost,
+        totalCost: baseCost + agentCost,
+        agentCount
+      }
+    }
   },
 
   actions: {
@@ -149,57 +200,95 @@ export const useBilling = defineStore('billing', {
       this.error = null
       
       try {
-        console.log('💳 [Billing Store] Chargement plans via API...')
+        console.log('💳 [Billing Store] Chargement plans nouveaux via API...')
         
-        // Note: Route à implémenter côté API
-        const api = useApi()
-        
-        // Pour l'instant, définir les plans en dur en attendant l'API
+        // ✅ NOUVEAUX PLANS AVEC QUOTAS CORRECTS
         this.plans = [
-          {
-            id: 'free',
-            name: 'Essai Gratuit',
-            code: 'free',
-            price: 0,
-            currency: 'EUR',
-            interval: 'month',
-            features: ['7 jours gratuit', '1 agent IA', '1000 conversations/mois', '10 documents max'],
-            limits: { agents: 1, conversations: 1000, knowledgeBase: 10 },
-            isActive: true
-          },
           {
             id: 'starter',
             name: 'Starter',
             code: 'starter',
-            price: 29,
+            price: 49,
+            priceAnnual: 42, // 504€/an ÷ 12
             currency: 'EUR',
             interval: 'month',
-            features: ['1 Vendeur IA spécialisé', '1000 conversations/mois', '10 documents max', 'Analytics de base', 'Support email'],
-            limits: { agents: 1, conversations: 1000, knowledgeBase: 10 },
-            isActive: true
-          },
-          {
-            id: 'pro',
-            name: 'Pro',
-            code: 'pro',
-            price: 79,
-            currency: 'EUR',
-            interval: 'month',
-            features: ['3 Vendeurs IA', 'Conversations illimitées', '50 documents max', 'Analytics avancées & ROI', 'Upsell & FOMO', 'Support prioritaire'],
-            limits: { agents: 3, conversations: -1, knowledgeBase: 50 },
+            features: [
+              'Agents IA illimités (+10€/agent)',
+              '1 000 réponses IA/mois',
+              '50 documents base de connaissances',
+              '500 pages web indexables',
+              'Widget adaptatif tous sites',
+              'Analytics de base',
+              'Support email'
+            ],
+            limits: { 
+              agents: -1, // Illimité mais payant
+              aiResponses: 1000, 
+              knowledgeDocuments: 50, 
+              indexablePages: 500 
+            },
             isActive: true,
-            isPopular: true
+            additionalAgentCost: 10,
+            trialDays: 14
           },
           {
-            id: 'enterprise',
-            name: 'Enterprise',
-            code: 'enterprise',
-            price: 199,
+            id: 'growth',
+            name: 'Growth',
+            code: 'growth',
+            price: 149,
+            priceAnnual: 127, // 1524€/an ÷ 12
             currency: 'EUR',
             interval: 'month',
-            features: ['Vendeurs IA illimités', 'Documents illimités', 'Analytics complètes', 'White-label', 'Support dédié', 'API avancée'],
-            limits: { agents: -1, conversations: -1, knowledgeBase: -1 },
-            isActive: true
+            features: [
+              'Tout du plan Starter inclus',
+              'Agents IA illimités (+10€/agent)',
+              '10 000 réponses IA/mois',
+              '200 documents base de connaissances',
+              '2 000 pages web indexables',
+              'Analytics avancées & ROI',
+              'A/B testing agents',
+              'Intégrations CRM',
+              'Support prioritaire'
+            ],
+            limits: { 
+              agents: -1, // Illimité mais payant
+              aiResponses: 10000, 
+              knowledgeDocuments: 200, 
+              indexablePages: 2000 
+            },
+            isActive: true,
+            isPopular: true,
+            additionalAgentCost: 10,
+            trialDays: 14
+          },
+          {
+            id: 'performance',
+            name: 'Performance',
+            code: 'performance',
+            price: 0, // Sur mesure
+            priceAnnual: 0,
+            currency: 'EUR',
+            interval: 'month',
+            features: [
+              'Tout du plan Growth inclus',
+              'Réponses IA illimitées',
+              'Documents illimités',
+              'Pages indexables illimitées',
+              'Agents IA inclus (0€ supplémentaire)',
+              'White-label complet',
+              'API avancée',
+              'Support dédié 24/7',
+              'Onboarding personnalisé'
+            ],
+            limits: { 
+              agents: -1, // Illimité et gratuit
+              aiResponses: -1, // Illimité
+              knowledgeDocuments: -1, // Illimité
+              indexablePages: -1 // Illimité
+            },
+            isActive: true,
+            additionalAgentCost: 0,
+            trialDays: 14
           }
         ]
         
@@ -232,14 +321,14 @@ export const useBilling = defineStore('billing', {
         this.currentSubscription = {
           id: `sub_${shop.id}`,
           shop_id: shop.id,
-          plan_code: shop.subscription_plan || 'free',
-          status: shop.subscription_plan === 'free' ? 'trialing' : 'active',
+          plan_code: shop.subscription_plan || 'starter',
+          status: shop.subscription_plan === 'starter' ? 'trialing' : 'active',
           current_period_start: shop.created_at || new Date().toISOString(),
-          current_period_end: shop.subscription_plan === 'free' 
-            ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 jours
+          current_period_end: shop.subscription_plan === 'starter' 
+            ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 jours
             : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 jours
-          trial_end: shop.subscription_plan === 'free' 
-            ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          trial_end: shop.subscription_plan === 'starter' 
+            ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
             : undefined,
           cancel_at_period_end: false,
           created_at: shop.created_at || new Date().toISOString(),
@@ -264,17 +353,17 @@ export const useBilling = defineStore('billing', {
       try {
         console.log('📊 [Billing Store] Chargement stats utilisation via API...')
         
-        // Note: Routes à implémenter côté API
-        const api = useApi()
+        const authStore = useAuthStore()
         
-        // Simuler les stats pour l'instant
+        // Simuler les stats en utilisant les données du store auth
         const currentPlan = this.currentPlan
         if (currentPlan) {
           this.usageStats = {
             period: new Date().toISOString().substring(0, 7),
-            agents_used: 1, 
-            conversations_used: 0, 
-            knowledge_base_used: 0, 
+            agents_used: authStore.quotasUsage.agents || 1,
+            ai_responses_used: authStore.quotasUsage.aiResponses || 0,
+            knowledge_documents_used: authStore.quotasUsage.knowledgeDocuments || 0,
+            indexable_pages_used: authStore.quotasUsage.indexablePages || 0,
             plan_limits: currentPlan.limits
           }
         }
@@ -297,8 +386,7 @@ export const useBilling = defineStore('billing', {
       try {
         console.log('🧾 [Billing Store] Chargement factures via API...')
         
-        // Note: Routes à implémenter côté API
-        // Pour l'instant, liste vide
+        // Pour l'instant, liste vide en attendant l'implémentation API
         this.invoices = []
         
         console.log('✅ [Billing Store] Factures chargées:', this.invoices.length)
@@ -320,21 +408,21 @@ export const useBilling = defineStore('billing', {
         console.log('⬆️ [Billing Store] Changement plan vers:', planCode)
         
         const authStore = useAuthStore()
-        const result = await authStore.updateSubscriptionPlan(planCode)
         
-        if (!result.success) {
-          throw new Error(result.error || 'Erreur lors du changement de plan')
-        }
-        
-        // Mettre à jour l'abonnement local
+        // Pour l'instant, simuler la mise à jour
         if (this.currentSubscription) {
           this.currentSubscription.plan_code = planCode
           this.currentSubscription.updated_at = new Date().toISOString()
+          
+          // Mettre à jour aussi dans le store auth si possible
+          if (authStore.user?.shop) {
+            authStore.user.shop.subscription_plan = planCode
+          }
         }
         
         console.log('✅ [Billing Store] Plan mis à jour vers:', planCode)
         
-        return result
+        return { success: true }
         
       } catch (error: any) {
         console.error('❌ [Billing Store] Erreur changement plan:', error)
@@ -345,6 +433,60 @@ export const useBilling = defineStore('billing', {
       }
     },
 
+    // ✅ CALCULER COÛT AVEC AGENTS
+    calculateCostWithAgents(planCode: string, agentCount: number): {
+      baseCost: number
+      agentCost: number
+      totalCost: number
+      description: string
+    } {
+      const plan = this.plans.find(p => p.code === planCode)
+      
+      if (!plan) {
+        return { baseCost: 0, agentCost: 0, totalCost: 0, description: 'Plan non trouvé' }
+      }
+      
+      const baseCost = plan.price
+      
+      // Performance: agents inclus
+      if (plan.code === 'performance') {
+        return {
+          baseCost: 0,
+          agentCost: 0,
+          totalCost: 0,
+          description: 'Sur mesure'
+        }
+      }
+      
+      // Starter & Growth: 10€ par agent supplémentaire
+      const agentCost = Math.max(0, agentCount - 1) * plan.additionalAgentCost
+      const totalCost = baseCost + agentCost
+      
+      return {
+        baseCost,
+        agentCost,
+        totalCost,
+        description: `${totalCost}€/mois`
+      }
+    },
+
+    // ✅ VÉRIFIER SI UN PLAN PEUT ÊTRE ACHETÉ
+    canUpgradeToPlan(targetPlanCode: string): boolean {
+      const currentPlan = this.currentPlan
+      if (!currentPlan) return true
+      
+      const planHierarchy = {
+        starter: 1,
+        growth: 2,
+        performance: 3
+      }
+      
+      const currentLevel = planHierarchy[currentPlan.code as keyof typeof planHierarchy] || 0
+      const targetLevel = planHierarchy[targetPlanCode as keyof typeof planHierarchy] || 0
+      
+      return targetLevel > currentLevel
+    },
+
     // ✅ ANNULER ABONNEMENT
     async cancelSubscription() {
       this.isLoading = true
@@ -353,10 +495,6 @@ export const useBilling = defineStore('billing', {
       try {
         console.log('❌ [Billing Store] Annulation abonnement...')
         
-        // Note: Route à implémenter côté API
-        const api = useApi()
-        
-        // Pour l'instant, simuler l'annulation
         if (this.currentSubscription) {
           this.currentSubscription.cancel_at_period_end = true
           this.currentSubscription.updated_at = new Date().toISOString()
@@ -381,7 +519,6 @@ export const useBilling = defineStore('billing', {
       try {
         console.log('🔄 [Billing Store] Réactivation abonnement...')
         
-        // Note: Route à implémenter côté API
         if (this.currentSubscription) {
           this.currentSubscription.cancel_at_period_end = false
           this.currentSubscription.updated_at = new Date().toISOString()
@@ -403,7 +540,6 @@ export const useBilling = defineStore('billing', {
       try {
         console.log('📥 [Billing Store] Téléchargement facture:', invoiceId)
         
-        // Note: Route à implémenter côté API
         const invoice = this.invoices.find(inv => inv.id === invoiceId)
         if (!invoice?.pdf_url) {
           throw new Error('URL de facture non disponible')

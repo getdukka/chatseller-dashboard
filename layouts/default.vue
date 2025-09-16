@@ -1,4 +1,4 @@
-<!-- layouts/default.vue - NAVIGATION ROBUSTE CORRIGÉE -->
+<!-- layouts/default.vue - VERSION CORRIGÉE COMPLÈTE -->
 <template>
   <div class="min-h-screen bg-gray-50">
     
@@ -24,7 +24,7 @@
     <div 
       v-if="mobileMenuOpen" 
       class="fixed inset-0 z-50 lg:hidden"
-      @click="closeMobileMenu"
+      @click.self="closeMobileMenu"
     >
       <!-- Background overlay -->
       <div class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm"></div>
@@ -65,7 +65,7 @@
         <!-- Mobile menu button -->
         <button
           @click="toggleMobileMenu"
-          class="inline-flex items-center justify-center p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+          class="inline-flex items-center justify-center p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all duration-200"
         >
           <span class="sr-only">{{ mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu' }}</span>
           <Transition
@@ -88,7 +88,7 @@
 
         <!-- Mobile logo -->
         <div class="flex items-center space-x-3">
-          <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg">
+          <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-rose-600 to-rose-700 shadow-lg">
             <span class="text-xs font-bold text-white">CS</span>
           </div>
           <span class="text-lg font-bold text-gray-900">ChatSeller</span>
@@ -96,26 +96,26 @@
 
         <!-- Badges abonnement mobile -->
         <div class="flex items-center space-x-2">
-          <!-- Badge Plan Pro Actif -->
-          <div v-if="subscriptionInfo.plan === 'pro' && subscriptionInfo.isActive" class="flex items-center space-x-1 px-2 py-1 bg-green-50 border border-green-200 rounded-lg">
+          <!-- Badge Plan Growth Actif -->
+          <div v-if="subscriptionInfo.plan === 'growth' && subscriptionInfo.isActive" class="flex items-center space-x-1 px-2 py-1 bg-green-50 border border-green-200 rounded-lg">
             <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-            <span class="text-xs font-medium text-green-700">Pro</span>
+            <span class="text-xs font-medium text-green-700">Growth</span>
           </div>
           
           <!-- Badge Plan Starter Actif -->
-          <div v-else-if="subscriptionInfo.plan === 'starter' && subscriptionInfo.isActive" class="flex items-center space-x-1 px-2 py-1 bg-blue-50 border border-blue-200 rounded-lg">
-            <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-            <span class="text-xs font-medium text-blue-700">Starter</span>
+          <div v-else-if="subscriptionInfo.plan === 'starter' && subscriptionInfo.isActive" class="flex items-center space-x-1 px-2 py-1 bg-rose-50 border border-rose-200 rounded-lg">
+            <div class="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>
+            <span class="text-xs font-medium text-rose-700">Starter</span>
           </div>
           
           <!-- Badge Essai gratuit -->
-          <div v-else-if="subscriptionInfo.plan === 'free' && subscriptionInfo.isActive && subscriptionInfo.trialDaysLeft > 0" class="flex items-center space-x-1 px-2 py-1 bg-blue-50 border border-blue-200 rounded-lg">
-            <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
-            <span class="text-xs font-medium text-blue-700">{{ subscriptionInfo.trialDaysLeft }}j</span>
+          <div v-else-if="subscriptionInfo.trialDaysLeft > 0" class="flex items-center space-x-1 px-2 py-1 bg-rose-50 border border-rose-200 rounded-lg">
+            <div class="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></div>
+            <span class="text-xs font-medium text-rose-700">{{ subscriptionInfo.trialDaysLeft }}j</span>
           </div>
 
           <!-- Badge Expiré -->
-          <div v-else-if="subscriptionInfo.plan === 'free' && (!subscriptionInfo.isActive || subscriptionInfo.trialDaysLeft === 0)" class="flex items-center space-x-1 px-2 py-1 bg-red-50 border border-red-200 rounded-lg">
+          <div v-else class="flex items-center space-x-1 px-2 py-1 bg-red-50 border border-red-200 rounded-lg">
             <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
             <span class="text-xs font-medium text-red-700">Expiré</span>
           </div>
@@ -124,8 +124,9 @@
           <button 
             @click="toggleMobileProfileMenu"
             class="relative"
+            data-mobile-profile
           >
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-rose-600 shadow-md">
               <span class="text-xs font-semibold text-white">
                 {{ userInitials }}
               </span>
@@ -143,6 +144,7 @@
               <div 
                 v-if="showMobileProfileMenu"
                 class="absolute right-0 top-10 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2"
+                data-mobile-profile
               >
                 <div class="px-4 py-3 border-b border-gray-100">
                   <p class="text-sm font-medium text-gray-900">{{ userName || 'Utilisateur' }}</p>
@@ -173,27 +175,27 @@
                 
                 <!-- Boutons upgrade mobile adaptatifs -->
                 <button
-                  v-if="subscriptionInfo.plan === 'free'"
+                  v-if="subscriptionInfo.plan === 'starter' && subscriptionInfo.trialDaysLeft <= 0"
                   @click="handleUpgradeToPlan('starter')"
                   :disabled="upgradingToPlan === 'starter'"
-                  class="w-full flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  class="w-full flex items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50"
                 >
                   <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
-                  {{ upgradingToPlan === 'starter' ? 'Redirection...' : (subscriptionInfo.trialDaysLeft > 0 ? 'Passer à Starter' : 'Réactiver (Starter)') }}
+                  {{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver Starter' }}
                 </button>
 
                 <button
                   v-else-if="subscriptionInfo.plan === 'starter' && subscriptionInfo.isActive"
-                  @click="handleUpgradeToPlan('pro')"
-                  :disabled="upgradingToPlan === 'pro'"
+                  @click="handleUpgradeToPlan('growth')"
+                  :disabled="upgradingToPlan === 'growth'"
                   class="w-full flex items-center px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors disabled:opacity-50"
                 >
                   <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                   </svg>
-                  {{ upgradingToPlan === 'pro' ? 'Redirection...' : 'Passer au Pro' }}
+                  {{ upgradingToPlan === 'growth' ? 'Redirection...' : 'Passer au Growth' }}
                 </button>
                 
                 <button
@@ -223,8 +225,8 @@
     <div v-if="upgradingToPlan" class="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center">
       <div class="bg-white rounded-xl shadow-xl p-8 max-w-sm w-full mx-4">
         <div class="text-center">
-          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="animate-spin w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+          <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="animate-spin w-8 h-8 text-rose-600" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -242,7 +244,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '~~/stores/auth'
 
 // Types
-type SubscriptionPlan = 'free' | 'starter' | 'pro'
+type SubscriptionPlan = 'starter' | 'growth' | 'performance'
 
 interface SubscriptionInfo {
   plan: SubscriptionPlan
@@ -254,22 +256,23 @@ interface SubscriptionInfo {
 const authStore = useAuthStore()
 const config = useRuntimeConfig()
 const api = useApi()
+const route = useRoute()
 
 // États locaux
 const mobileMenuOpen = ref(false)
 const showProfileMenu = ref(false)
 const showMobileProfileMenu = ref(false)
-const upgradingToPlan = ref<'starter' | 'pro' | null>(null)
+const upgradingToPlan = ref<'starter' | 'growth' | null>(null)
 
 // État pour les conversations non lues
 const unreadConversationsCount = ref(0)
 const loadingConversations = ref(false)
 
-// Données d'abonnement
+// Données d'abonnement - CORRIGÉ avec les nouveaux plans
 const subscriptionInfo = ref<SubscriptionInfo>({
-  plan: 'free',
+  plan: 'starter',
   isActive: false,
-  trialDaysLeft: 7
+  trialDaysLeft: 14
 })
 
 // Computed properties pour les données utilisateur
@@ -333,8 +336,8 @@ const closeMobileProfileMenu = () => {
   showMobileProfileMenu.value = false
 }
 
-// FONCTION UPGRADE SIMPLIFIÉE
-const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
+// FONCTION UPGRADE SIMPLIFIÉE - CORRIGÉE POUR NOUVEAUX PLANS
+const handleUpgradeToPlan = async (targetPlan: 'starter' | 'growth') => {
   console.log(`[Layout] Initiation upgrade vers ${targetPlan}`)
   
   upgradingToPlan.value = targetPlan
@@ -368,22 +371,24 @@ const handleUpgradeToPlan = async (targetPlan: 'starter' | 'pro') => {
   }
 }
 
-// FONCTION POUR CHARGER LES INFOS D'ABONNEMENT
+// FONCTION POUR CHARGER LES INFOS D'ABONNEMENT - CORRIGÉE
 const loadSubscriptionInfo = async () => {
   try {
     const planDetails = authStore.planDetails
     
+    // CORRECTION : Utiliser hasActiveAccess au lieu de isActive
     subscriptionInfo.value = {
       plan: planDetails.code as SubscriptionPlan,
-      isActive: planDetails.isActive,
+      isActive: authStore.hasActiveAccess, // CORRIGÉ
       trialDaysLeft: planDetails.trialDaysLeft
     }
   } catch (error) {
     console.error('[Layout] Erreur subscription info:', error)
+    // Fallback sécurisé
     subscriptionInfo.value = {
-      plan: 'free',
+      plan: 'starter',
       isActive: true,
-      trialDaysLeft: 5
+      trialDaysLeft: 14
     }
   }
 }
@@ -401,7 +406,8 @@ const handleLogout = async () => {
 const handleClickOutside = (event: Event) => {
   const target = event.target as Element
   
-  if (showMobileProfileMenu.value && !target.closest('.relative')) {
+  // Fermer seulement le menu mobile profile si click extérieur
+  if (showMobileProfileMenu.value && !target.closest('[data-mobile-profile]')) {
     showMobileProfileMenu.value = false
   }
 }
@@ -415,27 +421,23 @@ const updateBodyScroll = () => {
   }
 }
 
-// WATCHERS SIMPLIFIÉS
-watch(mobileMenuOpen, updateBodyScroll)
+// WATCHERS SIMPLIFIÉS - CORRIGÉS
+watch(mobileMenuOpen, (newValue) => {
+  document.body.style.overflow = newValue ? 'hidden' : ''
+})
 
 watch(() => authStore.isAuthenticated, async (isAuth) => {
   if (isAuth && authStore.token) {
     await loadSubscriptionInfo()
     await loadUnreadConversations()
-  } else {
-    subscriptionInfo.value = {
-      plan: 'free',
-      isActive: false,
-      trialDaysLeft: 7
-    }
-    unreadConversationsCount.value = 0
   }
-})
+}, { immediate: false })
 
+// WATCHER PLAN DETAILS CORRIGÉ
 watch(() => authStore.planDetails, (newPlanDetails) => {
   subscriptionInfo.value = {
     plan: newPlanDetails.code as SubscriptionPlan,
-    isActive: newPlanDetails.isActive,
+    isActive: authStore.hasActiveAccess, // CORRIGÉ
     trialDaysLeft: newPlanDetails.trialDaysLeft
   }
 }, { deep: true })
@@ -449,11 +451,11 @@ watch(() => authStore.userShopId, async (newShopId) => {
 })
 
 // WATCHER POUR FERMER MENUS LORS NAVIGATION - SIMPLIFIÉ
-const route = useRoute()
 watch(() => route.path, () => {
-  closeMobileMenu()
-  closeMobileProfileMenu()
-  closeProfileMenu()
+  // Fermer tous les menus lors navigation - SIMPLE ET DIRECT
+  mobileMenuOpen.value = false
+  showMobileProfileMenu.value = false
+  showProfileMenu.value = false
 })
 
 onMounted(async () => {

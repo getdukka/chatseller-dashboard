@@ -1,22 +1,7 @@
 // stores/agents.ts
 import { defineStore } from 'pinia'
 import { useAuthStore } from './auth'
-
-interface Agent {
-  id: string
-  shopId: string
-  name: string
-  type: string
-  personality: string
-  description?: string
-  avatar?: string
-  welcomeMessage?: string
-  fallbackMessage?: string
-  isActive: boolean
-  config: any
-  createdAt: string
-  updatedAt: string
-}
+import type { Agent } from '~/types/beauty' 
 
 interface AgentsState {
   agents: Agent[]

@@ -1,8 +1,9 @@
-// composables/useBilling.ts
+// composables/useBilling.ts - VERSION ADAPTÉE NOUVEAUX PLANS
 import { ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-type SubscriptionPlan = 'free' | 'starter' | 'pro'
+// ✅ NOUVEAUX TYPES PLANS
+type SubscriptionPlan = 'starter' | 'growth' | 'performance'
 
 interface SubscriptionStatus {
   plan: SubscriptionPlan
@@ -40,7 +41,7 @@ export const useBilling = () => {
         console.log(`📋 Plan actuel: ${subscriptionData.plan}`)
         
         // 3. Vérifier si le plan a été mis à jour
-        if (subscriptionData.plan === expectedPlan && subscriptionData.plan !== 'free') {
+        if (subscriptionData.plan === expectedPlan && subscriptionData.plan !== 'starter') {
           console.log(`✅ Plan mis à jour avec succès: ${subscriptionData.plan}`)
           return true
         }
@@ -155,12 +156,162 @@ export const useBilling = () => {
     }
   }
 
+  // ✅ CALCULER LE COÛT TOTAL AVEC AGENTS
+  const calculateTotalCost = (plan: SubscriptionPlan, agentCount: number = 1) => {
+    // Prix de base des plans
+    const basePrices: Record<SubscriptionPlan, number> = {
+      starter: 49,
+      growth: 149,
+      performance: 0 // Sur mesure
+    }
+    
+    const basePrice = basePrices[plan]
+    
+    // Performance : agents inclus
+    if (plan === 'performance') {
+      return {
+        basePrice: 0,
+        agentCost: 0,
+        totalPrice: 0,
+        description: 'Sur mesure'
+      }
+    }
+    
+    // Starter & Growth : 10€ par agent supplémentaire
+    const agentCost = Math.max(0, agentCount - 1) * 10
+    const totalPrice = basePrice + agentCost
+    
+    return {
+      basePrice,
+      agentCost,
+      totalPrice,
+      description: `${totalPrice}€/mois`
+    }
+  }
+
+  // ✅ VÉRIFIER SI UN PLAN PEUT ÊTRE ACHETÉ
+  const canSubscribeToPlan = (targetPlan: SubscriptionPlan, currentPlan: SubscriptionPlan): boolean => {
+    const planHierarchy = {
+      starter: 1,
+      growth: 2,
+      performance: 3
+    }
+    
+    return planHierarchy[targetPlan] > planHierarchy[currentPlan]
+  }
+
+  // ✅ OBTENIR LES INFORMATIONS D'UN PLAN
+  const getPlanInfo = (plan: SubscriptionPlan) => {
+    const planInfos = {
+      starter: {
+        name: 'Starter',
+        price: 49,
+        priceAnnual: 42, // 504€/an ÷ 12
+        currency: 'EUR',
+        interval: 'month',
+        trialDays: 14,
+        features: [
+          'Agents IA illimités (+10€/agent)',
+          '1 000 réponses IA/mois',
+          '50 documents base de connaissances',
+          '500 pages web indexables',
+          'Widget adaptatif tous sites',
+          'Analytics de base',
+          'Support email'
+        ],
+        limits: {
+          aiResponses: 1000,
+          knowledgeDocuments: 50,
+          indexablePages: 500,
+          agents: -1 // Illimité mais payant
+        },
+        color: 'rose'
+      },
+      growth: {
+        name: 'Growth',
+        price: 149,
+        priceAnnual: 127, // 1524€/an ÷ 12
+        currency: 'EUR',
+        interval: 'month',
+        trialDays: 14,
+        features: [
+          'Tout du plan Starter inclus',
+          'Agents IA illimités (+10€/agent)',
+          '10 000 réponses IA/mois',
+          '200 documents base de connaissances',
+          '2 000 pages web indexables',
+          'Analytics avancées & ROI',
+          'A/B testing agents',
+          'Intégrations CRM',
+          'Support prioritaire'
+        ],
+        limits: {
+          aiResponses: 10000,
+          knowledgeDocuments: 200,
+          indexablePages: 2000,
+          agents: -1 // Illimité mais payant
+        },
+        color: 'purple'
+      },
+      performance: {
+        name: 'Performance',
+        price: 0, // Sur mesure
+        priceAnnual: 0,
+        currency: 'EUR',
+        interval: 'month',
+        trialDays: 14,
+        features: [
+          'Tout du plan Growth inclus',
+          'Réponses IA illimitées',
+          'Documents illimités',
+          'Pages indexables illimitées',
+          'Agents IA inclus (0€ supplémentaire)',
+          'White-label complet',
+          'API avancée',
+          'Support dédié 24/7',
+          'Onboarding personnalisé'
+        ],
+        limits: {
+          aiResponses: -1, // Illimité
+          knowledgeDocuments: -1, // Illimité
+          indexablePages: -1, // Illimité
+          agents: -1 // Illimité et gratuit
+        },
+        color: 'gray'
+      }
+    }
+    
+    return planInfos[plan]
+  }
+
+  // ✅ FORMATER LE PRIX D'AFFICHAGE
+  const formatPrice = (plan: SubscriptionPlan, isAnnual: boolean = false): string => {
+    const info = getPlanInfo(plan)
+    
+    if (plan === 'performance') {
+      return 'Sur mesure'
+    }
+    
+    const price = isAnnual ? info.priceAnnual : info.price
+    return `${price}€/mois`
+  }
+
+  // ✅ VÉRIFIER SI UN PLAN EST GRATUIT/TRIAL
+  const isPlanTrial = (plan: SubscriptionPlan, trialDaysLeft: number): boolean => {
+    return plan === 'starter' && trialDaysLeft > 0
+  }
+
   return {
     loading,
     error,
     getSubscriptionStatus,
     createCheckoutSession,
     createCustomerPortal,
-    waitForSubscriptionUpdate
+    waitForSubscriptionUpdate,
+    calculateTotalCost,
+    canSubscribeToPlan,
+    getPlanInfo,
+    formatPrice,
+    isPlanTrial
   }
 }

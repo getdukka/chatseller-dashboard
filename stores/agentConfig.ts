@@ -1,22 +1,46 @@
 // stores/agentConfig.ts 
 import { defineStore } from 'pinia'
+import type { Agent, AgentType, BeautyAgentType } from '~/types/beauty'
 
 export interface AgentConfigData {
   id: string
   name: string
   title?: string
-  type: string
+  type: AgentType
   personality?: string
   description?: string
   welcomeMessage?: string
   fallbackMessage?: string
   productType?: string
   customProductType?: string
+  productRange?: string
+  customProductRange?: string
   language?: string
   tone?: string
   avatar?: string
   isActive: boolean
-  config?: any
+  config?: {
+    collectName?: boolean
+    collectPhone?: boolean
+    collectEmail?: boolean
+    collectAddress?: boolean
+    collectBeautyProfile?: boolean
+    // ✅ NOUVELLES PROPRIÉTÉS :
+    collectAge?: boolean
+    collectBudget?: boolean
+    collectPreferences?: boolean
+    collectPayment?: boolean
+    upsellEnabled?: boolean
+    urgencyEnabled?: boolean
+    specificInstructions?: string[]
+    linkedKnowledgeBase?: string[]
+    aiProvider?: string
+    temperature?: number
+    maxTokens?: number
+    systemPrompt?: string
+    generatedSystemPrompt?: string
+    tone?: string
+  }
   stats?: any
   sourceComponent?: string 
   knowledgeBase?: any[]
@@ -42,8 +66,8 @@ export const useAgentConfigStore = defineStore('agentConfig', {
   },
 
   actions: {
-    setAgentForConfig(agent: AgentConfigData, source: string = 'vendeurs-ia') {
-      console.log('📦 Store AgentConfig: Sauvegarde agent pour configuration:', agent.name, agent.id)
+    setAgentForConfig(agent: AgentConfigData, source: string = 'agent-ia') {
+      console.log('📦 Store AgentConfig: Sauvegarde agent beauté pour configuration:', agent.name, agent.id)
       
       this.currentAgent = {
         ...agent,
@@ -68,7 +92,7 @@ export const useAgentConfigStore = defineStore('agentConfig', {
     getAgentForConfig(): AgentConfigData | null {
       // Essayer d'abord le store
       if (this.hasValidAgent && this.isDataFresh) {
-        console.log('✅ Store AgentConfig: Données agent récupérées depuis store')
+        console.log('✅ Store AgentConfig: Données agent beauté récupérées depuis store')
         return this.currentAgent
       }
 
@@ -81,7 +105,7 @@ export const useAgentConfigStore = defineStore('agentConfig', {
             const age = Date.now() - data.timestamp
             
             if (age < 5 * 60 * 1000 && data.agent) { // 5 minutes max
-              console.log('✅ Store AgentConfig: Données agent récupérées depuis localStorage')
+              console.log('✅ Store AgentConfig: Données agent beauté récupérées depuis localStorage')
               this.currentAgent = data.agent
               this.timestamp = data.timestamp
               return this.currentAgent
@@ -100,7 +124,7 @@ export const useAgentConfigStore = defineStore('agentConfig', {
     },
 
     clearAgentConfig() {
-      console.log('🧹 Store AgentConfig: Nettoyage données agent')
+      console.log('🧹 Store AgentConfig: Nettoyage données agent beauté')
       this.currentAgent = null
       this.navigationSource = ''
       this.timestamp = null
@@ -121,13 +145,13 @@ export const useAgentConfigStore = defineStore('agentConfig', {
       }
 
       try {
-        console.log('🔄 Store AgentConfig: Récupération agent depuis API:', agentId)
+        console.log('🔄 Store AgentConfig: Récupération agent beauté depuis API:', agentId)
         
         // Utiliser le composable useAgents pour récupérer les données
         // Cette méthode sera appelée depuis le composant si nécessaire
         return null
       } catch (error) {
-        console.error('❌ Store AgentConfig: Erreur récupération agent:', error)
+        console.error('❌ Store AgentConfig: Erreur récupération agent beauté:', error)
         return null
       }
     }
