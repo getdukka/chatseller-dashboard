@@ -1,7 +1,8 @@
-// composables/useAgents.ts 
+// composables/useAgents.ts
 
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useCache } from '~/composables/useCache' // ✅ NOUVEAU: Cache offline
 
 // ✅ IMPORT TYPES CENTRALISÉS BEAUTÉ
 import type {
@@ -45,6 +46,7 @@ interface ApiResponse<T = any> {
 export const useAgents = () => {
   const authStore = useAuthStore()
   const config = useRuntimeConfig()
+  const cache = useCache() // ✅ NOUVEAU: Instance cache
 
   // State réactif
   const agents = ref<Agent[]>([])
@@ -136,59 +138,64 @@ export const useAgents = () => {
   }
 
   const handleApiError = (err: any, defaultMessage: string): ApiResponse => {
-    console.error('API Error:', err)
-    
+    console.error('❌ [Agents] Erreur API:', err)
+
     let errorMessage = defaultMessage
-    
+
+    // Gestion des erreurs d'authentification
     if (err.status === 401 || err.statusCode === 401) {
       authStore.clearAuth()
       errorMessage = 'Session expirée. Veuillez vous reconnecter.'
       navigateTo('/login')
-    } else if (err.status === 403 || err.statusCode === 403) {
-      errorMessage = 'Accès refusé. Vérifiez vos permissions ou votre plan.'
-    } else if (err.data?.error && typeof err.data.error === 'string') {
-      errorMessage = err.data.error
-    } else if (err.message && typeof err.message === 'string') {
-      errorMessage = err.message
     }
-    
+    // Gestion des erreurs de permission
+    else if (err.status === 403 || err.statusCode === 403) {
+      errorMessage = 'Accès refusé. Vérifiez vos permissions ou votre plan.'
+    }
+    // Gestion des erreurs de connexion réseau (API offline/slow)
+    else if (err.message?.includes('fetch') || err.code === 'NETWORK_ERROR' || !err.status) {
+      errorMessage = 'Impossible de contacter nos serveurs. Vérifiez votre connexion internet et réessayez.'
+      console.warn('⚠️ [Agents] Problème de connexion réseau - API potentiellement offline')
+    }
+    // Gestion des erreurs API spécifiques
+    else if (err.data?.error && typeof err.data.error === 'string') {
+      errorMessage = err.data.error
+    }
+    // Fallback sur le message d'erreur brut
+    else if (err.message && typeof err.message === 'string') {
+      // Nettoyer les messages techniques pour l'utilisateur
+      if (err.message.includes('fetch')) {
+        errorMessage = 'Problème de connexion. Veuillez réessayer dans quelques instants.'
+      } else {
+        errorMessage = err.message
+      }
+    }
+
     error.value = errorMessage
     return { success: false, error: errorMessage }
   }
 
-  const checkApiAvailable = async (): Promise<boolean> => {
-    try {
-      const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
-      const response = await $fetch('/health', {
-        baseURL: apiUrl,
-        timeout: 5000
-      }) as any
-      
-      return response?.status === 'ok'
-    } catch (error: any) {
-      throw new Error(`Impossible de contacter l'API ChatSeller
-
-URL testée: ${config.public.apiBaseUrl || 'NON CONFIGURÉE'}
-Erreur: ${error.message}
-
-Solutions possibles:
-1. Vérifiez que votre serveur API tourne sur http://localhost:3001
-2. Vérifiez la variable NUXT_PUBLIC_API_BASE_URL dans votre .env`)
-    }
-  }
-
-  // ✅ RÉCUPÉRER TOUS LES AGENTS - 100% API
-  const fetchAgents = async (): Promise<ApiResponse<Agent[]>> => {
+  // ✅ RÉCUPÉRER TOUS LES AGENTS - AVEC CACHE OFFLINE
+  const fetchAgents = async (forceRefresh: boolean = false): Promise<ApiResponse<Agent[]>> => {
     loading.value = true
     error.value = null
 
+    // ✅ NOUVEAU: Essayer le cache d'abord (sauf si forceRefresh)
+    if (!forceRefresh) {
+      const cached = cache.get<Agent[]>('agents')
+      if (cached) {
+        console.log('🚀 [Agents] Utilisation cache offline')
+        agents.value = cached
+        loading.value = false
+        return { success: true, data: cached }
+      }
+    }
+
     try {
-      console.log('Récupération agents beauté')
-      
-      await checkApiAvailable()
-      
+      console.log('📡 [Agents] Récupération agents depuis API...')
+
       const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
-      
+
       // ✅ CORRECTION : Utiliser l'endpoint agents directement
       const response = await $fetch('/api/v1/agents', {
         baseURL: apiUrl,
@@ -198,19 +205,30 @@ Solutions possibles:
 
       if (response.success && Array.isArray(response.data)) {
         agents.value = response.data
-        
+
+        // ✅ NOUVEAU: Sauvegarder dans le cache (5 minutes)
+        cache.set('agents', response.data, 300000)
+
         // Mettre à jour le nombre d'agents dans le store
         await authStore.updateAgentsCount(response.data.length)
-        
-        console.log(`${response.data.length} agents récupérés`)
-        console.log(`Coût mensuel agents: ${monthlyAgentsCost.value}€`)
-        
+
+        console.log(`✅ ${response.data.length} agents récupérés et mis en cache`)
+        console.log(`💰 Coût mensuel agents: ${monthlyAgentsCost.value}€`)
+
         return { success: true, data: response.data }
       } else {
         throw new Error(response.error || 'Réponse API invalide')
       }
 
     } catch (err: any) {
+      // ✅ NOUVEAU: En cas d'erreur réseau, essayer de retourner le cache même expiré
+      const staleCache = cache.get<Agent[]>('agents')
+      if (staleCache) {
+        console.warn('⚠️ [Agents] Erreur API, utilisation cache expiré')
+        agents.value = staleCache
+        return { success: true, data: staleCache }
+      }
+
       return handleApiError(err, 'Erreur lors de la récupération des agents')
     } finally {
       loading.value = false
@@ -286,7 +304,6 @@ Solutions possibles:
         }
       }
 
-      await checkApiAvailable()
       
       // ... reste de la logique de création inchangée
       
@@ -320,7 +337,6 @@ Solutions possibles:
         throw new Error('ID agent requis pour la modification')
       }
 
-      await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}`, {
         method: 'PUT',
@@ -364,7 +380,6 @@ Solutions possibles:
       const newCost = estimateAgentCost(-1)
       const savings = Math.max(0, currentCost - newCost)
 
-      await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}`, {
         method: 'DELETE',
@@ -414,7 +429,6 @@ Solutions possibles:
         }
       }
       
-      await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}/toggle`, {
         method: 'PATCH',
@@ -471,7 +485,6 @@ Solutions possibles:
         throw new Error('Essai gratuit expiré. Impossible de dupliquer.')
       }
 
-      await checkApiAvailable()
       
       const response = await $fetch(`/api/v1/agents/${id}/duplicate`, {
         method: 'POST',

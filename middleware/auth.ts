@@ -103,6 +103,24 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo('/onboarding')
     }
 
+    // ✅ VÉRIFICATION ONBOARDING COMPLÉTÉ
+    // Si l'utilisateur n'a pas complété l'onboarding, le rediriger
+    try {
+      const { data: shopData } = await supabase
+        .from('shops')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .single()
+
+      if (shopData && !shopData.onboarding_completed) {
+        console.log('📋 [AUTH] Onboarding non complété, redirection...')
+        return navigateTo('/onboarding')
+      }
+    } catch (shopError) {
+      console.warn('⚠️ [AUTH] Impossible de vérifier onboarding (continuer):', shopError)
+      // Continuer même si la vérification échoue pour ne pas bloquer l'utilisateur
+    }
+
     console.log('✅ [AUTH] Accès autorisé à:', to.path)
 
   } catch (error) {

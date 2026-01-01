@@ -2,43 +2,53 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 pb-12">
     
-    <!-- Header avec breadcrumb -->
+    <!-- Header simplifié et accueillant -->
     <div class="bg-white/80 backdrop-blur-sm border-b border-rose-200">
       <div class="px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
-          <div class="flex items-center space-x-3 min-w-0 flex-1">
-            <button @click="goBack" class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-              </svg>
-            </button>
+          <div class="flex items-center space-x-4 min-w-0 flex-1">
+            <!-- Avatar de la conseillère -->
+            <div class="relative flex-shrink-0">
+              <div class="w-14 h-14 rounded-full overflow-hidden border-3 shadow-md" :class="getAvatarBorderClasses()">
+                <img
+                  v-if="localConfig?.agent?.avatar"
+                  :src="localConfig.agent.avatar"
+                  :alt="localConfig.agent.name"
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center text-white font-bold text-xl" :class="getAvatarBackgroundClasses()">
+                  {{ (localConfig?.agent?.name || 'C').charAt(0).toUpperCase() }}
+                </div>
+              </div>
+              <div
+                class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-xs"
+                :class="localConfig?.agent?.isActive ? 'bg-green-500' : 'bg-gray-400'"
+              >
+                {{ localConfig?.agent?.isActive ? '✓' : '○' }}
+              </div>
+            </div>
+
             <div class="min-w-0 flex-1">
               <h1 class="text-xl lg:text-2xl font-bold text-gray-900">
-                {{ agentName || 'Conseillère IA' }} - Configuration
+                {{ agentName || 'Ma Conseillère IA' }}
               </h1>
               <p class="text-sm text-gray-600 flex items-center mt-1">
                 <span :class="getBeautyIconClasses()">{{ getBeautyIcon() }}</span>
                 <span class="ml-1">{{ getBeautyTypeLabel() }}</span>
-                <span class="ml-2 text-xs" :class="getStatusClasses()">
-                  {{ localConfig?.agent?.isActive ? '🟢 Active' : '⭕ Inactive' }}
+                <span class="ml-3 px-2 py-0.5 rounded-full text-xs font-medium"
+                      :class="localConfig?.agent?.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'">
+                  {{ localConfig?.agent?.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </p>
             </div>
           </div>
-          
-          <!-- Actions rapides -->
+
+          <!-- Bouton sauvegarder -->
           <div class="flex items-center space-x-3">
-            <button 
-              @click="activeTab = 'test'"
-              class="hidden sm:flex items-center px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <span class="mr-2">🧪</span>
-              Tester
-            </button>
             <button
               @click="saveConfiguration"
               :disabled="saving || !hasChanges"
-              class="flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-50 transition-colors"
+              class="flex items-center px-5 py-2.5 text-white text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50 transition-all shadow-md"
               :class="getSaveButtonClasses()"
             >
               <svg v-if="saving" class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,7 +57,7 @@
               <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
               </svg>
-              {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
+              {{ saving ? 'Sauvegarde...' : (hasChanges ? 'Sauvegarder les modifications' : 'Tout est sauvegardé') }}
             </button>
           </div>
         </div>
@@ -140,33 +150,63 @@
     <div v-else class="px-4 sm:px-6 lg:px-8 pt-6">
       <!-- Navigation mobile (dropdown) -->
       <div class="sm:hidden mb-6">
-        <select 
-          v-model="activeTab" 
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        <select
+          v-model="activeTab"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm font-medium bg-white"
         >
-          <option value="agent">👩‍💼 Ma Conseillère</option>
-          <option value="buttons">🎨 Mes Boutons</option>
-          <option value="test">🧪 Tester</option>
-          <option value="activate">⚡ Activer</option>
+          <option value="agent">1️⃣ Personnaliser</option>
+          <option value="buttons">2️⃣ Apparence</option>
+          <option value="test">3️⃣ Tester</option>
+          <option value="activate">4️⃣ Installer</option>
         </select>
       </div>
 
-      <!-- Navigation desktop -->
-      <div class="hidden sm:flex space-x-1 p-1 rounded-xl mb-8" :class="getTabsBackgroundClasses()">
-        <button
-          v-for="tab in tabs"
-          :key="tab.id"
-          @click="activeTab = tab.id"
-          :class="[
-            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-center',
-            activeTab === tab.id 
-              ? 'bg-white text-gray-900 shadow-sm' 
-              : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-          ]"
-        >
-          <span class="mr-2">{{ tab.icon }}</span>
-          <span class="hidden md:inline">{{ tab.name }}</span>
-        </button>
+      <!-- Navigation desktop - Stepper UX -->
+      <div class="hidden sm:block mb-8">
+        <!-- Barre de progression -->
+        <div class="flex items-center justify-between mb-4">
+          <div v-for="(tab, index) in tabs" :key="tab.id" class="flex items-center flex-1">
+            <button
+              @click="activeTab = tab.id"
+              class="flex flex-col items-center group w-full"
+            >
+              <!-- Cercle numéroté -->
+              <div
+                :class="[
+                  'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 mb-2',
+                  activeTab === tab.id
+                    ? 'bg-rose-500 text-white shadow-lg scale-110'
+                    : getTabCompletedStatus(tab.id)
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-200 text-gray-600 group-hover:bg-gray-300'
+                ]"
+              >
+                <span v-if="getTabCompletedStatus(tab.id) && activeTab !== tab.id">✓</span>
+                <span v-else>{{ index + 1 }}</span>
+              </div>
+              <!-- Label -->
+              <span
+                :class="[
+                  'text-xs font-medium transition-colors text-center',
+                  activeTab === tab.id ? 'text-rose-600' : 'text-gray-600'
+                ]"
+              >
+                {{ tab.name }}
+              </span>
+            </button>
+            <!-- Ligne de connexion -->
+            <div
+              v-if="index < tabs.length - 1"
+              class="flex-1 h-1 mx-2 rounded-full -mt-6"
+              :class="getTabCompletedStatus(tab.id) ? 'bg-green-300' : 'bg-gray-200'"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Description de l'étape active -->
+        <div class="text-center">
+          <p class="text-sm text-gray-600">{{ getActiveTabDescription() }}</p>
+        </div>
       </div>
 
       <!-- Contenu des onglets -->
@@ -1666,8 +1706,14 @@ const integrationCodePreview = computed(() => {
 })
 
 // ✅ NOUVEAUX COMPUTED POUR QUOTAS ET FEEDBACK
-const canUseAI = computed(() => authStore.canUseAI)
-const canAddDocument = computed(() => authStore.canAddDocument)
+const canUseAI = computed(() => {
+  const check = checkQuotaBeforeAction('aiResponses', 1)
+  return check.allowed
+})
+const canAddDocument = computed(() => {
+  const check = checkQuotaBeforeAction('knowledgeDocuments', 1)
+  return check.allowed
+})
 
 const positiveFeedbackCount = computed(() => {
   return recentFeedbacks.value.filter(f => f.feedbackType === 'validation').length
@@ -1677,13 +1723,39 @@ const correctionFeedbackCount = computed(() => {
   return recentFeedbacks.value.filter(f => f.feedbackType === 'correction').length
 })
 
-// Données adaptatives par secteur beauté
+// Données adaptatives par secteur beauté - Noms plus intuitifs pour non-tech
 const tabs = [
-  { id: 'agent', name: 'Ma Conseillère', icon: '👩‍💼' },
-  { id: 'buttons', name: 'Mes Boutons', icon: '🎨' },
-  { id: 'test', name: 'Tester', icon: '🧪' },
-  { id: 'activate', name: 'Activer', icon: '⚡' }
+  { id: 'agent', name: 'Personnaliser', icon: '👩‍💼', description: 'Donnez une personnalité unique à votre conseillère' },
+  { id: 'buttons', name: 'Apparence', icon: '🎨', description: 'Personnalisez l\'apparence du chat sur votre site' },
+  { id: 'test', name: 'Tester', icon: '🧪', description: 'Testez les réponses de votre conseillère avant de la publier' },
+  { id: 'activate', name: 'Installer', icon: '⚡', description: 'Copiez le code pour activer votre conseillère sur votre site' }
 ]
+
+// Fonction pour vérifier si un onglet est complété
+const getTabCompletedStatus = (tabId: string): boolean => {
+  switch (tabId) {
+    case 'agent':
+      // Onglet personnalisation complété si nom et message d'accueil définis
+      return !!(localConfig.value.agent.name && localConfig.value.agent.welcomeMessage)
+    case 'buttons':
+      // Onglet apparence complété si couleur et texte de bouton définis
+      return !!(localConfig.value.widget.primaryColor && localConfig.value.widget.buttonText)
+    case 'test':
+      // Onglet test complété si au moins un message a été envoyé
+      return testMessages.value.length > 0
+    case 'activate':
+      // Onglet installation complété si l'agent est actif
+      return !!(localConfig.value.agent.isActive && localConfig.value.widget.isActive)
+    default:
+      return false
+  }
+}
+
+// Fonction pour obtenir la description de l'onglet actif
+const getActiveTabDescription = (): string => {
+  const tab = tabs.find(t => t.id === activeTab.value)
+  return tab?.description || ''
+}
 
 const mainButtonPositions = [
   { value: 'above-cta', label: 'Au-dessus', description: 'Sur le bouton d\'achat' },
@@ -1729,7 +1801,6 @@ const getBeautyIconClasses = () => `text-${getColorScheme()}-600`
 const getStatusClasses = () => localConfig.value.agent.isActive ? 'text-green-600' : 'text-red-600'
 const getSaveButtonClasses = () => `bg-${getColorScheme()}-600 hover:bg-${getColorScheme()}-700`
 const getLoadingClasses = () => `border-${getColorScheme()}-500`
-const getTabsBackgroundClasses = () => `bg-${getColorScheme()}-100`
 const getInputFocusClasses = () => `focus:ring-${getColorScheme()}-500 focus:border-${getColorScheme()}-500`
 const getAvatarBorderClasses = () => `border-${getColorScheme()}-200`
 const getAvatarBackgroundClasses = () => `bg-${getColorScheme()}-500`
@@ -1902,7 +1973,7 @@ const markAsChanged = () => {
 }
 
 const goBack = () => {
-  router.push('/agent-ia')
+  router.push('/')
 }
 
 const clearLocalError = () => {

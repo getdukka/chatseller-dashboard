@@ -1,4 +1,4 @@
-<!-- pages/settings.vue - VERSION CORRIGÉE 100% COMPATIBLE -->
+<!-- pages/settings.vue -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
     <!-- Header Beauté -->
@@ -6,9 +6,9 @@
       <div class="px-8 py-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900">Paramètres de votre marque beauté</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Paramètres de votre marque</h1>
             <p class="mt-2 text-gray-600">
-              Configurez votre profil, votre boutique beauté et vos préférences {{ getAgentTypeName() }}
+              Configurez votre profil et vos préférences
             </p>
           </div>
           
@@ -263,7 +263,7 @@
             <!-- Informations marque beauté -->
             <div class="card-beauty">
               <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-semibold text-gray-900">Informations de votre marque beauté</h2>
+                <h2 class="text-xl font-semibold text-gray-900">Informations de votre marque</h2>
                 <button 
                   @click="editingBrand = !editingBrand"
                   class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200"
@@ -281,7 +281,7 @@
               <form @submit.prevent="updateBrand" class="space-y-6">
                 <div>
                   <label for="brandName" class="block text-sm font-medium text-gray-700 mb-2">
-                    Nom de votre marque beauté
+                    Nom de votre marque
                   </label>
                   <input
                     id="brandName"
@@ -296,7 +296,7 @@
                 <!-- Catégorie beauté -->
                 <div>
                   <label for="beautyCategory" class="block text-sm font-medium text-gray-700 mb-2">
-                    Spécialité beauté
+                    Domaine de spécialité
                   </label>
                   <select
                     id="beautyCategory"
@@ -334,7 +334,7 @@
 
                 <div>
                   <label for="website" class="block text-sm font-medium text-gray-700 mb-2">
-                    Site web de votre boutique
+                    Site web 
                   </label>
                   <input
                     id="website"
@@ -496,177 +496,6 @@
                       </span>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ✅ ONGLET AGENTS IA BEAUTÉ -->
-        <div v-show="activeTab === 'agents'" class="space-y-8">
-          <div class="max-w-4xl">
-            
-            <!-- Configuration globale des agents -->
-            <div class="card-beauty">
-              <h2 class="text-xl font-semibold text-gray-900 mb-6">Configuration de vos {{ getAgentTypeName() }}s</h2>
-              
-              <div class="space-y-6">
-                <!-- Tone de communication -->
-                <div>
-                  <label for="communicationTone" class="block text-sm font-medium text-gray-700 mb-2">
-                    Ton de communication de vos agents
-                  </label>
-                  <select
-                    id="communicationTone"
-                    v-model="agentSettings.communicationTone"
-                    @change="saveAgentSettingsDebounced"
-                    class="input-beauty w-full"
-                  >
-                    <option value="professional">Professionnel et expert</option>
-                    <option value="friendly">Amical et accessible</option>
-                    <option value="luxury">Luxe et raffiné</option>
-                    <option value="trendy">Tendance et moderne</option>
-                  </select>
-                </div>
-
-                <!-- Niveau d'expertise -->
-                <div>
-                  <label for="expertiseLevel" class="block text-sm font-medium text-gray-700 mb-2">
-                    Niveau d'expertise affiché
-                  </label>
-                  <select
-                    id="expertiseLevel"
-                    v-model="agentSettings.expertiseLevel"
-                    @change="saveAgentSettingsDebounced"
-                    class="input-beauty w-full"
-                  >
-                    <option value="beginner_friendly">Accessible aux débutants</option>
-                    <option value="intermediate">Niveau intermédiaire</option>
-                    <option value="expert">Expert beauté</option>
-                    <option value="professional">Professionnel certifié</option>
-                  </select>
-                </div>
-
-                <!-- Collecte de données beauté -->
-                <div>
-                  <h3 class="text-sm font-medium text-gray-700 mb-3">Informations à collecter systématiquement</h3>
-                  <div class="space-y-3">
-                    <label class="flex items-center">
-                      <input
-                        type="checkbox"
-                        v-model="agentSettings.collectSkinType"
-                        @change="saveAgentSettingsDebounced"
-                        class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Type de peau</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input
-                        type="checkbox"
-                        v-model="agentSettings.collectAge"
-                        @change="saveAgentSettingsDebounced"
-                        class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Tranche d'âge</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input
-                        type="checkbox"
-                        v-model="agentSettings.collectBudget"
-                        @change="saveAgentSettingsDebounced"
-                        class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Budget prévu</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input
-                        type="checkbox"
-                        v-model="agentSettings.collectAllergies"
-                        @change="saveAgentSettingsDebounced"
-                        class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Allergies/Sensibilités</span>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Stratégies de vente -->
-                <div>
-                  <h3 class="text-sm font-medium text-gray-700 mb-3">Stratégies de vente activées</h3>
-                  <div class="space-y-3">
-                    <label class="flex items-center">
-                      <input
-                        type="checkbox"
-                        v-model="agentSettings.enableUpselling"
-                        @change="saveAgentSettingsDebounced"
-                        class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Upselling automatique (produits complémentaires)</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input
-                        type="checkbox"
-                        v-model="agentSettings.enableRoutineBuilding"
-                        @change="saveAgentSettingsDebounced"
-                        class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Construction de routines complètes</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input
-                        type="checkbox"
-                        v-model="agentSettings.enableSeasonalRecommendations"
-                        @change="saveAgentSettingsDebounced"
-                        class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-                      />
-                      <span class="ml-2 text-sm text-gray-700">Recommandations saisonnières</span>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Intelligence artificielle -->
-                <div>
-                  <h3 class="text-sm font-medium text-gray-700 mb-3">Paramètres d'intelligence</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label for="aiProvider" class="block text-xs font-medium text-gray-600 mb-1">
-                        Fournisseur IA
-                      </label>
-                      <select
-                        id="aiProvider"
-                        v-model="agentSettings.aiProvider"
-                        @change="saveAgentSettingsDebounced"
-                        class="input-beauty w-full text-sm"
-                      >
-                        <option value="openai">OpenAI GPT-4</option>
-                        <option value="claude">Anthropic Claude</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label for="creativity" class="block text-xs font-medium text-gray-600 mb-1">
-                        Niveau de créativité
-                      </label>
-                      <select
-                        id="creativity"
-                        v-model="agentSettings.creativity"
-                        @change="saveAgentSettingsDebounced"
-                        class="input-beauty w-full text-sm"
-                      >
-                        <option value="conservative">Conservateur</option>
-                        <option value="balanced">Équilibré</option>
-                        <option value="creative">Créatif</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Statut sauvegarde -->
-                <div v-if="savingAgents" class="flex items-center justify-center py-3">
-                  <svg class="animate-spin h-4 w-4 text-rose-600 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span class="text-sm text-gray-600">Sauvegarde automatique...</span>
                 </div>
               </div>
             </div>
@@ -991,13 +820,8 @@ const tabs = [
   },
   { 
     id: 'marque', 
-    label: 'Marque Beauté',
+    label: 'Votre marque',
     icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
-  },
-  { 
-    id: 'agents', 
-    label: 'Agents IA',
-    icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z'
   },
   { 
     id: 'notifications', 
@@ -1487,7 +1311,7 @@ watch(() => route.query.tab, (newTab) => {
 
 // ✅ SEO
 useHead({
-  title: 'Paramètres Marque Beauté - ChatSeller Dashboard'
+  title: 'Paramètres - ChatSeller Dashboard'
 })
 </script>
 

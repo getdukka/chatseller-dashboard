@@ -1,50 +1,40 @@
 <!-- pages/orders/index.vue -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-    <!-- Header ROI Focused -->
+  <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
+    <!-- Header Modern -->
     <div class="bg-white shadow-sm border-b border-gray-200">
       <div class="px-8 py-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900">Analytics de Conversion</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Commandes</h1>
             <p class="mt-2 text-gray-600">
-              Mesurez l'impact ROI de votre {{ getAgentTypeName() }} sur vos ventes
+              Gérez toutes les commandes générées par votre agent IA
             </p>
           </div>
-          
-          <div class="flex items-center space-x-4">
-            <!-- ROI Calculator Button -->
-            <button
-              @click="showROICalculator = true"
-              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-              </svg>
-              Calculer ROI
-            </button>
 
+          <!-- Actions Header -->
+          <div class="flex items-center space-x-4">
             <button
-              @click="handleConversionExport"
+              @click="handleExportOrders"
               :disabled="exporting"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
               <svg class="w-4 h-4 mr-2" :class="{ 'animate-spin': exporting }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
-              {{ exporting ? 'Export...' : 'Export Analytics' }}
+              {{ exporting ? 'Export en cours...' : 'Exporter CSV' }}
             </button>
-            
+
             <button
-              @click="refreshAnalytics"
+              @click="refreshOrders"
               :disabled="loading"
               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              <svg 
-                class="w-4 h-4 mr-2" 
+              <svg
+                class="w-4 h-4 mr-2"
                 :class="{ 'animate-spin': loading }"
-                fill="none" 
-                stroke="currentColor" 
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -58,973 +48,657 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- ROI Dashboard Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Conversions Attribuées IA -->
-        <div class="card-roi-gradient from-emerald-500 to-emerald-600">
-          <div class="flex items-center justify-between">
-            <div class="text-white">
-              <p class="text-emerald-100 text-sm font-medium">Conversions IA</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ analyticsData.aiConversions }}</p>
-              <p class="text-emerald-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ analyticsData.aiConversionRate }}%</span> du trafic
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Total Commandes -->
+        <div class="card-beauty-gradient from-blue-500 to-blue-600">
+          <div class="flex items-center justify-between text-white">
+            <div>
+              <p class="text-blue-100 text-sm font-medium">Total commandes</p>
+              <p class="text-3xl font-bold">{{ stats.totalOrders }}</p>
+              <p class="text-blue-100 text-sm mt-1">
+                Ce mois-ci
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
-            </div>
-          </div>
-          <div class="mt-4">
-            <div class="flex items-center justify-between text-emerald-100 text-sm">
-              <span>vs organiques: {{ analyticsData.organicConversions }}</span>
-              <span class="text-white font-medium">+{{ calculateUplift() }}%</span>
             </div>
           </div>
         </div>
 
-        <!-- Revenus Générés IA -->
-        <div class="card-roi-gradient from-teal-500 to-teal-600">
-          <div class="flex items-center justify-between">
-            <div class="text-white">
-              <p class="text-teal-100 text-sm font-medium">CA généré par IA</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ formatCurrency(analyticsData.aiRevenue) }}</p>
-              <p class="text-teal-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ formatCurrency(analyticsData.avgOrderValueAI) }}</span> panier IA
+        <!-- Revenus Totaux -->
+        <div class="card-beauty-gradient from-green-500 to-green-600">
+          <div class="flex items-center justify-between text-white">
+            <div>
+              <p class="text-green-100 text-sm font-medium">Revenus totaux</p>
+              <p class="text-3xl font-bold">{{ formatCurrency(stats.totalRevenue) }}</p>
+              <p class="text-green-100 text-sm mt-1">
+                +{{ stats.revenueGrowth }}% vs mois dernier
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
               </svg>
             </div>
           </div>
-          <div class="mt-4">
-            <div class="flex items-center justify-between text-teal-100 text-sm">
-              <span>vs organiques: {{ formatCurrency(analyticsData.organicRevenue) }}</span>
-              <span class="text-white font-medium">{{ getRevenueGrowthPercent() }}%</span>
-            </div>
-          </div>
         </div>
 
-        <!-- ROI ChatSeller -->
-        <div class="card-roi-gradient from-violet-500 to-purple-600">
-          <div class="flex items-center justify-between">
-            <div class="text-white">
-              <p class="text-violet-100 text-sm font-medium">ROI ChatSeller</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ calculateROI() }}x</p>
-              <p class="text-violet-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ formatCurrency(analyticsData.monthlyCost) }}</span> coût mensuel
+        <!-- Panier Moyen -->
+        <div class="card-beauty-gradient from-amber-500 to-orange-500">
+          <div class="flex items-center justify-between text-white">
+            <div>
+              <p class="text-orange-100 text-sm font-medium">Panier moyen</p>
+              <p class="text-3xl font-bold">{{ formatCurrency(stats.averageOrderValue) }}</p>
+              <p class="text-orange-100 text-sm mt-1">
+                Par commande
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
               </svg>
-            </div>
-          </div>
-          <div class="mt-4">
-            <div class="text-violet-100 text-sm">
-              <span>Bénéfice net: </span>
-              <span class="text-white font-medium">{{ formatCurrency(calculateNetProfit()) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Upsells Générés -->
-        <div class="card-roi-gradient from-amber-500 to-orange-600">
-          <div class="flex items-center justify-between">
-            <div class="text-white">
-              <p class="text-amber-100 text-sm font-medium">Upsells IA</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ analyticsData.upsellConversions }}</p>
-              <p class="text-amber-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ formatCurrency(analyticsData.upsellRevenue) }}</span> CA additionnel
+        <!-- En Attente -->
+        <div class="card-beauty-gradient from-purple-500 to-purple-600">
+          <div class="flex items-center justify-between text-white">
+            <div>
+              <p class="text-purple-100 text-sm font-medium">En attente</p>
+              <p class="text-3xl font-bold">{{ stats.pendingOrders }}</p>
+              <p class="text-purple-100 text-sm mt-1">
+                Nécessitent une action
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
           </div>
-          <div class="mt-4">
-            <div class="text-amber-100 text-sm">
-              <span>Taux upsell: </span>
-              <span class="text-white font-medium">{{ calculateUpsellRate() }}%</span>
-            </div>
-          </div>
         </div>
       </div>
 
-      <!-- Performance Insights Beauté -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Top Produits par IA -->
-        <div class="card-modern">
-          <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Produits stars de votre IA</h3>
-            <span class="text-sm text-emerald-600 font-medium">
-              {{ getTopProductsRevenue() }} de CA
-            </span>
-          </div>
-          <div class="p-6">
-            <div v-if="topAIProducts.length > 0" class="space-y-4">
-              <div 
-                v-for="(product, index) in topAIProducts.slice(0, 5)" 
-                :key="product.id"
-                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                    {{ index + 1 }}
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                    <p class="text-xs text-gray-500">{{ getProductCategoryLabel(product.category) }}</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm font-medium text-gray-900">{{ product.aiConversions }} ventes IA</p>
-                  <p class="text-xs text-emerald-600">{{ formatCurrency(product.aiRevenue) }}</p>
-                </div>
-              </div>
-            </div>
-            <div v-else class="text-center py-8">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-              </svg>
-              <p class="text-gray-500 text-sm mt-2">Aucune vente IA encore</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Insights Clientèle Beauté -->
-        <div class="card-modern">
-          <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Insights clientèle beauté</h3>
-            <button 
-              @click="showClientInsights = true"
-              class="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Voir détails →
-            </button>
-          </div>
-          <div class="p-6">
-            <div class="grid grid-cols-2 gap-4">
-              <!-- Age Range -->
-              <div class="text-center p-4 bg-rose-50 rounded-lg">
-                <p class="text-sm text-rose-600 font-medium">Âge dominant</p>
-                <p class="text-2xl font-bold text-rose-700">{{ beautyInsights.dominantAge }}</p>
-                <p class="text-xs text-rose-500">{{ beautyInsights.agePercentage }}% des clientes</p>
-              </div>
-
-              <!-- Skin Type -->
-              <div class="text-center p-4 bg-blue-50 rounded-lg">
-                <p class="text-sm text-blue-600 font-medium">Type peau #1</p>
-                <p class="text-2xl font-bold text-blue-700">{{ beautyInsights.topSkinType }}</p>
-                <p class="text-xs text-blue-500">{{ beautyInsights.skinTypePercentage }}% des consultations</p>
-              </div>
-
-              <!-- Budget Range -->
-              <div class="text-center p-4 bg-purple-50 rounded-lg">
-                <p class="text-sm text-purple-600 font-medium">Budget moyen</p>
-                <p class="text-2xl font-bold text-purple-700">{{ formatCurrency(beautyInsights.avgBudget) }}</p>
-                <p class="text-xs text-purple-500">par session</p>
-              </div>
-
-              <!-- Loyalty -->
-              <div class="text-center p-4 bg-green-50 rounded-lg">
-                <p class="text-sm text-green-600 font-medium">Clientes fidèles</p>
-                <p class="text-2xl font-bold text-green-700">{{ beautyInsights.loyaltyRate }}%</p>
-                <p class="text-xs text-green-500">rachètent dans les 30j</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Attribution & Tracking -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <!-- Méthodes d'Attribution -->
-        <div class="card-modern">
-          <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Attribution des conversions</h3>
-          </div>
-          <div class="p-6">
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">UTM Tracking</span>
-                <span :class="attributionMethods.utm ? 'text-green-600' : 'text-gray-400'">
-                  {{ attributionMethods.utm ? '✅ Actif' : '❌ Inactif' }}
-                </span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Cookie Tracking</span>
-                <span :class="attributionMethods.cookie ? 'text-green-600' : 'text-gray-400'">
-                  {{ attributionMethods.cookie ? '✅ Actif' : '❌ Inactif' }}
-                </span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Session ID</span>
-                <span :class="attributionMethods.session ? 'text-green-600' : 'text-gray-400'">
-                  {{ attributionMethods.session ? '✅ Actif' : '❌ Inactif' }}
-                </span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Referral Code</span>
-                <span :class="attributionMethods.referral ? 'text-green-600' : 'text-gray-400'">
-                  {{ attributionMethods.referral ? '✅ Actif' : '❌ Inactif' }}
-                </span>
-              </div>
-            </div>
-            <button 
-              @click="configureAttribution"
-              class="w-full mt-4 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
-            >
-              Configurer attribution
-            </button>
-          </div>
-        </div>
-
-        <!-- Conversion Funnel -->
-        <div class="card-modern">
-          <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Funnel de conversion IA</h3>
-          </div>
-          <div class="p-6">
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Visiteurs widget</span>
-                <span class="text-sm font-medium text-gray-900">{{ conversionFunnel.visitors }}</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-blue-500 h-2 rounded-full" style="width: 100%"></div>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Conversations initiées</span>
-                <span class="text-sm font-medium text-gray-900">{{ conversionFunnel.conversations }}</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-green-500 h-2 rounded-full" :style="`width: ${(conversionFunnel.conversations / conversionFunnel.visitors * 100)}%`"></div>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Recommandations acceptées</span>
-                <span class="text-sm font-medium text-gray-900">{{ conversionFunnel.recommendations }}</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-yellow-500 h-2 rounded-full" :style="`width: ${(conversionFunnel.recommendations / conversionFunnel.visitors * 100)}%`"></div>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Conversions finales</span>
-                <span class="text-sm font-medium text-gray-900">{{ conversionFunnel.conversions }}</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-emerald-500 h-2 rounded-full" :style="`width: ${(conversionFunnel.conversions / conversionFunnel.visitors * 100)}%`"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Optimisation Suggestions -->
-        <div class="card-modern">
-          <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Suggestions d'optimisation</h3>
-          </div>
-          <div class="p-6">
-            <div class="space-y-4">
-              <div v-for="suggestion in optimizationSuggestions" :key="suggestion.id" 
-                   class="p-3 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                <div class="flex items-start space-x-3">
-                  <div :class="suggestion.priority === 'high' ? 'bg-red-100 text-red-700' : suggestion.priority === 'medium' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'" 
-                       class="p-1 rounded">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                  <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">{{ suggestion.title }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ suggestion.description }}</p>
-                    <p class="text-xs text-emerald-600 mt-1">Gain estimé: {{ suggestion.expectedGain }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Detailed Conversions Table -->
-      <div class="card-modern">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+      <!-- Search & Filters -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">Conversions attribuées à l'IA</h3>
-            <p class="text-sm text-gray-500 mt-1">Ventes directement générées par votre {{ getAgentTypeName() }}</p>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Rechercher une commande
+            </label>
+            <div class="relative">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="ID commande, nom client, email..."
+                class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+              />
+              <svg
+                class="absolute left-3 top-3 w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
           </div>
-          <div class="flex items-center space-x-4">
-            <select v-model="filters.timeRange" @change="applyFilters" class="input-modern">
-              <option value="today">Aujourd'hui</option>
-              <option value="week">Cette semaine</option>
-              <option value="month">Ce mois-ci</option>
-              <option value="quarter">Ce trimestre</option>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Filtrer par statut
+            </label>
+            <select
+              v-model="filters.status"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+            >
+              <option value="">Tous les statuts</option>
+              <option value="pending">En attente</option>
+              <option value="confirmed">Confirmée</option>
+              <option value="shipped">Expédiée</option>
+              <option value="delivered">Livrée</option>
+              <option value="cancelled">Annulée</option>
             </select>
-            <select v-model="filters.attributionMethod" @change="applyFilters" class="input-modern">
-              <option value="">Toutes attributions</option>
-              <option value="utm">UTM Tracking</option>
-              <option value="cookie">Cookie Tracking</option>
-              <option value="session">Session ID</option>
-              <option value="referral">Code parrainage</option>
-            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Liste des commandes
+            </h3>
+            <span class="text-sm text-gray-500">
+              {{ filteredOrders.length }} commande(s)
+            </span>
           </div>
         </div>
 
         <!-- Loading State -->
         <div v-if="loading" class="p-12">
           <div class="flex items-center justify-center">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-            <span class="ml-3 text-gray-600">Chargement des analytics de conversion...</span>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+            <span class="ml-3 text-gray-600">Chargement des commandes...</span>
           </div>
         </div>
 
-        <!-- Conversions Table -->
-        <div v-else-if="hasConversions" class="overflow-x-auto">
+        <!-- Error State -->
+        <div v-else-if="error" class="p-12 text-center">
+          <div class="text-red-600 mb-4">
+            <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
+          <p class="text-gray-600 mb-4">{{ error }}</p>
+          <button
+            @click="refreshOrders"
+            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
+          >
+            Réessayer
+          </button>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="filteredOrders.length === 0" class="p-12 text-center">
+          <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <h3 class="mt-4 text-lg font-medium text-gray-900">Aucune commande</h3>
+          <p class="mt-2 text-gray-600">
+            {{ orders.length === 0 ? 'Les nouvelles commandes apparaîtront ici' : 'Aucune commande ne correspond à vos filtres' }}
+          </p>
+        </div>
+
+        <!-- Table -->
+        <div v-else-if="filteredOrders.length > 0" class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="table-header">Attribution</th>
-                <th class="table-header">Client</th>
-                <th class="table-header">Produits IA</th>
-                <th class="table-header">Conversation</th>
-                <th class="table-header">CA IA</th>
-                <th class="table-header">Upsells</th>
-                <th class="table-header">ROI</th>
-                <th class="table-header">Date</th>
-                <th class="table-header text-right">Actions</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Commande
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Client
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Produits
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Montant
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Paiement
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Statut
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr 
-                v-for="conversion in filteredConversions" 
-                :key="conversion.id"
+              <tr
+                v-for="order in filteredOrders"
+                :key="order.id"
                 class="hover:bg-gray-50 transition-colors"
               >
-                <!-- Attribution Method -->
-                <td class="table-cell">
-                  <span :class="getAttributionBadgeClass(conversion.attribution_method)" class="attribution-badge">
-                    {{ getAttributionLabel(conversion.attribution_method) }}
-                  </span>
-                  <div v-if="conversion.confidence_score" class="mt-1">
-                    <div class="flex items-center">
-                      <div class="w-12 bg-gray-200 rounded-full h-1.5">
-                        <div 
-                          class="bg-green-500 h-1.5 rounded-full" 
-                          :style="`width: ${conversion.confidence_score}%`"
-                        ></div>
-                      </div>
-                      <span class="ml-2 text-xs text-gray-500">{{ conversion.confidence_score }}%</span>
-                    </div>
-                  </div>
-                </td>
-                
-                <!-- Customer Info -->
-                <td class="table-cell">
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">
-                      {{ conversion.customer_name || 'Cliente anonyme' }}
-                    </div>
-                    <div v-if="conversion.customer_profile" class="text-xs text-gray-500">
-                      {{ getBeautyProfileSummary(conversion.customer_profile) }}
-                    </div>
-                    <div v-if="conversion.customer_segment" class="text-xs text-purple-600">
-                      Segment: {{ conversion.customer_segment }}
-                    </div>
-                  </div>
-                </td>
-                
-                <!-- AI Recommended Products -->
-                <td class="table-cell">
-                  <div class="text-sm text-gray-900">
-                    {{ getAIProductCount(conversion) }} produit(s) IA
-                  </div>
-                  <div class="text-xs text-gray-500">
-                    {{ getAIProductSummary(conversion) }}
-                  </div>
-                  <div v-if="hasPersonalizedRecs(conversion)" class="text-xs text-blue-600 mt-1">
-                    ✨ Personnalisées
-                  </div>
-                </td>
-                
-                <!-- Conversation Journey -->
-                <td class="table-cell">
-                  <div class="text-sm text-gray-900">
-                    {{ conversion.conversation_duration || '5min' }}
-                  </div>
-                  <div class="text-xs text-gray-500">
-                    {{ conversion.messages_count || 8 }} messages
-                  </div>
-                  <div v-if="conversion.satisfaction_score" class="text-xs text-green-600">
-                    Satisfaction: {{ conversion.satisfaction_score }}/5
-                  </div>
-                </td>
-                
-                <!-- AI Revenue -->
-                <td class="table-cell">
+                <!-- Commande -->
+                <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-medium text-gray-900">
-                    {{ formatCurrency(conversion.ai_attributed_revenue) }}
+                    #{{ order.id.slice(-8).toUpperCase() }}
                   </div>
-                  <div v-if="conversion.organic_revenue" class="text-xs text-gray-500">
-                    + {{ formatCurrency(conversion.organic_revenue) }} organique
-                  </div>
-                </td>
-                
-                <!-- Upsells -->
-                <td class="table-cell">
-                  <div v-if="conversion.upsell_revenue > 0" class="text-sm font-medium text-emerald-600">
-                    + {{ formatCurrency(conversion.upsell_revenue) }}
-                  </div>
-                  <div v-else class="text-sm text-gray-400">-</div>
-                  <div v-if="conversion.upsell_products" class="text-xs text-gray-500">
-                    {{ conversion.upsell_products.length }} produit(s)
+                  <div v-if="order.external_order_id" class="text-xs text-gray-500">
+                    Ext: {{ order.external_order_id }}
                   </div>
                 </td>
-                
-                <!-- Individual ROI -->
-                <td class="table-cell">
-                  <div class="text-sm font-medium" :class="getROIClass(conversion.roi)">
-                    {{ conversion.roi }}x
+
+                <!-- Client -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">
+                    {{ order.customer_name || 'N/A' }}
                   </div>
                   <div class="text-xs text-gray-500">
-                    vs coût: {{ formatCurrency(conversion.attributed_cost) }}
+                    {{ order.customer_email || 'N/A' }}
                   </div>
                 </td>
-                
-                <!-- Date -->
-                <td class="table-cell">
+
+                <!-- Produits -->
+                <td class="px-6 py-4">
                   <div class="text-sm text-gray-900">
-                    {{ formatDate(conversion.created_at) }}
-                  </div>
-                  <div class="text-xs text-gray-500">
-                    {{ formatTime(conversion.created_at) }}
+                    {{ getProductSummary(order) }}
                   </div>
                 </td>
-                
-                <!-- Actions -->
-                <td class="table-cell text-right">
-                  <div class="flex items-center justify-end space-x-2">
-                    <button
-                      @click="viewConversationJourney(conversion)"
-                      class="action-button-primary"
-                      title="Voir parcours"
-                    >
-                      Parcours
-                    </button>
-                    <button
-                      @click="analyzeConversion(conversion)"
-                      class="action-button-secondary"
-                      title="Analyser"
-                    >
-                      📊
-                    </button>
+
+                <!-- Montant -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">
+                    {{ formatCurrency(order.amount, order.currency) }}
                   </div>
+                </td>
+
+                <!-- Paiement -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900 capitalize">
+                    {{ order.payment_method || 'N/A' }}
+                  </div>
+                </td>
+
+                <!-- Statut -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span :class="getStatusBadgeClass(order.status)" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                    {{ getStatusLabel(order.status) }}
+                  </span>
+                </td>
+
+                <!-- Date -->
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ formatDate(order.created_at) }}
+                </td>
+
+                <!-- Actions -->
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    @click.stop="viewOrder(order)"
+                    class="text-rose-600 hover:text-rose-900 transition-colors"
+                  >
+                    Voir
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Empty State -->
-        <div v-else class="text-center py-12">
-          <div class="w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">
-            {{ hasActiveFilters ? 'Aucune conversion trouvée' : 'Prêt à mesurer vos conversions IA ?' }}
-          </h3>
-          <p class="text-gray-500 mb-6">
-            {{ hasActiveFilters
-              ? 'Aucune conversion ne correspond à vos critères'
-              : 'Les conversions générées par votre Conseillère IA apparaîtront ici avec tracking ROI complet'
-            }}
-          </p>
-          <div class="space-x-4">
-            <button
-              v-if="!hasActiveFilters"
-              @click="configureAttribution"
-              class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all"
-            >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-              Configurer le tracking
-            </button>
-            <button
-              v-else
-              @click="clearFilters"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              Effacer les filtres
-            </button>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Modals -->
-    <ROICalculatorModal v-if="showROICalculator" @close="showROICalculator = false" :data="analyticsData" />
-    <ClientInsightsModal v-if="showClientInsights" @close="showClientInsights = false" :insights="beautyInsights" />
-    <ConversationJourneyModal v-if="showJourneyModal" :conversion="selectedConversion" @close="showJourneyModal = false" />
-    <AttributionConfigModal v-if="showAttributionConfig" @close="showAttributionConfig = false" @save="saveAttributionConfig" />
-
-    <!-- Notification -->
-    <NotificationToast
-      :show="showNotification"
-      :message="notificationMessage"
-      :type="notificationType"
-      @close="showNotification = false"
-    />
+    <!-- Notification Toast -->
+    <div
+      v-if="notification.show"
+      class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300"
+    >
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        {{ notification.message }}
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '~/stores/auth'
 
+// ✅ PAGE META
 definePageMeta({
   middleware: 'auth',
   layout: 'default'
 })
 
-// COMPOSABLES
-const authStore = useAuthStore()
+// ✅ COMPOSABLES
 const api = useApi()
 
-// REACTIVE STATE
+// ✅ REACTIVE STATE
 const loading = ref(true)
 const exporting = ref(false)
-const showROICalculator = ref(false)
-const showClientInsights = ref(false)
-const showJourneyModal = ref(false)
-const showAttributionConfig = ref(false)
-const showNotification = ref(false)
-const notificationMessage = ref('')
-const notificationType = ref<'success' | 'error'>('success')
+const searchQuery = ref('')
+const error = ref<string | null>(null)
 
-const selectedConversion = ref(null)
-
-// Data
-const conversions = ref([])
-const analyticsData = ref({
-  aiConversions: 47,
-  organicConversions: 23,
-  aiConversionRate: 8.3,
-  aiRevenue: 4750,
-  organicRevenue: 2100,
-  avgOrderValueAI: 101,
-  avgOrderValueOrganic: 91,
-  monthlyCost: 149,
-  upsellConversions: 18,
-  upsellRevenue: 890
-})
-
-const topAIProducts = ref([])
-const beautyInsights = ref({
-  dominantAge: '25-35',
-  agePercentage: 42,
-  topSkinType: 'Mixte',
-  skinTypePercentage: 35,
-  avgBudget: 85,
-  loyaltyRate: 67
-})
-
-const attributionMethods = ref({
-  utm: true,
-  cookie: true,
-  session: true,
-  referral: false
-})
-
-const conversionFunnel = ref({
-  visitors: 1247,
-  conversations: 312,
-  recommendations: 189,
-  conversions: 47
-})
-
-const optimizationSuggestions = ref([
-  {
-    id: 1,
-    priority: 'high',
-    title: 'Améliorer qualification type de peau',
-    description: 'Conversion +15% en ajoutant diagnostic peau automatique',
-    expectedGain: '+€720/mois'
-  },
-  {
-    id: 2,
-    priority: 'medium',
-    title: 'Optimiser timing upsells',
-    description: 'Proposer produits complémentaires après première recommandation',
-    expectedGain: '+€340/mois'
-  },
-  {
-    id: 3,
-    priority: 'medium',
-    title: 'Personnaliser selon âge',
-    description: 'Adapter recommandations selon tranche d\'âge',
-    expectedGain: '+€210/mois'
-  }
-])
-
-// Filters
 const filters = ref({
-  timeRange: 'month',
-  attributionMethod: ''
+  status: ''
 })
 
-// COMPUTED
-const hasConversions = computed(() => conversions.value.length > 0)
-const hasActiveFilters = computed(() => Object.values(filters.value).some(f => f !== '' && f !== 'month'))
+const orders = ref<any[]>([])
 
-const filteredConversions = computed(() => {
-  let filtered = conversions.value
+const stats = ref({
+  totalOrders: 0,
+  totalRevenue: 0,
+  averageOrderValue: 0,
+  pendingOrders: 0,
+  revenueGrowth: 0
+})
 
-  if (filters.value.attributionMethod) {
-    filtered = filtered.filter(c => c.attribution_method === filters.value.attributionMethod)
+// Notification
+const notification = ref({
+  show: false,
+  message: '',
+  type: 'success' as 'success' | 'error'
+})
+
+// ✅ COMPUTED
+const filteredOrders = computed(() => {
+  let filtered = orders.value
+
+  // Search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(order =>
+      order.customer_name?.toLowerCase().includes(query) ||
+      order.customer_email?.toLowerCase().includes(query) ||
+      order.id.toLowerCase().includes(query) ||
+      order.external_order_id?.toLowerCase().includes(query)
+    )
   }
 
-  // Time range filtering would be implemented here
-  
+  // Status filter
+  if (filters.value.status) {
+    filtered = filtered.filter(order => order.status === filters.value.status)
+  }
+
   return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 })
 
-// BEAUTY-SPECIFIC METHODS
-const getAgentTypeName = () => {
-  const user = authStore.user
-  const beautyCategory = user?.shop?.beauty_category || 'multi'
-  
-  const types = {
-    'skincare': 'Esthéticienne IA',
-    'makeup': 'Experte Makeup IA',
-    'fragrance': 'Conseillère Parfums IA',
-    'haircare': 'Experte Capillaire IA',
-    'bodycare': 'Experte Soins Corps IA',
-    'multi': 'Conseillère Beauté IA'
+const hasActiveFilters = computed(() => {
+  return filters.value.status !== '' || searchQuery.value !== ''
+})
+
+// ✅ UTILITY METHODS
+const getProductCount = (order: any): number => {
+  if (!order.product_items || !Array.isArray(order.product_items)) return 0
+  return order.product_items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0)
+}
+
+const getUpsellCount = (order: any): number => {
+  if (!order.upsell_items || !Array.isArray(order.upsell_items)) return 0
+  return order.upsell_items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0)
+}
+
+const hasUpsellItems = (order: any): boolean => {
+  return order.upsell_items && Array.isArray(order.upsell_items) && order.upsell_items.length > 0
+}
+
+const getProductSummary = (order: any): string => {
+  if (!order.product_items || !Array.isArray(order.product_items) || order.product_items.length === 0) {
+    return 'Aucun produit'
   }
-  
-  return types[beautyCategory] || types.multi
+
+  const firstItem = order.product_items[0]
+  const itemName = firstItem.name || firstItem.productName || 'Produit'
+
+  if (order.product_items.length === 1) {
+    return itemName
+  }
+
+  return `${itemName} et ${order.product_items.length - 1} autre(s)`
 }
 
-// CALCULATION METHODS
-const calculateUplift = () => {
-  const organic = analyticsData.value.organicConversions
-  const ai = analyticsData.value.aiConversions
-  return organic > 0 ? Math.round(((ai - organic) / organic) * 100) : 0
+const getTotalOrderAmount = (order: any): number => {
+  return (order.total_amount || 0) + (order.upsell_amount || 0)
 }
 
-const calculateROI = () => {
-  const revenue = analyticsData.value.aiRevenue
-  const cost = analyticsData.value.monthlyCost
-  return cost > 0 ? (revenue / cost).toFixed(1) : '0.0'
-}
+const formatCurrency = (amount: number, currency: string = 'EUR'): string => {
+  // Adaptation pour XOF (Franc CFA)
+  if (currency === 'XOF') {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF',
+      minimumFractionDigits: 0
+    }).format(amount)
+  }
 
-const calculateNetProfit = () => {
-  return analyticsData.value.aiRevenue - analyticsData.value.monthlyCost
-}
-
-const calculateUpsellRate = () => {
-  const total = analyticsData.value.aiConversions
-  const upsells = analyticsData.value.upsellConversions
-  return total > 0 ? Math.round((upsells / total) * 100) : 0
-}
-
-const getRevenueGrowthPercent = () => {
-  const ai = analyticsData.value.aiRevenue
-  const organic = analyticsData.value.organicRevenue
-  return organic > 0 ? Math.round(((ai - organic) / organic) * 100) : 0
-}
-
-const getTopProductsRevenue = () => {
-  const total = topAIProducts.value.reduce((sum, p) => sum + p.aiRevenue, 0)
-  return formatCurrency(total)
-}
-
-// UTILITY METHODS
-const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: 'EUR'
+    currency: currency || 'EUR'
   }).format(amount)
 }
 
-const formatDate = (date) => {
+const formatDate = (date: string): string => {
   return new Date(date).toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
-  })
-}
-
-const formatTime = (date) => {
-  return new Date(date).toLocaleTimeString('fr-FR', {
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
   })
 }
 
-const getAttributionLabel = (method) => {
-  const labels = {
-    utm: 'UTM',
-    cookie: 'Cookie',
-    session: 'Session',
-    referral: 'Parrainage'
+const getStatusLabel = (status: string): string => {
+  const labels: Record<string, string> = {
+    pending: 'En attente',
+    confirmed: 'Confirmée',
+    shipped: 'Expédiée',
+    delivered: 'Livrée',
+    cancelled: 'Annulée'
+  }
+  return labels[status] || status
+}
+
+const getStatusBadgeClass = (status: string): string => {
+  const classes: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    confirmed: 'bg-blue-100 text-blue-800',
+    shipped: 'bg-purple-100 text-purple-800',
+    delivered: 'bg-green-100 text-green-800',
+    cancelled: 'bg-red-100 text-red-800'
+  }
+  return classes[status] || 'bg-gray-100 text-gray-800'
+}
+
+const getPaymentMethodLabel = (method: string | null): string => {
+  if (!method) return 'Non spécifié'
+
+  const labels: Record<string, string> = {
+    card: 'Carte bancaire',
+    paypal: 'PayPal',
+    bank_transfer: 'Virement',
+    cash: 'Espèces',
+    mobile_money: 'Mobile Money'
   }
   return labels[method] || method
 }
 
-const getAttributionBadgeClass = (method) => {
-  const classes = {
-    utm: 'bg-blue-100 text-blue-700',
-    cookie: 'bg-green-100 text-green-700',
-    session: 'bg-purple-100 text-purple-700',
-    referral: 'bg-orange-100 text-orange-700'
+const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+  notification.value = {
+    show: true,
+    message,
+    type
   }
-  return classes[method] || 'bg-gray-100 text-gray-700'
+
+  setTimeout(() => {
+    notification.value.show = false
+  }, 5000)
 }
 
-const getBeautyProfileSummary = (profile) => {
-  if (!profile) return ''
-  const parts = []
-  if (profile.skin_type) parts.push(`Peau ${profile.skin_type}`)
-  if (profile.age_range) parts.push(profile.age_range)
-  return parts.join(', ')
-}
-
-const getAIProductCount = (conversion) => {
-  return conversion.ai_products?.length || 0
-}
-
-const getAIProductSummary = (conversion) => {
-  if (!conversion.ai_products || conversion.ai_products.length === 0) return 'Aucun'
-  const first = conversion.ai_products[0]
-  if (conversion.ai_products.length === 1) return first.name
-  return `${first.name} et ${conversion.ai_products.length - 1} autre(s)`
-}
-
-const hasPersonalizedRecs = (conversion) => {
-  return conversion.personalized_recommendations || false
-}
-
-const getProductCategoryLabel = (category) => {
-  const labels = {
-    'skincare': 'Soin visage',
-    'makeup': 'Maquillage',
-    'fragrance': 'Parfum',
-    'haircare': 'Cheveux',
-    'bodycare': 'Corps'
-  }
-  return labels[category] || 'Beauté'
-}
-
-const getROIClass = (roi) => {
-  if (roi >= 3) return 'text-green-600'
-  if (roi >= 2) return 'text-yellow-600'
-  return 'text-red-600'
-}
-
-// ACTION METHODS
-const refreshAnalytics = async () => {
+// ✅ API METHODS UTILISANT LE COMPOSABLE API
+const loadOrders = async () => {
   loading.value = true
+  error.value = null
+
   try {
-    // Charger les conversions depuis l'API
-    const response = await api.analytics.getConversions(filters.value)
-    if (response.success) {
-      conversions.value = response.data || []
-      await loadAnalyticsData()
+    console.log('Chargement commandes via API...')
+
+    const response: any = await api.orders.list()
+    console.log('Réponse API brute:', response)
+
+    if (response?.success) {
+      let commandesArray: any[] = []
+
+      if (response.data) {
+        // ✅ CAS 1: data contient une structure imbriquée avec orders (format actuel de l'API)
+        if (response.data.orders && Array.isArray(response.data.orders)) {
+          commandesArray = response.data.orders
+          console.log('✅ Structure API: objet avec orders -', commandesArray.length, 'commandes trouvées')
+        }
+        // ✅ CAS 2: data est directement un tableau (fallback pour compatibilité)
+        else if (Array.isArray(response.data)) {
+          commandesArray = response.data
+          console.log('✅ Structure: tableau direct -', commandesArray.length, 'commandes trouvées')
+        }
+        // ❌ Structure inconnue
+        else {
+          console.warn('⚠️ Structure de réponse API inconnue:', response.data)
+          commandesArray = []
+        }
+      }
+
+      orders.value = commandesArray
+      console.log('📦 Commandes chargées avec succès:', orders.value.length)
+
+      await loadStats()
+    } else {
+      const errorMsg = response?.error || 'Erreur lors du chargement des commandes'
+      throw new Error(errorMsg)
     }
-  } catch (error) {
-    console.error('Erreur refresh analytics:', error)
+
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    console.error('Erreur chargement commandes:', errorObj)
+    error.value = errorObj.message || 'Erreur lors du chargement des commandes'
+    orders.value = []
   } finally {
     loading.value = false
   }
 }
 
-const loadAnalyticsData = async () => {
+const loadStats = async () => {
   try {
-    // Charger les données analytics
-    const [topProducts, insights] = await Promise.allSettled([
-      api.analytics.getTopProducts(),
-      api.analytics.getBeautyInsights()
-    ])
+    const ordersData = orders.value
+    const today = new Date()
+    const thisMonth = ordersData.filter((o: any) => {
+      const orderDate = new Date(o.created_at)
+      return orderDate.getMonth() === today.getMonth() && orderDate.getFullYear() === today.getFullYear()
+    })
 
-    if (topProducts.status === 'fulfilled') {
-      topAIProducts.value = topProducts.value.data || []
+    const totalRevenue = thisMonth.reduce((sum: number, order: any) => sum + getTotalOrderAmount(order), 0)
+
+    stats.value = {
+      totalOrders: thisMonth.length,
+      totalRevenue,
+      averageOrderValue: thisMonth.length > 0 ? totalRevenue / thisMonth.length : 0,
+      pendingOrders: ordersData.filter((o: any) => o.status === 'pending').length,
+      revenueGrowth: 23.5 // TODO: Calculer réellement vs mois précédent
     }
-
-    if (insights.status === 'fulfilled') {
-      beautyInsights.value = { ...beautyInsights.value, ...insights.value.data }
-    }
-
-  } catch (error) {
-    console.error('Erreur load analytics data:', error)
+  } catch (err) {
+    console.warn('⚠️ Erreur chargement stats:', err)
   }
 }
 
-const handleConversionExport = async () => {
+const refreshOrders = async () => {
+  await loadOrders()
+  showNotification('Commandes actualisées avec succès!')
+}
+
+// ✅ EXPORT CSV FUNCTION
+const handleExportOrders = async () => {
   exporting.value = true
-  
+
   try {
+    // Créer les headers CSV
     const headers = [
-      'Date', 'Attribution', 'Confiance (%)', 'Client', 'Profil beauté', 
-      'Produits IA', 'CA IA', 'Upsells', 'ROI', 'Durée conversation', 'Satisfaction'
+      'ID Commande',
+      'ID Externe',
+      'Nom Client',
+      'Email Client',
+      'Téléphone',
+      'Adresse',
+      'Produits',
+      'Quantité Totale',
+      'Montant Total',
+      'Montant Upsell',
+      'Devise',
+      'Méthode Paiement',
+      'Statut',
+      'Date Création',
+      'Date Export',
+      'Notes'
     ]
-    
-    const csvData = filteredConversions.value.map(c => [
-      formatDate(c.created_at),
-      getAttributionLabel(c.attribution_method),
-      c.confidence_score || '',
-      c.customer_name || 'Anonyme',
-      getBeautyProfileSummary(c.customer_profile),
-      getAIProductSummary(c),
-      c.ai_attributed_revenue,
-      c.upsell_revenue || 0,
-      c.roi,
-      c.conversation_duration || '',
-      c.satisfaction_score || ''
+
+    // Préparer les données
+    const csvData = filteredOrders.value.map((order: any) => [
+      `#${order.id.slice(-8).toUpperCase()}`,
+      order.external_order_id || '',
+      order.customer_name || '',
+      order.customer_email || '',
+      order.customer_phone || '',
+      order.customer_address || '',
+      getProductSummary(order),
+      getProductCount(order) + getUpsellCount(order),
+      getTotalOrderAmount(order),
+      order.upsell_amount || 0,
+      order.currency,
+      getPaymentMethodLabel(order.payment_method),
+      getStatusLabel(order.status),
+      formatDate(order.created_at),
+      order.exported_at ? formatDate(order.exported_at) : '',
+      order.notes || ''
     ])
-    
+
+    // Créer le contenu CSV
     const csvContent = [
       headers.join(','),
-      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...csvData.map((row: any[]) => row.map((cell: any) => `"${cell}"`).join(','))
     ].join('\n')
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `analytics-conversion-${new Date().toISOString().split('T')[0]}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
-    
-    showNotification.value = true
-    notificationMessage.value = 'Analytics exportées avec succès !'
-    notificationType.value = 'success'
-    
+
+    // Créer et télécharger le fichier
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', `commandes-chatseller-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    showNotification(`${filteredOrders.value.length} commande(s) exportée(s) avec succès!`)
+
   } catch (error) {
-    console.error('Erreur export:', error)
-    showNotification.value = true
-    notificationMessage.value = 'Erreur lors de l\'export'
-    notificationType.value = 'error'
+    console.error('Erreur lors de l\'export CSV:', error)
+    showNotification('Erreur lors de l\'export CSV', 'error')
   } finally {
     exporting.value = false
   }
 }
 
-const viewConversationJourney = (conversion) => {
-  selectedConversion.value = conversion
-  showJourneyModal.value = true
-}
-
-const analyzeConversion = async (conversion) => {
+// ✅ ACTION METHODS
+const viewOrder = async (order: any) => {
   try {
-    const response = await api.analytics.analyzeConversion(conversion.id)
-    
+    const response = await api.orders.get(order.id)
+
     if (response.success) {
-      // Afficher les insights d'analyse
-      console.log('Analyse conversion:', response.data)
+      console.log('Commande détaillée:', response.data)
+      // TODO: Ouvrir modal ou page de détail
+    } else {
+      showNotification('Erreur lors du chargement des détails', 'error')
     }
-    
-  } catch (error) {
-    console.error('Erreur analyse conversion:', error)
+  } catch (err) {
+    console.error('Erreur vue commande:', err)
+    showNotification('Erreur lors du chargement des détails', 'error')
   }
-}
-
-const configureAttribution = () => {
-  showAttributionConfig.value = true
-}
-
-const saveAttributionConfig = async (config) => {
-  try {
-    const response = await api.settings.updateAttribution(config)
-    
-    if (response.success) {
-      attributionMethods.value = config
-      showNotification.value = true
-      notificationMessage.value = 'Configuration attribution mise à jour !'
-      notificationType.value = 'success'
-    }
-    
-  } catch (error) {
-    console.error('Erreur save attribution:', error)
-    showNotification.value = true
-    notificationMessage.value = 'Erreur lors de la sauvegarde'
-    notificationType.value = 'error'
-  } finally {
-    showAttributionConfig.value = false
-  }
-}
-
-const applyFilters = () => {
-  // Les filtres sont appliqués automatiquement via le computed filteredConversions
 }
 
 const clearFilters = () => {
-  filters.value = {
-    timeRange: 'month',
-    attributionMethod: ''
-  }
+  searchQuery.value = ''
+  filters.value.status = ''
 }
 
-// LIFECYCLE
-onMounted(async () => {
-  await refreshAnalytics()
+// ✅ LIFECYCLE
+onMounted(() => {
+  loadOrders()
 })
 
-// SEO
+// ✅ SEO
 useHead({
-  title: 'Analytics de Conversion - ChatSeller Dashboard',
-  meta: [
-    { name: 'description', content: 'Mesurez le ROI de votre Conseillère IA avec analytics avancées et tracking de conversion' }
-  ]
+  title: 'Commandes - ChatSeller Dashboard'
 })
 </script>
 
 <style scoped>
-.card-modern {
-  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
-}
-
-.card-roi-gradient {
+.card-beauty-gradient {
   @apply bg-gradient-to-br rounded-xl shadow-lg p-6 text-white;
-}
-
-.input-modern {
-  @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-sm;
-}
-
-.table-header {
-  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
-}
-
-.table-cell {
-  @apply px-6 py-4 whitespace-nowrap;
-}
-
-.attribution-badge {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-}
-
-.action-button-primary {
-  @apply text-emerald-600 hover:text-emerald-900 text-sm font-medium transition-colors;
-}
-
-.action-button-secondary {
-  @apply text-gray-600 hover:text-gray-900 text-sm transition-colors;
 }
 
 @keyframes spin {

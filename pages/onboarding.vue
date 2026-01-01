@@ -1,30 +1,22 @@
-<!-- pages/onboarding.vue - ONBOARDING SECTEUR BEAUTÉ -->
+<!-- pages/onboarding.vue -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 relative overflow-hidden">
     
     <!-- Background Elements Premium -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <!-- Gradient animé principal -->
       <div class="absolute inset-0 bg-gradient-to-br from-rose-50/80 via-pink-50/60 to-purple-50/80 animate-gradient-xy"></div>
-      
-      <!-- Éléments décoratifs flottants -->
       <div class="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-rose-300/20 to-pink-300/10 rounded-full blur-3xl animate-pulse"></div>
       <div class="absolute bottom-20 right-10 w-80 h-80 bg-gradient-to-br from-purple-300/20 to-rose-300/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s"></div>
       <div class="absolute top-1/3 right-1/4 w-32 h-32 bg-gradient-to-br from-pink-400/15 to-rose-400/10 rounded-full blur-2xl animate-bounce" style="animation-delay: 2s"></div>
     </div>
     
-    <!-- Header avec logo et progression -->
+    <!-- Header -->
     <header class="relative z-10 p-6">
       <div class="flex items-center justify-between">
-        <!-- Logo  premium -->
         <div class="flex items-center space-x-3">
           <div class="relative">
             <div class="flex h-12 w-12 items-center justify-center bg-transparent">
-              <img 
-                src="/assets/images/logos/fav.svg" 
-                alt="ChatSeller" 
-                class="w-10 h-10"
-              />
+              <img src="/assets/images/logos/fav.svg" alt="ChatSeller" class="w-10 h-10" />
             </div>
             <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/20 to-transparent"></div>
           </div>
@@ -34,15 +26,14 @@
           </div>
         </div>
         
-        <!-- Welcome message beauté -->
         <div v-if="!initializing" class="hidden md:block text-right">
-          <p class="text-rose-600 text-sm font-medium">Configuration de votre espace Chatseller</p>
-          <p class="text-gray-800 font-semibold">{{ userFirstName }}, personnalisons votre expérience !</p>
+          <p class="text-rose-600 text-sm font-medium">Configuration de votre Conseillère IA</p>
+          <p class="text-gray-800 font-semibold">{{ userFirstName }}, créons votre assistante beauté !</p>
         </div>
       </div>
     </header>
 
-    <!-- Message d'initialisation beauté -->
+    <!-- Message d'initialisation -->
     <div v-if="initializing" class="relative z-10 flex items-center justify-center min-h-[60vh]">
       <div class="bg-white/80 backdrop-blur-sm border border-rose-200 rounded-2xl p-10 text-center max-w-md shadow-2xl">
         <div class="flex justify-center mb-6">
@@ -53,30 +44,31 @@
             </svg>
           </div>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 mb-3">Préparation de votre tableau de bord...</h3>
-        <p class="text-gray-600">Configuration de votre espace Chatseller.</p>
+        <h3 class="text-2xl font-bold text-gray-900 mb-3">Préparation de votre espace...</h3>
+        <p class="text-gray-600">Configuration de votre tableau de bord ChatSeller.</p>
       </div>
     </div>
 
-    <!-- Contenu principal onboarding beauté -->
+    <!-- Contenu principal -->
     <div v-else class="relative z-10">
-      <!-- Progress bar beauté premium -->
+      <!-- Progress bar -->
       <div class="px-6 pb-8">
         <div class="max-w-6xl mx-auto">
-          <!-- Info sur le processus beauté -->
           <div class="text-center mb-8">
             <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-full mb-4">
               <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <span class="text-sm font-semibold text-rose-700">Email confirmé</span>
+              <span class="mx-2 text-rose-300">•</span>
+              <span class="text-sm text-rose-600">⏱️ 3 minutes</span>
             </div>
             <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-rose-800 to-purple-900 bg-clip-text text-transparent mb-3">
-              Configurons votre espace Chatseller
+              Créons votre Conseillère IA
             </h1>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-              Ces informations nous permettent de créer une expérience personnalisée 
-              <span class="font-semibold text-rose-600">parfaitement adaptée</span> à votre marque.
+              Ces informations nous permettent de créer une Conseillère IA 
+              <span class="font-semibold text-rose-600">parfaitement adaptée</span> à votre marque et vos clientes.
             </p>
           </div>
           
@@ -85,7 +77,6 @@
             <span class="font-medium">{{ Math.round((currentStep / 4) * 100) }}% terminé</span>
           </div>
           
-          <!-- Barre de progression beauté -->
           <div class="w-full bg-rose-100 rounded-full h-3 shadow-inner">
             <div 
               class="h-3 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 transition-all duration-700 ease-out shadow-lg"
@@ -99,11 +90,10 @@
       <div class="px-6 pb-6">
         <div class="max-w-7xl mx-auto">
           
-          <!-- Étape 1: Profil marque beauté -->
+          <!-- ========== ÉTAPE 1: PROFIL MARQUE BEAUTÉ ========== -->
           <div v-if="currentStep === 1" class="transition-all duration-500 ease-in-out">
             <div class="grid lg:grid-cols-2 gap-12 items-center">
               
-              <!-- Colonne gauche : Titre et description -->
               <div class="text-center lg:text-left">
                 <div class="inline-flex p-4 bg-gradient-to-br from-rose-100 to-pink-100 rounded-2xl mb-8">
                   <svg class="w-12 h-12 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,17 +104,28 @@
                   Votre marque
                 </h1>
                 <p class="text-xl lg:text-2xl text-gray-700 mb-8 leading-relaxed">
-                  Parlez-nous de votre marque et de votre activité
+                  Parlez-nous de votre marque beauté
                 </p>
-                <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-6 text-left">
+                
+                <!-- 🆕 USP WHATSAPP -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 mb-6 text-left">
+                  <div class="flex items-start space-x-4">
+                    <span class="text-3xl">📱</span>
+                    <div>
+                      <p class="font-bold text-green-800 mb-1">Fini les nuits sur WhatsApp !</p>
+                      <p class="text-sm text-green-700">Votre Conseillère IA va répondre à vos clientes 24h/24, même quand vous dormez. Plus besoin de répéter les mêmes conseils des dizaines de fois.</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-5 text-left">
                   <p class="text-rose-800 text-sm leading-relaxed">
-                    <strong class="text-rose-900">Personnalisation intelligente :</strong><br>
-                    Nous analysons votre site web et créons automatiquement une base de connaissances pour votre Conseillère IA, afin qu'elle puisse se familiariser avec vos produits et votre marque.                    
+                    <strong class="text-rose-900">Configuration intelligente :</strong><br>
+                    Nous analysons votre site web pour créer automatiquement une base de connaissances. Votre Conseillère IA connaîtra vos produits dès le premier jour.
                   </p>
                 </div>
               </div>
 
-              <!-- Colonne droite : Formulaire -->
               <div class="w-full">
                 <form @submit.prevent="nextStep" class="space-y-6">
                   <div class="bg-white/80 backdrop-blur-sm border border-rose-200 rounded-2xl p-8 shadow-xl">
@@ -138,33 +139,33 @@
                           type="text"
                           required
                           class="w-full px-6 py-4 bg-white/70 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-gray-900 text-lg placeholder-gray-500"
-                          placeholder="Ex: Belle Étoile Cosmétiques"
+                          placeholder="Ex: Nappy Queen, Carapate Beauty, Mariam Cosmetics..."
                         />
-                        <p class="text-gray-500 text-sm mt-2">Ce nom apparaîtra dans vos conversations avec vos clients</p>
+                        <p class="text-gray-500 text-sm mt-2">Ce nom apparaîtra dans les conversations avec vos clientes</p>
                       </div>
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Site web de votre marque *
+                          Site web de votre boutique *
                         </label>
                         <input
                           v-model="form.website"
                           type="url"
                           required
                           class="w-full px-6 py-4 bg-white/70 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-gray-900 text-lg placeholder-gray-500"
-                          placeholder="https://belletoile-cosmetiques.fr"
+                          placeholder="https://votremarque.com"
                         />
                         <p class="text-gray-500 text-sm mt-2">
                           <svg class="w-4 h-4 text-green-500 inline mr-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
-                          Nous utiliserons son contenu pour former votre Conseillère IA
+                          Nous analyserons votre catalogue pour former votre Conseillère IA
                         </p>
                       </div>
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Votre domaine d'activité *
+                          Votre domaine beauté *
                         </label>
                         <select
                           v-model="form.beautyCategory"
@@ -173,13 +174,14 @@
                         >
                           <option value="" class="bg-white">Sélectionnez votre spécialité</option>
                           <option value="skincare" class="bg-white">🧴 Skincare & Soins du visage</option>
+                          <option value="haircare" class="bg-white">💇‍♀️ Soins capillaires</option>
                           <option value="makeup" class="bg-white">💄 Maquillage & Cosmétiques</option>
                           <option value="fragrance" class="bg-white">🌸 Parfums & Fragrances</option>
-                          <option value="haircare" class="bg-white">💇‍♀️ Soins capillaires</option>
                           <option value="bodycare" class="bg-white">🧴 Soins du corps</option>
+                          <option value="natural" class="bg-white">🌿 Cosmétiques naturels & Bio</option>
                           <option value="multi" class="bg-white">✨ Multi-catégories beauté</option>
                         </select>
-                        <p class="text-gray-500 text-sm mt-2">Votre Conseillère sera spécialisée dans ce domaine</p>
+                        <p class="text-gray-500 text-sm mt-2">Votre Conseillère sera experte dans ce domaine</p>
                       </div>
 
                       <div>
@@ -196,7 +198,7 @@
                           <option value="woocommerce" class="bg-white">🔗 WooCommerce</option>
                           <option value="custom" class="bg-white">⚙️ Site personnalisé</option>
                         </select>
-                        <p class="text-gray-500 text-sm mt-2">Pour préparer l'intégration de votre widget</p>
+                        <p class="text-gray-500 text-sm mt-2">Pour préparer l'intégration du widget sur votre site</p>
                       </div>
                     </div>
 
@@ -217,7 +219,7 @@
             </div>
           </div>
 
-          <!-- Étape 2: Clientèle cible beauté (ADAPTATIVE) -->
+          <!-- ========== ÉTAPE 2: CLIENTÈLE CIBLE ========== -->
           <div v-if="currentStep === 2" class="transition-all duration-500 ease-in-out">
             <div class="text-center mb-12">
               <div class="inline-flex p-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl mb-6">
@@ -270,7 +272,7 @@
                 <!-- Tranche d'âge -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Tranche d'âge principale de vos client.e.s *
+                    Tranche d'âge principale de vos clientes *
                   </label>
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <label v-for="ageRange in ageRanges" :key="ageRange.value" class="relative group cursor-pointer">
@@ -341,7 +343,7 @@
             </form>
           </div>
 
-          <!-- Étape 3: Style de conseil et expertise -->
+          <!-- ========== ÉTAPE 3: STYLE DE CONSEIL ========== -->
           <div v-if="currentStep === 3" class="transition-all duration-500 ease-in-out">
             <div class="text-center mb-12">
               <div class="inline-flex p-4 bg-gradient-to-br from-pink-100 to-rose-100 rounded-2xl mb-6">
@@ -350,15 +352,15 @@
                 </svg>
               </div>
               <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 bg-clip-text text-transparent">
-                Votre style de conseil
+                Personnalité de votre Conseillère
               </h1>
               <p class="text-xl lg:text-2xl text-gray-700 max-w-4xl mx-auto mb-8">
-                Comment souhaitez-vous que votre Conseillère IA interagisse avec vos client.e.s ?
+                Comment souhaitez-vous que votre Conseillère IA s'adresse à vos clientes ?
               </p>
               <div class="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-xl p-6 max-w-2xl mx-auto">
                 <p class="text-pink-800 text-sm leading-relaxed">
                   <strong class="text-pink-900">Personnalité adaptée :</strong><br>
-                  Votre Conseillère IA adoptera le ton et l'approche qui correspondent à votre clientèle.
+                  Votre Conseillère IA adoptera le ton et l'approche qui correspondent à votre marque et vos clientes.
                 </p>
               </div>
             </div>
@@ -480,7 +482,7 @@
             </form>
           </div>
 
-          <!-- Étape 4: Finalisation et lancement -->
+          <!-- ========== ÉTAPE 4: FINALISATION ========== -->
           <div v-if="currentStep === 4" class="transition-all duration-500 ease-in-out">
             <div class="grid lg:grid-cols-2 gap-12 items-center">
               
@@ -492,15 +494,15 @@
                   </svg>
                 </div>
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
-                  Prêt à décoller !
+                  Presque terminé !
                 </h1>
                 <p class="text-xl lg:text-2xl text-gray-700 mb-8">
-                  Votre Conseillère IA va être créée avec vos paramètres
+                  Votre {{ getAgentTypeName() }} va être créée automatiquement
                 </p>
 
                 <!-- Récapitulatif des choix -->
                 <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-6 mb-8 text-left">
-                  <h3 class="font-bold text-emerald-800 mb-4 text-lg">Récapitulatif de vos réponses :</h3>
+                  <h3 class="font-bold text-emerald-800 mb-4 text-lg">Récapitulatif de vos choix :</h3>
                   <div class="space-y-3 text-sm text-emerald-700">
                     <div class="flex justify-between">
                       <span class="font-medium">Marque :</span>
@@ -538,25 +540,25 @@
                       <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
+                      Création de votre {{ getAgentTypeName() }} personnalisée
+                    </div>
+                    <div class="flex items-center">
+                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      Configuration du Widget pour {{ getPlatformLabel(form.platform) }}
+                    </div>
+                    <div class="flex items-center">
+                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
                       Indexation automatique de votre site web
                     </div>
                     <div class="flex items-center">
                       <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
-                      Base de connaissances pré-remplie
-                    </div>
-                    <div class="flex items-center">
-                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Personnalité adaptée à vos clients
-                    </div>
-                    <div class="flex items-center">
-                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Widget prêt pour {{ form.platform }}
+                      Base de connaissances beauté pré-remplie
                     </div>
                   </div>
                 </div>
@@ -571,7 +573,7 @@
                       <!-- Nom de la Conseillère -->
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Nom de votre Conseillère IA
+                          Nom de votre {{ getAgentTypeName() }}
                         </label>
                         <input
                           v-model="form.agentName"
@@ -579,13 +581,13 @@
                           class="w-full px-6 py-4 bg-white/70 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-gray-900 text-lg placeholder-gray-500"
                           :placeholder="getDefaultAgentName()"
                         />
-                        <p class="text-gray-500 text-sm mt-2">Laissez vide pour utiliser le nom suggéré selon votre domaine</p>
+                        <p class="text-gray-500 text-sm mt-2">Laissez vide pour utiliser "{{ getDefaultAgentName() }}"</p>
                       </div>
 
-                      <!-- Acquisition source -->
+                      <!-- Source d'acquisition (optionnel) -->
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Comment avez-vous connu ChatSeller ?
+                          Comment avez-vous connu ChatSeller ? <span class="text-gray-400 font-normal">(optionnel)</span>
                         </label>
                         <select
                           v-model="form.acquisitionSource"
@@ -594,16 +596,16 @@
                           <option value="" class="bg-white">Sélectionnez une source</option>
                           <option value="search_google" class="bg-white">Recherche Google</option>
                           <option value="social_media" class="bg-white">Réseaux sociaux (LinkedIn, Instagram, Facebook)</option>
-                          <option value="recommendation" class="bg-white">Recommandation d'une autre marque beauté</option>
-                          <option value="beauty_blog" class="bg-white">Blog ou média beauté</option>
+                          <option value="recommendation" class="bg-white">Recommandation d'une autre marque</option>
+                          <option value="whatsapp_group" class="bg-white">Groupe WhatsApp / Telegram</option>
                           <option value="youtube" class="bg-white">YouTube</option>
                           <option value="beauty_event" class="bg-white">Salon beauté / événement professionnel</option>
-                          <option value="advertising" class="bg-white">Publicité en ligne</option>
+                          <option value="dukka" class="bg-white">Déjà cliente Dukka</option>
                           <option value="other" class="bg-white">Autre</option>
                         </select>
                       </div>
 
-                      <!-- Newsletter -->
+                      <!-- Newsletter (optionnel) -->
                       <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-6">
                         <div class="flex items-start space-x-4">
                           <div class="flex items-center h-6 mt-1">
@@ -616,10 +618,10 @@
                           </div>
                           <div>
                             <label for="newsletter" class="text-lg font-semibold text-rose-800">
-                              Conseils d'optimisation
+                              Conseils pour vendre plus
                             </label>
                             <p class="text-sm text-rose-700 mt-1">
-                              Recevez nos meilleures pratiques pour maximiser vos conversions, nouvelles fonctionnalités et études de cas de marques (1-2 emails/mois maximum)
+                              Recevez nos meilleures stratégies pour maximiser vos ventes, les nouvelles fonctionnalités et des études de cas de marques africaines (1-2 emails/mois max)
                             </p>
                           </div>
                         </div>
@@ -632,9 +634,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
                           <div>
-                            <p class="font-bold text-green-800 mb-2 text-lg">Votre essai gratuit de 14 jours commence maintenant !</p>
+                            <p class="font-bold text-green-800 mb-2 text-lg">14 jours d'essai gratuit !</p>
                             <p class="text-green-700 text-sm">
-                              Testez toutes les fonctionnalités premium sans engagement. Aucune carte de crédit requise.
+                              Testez toutes les fonctionnalités sans engagement. Aucune carte bancaire requise. Votre Conseillère IA commence à vendre pour vous dès maintenant.
                             </p>
                           </div>
                         </div>
@@ -662,10 +664,10 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Configuration de votre espace...
+                          Création en cours...
                         </span>
                         <span v-else class="flex items-center justify-center">
-                          Accéder à votre espace
+                          Créer ma {{ getAgentTypeName() }}
                           <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                           </svg>
@@ -687,37 +689,36 @@
 import { useSupabase } from '~~/composables/useSupabase'
 import { useAuthStore } from '~~/stores/auth'
 
+const auth = useAuth()
+const authStore = useAuthStore()
+const api = useApi()
+
 definePageMeta({
   layout: false
 })
 
-// ✅ COMPOSABLES
-const auth = useAuth()
-const authStore = useAuthStore()
-const supabase = useSupabase()
-
-// ✅ STATE
+// ========== STATE ==========
 const currentStep = ref(1)
 const loading = ref(false)
 const initializing = ref(true)
 
-// ✅ FORMULAIRE ADAPTATIF BEAUTÉ
+// ========== FORMULAIRE ==========
 const form = reactive({
   // Étape 1 : Profil marque beauté
   company: '',
   website: '',
-  beautyCategory: '', // skincare, makeup, fragrance, haircare, bodycare, multi
+  beautyCategory: '',
   platform: '',
   
-  // Étape 2 : Clientèle cible (ADAPTATIVE)
-  specializedTarget: [] as string[], // Variable adaptative selon domaine
-  targetAgeRange: '', // 18-25, 26-35, 36-45, 46+
-  priceRange: '', // budget, mid, luxury
+  // Étape 2 : Clientèle cible
+  specializedTarget: [] as string[],
+  targetAgeRange: '',
+  priceRange: '',
   
   // Étape 3 : Style de conseil
-  expertiseLevel: '', // beginner, expert, luxury
-  communicationTone: '', // friendly, professional, luxury, trendy
-  primaryGoal: '', // conversions, upsell, support, education
+  expertiseLevel: '',
+  communicationTone: '',
+  primaryGoal: '',
   
   // Étape 4 : Finalisation
   agentName: '',
@@ -725,7 +726,7 @@ const form = reactive({
   newsletter: true
 })
 
-// ✅ OPTIONS SPÉCIALISÉES PAR DOMAINE BEAUTÉ
+// ========== OPTIONS SPÉCIALISÉES PAR DOMAINE BEAUTÉ (ADAPTÉ AFRIQUE) ==========
 const specializedTargetOptions = {
   skincare: [
     { value: 'normal', icon: '😊', label: 'Peau normale', description: 'Équilibrée, peu de problèmes' },
@@ -733,62 +734,70 @@ const specializedTargetOptions = {
     { value: 'oily', icon: '✨', label: 'Peau grasse', description: 'Excès de sébum' },
     { value: 'combination', icon: '🤔', label: 'Peau mixte', description: 'Zone T grasse, joues sèches' },
     { value: 'sensitive', icon: '🌸', label: 'Peau sensible', description: 'Réactive, intolérances' },
-    { value: 'mature', icon: '👑', label: 'Peau mature', description: 'Anti-âge, fermeté' }
+    { value: 'hyperpigmentation', icon: '🎯', label: 'Teint irrégulier', description: 'Taches, hyperpigmentation' }
   ],
   haircare: [
-    { value: 'straight', icon: '📏', label: 'Cheveux lisses', description: 'Naturellement droits' },
-    { value: 'wavy', icon: '〰️', label: 'Cheveux ondulés', description: 'Légèrement bouclés' },
-    { value: 'curly', icon: '🌀', label: 'Cheveux bouclés', description: 'Boucles marquées' },
-    { value: 'coily', icon: '🔄', label: 'Cheveux crépus', description: 'Texture afro, spiralée' },
-    { value: 'fine', icon: '🪶', label: 'Cheveux fins', description: 'Texture délicate' },
-    { value: 'thick', icon: '💪', label: 'Cheveux épais', description: 'Volume naturel' }
+    { value: 'natural_4c', icon: '🔄', label: 'Cheveux crépus 4C', description: 'Texture très serrée' },
+    { value: 'natural_4b', icon: '🌀', label: 'Cheveux crépus 4A/4B', description: 'Boucles en Z ou S serrées' },
+    { value: 'curly', icon: '➰', label: 'Cheveux bouclés 3A-3C', description: 'Boucles définies' },
+    { value: 'relaxed', icon: '📏', label: 'Cheveux défrisés', description: 'Traités chimiquement' },
+    { value: 'transitioning', icon: '🔀', label: 'En transition', description: 'Retour au naturel' },
+    { value: 'protective', icon: '🛡️', label: 'Coiffures protectrices', description: 'Tresses, locks, tissages' }
   ],
   makeup: [
     { value: 'natural', icon: '🌱', label: 'Look naturel', description: 'Maquillage discret quotidien' },
     { value: 'professional', icon: '👔', label: 'Look professionnel', description: 'Bureau, réunions' },
     { value: 'evening', icon: '🌙', label: 'Look soirée', description: 'Événements, sorties' },
-    { value: 'glamour', icon: '✨', label: 'Look glamour', description: 'Occasions spéciales' },
-    { value: 'editorial', icon: '📸', label: 'Look éditorial', description: 'Créatif, artistique' },
-    { value: 'bridal', icon: '👰', label: 'Look mariage', description: 'Mariée, témoins' }
+    { value: 'bridal', icon: '👰', label: 'Look mariage', description: 'Mariée, témoins, cérémonies' },
+    { value: 'deep_skin', icon: '👑', label: 'Peaux foncées', description: 'Teintes profondes, sous-tons' },
+    { value: 'editorial', icon: '📸', label: 'Look créatif', description: 'Artistique, bold' }
   ],
   fragrance: [
     { value: 'floral', icon: '🌸', label: 'Floral', description: 'Rose, jasmin, pivoine' },
-    { value: 'woody', icon: '🌲', label: 'Boisé', description: 'Santal, cèdre, patchouli' },
+    { value: 'woody', icon: '🌲', label: 'Boisé', description: 'Santal, cèdre, oud' },
     { value: 'oriental', icon: '🏺', label: 'Oriental', description: 'Vanille, ambre, épices' },
     { value: 'fresh', icon: '🍃', label: 'Frais', description: 'Agrumes, aquatique' },
-    { value: 'fruity', icon: '🍑', label: 'Fruité', description: 'Pêche, pomme, baies' },
+    { value: 'musk', icon: '💫', label: 'Musc', description: 'Encens, musc blanc' },
     { value: 'gourmand', icon: '🍰', label: 'Gourmand', description: 'Chocolat, caramel, miel' }
   ],
   bodycare: [
-    { value: 'hydrating', icon: '💧', label: 'Hydratation', description: 'Peaux sèches, déshydratées' },
-    { value: 'firming', icon: '💪', label: 'Fermeté', description: 'Anti-âge corporel' },
-    { value: 'exfoliating', icon: '✨', label: 'Exfoliation', description: 'Gommages, renouvellement' },
-    { value: 'cellulite', icon: '🎯', label: 'Anti-cellulite', description: 'Raffermissement ciblé' },
-    { value: 'sensitive', icon: '🌸', label: 'Peaux sensibles', description: 'Formules douces' },
-    { value: 'sun', icon: '☀️', label: 'Solaire', description: 'Protection, après-soleil' }
+    { value: 'hydrating', icon: '💧', label: 'Hydratation intense', description: 'Peaux très sèches' },
+    { value: 'shea_butter', icon: '🧈', label: 'Karité & beurres', description: 'Soins traditionnels' },
+    { value: 'brightening', icon: '✨', label: 'Teint unifié', description: 'Éclat, anti-taches' },
+    { value: 'exfoliating', icon: '🧽', label: 'Exfoliation', description: 'Gommages, renouvellement' },
+    { value: 'stretch_marks', icon: '🎯', label: 'Vergetures', description: 'Prévention et traitement' },
+    { value: 'sun', icon: '☀️', label: 'Protection solaire', description: 'SPF pour peaux foncées' }
+  ],
+  natural: [
+    { value: 'shea', icon: '🧈', label: 'Karité pur', description: 'Beurre de karité brut' },
+    { value: 'baobab', icon: '🌳', label: 'Baobab', description: 'Huile et poudre de baobab' },
+    { value: 'moringa', icon: '🌿', label: 'Moringa', description: 'Huile et extraits' },
+    { value: 'black_soap', icon: '🧼', label: 'Savon noir', description: 'Savon noir africain' },
+    { value: 'argan', icon: '🫒', label: 'Argan', description: 'Huile d\'argan' },
+    { value: 'neem', icon: '🌱', label: 'Neem', description: 'Soins purifiants au neem' }
   ],
   multi: [
     { value: 'skincare', icon: '🧴', label: 'Soins visage', description: 'Routine skincare' },
     { value: 'makeup', icon: '💄', label: 'Maquillage', description: 'Cosmétiques couleur' },
-    { value: 'haircare', icon: '💇‍♀️', label: 'Soins cheveux', description: 'Shampooings, masques' },
-    { value: 'fragrance', icon: '🌸', label: 'Parfums', description: 'Eaux de parfum, toilette' },
+    { value: 'haircare', icon: '💇‍♀️', label: 'Soins cheveux', description: 'Capillaires naturels' },
+    { value: 'fragrance', icon: '🌸', label: 'Parfums', description: 'Fragrances' },
     { value: 'bodycare', icon: '🧴', label: 'Soins corps', description: 'Hydratation corporelle' },
-    { value: 'wellness', icon: '🧘‍♀️', label: 'Bien-être', description: 'Aromathérapie, détente' }
+    { value: 'natural', icon: '🌿', label: 'Cosmétiques naturels', description: 'Produits bio & naturels' }
   ]
 }
 
-// ✅ OPTIONS COMMUNES
+// ========== OPTIONS COMMUNES ==========
 const ageRanges = [
   { value: '18-25', label: '18-25 ans', description: 'Jeunes adultes' },
-  { value: '26-35', label: '26-35 ans', description: 'Adultes actifs' },
-  { value: '36-45', label: '36-45 ans', description: 'Adultes établis' },
+  { value: '26-35', label: '26-35 ans', description: 'Adultes actives' },
+  { value: '36-45', label: '36-45 ans', description: 'Adultes établies' },
   { value: '46+', label: '46+ ans', description: 'Adultes matures' }
 ]
 
 const priceRanges = [
   { value: 'budget', icon: '💝', label: 'Accessible', description: '5-25€ par produit' },
   { value: 'mid', icon: '💎', label: 'Milieu de gamme', description: '25-80€ par produit' },
-  { value: 'luxury', icon: '👑', label: 'Luxe & Premium', description: '80€+ par produit' }
+  { value: 'luxury', icon: '👑', label: 'Premium', description: '80€+ par produit' }
 ]
 
 const expertiseLevels = [
@@ -807,39 +816,40 @@ const expertiseLevels = [
   { 
     value: 'luxury', 
     icon: '💎', 
-    label: 'Conseillère de luxe', 
-    description: 'Service premium avec expertise pointue' 
+    label: 'Conseillère Premium', 
+    description: 'Service haut de gamme avec expertise pointue' 
   }
 ]
 
+// ========== TONS DE COMMUNICATION (ADAPTÉ CONTEXTE AFRICAIN) ==========
 const communicationTones = [
   {
     value: 'friendly',
     icon: '😊',
-    label: 'Amicale & Chaleureuse',
-    description: 'Ton bienveillant, comme une amie qui conseille',
-    example: 'Salut ma belle ! Je vais t\'aider à trouver le parfait soin pour ta peau.'
+    label: 'Chaleureuse & Proche',
+    description: 'Comme une grande sœur qui conseille avec bienveillance',
+    example: 'Salut ma belle ! Dis-moi ton type de peau, je vais te trouver le soin parfait pour toi.'
   },
   {
     value: 'professional',
     icon: '👩‍💼',
     label: 'Professionnelle & Experte',
-    description: 'Approche consultante, crédible et rassurante',
-    example: 'Bonjour, je suis votre conseillère beauté. Analysons ensemble vos besoins.'
+    description: 'Approche conseillère beauté en institut',
+    example: 'Bonjour Madame, je suis votre conseillère beauté. Comment puis-je vous accompagner aujourd\'hui ?'
   },
   {
     value: 'luxury',
     icon: '✨',
-    label: 'Luxe & Raffinée',
-    description: 'Service premium, attention particulière',
-    example: 'Madame, il me fait plaisir de vous accompagner dans votre quête de beauté.'
+    label: 'Premium & Raffinée',
+    description: 'Service VIP personnalisé, attention particulière',
+    example: 'Bienvenue dans notre espace beauté. Je suis à votre entière disposition pour vous conseiller.'
   },
   {
     value: 'trendy',
     icon: '🌟',
-    label: 'Tendance & Moderne',
-    description: 'Langage actuel, références aux tendances',
-    example: 'Hey ! Tu vas adorer cette routine skincare qui cartonne sur TikTok !'
+    label: 'Moderne & Dynamique',
+    description: 'Langage actuel, références aux tendances beauté',
+    example: 'Hey ! Tu as vu ce sérum dont tout le monde parle ? Je te dis tout sur ses bienfaits !'
   }
 ]
 
@@ -847,30 +857,30 @@ const primaryGoals = [
   {
     value: 'conversions',
     icon: '📈',
-    label: 'Maximiser les conversions',
-    description: 'Focus sur la transformation visiteur → acheteur'
+    label: 'Maximiser les ventes',
+    description: 'Transformer les visiteuses en acheteuses'
   },
   {
     value: 'upsell',
     icon: '🛍️',
     label: 'Augmenter le panier moyen',
-    description: 'Routines complètes et ventes additionnelles'
+    description: 'Proposer des routines complètes et produits complémentaires'
   },
   {
     value: 'support',
     icon: '💬',
-    label: 'Réduire les questions SAV',
-    description: 'Réponses autonomes aux questions fréquentes'
+    label: 'Réduire les questions répétitives',
+    description: 'Répondre automatiquement aux questions fréquentes'
   },
   {
     value: 'education',
     icon: '🎓',
     label: 'Éduquer et fidéliser',
-    description: 'Construire la confiance par l\'expertise'
+    description: 'Construire la confiance par l\'expertise beauté'
   }
 ]
 
-// ✅ COMPUTED
+// ========== COMPUTED ==========
 const userFirstName = computed(() => {
   const userName = authStore.userName
   const userEmail = authStore.userEmail
@@ -889,41 +899,44 @@ const userFirstName = computed(() => {
   return 'Utilisateur'
 })
 
-// ✅ HELPERS POUR TEXTES ADAPTATIFS (ÉTAPE 2)
+// ========== HELPERS POUR TEXTES ADAPTATIFS ==========
 const getClienteleTitle = () => {
   const titles = {
-    skincare: 'Vos client.e.s skincare',
-    haircare: 'Vos client.e.s capillaires',
-    makeup: 'Vos client.e.s maquillage',
-    fragrance: 'Vos client.e.s parfums',
-    bodycare: 'Vos client.e.s soins corps',
-    multi: 'Vos client.e.s'
+    skincare: 'Vos clientes skincare',
+    haircare: 'Vos clientes capillaires',
+    makeup: 'Vos clientes maquillage',
+    fragrance: 'Vos clientes parfums',
+    bodycare: 'Vos clientes soins corps',
+    natural: 'Vos clientes cosmétiques naturels',
+    multi: 'Vos clientes'
   }
-  return titles[form.beautyCategory] || 'Vos client.e.s'
+  return titles[form.beautyCategory] || 'Vos clientes'
 }
 
 const getClienteleDescription = () => {
   const descriptions = {
-    skincare: 'Qui sont vos client.e.s ? Cela nous aide à adapter les conseils selon leur type de peau et besoins.',
-    haircare: 'Qui sont vos client.e.s ? Cela nous aide à adapter les conseils selon leur type de cheveux et routine.',
-    makeup: 'Qui sont vos client.e.s ? Cela nous aide à adapter les conseils selon leurs occasions et style de maquillage.',
-    fragrance: 'Qui sont vos client.e.s ? Cela nous aide à adapter les conseils selon leurs préférences olfactives.',
-    bodycare: 'Qui sont vos client.e.s ? Cela nous aide à adapter les conseils selon leurs besoins corporels spécifiques.',
-    multi: 'Qui sont vos client.e.s ? Cela nous aide à adapter le langage et les réponses de votre Conseillère IA.'
+    skincare: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leur type de peau.',
+    haircare: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leur type de cheveux et texture.',
+    makeup: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs occasions et carnation.',
+    fragrance: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs préférences olfactives.',
+    bodycare: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs besoins corporels.',
+    natural: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs préférences naturelles.',
+    multi: 'Qui sont vos clientes ? Cela permet d\'adapter le langage et les recommandations de votre Conseillère IA.'
   }
-  return descriptions[form.beautyCategory] || 'Qui sont vos client.e.s ? Cela nous aide à adapter le langage et les réponses de votre Conseillère IA.'
+  return descriptions[form.beautyCategory] || descriptions.multi
 }
 
 const getClienteleExplanation = () => {
   const explanations = {
-    skincare: 'Plus nous connaissons les types de peau de vos client.e.s, mieux votre Conseillère pourra recommander les soins adaptés.',
-    haircare: 'Plus nous connaissons les types de cheveux de vos client.e.s, mieux votre Conseillère pourra conseiller les soins capillaires.',
-    makeup: 'Plus nous connaissons les occasions maquillage de vos client.e.s, mieux votre Conseillère pourra proposer les looks appropriés.',
-    fragrance: 'Plus nous connaissons les goûts olfactifs de vos client.e.s, mieux votre Conseillère pourra orienter vers les bonnes familles de parfums.',
-    bodycare: 'Plus nous connaissons les besoins corporels de vos client.e.s, mieux votre Conseillère pourra recommander les soins adaptés.',
-    multi: 'Plus nous connaissons vos client.e.s, mieux votre Conseillère pourra les accompagner selon leurs besoins beauté variés.'
+    skincare: 'Plus nous connaissons les types de peau de vos clientes, mieux votre Conseillère pourra recommander les soins adaptés.',
+    haircare: 'Plus nous connaissons les textures capillaires de vos clientes, mieux votre Conseillère pourra conseiller les soins adaptés.',
+    makeup: 'Plus nous connaissons les occasions maquillage de vos clientes, mieux votre Conseillère pourra proposer les looks appropriés.',
+    fragrance: 'Plus nous connaissons les goûts olfactifs de vos clientes, mieux votre Conseillère pourra orienter vers les bonnes familles de parfums.',
+    bodycare: 'Plus nous connaissons les besoins corporels de vos clientes, mieux votre Conseillère pourra recommander les soins adaptés.',
+    natural: 'Plus nous connaissons les préférences de vos clientes, mieux votre Conseillère pourra conseiller les ingrédients naturels adaptés.',
+    multi: 'Plus nous connaissons vos clientes, mieux votre Conseillère pourra les accompagner selon leurs besoins beauté.'
   }
-  return explanations[form.beautyCategory] || 'Plus nous connaissons vos client.e.s, mieux votre Conseillère pourra les accompagner selon leurs besoins.'
+  return explanations[form.beautyCategory] || explanations.multi
 }
 
 const getSpecializedQuestion = () => {
@@ -933,23 +946,25 @@ const getSpecializedQuestion = () => {
     makeup: 'Quels styles de maquillage proposez-vous principalement ?',
     fragrance: 'Quelles familles olfactives proposez-vous principalement ?',
     bodycare: 'Quels types de soins corporels proposez-vous principalement ?',
+    natural: 'Quels ingrédients naturels proposez-vous principalement ?',
     multi: 'Quels domaines beauté couvrez-vous principalement ?'
   }
-  return questions[form.beautyCategory] || 'Quels sont vos domaines de spécialité principaux ?'
+  return questions[form.beautyCategory] || questions.multi
 }
 
 const getSpecializedOptions = () => {
   return specializedTargetOptions[form.beautyCategory] || specializedTargetOptions.multi
 }
 
-// ✅ HELPERS POUR LABELS
+// ========== HELPERS POUR LABELS ==========
 const getBeautyCategoryLabel = (value: string) => {
   const categories = {
     'skincare': '🧴 Skincare & Soins du visage',
     'makeup': '💄 Maquillage & Cosmétiques', 
     'fragrance': '🌸 Parfums & Fragrances',
-    'haircare': '💇‍♀️ Soins capillaires',
-    'bodycare': '🧴 Soins du corps',
+    'haircare': '💇‍♀️ Soins capillaires & Cheveux naturels',
+    'bodycare': '🧴 Soins du corps & Karité',
+    'natural': '🌿 Cosmétiques naturels & Bio',
     'multi': '✨ Multi-catégories beauté'
   }
   return categories[value] || value
@@ -967,19 +982,42 @@ const getExpertiseLevelLabel = (value: string) => {
   return expertiseLevels.find(level => level.value === value)?.label || value
 }
 
-const getDefaultAgentName = () => {
-  const names = {
-    'skincare': 'Camille',
-    'makeup': 'Léa', 
-    'fragrance': 'Chloé',
-    'haircare': 'Amélie',
-    'bodycare': 'Sarah',
-    'multi': 'Rose'
+const getPlatformLabel = (value: string) => {
+  const platforms = {
+    'shopify': 'Shopify',
+    'woocommerce': 'WooCommerce',
+    'custom': 'Site personnalisé'
   }
-  return names[form.beautyCategory] || 'Rose'
+  return platforms[value] || value
 }
 
-// ✅ NAVIGATION
+const getDefaultAgentName = () => {
+  const names = {
+    'skincare': 'Awa',
+    'makeup': 'Fatou', 
+    'fragrance': 'Aïcha',
+    'haircare': 'Mariama',
+    'bodycare': 'Aminata',
+    'natural': 'Binta',
+    'multi': 'Adama'
+  }
+  return names[form.beautyCategory] || 'Adama'
+}
+
+const getAgentTypeName = () => {
+  const types = {
+    'skincare': 'Conseillère Skincare',
+    'haircare': 'Conseillère Capillaire',
+    'makeup': 'Conseillère Makeup',
+    'fragrance': 'Conseillère Parfums',
+    'bodycare': 'Conseillère Beauté',
+    'natural': 'Conseillère Produits Naturels',
+    'multi': 'Conseillère IA'
+  }
+  return types[form.beautyCategory] || 'Conseillère IA'
+}
+
+// ========== NAVIGATION ==========
 const nextStep = () => {
   if (currentStep.value < 4) {
     currentStep.value++
@@ -994,7 +1032,7 @@ const previousStep = () => {
   }
 }
 
-// ✅ HELPER POUR EXTRAIRE DOMAINE
+// ========== UTILITAIRES ==========
 const extractDomain = (url: string): string | null => {
   if (!url) return null
   try {
@@ -1005,33 +1043,24 @@ const extractDomain = (url: string): string | null => {
   }
 }
 
-// ✅ CONFIGURATION AGENT SPÉCIALISÉE BEAUTÉ
+// ========== CONFIGURATION AGENT IA ==========
 const getOptimizedAgentConfig = () => {
   const agentName = form.agentName || getDefaultAgentName()
   
-  // Messages selon domaine beauté
   const welcomeMessages = {
-    'skincare': `Bonjour ! Je suis ${agentName}, votre experte skincare. Quel est votre type de peau ? Je vais vous conseiller la routine parfaite !`,
-    'makeup': `Salut ! ${agentName}, votre conseillère maquillage. Pour quelle occasion cherchez-vous le look parfait ?`,
+    'skincare': `Bonjour ! Je suis ${agentName}, votre conseillère skincare. Quel est votre type de peau ? Je vais vous recommander la routine parfaite !`,
+    'makeup': `Salut ! Je suis ${agentName}, votre conseillère maquillage. Pour quelle occasion cherchez-vous le look parfait ?`,
     'fragrance': `Bonjour ! Je suis ${agentName}, votre spécialiste parfums. Quel type de fragrance vous fait rêver ?`,
-    'haircare': `Hello ! ${agentName} ici, experte capillaire. Parlez-moi de vos cheveux, je vais vous chouchouter !`,
-    'bodycare': `Bonjour ! ${agentName}, spécialiste soins du corps. Comment puis-je sublimer votre routine bien-être ?`,
+    'haircare': `Hello ! ${agentName} ici, experte capillaire. Parlez-moi de vos cheveux, je vais vous aider à trouver les soins adaptés !`,
+    'bodycare': `Bonjour ! Je suis ${agentName}, spécialiste soins du corps. Comment puis-je sublimer votre routine bien-être ?`,
+    'natural': `Bonjour ! Je suis ${agentName}, votre conseillère cosmétiques naturels. Quels sont vos besoins beauté aujourd'hui ?`,
     'multi': `Bonjour ! Je suis ${agentName}, votre conseillère beauté. Dans quel domaine puis-je vous accompagner aujourd'hui ?`
   }
 
-  // Messages fallback selon expertise
   const fallbackMessages = {
-    'beginner': `Je transmets votre question à notre équipe beauté pour un conseil personnalisé adapté à vos besoins.`,
+    'beginner': `Je transmets votre question à notre équipe pour un conseil personnalisé adapté à vos besoins.`,
     'expert': `Je contacte notre experte senior pour une analyse approfondie de votre demande spécifique.`,
     'luxury': `Je vous mets en relation avec notre consultante premium pour un accompagnement sur mesure.`
-  }
-
-  // Personnalité selon ton
-  const personalities = {
-    'friendly': { warmth: 'high', formality: 'low', enthusiasm: 'high' },
-    'professional': { warmth: 'medium', formality: 'high', enthusiasm: 'medium' },
-    'luxury': { warmth: 'medium', formality: 'high', enthusiasm: 'refined' },
-    'trendy': { warmth: 'high', formality: 'low', enthusiasm: 'very_high' }
   }
 
   return {
@@ -1045,16 +1074,14 @@ const getOptimizedAgentConfig = () => {
       category: form.beautyCategory,
       expertiseLevel: form.expertiseLevel,
       communicationTone: form.communicationTone,
-      specializedTarget: form.specializedTarget, // ✅ Données adaptatives
+      specializedTarget: form.specializedTarget,
       targetAgeRange: form.targetAgeRange,
       priceRange: form.priceRange,
-      primaryGoal: form.primaryGoal,
-      personality: personalities[form.communicationTone] || personalities['professional']
+      primaryGoal: form.primaryGoal
     }
   }
 }
 
-// ✅ CONFIGURATION WIDGET BEAUTÉ
 const getOptimizedWidgetConfig = () => {
   const colors = {
     'skincare': '#4CAF50',
@@ -1062,6 +1089,7 @@ const getOptimizedWidgetConfig = () => {
     'fragrance': '#9C27B0',
     'haircare': '#FF9800',
     'bodycare': '#03DAC5',
+    'natural': '#8BC34A',
     'multi': '#E91E63'
   }
   
@@ -1070,8 +1098,9 @@ const getOptimizedWidgetConfig = () => {
     'makeup': '💄 Conseil maquillage',
     'fragrance': '🌸 Conseil parfum',
     'haircare': '💇‍♀️ Conseil capillaire',
-    'bodycare': '🧴 Conseil corps',
-    'multi': '💝 Parler à la conseillère'
+    'bodycare': '🧴 Conseil soins corps',
+    'natural': '🌿 Conseil naturel',
+    'multi': '💝 Parler à ma conseillère'
   }
   
   return {
@@ -1086,32 +1115,35 @@ const getOptimizedWidgetConfig = () => {
   }
 }
 
-// ✅ COMPLETION ONBOARDING AVEC INDEXATION
+// ========== COMPLETION ONBOARDING ==========
 const completeOnboarding = async () => {
   loading.value = true
   
   try {
-    console.log('🚀 [Onboarding Beauty] Finalisation avec données beauté...')
+    console.log('🚀 [Onboarding] Finalisation avec auto-création agent IA...')
     
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      console.error('❌ [Onboarding Beauty] Pas d\'utilisateur connecté')
+    if (!auth.isAuthenticated.value) {
+      console.error('❌ [Onboarding] Non connecté')
       await navigateTo('/login')
       return
     }
     
-    console.log('✅ [Onboarding Beauty] Utilisateur connecté:', user.email)
+    const user = authStore.user
+    if (!user?.id) {
+      throw new Error('Données utilisateur manquantes')
+    }
     
-    // ✅ DONNÉES SHOP BEAUTÉ ENRICHIES
+    console.log('✅ [Onboarding] Utilisateur connecté:', user.email)
+    
+    // ÉTAPE 1: MISE À JOUR SHOP
     const shopData = {
       name: form.company || `${getBeautyCategoryLabel(form.beautyCategory)} de ${user.email?.split('@')[0]}`,
       domain: extractDomain(form.website),
       platform: form.platform,
       
-      // ✅ SPÉCIALISATION BEAUTÉ
+      // Spécialisation beauté
       beauty_category: form.beautyCategory,
-      specialized_target: form.specializedTarget, // ✅ Données adaptatives sauvées
+      specialized_target: form.specializedTarget,
       target_age_range: form.targetAgeRange,
       price_range: form.priceRange,
       expertise_level: form.expertiseLevel,
@@ -1124,100 +1156,99 @@ const completeOnboarding = async () => {
       onboarding_completed: true,
       onboarding_completed_at: new Date().toISOString(),
       
-      // ✅ CONFIGURATION SPÉCIALISÉE BEAUTÉ
-      agent_config: getOptimizedAgentConfig(),
+      // Configuration widget
       widget_config: getOptimizedWidgetConfig()
     }
     
-    const config = useRuntimeConfig()
-    const baseURL = config.public.apiBaseUrl
+    console.log('📊 [Onboarding] Données shop:', shopData)
     
-    // ✅ MISE À JOUR VIA API
-    try {
-      const shopResponse = await $fetch(`/api/v1/shops/${user.id}`, {
-        method: 'PUT',
-        baseURL,
-        headers: {
-          'Authorization': `Bearer ${authStore.token}`,
-          'Content-Type': 'application/json'
-        },
-        body: shopData
-      })
-      
-      console.log('✅ [Onboarding Beauty] Shop mis à jour avec données beauté')
-      
-    } catch (updateError: any) {
-      if (updateError.status === 404) {
-        // Créer le shop s'il n'existe pas
-        const createResponse = await $fetch('/api/v1/shops', {
-          method: 'POST',
-          baseURL,
-          headers: {
-            'Authorization': `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json'
-          },
-          body: {
-            id: user.id,
-            email: user.email,
-            subscription_plan: 'free',
-            is_active: true,
-            ...shopData
-          }
-        })
-        
-        console.log('✅ [Onboarding Beauty] Shop créé avec spécialisation beauté')
-      } else {
-        throw updateError
-      }
+    const shopResponse = await api.shops.update(user.id, shopData)
+    
+    if (!shopResponse.success) {
+      throw new Error(shopResponse.error || 'Erreur mise à jour shop')
     }
     
-    // ✅ LANCER L'INDEXATION DU SITE WEB (ASYNCHRONE)
+    console.log('✅ [Onboarding] Shop mis à jour')
+    
+    // ÉTAPE 2: CRÉER AUTOMATIQUEMENT L'AGENT IA
+    // Déterminer le type d'agent basé sur la catégorie beauté
+    const agentType = form.beautyCategory ? `${form.beautyCategory}_expert` : 'beauty_expert'
+
+    // Déterminer la personnalité (défaut: friendly si non sélectionné)
+    const agentPersonality = form.communicationTone || 'friendly'
+
+    const agentData = {
+      name: form.agentName || getDefaultAgentName(),
+      type: agentType,
+      personality: agentPersonality,
+      description: `${getAgentTypeName()} spécialisée pour ${form.company}`,
+      welcomeMessage: getOptimizedAgentConfig().welcomeMessage,
+      fallbackMessage: getOptimizedAgentConfig().fallbackMessage,
+      avatar: getOptimizedAgentConfig().avatar,
+      isActive: true,
+      config: getOptimizedAgentConfig().beautySpecialization,
+      productRange: form.priceRange === 'luxury' ? 'premium' : 'accessible',
+      customProductRange: form.priceRange === 'luxury' ? 'Premium' : '',
+      shopName: form.company,
+      productType: form.beautyCategory || 'multi'
+    }
+    
+    console.log('🤖 [Onboarding] Données agent:', agentData)
+    
+    console.log('🤖 [Onboarding] Envoi création agent à l\'API...')
+
+    const agentResponse = await api.agents.create(agentData)
+
+    if (!agentResponse.success) {
+      // Log détaillé de l'erreur
+      console.error('❌ [Onboarding] Erreur création agent:', {
+        error: agentResponse.error,
+        details: (agentResponse as any).details,
+        received: (agentResponse as any).received,
+        agentData: agentData
+      })
+      // On continue malgré l'erreur car le shop a été mis à jour
+      // L'utilisateur pourra créer son agent manuellement plus tard
+    } else {
+      console.log('✅ [Onboarding] Agent IA créé avec succès:', agentResponse.data?.id)
+    }
+    
+    // ÉTAPE 3: INDEXATION DU SITE WEB (ASYNCHRONE)
     if (form.website) {
       try {
-        console.log('🔍 [Onboarding Beauty] Lancement indexation site web...')
+        console.log('🔍 [Onboarding] Lancement indexation site web...')
         
-        // Lancer l'indexation en arrière-plan (fire & forget)
-        $fetch('/api/v1/knowledge-base/index-website', {
-          method: 'POST',
-          baseURL,
-          headers: {
-            'Authorization': `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json'
-          },
-          body: {
-            shop_id: user.id,
-            website_url: form.website,
-            beauty_category: form.beautyCategory,
-            priority: 'high'
-          }
+        api.knowledgeBase.processWebsite({
+          url: form.website,
+          title: `Site ${form.company}`,
+          tags: ['website', 'onboarding', form.beautyCategory || 'multi'],
+          beautyCategory: form.beautyCategory
         }).catch(indexError => {
-          console.warn('⚠️ [Onboarding Beauty] Indexation en arrière-plan:', indexError)
-          // Ne pas bloquer l'onboarding si l'indexation échoue
+          console.warn('⚠️ [Onboarding] Indexation en arrière-plan échouée (non bloquante):', indexError)
         })
         
       } catch (indexError) {
-        console.warn('⚠️ [Onboarding Beauty] Erreur indexation (non bloquante):', indexError)
-        // Continuer même si l'indexation échoue
+        console.warn('⚠️ [Onboarding] Erreur lancement indexation (non bloquante):', indexError)
       }
     }
     
-    // ✅ SYNCHRONISER LE STORE
+    // ÉTAPE 4: SYNCHRONISER LE STORE
     if (authStore.user) {
       await authStore.restoreSession(true)
-      console.log('✅ [Onboarding Beauty] Store synchronisé')
+      console.log('✅ [Onboarding] Store synchronisé')
     }
     
-    console.log('🎉 [Onboarding Beauty] Finalisation terminée!')
+    console.log('🎉 [Onboarding] Onboarding terminé avec succès !')
     
-    // ✅ REDIRECTION AVEC PARAMÈTRES BEAUTÉ
-    window.location.href = `/?onboarding=completed&beauty=true&category=${form.beautyCategory}&welcome=true`
+    // REDIRECTION
+    window.location.href = `/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`
     
   } catch (error: any) {
-    console.error('❌ [Onboarding Beauty] Erreur finalisation:', error)
+    console.error('❌ [Onboarding] Erreur finalisation:', error)
     
-    let userMessage = 'Une erreur s\'est produite lors de la création de votre Conseillère Beauté.'
+    let userMessage = 'Une erreur s\'est produite lors de la création de votre Conseillère IA.'
     
-    if (error.status === 401) {
+    if (error.message?.includes('Token') || error.message?.includes('401')) {
       userMessage = 'Session expirée. Reconnexion en cours...'
       await navigateTo('/login')
       return
@@ -1230,34 +1261,35 @@ const completeOnboarding = async () => {
   }
 }
 
-// ✅ INITIALISATION
+// ========== INITIALISATION ==========
 onMounted(async () => {
   try {
-    console.log('🔄 [Onboarding Beauty] Initialisation...')
+    console.log('🔄 [Onboarding] Initialisation...')
     
     if (!auth.isAuthenticated.value) {
-      console.log('❌ [Onboarding Beauty] Non connecté')
+      console.log('❌ [Onboarding] Non connecté')
       await navigateTo('/login')
       return
     }
     
+    const supabase = useSupabase()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user || !user.email_confirmed_at) {
-      console.log('❌ [Onboarding Beauty] Email non confirmé')
+      console.log('❌ [Onboarding] Email non confirmé')
       await navigateTo('/register')
       return
     }
     
-    // ✅ PRÉ-REMPLIR LE FORMULAIRE
+    // Pré-remplir le formulaire
     if (user.user_metadata?.company) {
       form.company = user.user_metadata.company
     }
     
-    console.log('✅ [Onboarding Beauty] Initialisé pour marque beauté:', user.email)
+    console.log('✅ [Onboarding] Initialisé pour:', user.email)
     
   } catch (error: any) {
-    console.error('❌ [Onboarding Beauty] Erreur initialisation:', error)
+    console.error('❌ [Onboarding] Erreur initialisation:', error)
     await navigateTo('/login')
   } finally {
     initializing.value = false
@@ -1265,16 +1297,15 @@ onMounted(async () => {
 })
 
 useHead({
-  title: 'Configuration de votre Conseillère IA - ChatSeller',
+  title: 'Créez votre Conseillère IA - ChatSeller',
   meta: [
-    { name: 'description', content: 'Configurez votre Conseillère IA spécialisée selon votre marque : skincare, maquillage, parfums ou soins capillaires.' },
-    { name: 'keywords', content: 'Conseillère IA, skincare, maquillage, parfums, capillaire, onboarding beauté' }
+    { name: 'description', content: 'Configurez votre Conseillère IA beauté en 3 minutes. Skincare, maquillage, parfums, soins capillaires - votre assistante vend pour vous 24h/24.' },
+    { name: 'keywords', content: 'Conseillère IA, skincare, maquillage, parfums, capillaire, beauté Afrique, e-commerce' }
   ]
 })
 </script>
 
 <style scoped>
-/* Gradient animé pour le background */
 @keyframes gradient-xy {
   0%, 100% {
     background-size: 400% 400%;
@@ -1313,7 +1344,7 @@ useHead({
   transition: transform 0.3s ease;
 }
 
-.hover\\:scale-105:hover {
+.hover\:scale-105:hover {
   transform: scale(1.05);
 }
 

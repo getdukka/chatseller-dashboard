@@ -1,4 +1,4 @@
-<!-- pages/auth/callback.vue - VERSION AMÉLIORÉE UX -->
+<!-- pages/auth/callback.vue -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-white to-rose-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
@@ -19,28 +19,9 @@
         <p class="text-gray-600 mb-4">
           Vérification de votre adresse email
         </p>
-        
-        <!-- Progress steps avec délais -->
-        <div class="text-sm text-gray-500 space-y-1">
-          <p v-if="step === 'parsing'">🔍 Analyse du lien de confirmation...</p>
-          <p v-else-if="step === 'tokens'">🔑 Récupération des informations...</p>
-          <p v-else-if="step === 'verification'">✅ Vérification de votre email...</p>
-          <p v-else-if="step === 'session'">🔐 Création de votre session...</p>
-          <p v-else-if="step === 'store'">💾 Préparation de vos données...</p>
-          <p v-else-if="step === 'creating-shop'">🏪 Configuration de votre espace...</p>
-          <p v-else-if="step === 'finalizing'">✨ Finalisation...</p>
-          <p v-else-if="step === 'redirect'">🚀 Préparation de votre onboarding...</p>
-          <p v-else>⏳ Initialisation...</p>
+        <div class="text-sm text-gray-500">
+          {{ currentStep }}
         </div>
-        
-        <!-- Progress bar -->
-        <div class="mt-4 w-full bg-gray-200 rounded-full h-2">
-          <div 
-            class="bg-rose-600 h-2 rounded-full transition-all duration-500"
-            :style="{ width: `${progressPercent}%` }"
-          ></div>
-        </div>
-        <p class="text-xs text-gray-400 mt-2">{{ progressPercent }}% terminé</p>
       </div>
 
       <!-- Success State -->
@@ -60,24 +41,22 @@
         </p>
         <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6">
           <p class="text-rose-800 text-sm">
-            <strong>Prochaine étape :</strong> Configurons ensemble votre espace de vente IA
+            <strong>Prochaine étape :</strong> Configurons ensemble votre espace de vente beauté IA
           </p>
         </div>
         
-        <!-- Countdown Progress -->
         <div class="mb-6">
+          <p class="text-sm text-gray-500 mb-2">
+            Redirection automatique dans {{ countdown }} secondes...
+          </p>
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div 
               class="bg-gradient-to-r from-rose-600 to-green-600 h-2 rounded-full transition-all duration-100 ease-linear"
               :style="{ width: `${countdownProgress}%` }"
             ></div>
           </div>
-          <p class="text-sm text-gray-500 mt-2">
-            Configuration automatique dans {{ countdown }} secondes...
-          </p>
         </div>
         
-        <!-- Action button -->
         <button
           @click="redirectToOnboarding"
           class="w-full bg-gradient-to-r from-rose-600 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-rose-700 hover:to-green-700 transition-all shadow-lg transform hover:scale-105"
@@ -126,34 +105,26 @@
 import { useSupabase } from '~~/composables/useSupabase'
 import { useAuthStore } from '~~/stores/auth'
 
+// ✅ IMPORTS SIMPLIFIÉS - UTILISER useApi() au lieu de mélanger
+const auth = useAuth()
+const authStore = useAuthStore()
+const api = useApi() // ✅ NOUVEAU : Utiliser le composable API
+const supabase = useSupabase()
+
 definePageMeta({
   layout: false
 })
 
-const supabase = useSupabase()
-const config = useRuntimeConfig()
-
-// State
+// ✅ STATE SIMPLIFIÉ
 const loading = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
-const countdown = ref(5) // ✅ 5 SECONDES MINIMUM POUR LA CONFIRMATION
+const countdown = ref(3) // ✅ 3 SECONDES
 const countdownProgress = ref(0)
-const step = ref('init')
-const progressPercent = ref(0)
+const currentStep = ref('Analyse du lien de confirmation...')
 
-// Variables pour forcer l'affichage minimum
-const minDisplayTime = 3000 // ✅ 3 SECONDES MINIMUM POUR VOIR LA CONFIRMATION
-
-// ✅ FONCTION POUR CALCULER LE PROGRÈS
-const updateProgress = (currentStep: string) => {
-  const steps = ['init', 'parsing', 'tokens', 'verification', 'session', 'store', 'creating-shop', 'finalizing', 'redirect']
-  const currentIndex = steps.indexOf(currentStep)
-  progressPercent.value = Math.round((currentIndex / (steps.length - 1)) * 100)
-}
-
-// ✅ ANALYSER URL AVEC GESTION ROBUSTE
+// ✅ FONCTION SIMPLIFIÉE : Analyser URL callback
 const parseCallbackUrl = () => {
   const url = window.location.href
   const hash = window.location.hash
@@ -170,7 +141,7 @@ const parseCallbackUrl = () => {
     error_description: ''
   }
   
-  // Hash fragments (#) 
+  // Hash fragments (#)
   if (hash && hash.length > 1) {
     const hashContent = hash.substring(1)
     const hashParams = new URLSearchParams(hashContent)
@@ -198,9 +169,10 @@ const parseCallbackUrl = () => {
   return tokens
 }
 
-// ✅ CRÉER SESSION SUPABASE
+// ✅ FONCTION SIMPLIFIÉE : Établir session Supabase
 const establishSupabaseSession = async (tokens: any) => {
   console.log('🔐 [Callback] Création session Supabase')
+  currentStep.value = '🔐 Vérification de votre email...'
   
   if (tokens.error) {
     throw new Error(tokens.error_description || tokens.error)
@@ -243,78 +215,65 @@ const establishSupabaseSession = async (tokens: any) => {
   return sessionData
 }
 
-// ✅ ASSURER L'EXISTENCE DU SHOP
-const ensureShopExists = async (user: any, token: string) => {
-  console.log('🏪 [Callback] Vérification/création shop')
-  
-  const api = useApi()
+// ✅ FONCTION SIMPLIFIÉE : Assurer l'existence du shop - UTILISER useApi()
+const ensureShopExists = async (user: any) => {
+  console.log('🏪 [Callback] Vérification/création shop beauté')
+  currentStep.value = '🏪 Configuration de votre espace...'
   
   try {
-    // Vérifier si le shop existe
+    // ✅ UTILISER useApi() - Vérifier si le shop existe
     const shopResponse = await api.shops.get(user.id)
     
     if (shopResponse.success && shopResponse.data) {
-      console.log('✅ [Callback] Shop existant trouvé')
+      console.log('✅ [Callback] Shop beauté existant trouvé')
       return shopResponse.data
     }
   } catch (checkError) {
     console.log('ℹ️ [Callback] Shop non trouvé, création...')
   }
   
-  // Créer le shop
+  // ✅ UTILISER useApi() - Créer le shop
   const createData = {
     id: user.id,
-    name: user.user_metadata?.company || `Shop de ${user.user_metadata?.first_name || user.email?.split('@')[0]}`,
+    name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} Beauté` : `Shop de ${user.email?.split('@')[0]}`,
     email: user.email,
-    subscription_plan: 'free',
+    subscription_plan: 'starter',
     is_active: true,
     onboarding_completed: false,
     widget_config: {
-      theme: 'modern',
+      theme: 'beauty_modern',
       primaryColor: '#E91E63',
       position: 'bottom-right',
-      buttonText: 'Parler au vendeur',
+      buttonText: 'Parler à votre conseillère beauté',
       language: 'fr'
-    },
-    agent_config: {
-      name: 'Rose',
-      avatar: 'https://ui-avatars.com/api/?name=Rose&background=E91E63&color=fff',
-      welcomeMessage: 'Bonjour ! Je suis votre assistante d\'achat. Comment puis-je vous aider ?',
-      fallbackMessage: 'Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt.',
-      collectPaymentMethod: true,
-      upsellEnabled: false
     }
   }
   
   const createResponse = await api.shops.create(createData)
   
   if (!createResponse.success) {
-    throw new Error(createResponse.error || 'Erreur création shop')
+    throw new Error(createResponse.error || 'Erreur création shop beauté')
   }
   
-  console.log('✅ [Callback] Shop créé avec succès')
+  console.log('✅ [Callback] Shop beauté créé avec succès')
   return createResponse.data
 }
 
-// ✅ TRAITEMENT PRINCIPAL AVEC DÉLAIS OBLIGATOIRES
+// ✅ TRAITEMENT PRINCIPAL SIMPLIFIÉ
 onMounted(async () => {
-  const startTime = Date.now()
-  
   try {
     console.log('🔗 [Callback] Début traitement confirmation email')
     
-    step.value = 'parsing'
-    updateProgress('parsing')
-    await new Promise(resolve => setTimeout(resolve, 800))
+    // ✅ ÉTAPE 1: Parser URL
+    currentStep.value = '🔍 Analyse du lien de confirmation...'
+    await new Promise(resolve => setTimeout(resolve, 500))
     
     const tokens = parseCallbackUrl()
     
-    step.value = 'tokens'
-    updateProgress('tokens')
-    await new Promise(resolve => setTimeout(resolve, 600))
+    // ✅ ÉTAPE 2: Établir session
+    currentStep.value = '🔑 Récupération des informations...'
+    await new Promise(resolve => setTimeout(resolve, 500))
     
-    step.value = 'verification'
-    updateProgress('verification')
     const sessionData = await establishSupabaseSession(tokens)
     
     if (!sessionData?.user) {
@@ -323,57 +282,34 @@ onMounted(async () => {
     
     console.log('✅ [Callback] Email confirmé pour:', sessionData.user.email)
     
-    step.value = 'session'
-    updateProgress('session')
-    await new Promise(resolve => setTimeout(resolve, 600))
+    // ✅ ÉTAPE 3: Synchroniser store
+    currentStep.value = '💾 Préparation de vos données...'
+    await new Promise(resolve => setTimeout(resolve, 500))
     
-    step.value = 'store'
-    updateProgress('store')
-    
-    // Mise à jour du store
     try {
-      const authStore = useAuthStore()
-      const userData = await authStore.fetchCompleteUserDataViaAPI(
-        sessionData.user, 
-        sessionData.session.access_token
-      )
+      // ✅ UTILISER fetchCompleteUserData du composable auth
+      const userData = await auth.fetchCompleteUserData(sessionData.user)
       authStore.setUser(userData, sessionData.session.access_token)
       console.log('✅ [Callback] Store synchronisé')
     } catch (storeError) {
       console.warn('⚠️ [Callback] Erreur store (non critique):', storeError)
     }
     
-    await new Promise(resolve => setTimeout(resolve, 600))
+    // ✅ ÉTAPE 4: Assurer l'existence du shop beauté
+    currentStep.value = '🏪 Configuration de votre espace beauté...'
+    await new Promise(resolve => setTimeout(resolve, 500))
     
-    step.value = 'creating-shop'
-    updateProgress('creating-shop')
-    
-    // Assurer l'existence du shop
     try {
-      const shopData = await ensureShopExists(sessionData.user, sessionData.session.access_token)
-      console.log('✅ [Callback] Shop configuré')
+      const shopData = await ensureShopExists(sessionData.user)
+      console.log('✅ [Callback] Shop beauté configuré')
     } catch (shopError: any) {
-      console.error('❌ [Callback] Erreur shop:', shopError)
-      throw new Error(`Configuration espace échouée: ${shopError.message}`)
+      console.error('❌ [Callback] Erreur shop beauté:', shopError)
+      throw new Error(`Configuration espace beauté échouée: ${shopError.message}`)
     }
     
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    step.value = 'finalizing'
-    updateProgress('finalizing')
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    step.value = 'redirect'
-    updateProgress('redirect')
-    
-    // ✅ ASSURER L'AFFICHAGE MINIMUM MÊME SI TRAITEMENT RAPIDE
-    const elapsedTime = Date.now() - startTime
-    const remainingTime = Math.max(0, minDisplayTime - elapsedTime)
-    
-    if (remainingTime > 0) {
-      console.log(`⏳ [Callback] Attente ${remainingTime}ms pour affichage minimum`)
-      await new Promise(resolve => setTimeout(resolve, remainingTime))
-    }
+    // ✅ FINALISATION
+    currentStep.value = '✨ Finalisation...'
+    await new Promise(resolve => setTimeout(resolve, 500))
     
     // Nettoyer l'URL
     window.history.replaceState({}, '', window.location.pathname)
@@ -381,41 +317,33 @@ onMounted(async () => {
     loading.value = false
     success.value = true
     
-    console.log('✅ [Callback] Confirmation terminée avec succès')
+    console.log('✅ [Callback] Confirmation beauté terminée avec succès')
     startCountdown()
     
   } catch (err: any) {
     console.error('❌ [Callback] Erreur:', err)
     
-    // ✅ ASSURER L'AFFICHAGE MINIMUM MÊME EN CAS D'ERREUR
-    const elapsedTime = Date.now() - startTime
-    const remainingTime = Math.max(0, minDisplayTime - elapsedTime)
-    
-    if (remainingTime > 0) {
-      await new Promise(resolve => setTimeout(resolve, remainingTime))
-    }
-    
     loading.value = false
     error.value = true
     
-    // Messages d'erreur appropriés
+    // Messages d'erreur beauté appropriés
     if (err.message?.includes('expired')) {
       errorMessage.value = 'Le lien de confirmation a expiré. Créez un nouveau compte.'
     } else if (err.message?.includes('invalid') || err.message?.includes('token')) {
       errorMessage.value = 'Lien de confirmation invalide. Vérifiez votre email.'
     } else if (err.message?.includes('shop') || err.message?.includes('espace')) {
-      errorMessage.value = 'Email confirmé mais configuration échouée. Contactez le support.'
+      errorMessage.value = 'Email confirmé mais configuration beauté échouée. Contactez le support.'
     } else {
       errorMessage.value = 'Erreur de confirmation. Contactez le support si cela persiste.'
     }
   }
 })
 
-// ✅ COUNTDOWN AVEC PROGRESS
+// ✅ COUNTDOWN SIMPLIFIÉ
 const startCountdown = () => {
   const interval = setInterval(() => {
     countdown.value--
-    countdownProgress.value = ((5 - countdown.value) / 5) * 100
+    countdownProgress.value = ((3 - countdown.value) / 3) * 100
     
     if (countdown.value <= 0) {
       clearInterval(interval)
@@ -426,8 +354,8 @@ const startCountdown = () => {
 
 // ✅ REDIRECTION VERS ONBOARDING
 const redirectToOnboarding = async () => {
-  console.log('🚀 [Callback] Redirection vers onboarding')
-  await navigateTo('/onboarding?from=email-confirmation&welcome=true')
+  console.log('🚀 [Callback] Redirection vers onboarding beauté')
+  await navigateTo('/onboarding?from=email-confirmation&beauty=true&welcome=true')
 }
 
 useHead({

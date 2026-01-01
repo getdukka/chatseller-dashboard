@@ -1,66 +1,96 @@
 <!-- pages/index.vue -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
-    <!-- Welcome Modal Post-Onboarding -->
+    
+    <!-- ========== WELCOME MODAL POST-ONBOARDING ========== -->
     <div v-if="showWelcomeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl">
+      <div class="bg-white rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
         <div class="text-center">
-          <div class="w-20 h-20 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-10 h-10 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Success Icon -->
+          <div class="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
           </div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">
-            {{ getWelcomeTitle() }}
+          
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">
+            🎉 {{ getWelcomeTitle() }}
           </h2>
-          <p class="text-gray-600 mb-8">
+          
+          <!-- USP WhatsApp -->
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6 text-left">
+            <div class="flex items-start space-x-3">
+              <span class="text-2xl">📱</span>
+              <div>
+                <p class="font-semibold text-green-800">Fini les nuits sur WhatsApp !</p>
+                <p class="text-sm text-green-700">{{ agentInfo?.name || 'Votre Conseillère IA' }} va répondre à vos clientes 24h/24, même quand vous dormez.</p>
+              </div>
+            </div>
+          </div>
+          
+          <p class="text-gray-600 mb-6">
             {{ getWelcomeDescription() }}
           </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          
+          <!-- Prochaines étapes -->
+          <div class="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+            <p class="font-semibold text-gray-800 mb-3">📋 Prochaines étapes :</p>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center text-gray-600">
+                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">1</span>
+                Synchronisez vos produits depuis votre boutique
+              </div>
+              <div class="flex items-center text-gray-600">
+                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">2</span>
+                Ajoutez vos connaissances beauté (FAQ, routines, conseils)
+              </div>
+              <div class="flex items-center text-gray-600">
+                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">3</span>
+                Intégrez le widget sur votre site
+              </div>
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              @click="navigateToAgentSetup"
-              class="px-8 py-3 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-semibold rounded-xl hover:from-rose-700 hover:to-pink-700 transition-all"
+              @click="navigateToProducts"
+              class="px-6 py-3 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-semibold rounded-xl hover:from-rose-700 hover:to-pink-700 transition-all"
             >
-              {{ getCreateAgentText() }}
-            </button>
-            <button
-              @click="navigateToKnowledgeBase"
-              class="px-8 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
-            >
-              {{ getTrainAgentText() }}
+              Synchroniser mes produits
             </button>
             <button
               @click="closeWelcomeModal"
-              class="px-6 py-3 text-gray-500 hover:text-gray-700 transition-colors"
+              class="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
             >
-              Plus tard
+              Explorer le Dashboard
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Header -->
-    <div class="px-4 md:px-8 py-6">
-      <div class="flex items-center justify-between">
+    <!-- ========== HEADER ========== -->
+    <div class="px-4 md:px-8 py-4 md:py-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-            {{ greeting }}, {{ userFirstName }}
+          <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
+            {{ greeting }}, {{ userFirstName }} 👋
           </h1>
-          <p class="mt-2 text-gray-600">
+          <p class="mt-1 text-sm md:text-base text-gray-600">
             {{ getDashboardSubtitle() }}
           </p>
         </div>
         
         <!-- Quick Actions -->
-        <div class="flex items-center space-x-2 md:space-x-4">
+        <div class="flex items-center space-x-2">
           <button
             @click="handleRefreshData"
             :disabled="refreshing"
-            class="inline-flex items-center px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
             <svg 
-              class="w-4 h-4 mr-1 md:mr-2" 
+              class="w-4 h-4 mr-1.5" 
               :class="{ 'animate-spin': refreshing }"
               fill="none" 
               stroke="currentColor" 
@@ -71,354 +101,596 @@
             <span class="hidden sm:inline">{{ refreshing ? 'Actualisation...' : 'Actualiser' }}</span>
           </button>
           
-          <NuxtLink
-            to="/agent-ia"
-            class="inline-flex items-center px-3 md:px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
+          <button
+            v-if="agentInfo"
+            @click="navigateToAgentDetail"
+            class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
           >
-            <svg class="w-4 h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
             </svg>
-            <span class="hidden sm:inline">{{ getConfigureButtonText() }}</span>
-            <span class="sm:hidden">Config</span>
-          </NuxtLink>
+            <span class="hidden sm:inline">Voir {{ agentInfo.name }}</span>
+            <span class="sm:hidden">Agent</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Loading State -->
+    <!-- ========== LOADING STATE ========== -->
     <div v-if="loadingStats" class="px-4 md:px-8 pb-8">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
         <div v-for="i in 4" :key="i" class="card-modern animate-pulse">
-          <div class="h-24 bg-gray-200 rounded"></div>
+          <div class="h-20 md:h-24 bg-gray-200 rounded"></div>
         </div>
       </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- ========== MAIN CONTENT ========== -->
     <div v-else class="px-4 md:px-8 pb-8">
-      <!-- KPI Cards Contextuelles -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-        <!-- Conversations/Conversations Card -->
+      
+      <!-- ===== SECTION: GUIDE DÉMARRAGE (pour nouveaux utilisateurs) ===== -->
+      <div v-if="isNewUser" class="mb-6">
+        <div class="bg-white rounded-2xl border-2 border-rose-200 shadow-lg overflow-hidden">
+          <!-- Header du guide -->
+          <div class="bg-gradient-to-r from-rose-500 to-pink-500 px-4 md:px-6 py-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                </div>
+                <div class="text-white">
+                  <h3 class="font-bold text-lg">Lancez votre Conseillère IA</h3>
+                  <p class="text-rose-100 text-sm">3 étapes pour commencer à vendre</p>
+                </div>
+              </div>
+              <div class="hidden sm:block">
+                <span class="bg-white/20 text-white text-sm font-medium px-3 py-1 rounded-full">
+                  {{ completedSteps }}/3 étapes
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Étapes -->
+          <div class="p-4 md:p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              <!-- Étape 1: Agent créé -->
+              <div 
+                class="relative p-4 rounded-xl border-2 transition-all"
+                :class="setupStatus.agentCreated ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'"
+              >
+                <div class="flex items-start space-x-3">
+                  <div 
+                    class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    :class="setupStatus.agentCreated ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'"
+                  >
+                    <svg v-if="setupStatus.agentCreated" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <span v-else class="text-sm font-bold">1</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 text-sm">Conseillère IA créée</p>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                      {{ setupStatus.agentCreated ? `${agentInfo?.name || 'Votre agent'} est prête !` : 'Créez votre première Conseillère' }}
+                    </p>
+                  </div>
+                </div>
+                <div v-if="!setupStatus.agentCreated" class="mt-3">
+                  <NuxtLink 
+                    to="/agent-ia"
+                    class="inline-flex items-center text-xs font-medium text-rose-600 hover:text-rose-700"
+                  >
+                    Créer maintenant
+                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </NuxtLink>
+                </div>
+              </div>
+              
+              <!-- Étape 2: Produits synchronisés -->
+              <div 
+                class="relative p-4 rounded-xl border-2 transition-all"
+                :class="setupStatus.productsSynced ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'"
+              >
+                <div class="flex items-start space-x-3">
+                  <div 
+                    class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    :class="setupStatus.productsSynced ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'"
+                  >
+                    <svg v-if="setupStatus.productsSynced" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <span v-else class="text-sm font-bold">2</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 text-sm">Produits synchronisés</p>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                      {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits importés` : 'Importez votre catalogue' }}
+                    </p>
+                  </div>
+                </div>
+                <div v-if="!setupStatus.productsSynced" class="mt-3">
+                  <NuxtLink 
+                    to="/products"
+                    class="inline-flex items-center text-xs font-medium text-rose-600 hover:text-rose-700"
+                  >
+                    Synchroniser
+                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </NuxtLink>
+                </div>
+              </div>
+              
+              <!-- Étape 3: Widget intégré -->
+              <div 
+                class="relative p-4 rounded-xl border-2 transition-all"
+                :class="setupStatus.widgetIntegrated ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'"
+              >
+                <div class="flex items-start space-x-3">
+                  <div 
+                    class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    :class="setupStatus.widgetIntegrated ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'"
+                  >
+                    <svg v-if="setupStatus.widgetIntegrated" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <span v-else class="text-sm font-bold">3</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 text-sm">Widget intégré</p>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                      {{ setupStatus.widgetIntegrated ? 'Actif sur votre site' : 'Ajoutez le code sur votre site' }}
+                    </p>
+                  </div>
+                </div>
+                <div v-if="!setupStatus.widgetIntegrated" class="mt-3">
+                  <NuxtLink 
+                    to="/agent-ia?tab=integration"
+                    class="inline-flex items-center text-xs font-medium text-rose-600 hover:text-rose-700"
+                  >
+                    Voir le code
+                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Barre de progression mobile -->
+            <div class="mt-4 sm:hidden">
+              <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
+                <span>Progression</span>
+                <span>{{ completedSteps }}/3 étapes</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  class="bg-gradient-to-r from-rose-500 to-pink-500 h-2 rounded-full transition-all duration-500"
+                  :style="{ width: `${(completedSteps / 3) * 100}%` }"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== KPI CARDS ===== -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
+        
+        <!-- Conversations Card -->
         <div class="card-modern-gradient from-blue-500 to-blue-600">
-          <div class="flex items-center justify-between">
-            <div class="text-white">
-              <p class="text-blue-100 text-sm font-medium">{{ getConversationsLabel() }}</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ dashboardStats.conversations.total }}</p>
-              <p class="text-blue-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ dashboardStats.conversations.active }}</span> {{ getActiveLabel() }}
+          <div class="flex items-start justify-between">
+            <div class="text-white flex-1 min-w-0">
+              <p class="text-blue-100 text-xs md:text-sm font-medium">Conversations</p>
+              <p class="text-xl md:text-3xl font-bold mt-1">{{ dashboardStats.conversations.total }}</p>
+              <p class="text-blue-100 text-xs mt-1">
+                <span class="text-white font-medium">{{ dashboardStats.conversations.active }}</span> en cours
               </p>
             </div>
-            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-2 md:p-3 bg-white bg-opacity-20 rounded-lg md:rounded-xl flex-shrink-0">
+              <svg class="w-5 h-5 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
             </div>
           </div>
-          <div class="mt-4">
+          <div class="mt-3 md:mt-4">
             <NuxtLink 
               to="/conversations"
-              class="text-white text-sm font-medium hover:text-blue-100 transition-colors inline-flex items-center"
+              class="text-white text-xs md:text-sm font-medium hover:text-blue-100 transition-colors inline-flex items-center"
             >
-              {{ getViewAllText() }}
-              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              Voir tout
+              <svg class="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </NuxtLink>
           </div>
         </div>
 
-        <!-- Conversions Card -->
+        <!-- Ventes Card -->
         <div class="card-modern-gradient from-green-500 to-green-600">
-          <div class="flex items-center justify-between">
-            <div class="text-white">
-              <p class="text-green-100 text-sm font-medium">{{ getConversionsLabel() }}</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ dashboardStats.orders.total }}</p>
-              <p class="text-green-100 text-sm mt-1">
+          <div class="flex items-start justify-between">
+            <div class="text-white flex-1 min-w-0">
+              <p class="text-green-100 text-xs md:text-sm font-medium">Ventes</p>
+              <p class="text-xl md:text-3xl font-bold mt-1">{{ dashboardStats.orders.total }}</p>
+              <p class="text-green-100 text-xs mt-1">
                 <span class="text-white font-medium">{{ formatConversionRate(dashboardStats.orders.conversionRate) }}</span> conversion
               </p>
             </div>
-            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-2 md:p-3 bg-white bg-opacity-20 rounded-lg md:rounded-xl flex-shrink-0">
+              <svg class="w-5 h-5 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
             </div>
           </div>
-          <div class="mt-4">
-            <NuxtLink 
-              to="/orders"
-              class="text-white text-sm font-medium hover:text-green-100 transition-colors inline-flex items-center"
-            >
-              {{ getOrdersLinkText() }}
-              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-            </NuxtLink>
+          <div class="mt-3 md:mt-4">
+            <span class="text-green-100 text-xs md:text-sm">
+              Via votre Conseillère IA
+            </span>
           </div>
         </div>
 
-        <!-- Revenue Card -->
+        <!-- Chiffre d'affaires Card -->
         <div class="card-modern-gradient from-yellow-500 to-orange-500">
-          <div class="flex items-center justify-between">
-            <div class="text-white">
-              <p class="text-orange-100 text-sm font-medium">Chiffre d'affaires</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ formatCurrency(dashboardStats.revenue.total) }}</p>
-              <p class="text-orange-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ formatCurrency(dashboardStats.revenue.average) }}</span> {{ getAverageBasketLabel() }}
+          <div class="flex items-start justify-between">
+            <div class="text-white flex-1 min-w-0">
+              <p class="text-orange-100 text-xs md:text-sm font-medium">Chiffre d'affaires</p>
+              <p class="text-xl md:text-3xl font-bold mt-1">{{ formatCurrency(dashboardStats.revenue.total) }}</p>
+              <p class="text-orange-100 text-xs mt-1">
+                <span class="text-white font-medium">{{ formatCurrency(dashboardStats.revenue.average) }}</span> panier moy.
               </p>
             </div>
-            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-2 md:p-3 bg-white bg-opacity-20 rounded-lg md:rounded-xl flex-shrink-0">
+              <svg class="w-5 h-5 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
               </svg>
             </div>
           </div>
-          <div class="mt-4">
-            <NuxtLink 
-              to="/analytics"
-              class="text-white text-sm font-medium hover:text-orange-100 transition-colors inline-flex items-center"
+          <div class="mt-3 md:mt-4">
+            <span class="text-orange-100 text-xs md:text-sm">
+              Généré par l'IA
+            </span>
+          </div>
+        </div>
+
+        <!-- Produits recommandés Card -->
+        <div class="card-modern-gradient from-purple-500 to-purple-600">
+          <div class="flex items-start justify-between">
+            <div class="text-white flex-1 min-w-0">
+              <p class="text-purple-100 text-xs md:text-sm font-medium">Recommandations</p>
+              <p class="text-xl md:text-3xl font-bold mt-1">{{ dashboardStats.beautyInsights?.productsRecommended || 0 }}</p>
+              <p class="text-purple-100 text-xs mt-1 truncate">
+                {{ dashboardStats.beautyInsights?.topProduct || 'Aucun produit' }}
+              </p>
+            </div>
+            <div class="p-2 md:p-3 bg-white bg-opacity-20 rounded-lg md:rounded-xl flex-shrink-0">
+              <svg class="w-5 h-5 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="mt-3 md:mt-4">
+            <NuxtLink
+              to="/products"
+              class="text-white text-xs md:text-sm font-medium hover:text-purple-100 transition-colors inline-flex items-center"
             >
-              Voir analytics 
-              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              Voir produits
+              <svg class="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </NuxtLink>
           </div>
         </div>
+      </div>
 
-        <!-- Insights Spécialisés Card -->
-        <div class="card-modern-gradient from-purple-500 to-purple-600">
-          <div class="flex items-center justify-between">
-            <div class="text-white">
-              <p class="text-purple-100 text-sm font-medium">{{ getInsightsLabel() }}</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ getTopInsightValue() }}</p>
-              <p class="text-purple-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ getSecondaryInsight() }}</span>
-              </p>
+      <!-- ===== EMPTY STATE MESSAGE (quand pas de données) ===== -->
+      <div 
+        v-if="hasNoData && !isNewUser" 
+        class="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 md:p-6"
+      >
+        <div class="flex flex-col md:flex-row items-start md:items-center space-y-3 md:space-y-0 md:space-x-4">
+          <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h4 class="font-semibold text-gray-900">Vos statistiques apparaîtront bientôt !</h4>
+            <p class="text-sm text-gray-600 mt-1">
+              Dès que des clientes discuteront avec {{ agentInfo?.name || 'votre Conseillère IA' }}, vous verrez ici vos conversations, ventes et revenus.
+            </p>
+          </div>
+          <NuxtLink 
+            to="/agent-ia?tab=test"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Tester ma Conseillère
+          </NuxtLink>
+        </div>
+      </div>
+
+      <!-- ===== MAIN CONTENT GRID ===== -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        
+        <!-- ===== CARD: Votre Conseillère IA ===== -->
+        <div class="card-modern">
+          <div class="flex items-center justify-between mb-4 md:mb-6">
+            <h3 class="text-base md:text-lg font-semibold text-gray-900">Votre {{ getAgentTypeName() }}</h3>
+            <button
+              v-if="agentInfo"
+              @click="navigateToAgentDetail"
+              class="text-rose-600 hover:text-rose-700 text-xs md:text-sm font-medium transition-colors"
+            >
+              Configurer
+            </button>
+          </div>
+
+          <!-- Agent trouvé -->
+          <div v-if="agentInfo" class="space-y-4">
+            <!-- Avatar et nom -->
+            <div class="flex items-center space-x-4">
+              <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                <img
+                  v-if="agentInfo.avatar"
+                  :src="agentInfo.avatar"
+                  :alt="agentInfo.name"
+                  class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover"
+                />
+                <span v-else class="text-white text-xl md:text-2xl font-bold">
+                  {{ agentInfo.name.charAt(0) }}
+                </span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-semibold text-gray-900 truncate">{{ agentInfo.name }}</h4>
+                <p class="text-sm text-gray-500 truncate">{{ getAgentTypeName() }}</p>
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1"
+                  :class="agentInfo.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                >
+                  <span
+                    class="w-1.5 h-1.5 rounded-full mr-1"
+                    :class="agentInfo.isActive ? 'bg-green-500' : 'bg-gray-400'"
+                  ></span>
+                  {{ agentInfo.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
             </div>
-            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {{ getInsightIcon() }}
+
+            <!-- Stats rapides -->
+            <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+              <div class="text-center p-2 bg-gray-50 rounded-lg">
+                <p class="text-lg md:text-xl font-bold text-gray-900">{{ agentInfo.knowledgeBaseCount }}</p>
+                <p class="text-xs text-gray-500">Documents</p>
+              </div>
+              <div class="text-center p-2 bg-gray-50 rounded-lg">
+                <p class="text-lg md:text-xl font-bold text-gray-900">{{ dashboardStats.conversations.total }}</p>
+                <p class="text-xs text-gray-500">Conversations</p>
+              </div>
+            </div>
+
+            <!-- Bouton action -->
+            <button
+              @click="navigateToAgentDetail"
+              class="w-full py-2.5 px-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all flex items-center justify-center"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              Voir les détails
+            </button>
+          </div>
+
+          <!-- Aucun agent -->
+          <div v-else class="text-center py-6 md:py-8">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
               </svg>
             </div>
-          </div>
-          <div class="mt-4">
-            <NuxtLink 
-              to="/analytics"
-              class="text-purple-100 text-sm font-medium hover:text-purple-200 transition-colors"
+            <p class="text-gray-600 font-medium">Créez votre Conseillère IA</p>
+            <p class="text-gray-400 text-sm mt-1 mb-4">Elle conseillera vos clientes 24h/24</p>
+            <NuxtLink
+              to="/agent-ia"
+              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
             >
-              {{ getInsightActionText() }}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Créer ma Conseillère
             </NuxtLink>
           </div>
         </div>
-      </div>
 
-      <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        <!-- Recent Conversations -->
+        <!-- ===== CARD: Performances IA ===== -->
         <div class="card-modern">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900">{{ getRecentConversationsTitle() }}</h3>
-            <NuxtLink 
+          <div class="flex items-center justify-between mb-4 md:mb-6">
+            <h3 class="text-base md:text-lg font-semibold text-gray-900">Performances IA</h3>
+            <NuxtLink
               to="/conversations"
-              class="text-rose-600 hover:text-rose-700 text-sm font-medium transition-colors"
+              class="text-rose-600 hover:text-rose-700 text-xs md:text-sm font-medium transition-colors"
             >
-              {{ getManageConversationsText() }}
+              Voir conversations
             </NuxtLink>
           </div>
+
+          <div class="space-y-3 md:space-y-4">
+            <!-- Temps de réponse -->
+            <div class="flex items-center justify-between py-2 md:py-3 border-b border-gray-100">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 md:w-5 md:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs md:text-sm font-medium text-gray-900">Temps de réponse</p>
+                  <p class="text-xs text-gray-500 hidden sm:block">Moyenne par message</p>
+                </div>
+              </div>
+              <span class="text-base md:text-lg font-semibold text-blue-600">{{ dashboardStats.performance.responseTime }}</span>
+            </div>
+
+            <!-- Disponibilité -->
+            <div class="flex items-center justify-between py-2 md:py-3 border-b border-gray-100">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 md:w-5 md:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs md:text-sm font-medium text-gray-900">Disponibilité</p>
+                  <p class="text-xs text-gray-500 hidden sm:block">Uptime du service</p>
+                </div>
+              </div>
+              <span class="text-base md:text-lg font-semibold text-green-600">{{ dashboardStats.performance.uptime }}%</span>
+            </div>
+
+            <!-- Conversations actives -->
+            <div class="flex items-center justify-between py-2 md:py-3">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 md:w-5 md:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs md:text-sm font-medium text-gray-900">En cours</p>
+                  <p class="text-xs text-gray-500 hidden sm:block">Conversations actives</p>
+                </div>
+              </div>
+              <span class="text-base md:text-lg font-semibold text-purple-600">{{ dashboardStats.conversations.active }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== CARD: Actions rapides ===== -->
+        <div class="card-modern">
+          <div class="flex items-center justify-between mb-4 md:mb-6">
+            <h3 class="text-base md:text-lg font-semibold text-gray-900">Actions rapides</h3>
+          </div>
           
-          <div v-if="recentConversations.length > 0" class="space-y-4">
-            <div 
-              v-for="conversation in recentConversations" 
-              :key="conversation.id"
-              class="conversation-item"
-              @click="goToConversation(conversation.id)"
+          <div class="space-y-3">
+            <!-- Former l'IA -->
+            <NuxtLink 
+              to="/knowledge-base" 
+              class="flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-rose-300 hover:bg-rose-50 transition-all group"
             >
               <div class="flex items-center space-x-3">
-                <div class="avatar-circle">
-                  <span class="text-sm font-medium text-white">
-                    {{ getInitials(conversation.visitor) }}
-                  </span>
+                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                  </svg>
                 </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-900 truncate">
-                    {{ conversation.visitor }}
-                  </p>
-                  <p class="text-xs text-gray-500 truncate">
-                    {{ getContextualLastMessage(conversation) }}
-                  </p>
-                </div>
-                <div class="flex flex-col items-end">
-                  <div class="text-xs text-gray-400">
-                    {{ formatTime(conversation.time) }}
-                  </div>
-                  <div 
-                    v-if="conversation.unread" 
-                    class="w-2 h-2 bg-rose-500 rounded-full mt-1"
-                  ></div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">Former mon IA</p>
+                  <p class="text-xs text-gray-500">Ajouter des connaissances</p>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          <div v-else class="empty-state">
-            <svg class="w-12 h-12 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-            <p class="text-gray-500 text-sm mt-2">{{ getNoConversationsText() }}</p>
-            <p class="text-gray-400 text-xs mt-1">{{ getNoConversationsSubtext() }}</p>
-          </div>
-        </div>
+              <svg class="w-4 h-4 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </NuxtLink>
 
-        <!-- Recent Orders -->
-        <div class="card-modern">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900">{{ getRecentOrdersTitle() }}</h3>
+            <!-- Gérer les produits -->
             <NuxtLink 
-              to="/orders"
-              class="text-rose-600 hover:text-rose-700 text-sm font-medium transition-colors"
+              to="/products" 
+              class="flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-rose-300 hover:bg-rose-50 transition-all group"
             >
-              {{ getSalesTrackingText() }}
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">Mes produits</p>
+                  <p class="text-xs text-gray-500">{{ dashboardStats.products.total }} produit{{ dashboardStats.products.total > 1 ? 's' : '' }}</p>
+                </div>
+              </div>
+              <svg class="w-4 h-4 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </NuxtLink>
+
+            <!-- Intégrer le widget -->
+            <NuxtLink 
+              to="/agent-ia?tab=integration" 
+              class="flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-rose-300 hover:bg-rose-50 transition-all group"
+            >
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+                  <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">Intégrer le widget</p>
+                  <p class="text-xs text-gray-500">Code pour votre site</p>
+                </div>
+              </div>
+              <svg class="w-4 h-4 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </NuxtLink>
+
+            <!-- Voir la facturation -->
+            <NuxtLink 
+              to="/billing" 
+              class="flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-rose-300 hover:bg-rose-50 transition-all group"
+            >
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">Facturation</p>
+                  <p class="text-xs text-gray-500">Gérer mon abonnement</p>
+                </div>
+              </div>
+              <svg class="w-4 h-4 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
             </NuxtLink>
           </div>
-          
-          <div v-if="recentOrders.length > 0" class="space-y-4">
-            <div 
-              v-for="order in recentOrders" 
-              :key="order.id"
-              class="order-item"
-              @click="goToOrder(order.id)"
-            >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">
-                      {{ order.customer }}
-                    </p>
-                    <p class="text-xs text-gray-500">
-                      {{ getOrderLabel() }} #{{ order.id.slice(-6).toUpperCase() }}
-                    </p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm font-medium text-gray-900">
-                    {{ formatCurrency(order.amount) }}
-                  </p>
-                  <p class="text-xs text-gray-500">
-                    {{ formatTime(order.time) }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div v-else class="empty-state">
-            <svg class="w-12 h-12 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
-            <p class="text-gray-500 text-sm mt-2">{{ getNoOrdersText() }}</p>
-            <p class="text-gray-400 text-xs mt-1">{{ getNoOrdersSubtext() }}</p>
-          </div>
-        </div>
-
-        <!-- Quick Setup Contextuel -->
-        <div class="card-modern">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900">{{ getQuickSetupTitle() }}</h3>
-            <div class="progress-circle">
-              <span class="text-xs text-gray-600">{{ configurationProgress }}%</span>
-            </div>
-          </div>
-          
-          <div class="space-y-4">
-            <div class="setup-item" :class="{ 'completed': setupStatus.knowledgeBase }">
-              <NuxtLink to="/knowledge-base" class="flex items-center justify-between w-full">
-                <div class="flex items-center space-x-3">
-                  <div class="setup-icon" :class="setupStatus.knowledgeBase ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">{{ getKnowledgeBaseTitle() }}</p>
-                    <p class="text-xs text-gray-500">{{ getKnowledgeBaseSubtitle() }}</p>
-                  </div>
-                </div>
-                <div class="flex items-center">
-                  <span class="text-xs text-gray-400">{{ setupStatus.knowledgeBase ? 'Configuré' : 'Vide' }}</span>
-                  <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </div>
-              </NuxtLink>
-            </div>
-
-            <div class="setup-item" :class="{ 'completed': setupStatus.agentConfig }">
-              <NuxtLink to="/agent-ia" class="flex items-center justify-between w-full">
-                <div class="flex items-center space-x-3">
-                  <div class="setup-icon" :class="setupStatus.agentConfig ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-600'">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">{{ getAgentConfigTitle() }}</p>
-                    <p class="text-xs text-gray-500">{{ getAgentConfigSubtitle() }}</p>
-                  </div>
-                </div>
-                <div class="flex items-center">
-                  <span class="text-xs text-gray-400">{{ setupStatus.agentConfig ? 'Configuré' : 'À configurer' }}</span>
-                  <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </div>
-              </NuxtLink>
-            </div>
-
-            <div class="setup-item" :class="{ 'completed': setupStatus.widgetIntegration }">
-              <NuxtLink to="/agent-ia?tab=integration" class="flex items-center justify-between w-full">
-                <div class="flex items-center space-x-3">
-                  <div class="setup-icon" :class="setupStatus.widgetIntegration ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">{{ getWidgetTitle() }}</p>
-                    <p class="text-xs text-gray-500">{{ getWidgetSubtitle() }}</p>
-                  </div>
-                </div>
-                <div class="flex items-center">
-                  <span class="text-xs text-gray-400">{{ setupStatus.widgetIntegration ? 'Intégré' : 'À intégrer' }}</span>
-                  <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </div>
-              </NuxtLink>
-            </div>
-          </div>
         </div>
       </div>
     </div>
 
-    <!-- Success Notification -->
-    <div
-      v-if="showSuccessMessage"
-      class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300"
+    <!-- ========== SUCCESS NOTIFICATION ========== -->
+    <Transition
+      enter-active-class="transform ease-out duration-300 transition"
+      enter-from-class="translate-y-2 opacity-0"
+      enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transition ease-in duration-100"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
     >
-      <div class="flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
-        {{ successMessage }}
+      <div
+        v-if="showSuccessMessage"
+        class="fixed bottom-4 right-4 left-4 md:left-auto bg-green-600 text-white px-4 md:px-6 py-3 rounded-lg shadow-lg z-50"
+      >
+        <div class="flex items-center justify-center md:justify-start">
+          <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span class="text-sm">{{ successMessage }}</span>
+        </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -431,6 +703,7 @@ definePageMeta({
   layout: 'default'
 })
 
+// ========== INTERFACES ==========
 interface DashboardStats {
   conversations: {
     total: number
@@ -448,35 +721,25 @@ interface DashboardStats {
     responseTime: string
     uptime: number
   }
+  products: {
+    total: number
+  }
   beautyInsights?: {
+    productsRecommended?: number
+    topProduct?: string
     [key: string]: any
   }
 }
 
-interface Conversation {
-  id: string
-  visitor: string
-  lastMessage: string
-  time: Date
-  unread: boolean
-  context?: string
-}
-
-interface Order {
-  id: string
-  customer: string
-  amount: number
-  time: Date
-}
-
 interface SetupStatus {
+  agentCreated: boolean
+  productsSynced: boolean
+  widgetIntegrated: boolean
   knowledgeBase: boolean
-  agentConfig: boolean
-  widgetIntegration: boolean
 }
 
 interface BeautyProfile {
-  beautyCategory: 'skincare' | 'haircare' | 'makeup' | 'fragrance' | 'bodycare' | 'multi'
+  beautyCategory: 'skincare' | 'haircare' | 'makeup' | 'fragrance' | 'bodycare' | 'natural' | 'multi'
   specializedTarget: string[]
   targetAgeRange: string
   priceRange: string
@@ -486,12 +749,20 @@ interface BeautyProfile {
   agentName?: string
 }
 
-// COMPOSABLES
+interface AgentInfo {
+  id: string
+  name: string
+  title: string
+  avatar: string | null
+  isActive: boolean
+  knowledgeBaseCount: number
+}
+
+// ========== COMPOSABLES ==========
 const authStore = useAuthStore()
 const api = useApi()
-const route = useRoute()
 
-// REACTIVE STATE
+// ========== REACTIVE STATE ==========
 const refreshing = ref(false)
 const loadingStats = ref(true)
 const showSuccessMessage = ref(false)
@@ -503,15 +774,15 @@ const dashboardStats = ref<DashboardStats>({
   orders: { total: 0, conversionRate: 0 },
   revenue: { total: 0, average: 0 },
   performance: { responseTime: '< 2s', uptime: 99.9 },
+  products: { total: 0 },
   beautyInsights: {}
 })
 
-const recentConversations = ref<Conversation[]>([])
-const recentOrders = ref<Order[]>([])
 const setupStatus = ref<SetupStatus>({
-  knowledgeBase: false,
-  agentConfig: false,
-  widgetIntegration: false
+  agentCreated: false,
+  productsSynced: false,
+  widgetIntegrated: false,
+  knowledgeBase: false
 })
 
 const beautyProfile = ref<BeautyProfile>({
@@ -525,7 +796,10 @@ const beautyProfile = ref<BeautyProfile>({
   agentName: ''
 })
 
-// COMPUTED
+const agentId = ref<string | null>(null)
+const agentInfo = ref<AgentInfo | null>(null)
+
+// ========== COMPUTED ==========
 const greeting = computed(() => {
   const hour = new Date().getHours()
   if (hour >= 5 && hour < 12) return 'Bonjour'
@@ -552,17 +826,35 @@ const userFirstName = computed(() => {
   return 'Utilisateur'
 })
 
-const configurationProgress = computed(() => {
-  const total = Object.keys(setupStatus.value).length
-  const completed = Object.values(setupStatus.value).filter(Boolean).length
-  return Math.round((completed / total) * 100)
+// Nouveau utilisateur = aucune conversation ET agent créé récemment
+const isNewUser = computed(() => {
+  return dashboardStats.value.conversations.total === 0 && 
+         (setupStatus.value.agentCreated || !agentInfo.value)
 })
 
-// UTILITY METHODS
+// Pas de données = toutes les stats à 0
+const hasNoData = computed(() => {
+  return dashboardStats.value.conversations.total === 0 &&
+         dashboardStats.value.orders.total === 0 &&
+         dashboardStats.value.revenue.total === 0
+})
+
+// Nombre d'étapes complétées
+const completedSteps = computed(() => {
+  let count = 0
+  if (setupStatus.value.agentCreated) count++
+  if (setupStatus.value.productsSynced) count++
+  if (setupStatus.value.widgetIntegrated) count++
+  return count
+})
+
+// ========== UTILITY METHODS ==========
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: 'EUR'
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount)
 }
 
@@ -576,25 +868,6 @@ const formatConversionRate = (rate: any): string => {
   return '0%'
 }
 
-const formatTime = (date: Date): string => {
-  const now = new Date()
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-  
-  if (diffInMinutes < 1) return 'À l\'instant'
-  if (diffInMinutes < 60) return `Il y a ${diffInMinutes}min`
-  if (diffInMinutes < 24 * 60) return `Il y a ${Math.floor(diffInMinutes / 60)}h`
-  return date.toLocaleDateString('fr-FR')
-}
-
-const getInitials = (name: string): string => {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
-
 const showNotification = (message: string) => {
   successMessage.value = message
   showSuccessMessage.value = true
@@ -603,297 +876,63 @@ const showNotification = (message: string) => {
   }, 3000)
 }
 
-// MÉTHODES CONTEXTUELLES BEAUTÉ
-
-// Dashboard Subtitle
+// ========== MÉTHODES CONTEXTUELLES ==========
 const getDashboardSubtitle = () => {
+  if (!agentInfo.value) {
+    return 'Créez votre Conseillère IA pour commencer à vendre'
+  }
+  
   const subtitles = {
-    'skincare': 'Voici les performances de votre Esthéticienne IA',
-    'haircare': 'Voici les performances de votre Experte Capillaire IA',
-    'makeup': 'Voici les performances de votre Conseillère Maquillage IA',
-    'fragrance': 'Voici les performances de votre Conseillère Parfums IA',
-    'bodycare': 'Voici les performances de votre Experte Soins Corps IA',
-    'multi': 'Voici les performances de votre Conseillère IA'
+    'skincare': `${agentInfo.value.name} conseille vos clientes en soins du visage`,
+    'haircare': `${agentInfo.value.name} conseille vos clientes en soins capillaires`,
+    'makeup': `${agentInfo.value.name} conseille vos clientes en maquillage`,
+    'fragrance': `${agentInfo.value.name} conseille vos clientes en parfums`,
+    'bodycare': `${agentInfo.value.name} conseille vos clientes en soins du corps`,
+    'natural': `${agentInfo.value.name} conseille vos clientes en cosmétiques naturels`,
+    'multi': `${agentInfo.value.name} conseille vos clientes en beauté`
   }
   return subtitles[beautyProfile.value.beautyCategory] || subtitles.multi
 }
 
-// Welcome Modal
 const getWelcomeTitle = () => {
-  return `Votre ${getAgentTypeName()} est prête !`
+  if (agentInfo.value) {
+    return `${agentInfo.value.name} est prête à vendre pour vous !`
+  }
+  return 'Votre espace ChatSeller est prêt !'
 }
 
 const getWelcomeDescription = () => {
-  const descriptions = {
-    'skincare': 'Votre Esthéticienne IA spécialisée en soins du visage est configurée selon vos paramètres. Personnalisez ses conseils et intégrez-la à votre site.',
-    'haircare': 'Votre Experte Capillaire IA spécialisée selon vos types de cheveux est prête. Affinez ses recommandations et activez-la sur votre boutique.',
-    'makeup': 'Votre Conseillère Maquillage IA adaptée à vos styles et occasions est configurée. Personnalisez ses looks et intégrez-la à votre site.',
-    'fragrance': 'Votre Conseillère Parfums IA experte en familles olfactives est prête. Affinez ses recommandations et activez-la sur votre boutique.',
-    'bodycare': 'Votre Experte Soins Corps IA spécialisée selon vos produits est configurée. Personnalisez ses routines et intégrez-la à votre site.',
-    'multi': 'Votre Conseillère IA multi-spécialités est prête. Affinez ses domaines d\'expertise et intégrez-la à votre site.'
+  if (agentInfo.value) {
+    return `${agentInfo.value.name} peut maintenant conseiller vos clientes 24h/24. Synchronisez vos produits pour qu'elle puisse les recommander.`
   }
-  return descriptions[beautyProfile.value.beautyCategory] || descriptions.multi
+  return 'Configurez votre Conseillère IA et commencez à automatiser vos ventes.'
 }
 
-const getCreateAgentText = () => {
-  return `Personnaliser ma ${getAgentTypeName()}`
-}
-
-const getTrainAgentText = () => {
-  const texts = {
-    'skincare': 'Ajouter mes routines skincare',
-    'haircare': 'Ajouter mes soins capillaires',
-    'makeup': 'Ajouter mes looks & tutos',
-    'fragrance': 'Ajouter mes fragrances',
-    'bodycare': 'Ajouter mes soins corps',
-    'multi': 'Ajouter mes connaissances'
-  }
-  return texts[beautyProfile.value.beautyCategory] || texts.multi
-}
-
-// Agent Type Name
 const getAgentTypeName = () => {
   const types = {
-    'skincare': 'Esthéticienne IA',
+    'skincare': 'Conseillère Skincare IA',
     'haircare': 'Experte Capillaire IA',
     'makeup': 'Conseillère Maquillage IA',
     'fragrance': 'Conseillère Parfums IA',
     'bodycare': 'Experte Soins Corps IA',
+    'natural': 'Conseillère Naturel IA',
     'multi': 'Conseillère IA'
   }
   return types[beautyProfile.value.beautyCategory] || types.multi
 }
 
-// Button Texts
-const getConfigureButtonText = () => {
-  return `Configurer ma ${getAgentTypeName()}`
-}
-
-// KPI Labels
-const getConversationsLabel = () => {
-  const labels = {
-    'skincare': 'Conversations',
-    'haircare': 'Conversations', 
-    'makeup': 'Conversations',
-    'fragrance': 'Conversations',
-    'bodycare': 'Conversations',
-    'multi': 'Conversations'
+// ========== NAVIGATION ==========
+const navigateToAgentDetail = () => {
+  if (agentId.value) {
+    navigateTo(`/agent-ia/${agentId.value}`)
+  } else {
+    navigateTo('/agent-ia')
   }
-  return labels[beautyProfile.value.beautyCategory] || labels.multi
 }
 
-const getConversionsLabel = () => {
-  const labels = {
-    'skincare': 'Routines vendues',
-    'haircare': 'Soins recommandés',
-    'makeup': 'Looks créés',
-    'fragrance': 'Parfums choisis',
-    'bodycare': 'Rituels adoptés',
-    'multi': 'Conversions'
-  }
-  return labels[beautyProfile.value.beautyCategory] || labels.multi
-}
-
-const getActiveLabel = () => {
-  return 'actives'
-}
-
-const getViewAllText = () => {
-  return 'Voir tout'
-}
-
-const getOrdersLinkText = () => {
-  const texts = {
-    'skincare': 'Suivi routines',
-    'haircare': 'Suivi soins',
-    'makeup': 'Suivi commandes',
-    'fragrance': 'Suivi parfums',
-    'bodycare': 'Suivi rituels',
-    'multi': 'Suivi des ventes'
-  }
-  return texts[beautyProfile.value.beautyCategory] || texts.multi
-}
-
-const getAverageBasketLabel = () => {
-  const labels = {
-    'skincare': 'routine moyenne',
-    'haircare': 'panier cheveux',
-    'makeup': 'look moyen',
-    'fragrance': 'panier parfum',
-    'bodycare': 'rituel moyen',
-    'multi': 'panier moyen'
-  }
-  return labels[beautyProfile.value.beautyCategory] || labels.multi
-}
-
-// Insights spécialisés
-const getInsightsLabel = () => {
-  const labels = {
-    'skincare': 'Type de peau top',
-    'haircare': 'Type cheveux top',
-    'makeup': 'Style préféré',
-    'fragrance': 'Famille olfactive top',
-    'bodycare': 'Besoin corporel top',
-    'multi': 'Catégorie top'
-  }
-  return labels[beautyProfile.value.beautyCategory] || labels.multi
-}
-
-const getTopInsightValue = () => {
-  // Simulation d'insights contextuels
-  const insights = {
-    'skincare': 'Mixte',
-    'haircare': 'Bouclés', 
-    'makeup': 'Naturel',
-    'fragrance': 'Floral',
-    'bodycare': 'Hydratant',
-    'multi': 'Skincare'
-  }
-  return insights[beautyProfile.value.beautyCategory] || '42%'
-}
-
-const getSecondaryInsight = () => {
-  const insights = {
-    'skincare': '32% de vos clientes',
-    'haircare': '28% de vos clientes',
-    'makeup': '45% des Conversations',
-    'fragrance': '38% des achats',
-    'bodycare': '31% des demandes',
-    'multi': '35% des Conversations'
-  }
-  return insights[beautyProfile.value.beautyCategory] || 'engagement'
-}
-
-const getInsightIcon = () => {
-  const icons = {
-    'skincare': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>',
-    'haircare': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>',
-    'makeup': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>',
-    'fragrance': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>',
-    'bodycare': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>',
-    'multi': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>'
-  }
-  return icons[beautyProfile.value.beautyCategory] || icons.multi
-}
-
-const getInsightActionText = () => {
-  return 'Analytics détaillées'
-}
-
-// Consultation Texts
-const getRecentConversationsTitle = () => {
-  return `${getConversationsLabel()} récentes`
-}
-
-const getManageConversationsText = () => {
-  return 'Gérer les Conversations'
-}
-
-const getContextualLastMessage = (conversation: Conversation) => {
-  if (conversation.context) return conversation.context
-  
-  const defaultMessages = {
-    'skincare': 'Question sur routine visage',
-    'haircare': 'Demande conseil cheveux',
-    'makeup': 'Recherche look parfait',
-    'fragrance': 'Aide choix parfum',
-    'bodycare': 'Conseil soins corps',
-    'multi': 'Nouvelle consultation'
-  }
-  return conversation.lastMessage || defaultMessages[beautyProfile.value.beautyCategory] || 'Nouvelle consultation'
-}
-
-const getNoConversationsText = () => {
-  return `Aucune ${getConversationsLabel().toLowerCase()}`
-}
-
-const getNoConversationsSubtext = () => {
-  const texts = {
-    'skincare': 'Les Conversations peau apparaîtront ici',
-    'haircare': 'Les Conversations cheveux apparaîtront ici',
-    'makeup': 'Les Conversations maquillage apparaîtront ici', 
-    'fragrance': 'Les Conversations parfum apparaîtront ici',
-    'bodycare': 'Les Conversations corps apparaîtront ici',
-    'multi': 'Les nouvelles Conversations apparaîtront ici'
-  }
-  return texts[beautyProfile.value.beautyCategory] || texts.multi
-}
-
-// Orders Texts
-const getRecentOrdersTitle = () => {
-  return `${getConversionsLabel()} récentes`
-}
-
-const getSalesTrackingText = () => {
-  return 'Suivi des ventes'
-}
-
-const getOrderLabel = () => {
-  const labels = {
-    'skincare': 'Routine',
-    'haircare': 'Soin', 
-    'makeup': 'Commande',
-    'fragrance': 'Parfum',
-    'bodycare': 'Rituel',
-    'multi': 'Commande'
-  }
-  return labels[beautyProfile.value.beautyCategory] || labels.multi
-}
-
-const getNoOrdersText = () => {
-  return `Aucune ${getConversionsLabel().toLowerCase()}`
-}
-
-const getNoOrdersSubtext = () => {
-  return 'Les nouvelles ventes apparaîtront ici'
-}
-
-// Setup Texts
-const getQuickSetupTitle = () => {
-  return 'Configuration rapide'
-}
-
-const getKnowledgeBaseTitle = () => {
-  const titles = {
-    'skincare': 'Expertise skincare',
-    'haircare': 'Expertise capillaire',
-    'makeup': 'Looks & techniques',
-    'fragrance': 'Familles olfactives',
-    'bodycare': 'Soins corporels',
-    'multi': 'Base de connaissances'
-  }
-  return titles[beautyProfile.value.beautyCategory] || titles.multi
-}
-
-const getKnowledgeBaseSubtitle = () => {
-  return `Former votre ${getAgentTypeName()}`
-}
-
-const getAgentConfigTitle = () => {
-  return `Paramètres ${getAgentTypeName()}`
-}
-
-const getAgentConfigSubtitle = () => {
-  return 'Personnaliser le comportement'
-}
-
-const getWidgetTitle = () => {
-  return 'Widget intégration'
-}
-
-const getWidgetSubtitle = () => {
-  return 'Code à intégrer sur votre site'
-}
-
-// NAVIGATION ACTIONS
-const navigateToAgentSetup = () => {
+const navigateToProducts = () => {
   closeWelcomeModal()
-  navigateTo('/agent-ia')
-}
-
-const navigateToKnowledgeBase = () => {
-  closeWelcomeModal()
-  navigateTo('/knowledge-base')
+  navigateTo('/products')
 }
 
 const closeWelcomeModal = () => {
@@ -901,7 +940,46 @@ const closeWelcomeModal = () => {
   localStorage.setItem('chatseller_welcome_shown', 'true')
 }
 
-// DATA LOADING
+// ========== DATA LOADING ==========
+const loadAgent = async () => {
+  try {
+    const config = useRuntimeConfig()
+    const baseURL = config.public.apiBaseUrl
+
+    const response = await $fetch('/api/v1/agents', {
+      method: 'GET',
+      baseURL,
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json'
+      }
+    }) as { success: boolean; data: any[] }
+
+    if (response.success && response.data && response.data.length > 0) {
+      const agent = response.data[0]
+      agentId.value = agent.id
+
+      const knowledgeBase = agent.agent_knowledge_base || []
+      agentInfo.value = {
+        id: agent.id,
+        name: agent.name || 'Conseillère IA',
+        title: agent.title || '',
+        avatar: agent.avatar || null,
+        isActive: agent.is_active ?? true,
+        knowledgeBaseCount: knowledgeBase.length
+      }
+
+      // Mettre à jour le statut
+      setupStatus.value.agentCreated = true
+      setupStatus.value.knowledgeBase = knowledgeBase.length > 0
+
+      console.log('✅ Agent chargé:', agentInfo.value.name)
+    }
+  } catch (error) {
+    console.error('❌ Erreur chargement agent:', error)
+  }
+}
+
 const loadBeautyProfile = async () => {
   try {
     const user = authStore.user
@@ -917,7 +995,7 @@ const loadBeautyProfile = async () => {
         'Authorization': `Bearer ${authStore.token}`,
         'Content-Type': 'application/json'
       }
-    })
+    }) as { success: boolean; data: any }
     
     if (shopResponse.success && shopResponse.data) {
       const shop = shopResponse.data
@@ -933,41 +1011,74 @@ const loadBeautyProfile = async () => {
         agentName: shop.agent_config?.name || ''
       }
       
-      console.log('Beauty profile chargé:', beautyProfile.value)
+      // Vérifier si le widget est intégré (basé sur une propriété du shop)
+      setupStatus.value.widgetIntegrated = shop.widget_integrated === true
+      
+      console.log('✅ Beauty profile chargé:', beautyProfile.value.beautyCategory)
     }
   } catch (error) {
-    console.error('Erreur chargement beauty profile:', error)
-    // Utiliser les valeurs par défaut
+    console.error('❌ Erreur chargement beauty profile:', error)
+  }
+}
+
+const loadProducts = async () => {
+  try {
+    const response = await api.products.list()
+    if (response.success && response.data) {
+      dashboardStats.value.products.total = response.data.length
+      setupStatus.value.productsSynced = response.data.length > 0
+      return response.data
+    }
+    return []
+  } catch (error) {
+    console.error('❌ Erreur chargement produits:', error)
+    return []
+  }
+}
+
+const loadConversations = async () => {
+  try {
+    const response = await api.conversations.list()
+    if (response.success && response.data) {
+      return response.data
+    }
+    return []
+  } catch (error) {
+    console.error('❌ Erreur chargement conversations:', error)
+    return []
+  }
+}
+
+const loadOrders = async () => {
+  try {
+    // TODO: Implémenter l'endpoint orders quand disponible
+    return []
+  } catch (error) {
+    console.error('❌ Erreur chargement commandes:', error)
+    return []
   }
 }
 
 const loadDashboardData = async () => {
   try {
-    console.log('Chargement des données dashboard avec contexte beauté...')
+    console.log('📊 Chargement des données dashboard...')
     
-    const [conversationsData, ordersData] = await Promise.allSettled([
+    const [conversationsData, ordersData, productsData] = await Promise.allSettled([
       loadConversations(),
-      loadOrders()
+      loadOrders(),
+      loadProducts()
     ])
 
+    // Conversations
     if (conversationsData.status === 'fulfilled') {
       const convs = conversationsData.value
       dashboardStats.value.conversations = {
         total: convs.length,
-        active: convs.filter(c => c.status === 'active').length
+        active: convs.filter((c: any) => c.status === 'active' || c.status === 'open').length
       }
-      
-      // Conversations avec contexte beauté
-      recentConversations.value = convs.slice(0, 3).map((conv: any) => ({
-        id: conv.id,
-        visitor: conv.visitor_id ? `Cliente ${conv.visitor_id.slice(0, 8)}` : 'Cliente anonyme',
-        lastMessage: 'Nouvelle consultation',
-        time: new Date(conv.started_at || Date.now()),
-        unread: conv.status === 'active',
-        context: getContextualLastMessage({ lastMessage: '', context: '' } as Conversation)
-      }))
     }
     
+    // Orders & Revenue
     if (ordersData.status === 'fulfilled') {
       const orders = ordersData.value
       const totalConversations = dashboardStats.value.conversations.total
@@ -981,155 +1092,85 @@ const loadDashboardData = async () => {
         const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.amount || 0), 0)
         dashboardStats.value.revenue = {
           total: totalRevenue,
-          average: totalRevenue / orders.length
+          average: Math.round(totalRevenue / orders.length)
         }
-        
-        recentOrders.value = orders.slice(0, 3).map((order: any) => ({
-          id: order.id,
-          customer: order.customer_name || 'Cliente',
-          amount: order.amount || 0,
-          time: new Date(order.created_at || Date.now())
-        }))
       }
     }
 
-    // Statut de configuration
-    setupStatus.value = {
-      knowledgeBase: Math.random() > 0.3, // Simulation
-      agentConfig: Math.random() > 0.4,
-      widgetIntegration: Math.random() > 0.6
+    // Products
+    if (productsData.status === 'fulfilled') {
+      const products = productsData.value
+      dashboardStats.value.products.total = products.length
     }
 
-    console.log('Données dashboard beauté chargées avec succès')
+    console.log('✅ Données dashboard chargées')
   } catch (error) {
-    console.error('Erreur lors du chargement des données dashboard beauté:', error)
+    console.error('❌ Erreur chargement dashboard:', error)
   } finally {
     loadingStats.value = false
   }
 }
 
-const loadConversations = async () => {
-  try {
-    const response = await api.conversations.list()
-    if (response.success && response.data) {
-      return response.data
-    }
-    return []
-  } catch (error) {
-    console.error('Erreur chargement conversations:', error)
-    return []
-  }
-}
-
-const loadOrders = async () => {
-  try {
-    // Simulation d'ordres car l'endpoint n'existe peut-être pas encore
-    return []
-  } catch (error) {
-    console.error('Erreur chargement commandes:', error)
-    return []
-  }
-}
-
-// ACTION METHODS
+// ========== ACTIONS ==========
 const handleRefreshData = async () => {
   refreshing.value = true
   
   try {
-    await loadDashboardData()
-    showNotification('Données actualisées avec succès!')
+    await Promise.all([
+      loadAgent(),
+      loadDashboardData()
+    ])
+    showNotification('Données actualisées !')
   } catch (error) {
-    console.error('Erreur lors du rafraîchissement:', error)
+    console.error('❌ Erreur rafraîchissement:', error)
     showNotification('Erreur lors de l\'actualisation')
   } finally {
     refreshing.value = false
   }
 }
 
-const goToConversation = (id: string) => {
-  try {
-    navigateTo(`/conversations/${id}`)
-  } catch (error) {
-    console.error('Erreur navigation conversation:', error)
-  }
-}
-
-const goToOrder = (id: string) => {
-  try {
-    navigateTo(`/orders/${id}`)
-  } catch (error) {
-    console.error('Erreur navigation commande:', error)
-  }
-}
-
-// LIFECYCLE
+// ========== LIFECYCLE ==========
 onMounted(async () => {
-  // Charger le profil beauté en premier
+  // Charger l'agent en premier
+  await loadAgent()
+
+  // Charger le profil beauté
   await loadBeautyProfile()
-  
-  // Puis charger les données dashboard avec le contexte
+
+  // Charger les données dashboard
   await loadDashboardData()
-  
+
   // Vérifier si on doit afficher le welcome modal
   const urlParams = new URLSearchParams(window.location.search)
   const onboardingCompleted = urlParams.get('onboarding') === 'completed'
   const welcomeShown = localStorage.getItem('chatseller_welcome_shown')
-  
+
   if (onboardingCompleted && !welcomeShown) {
     showWelcomeModal.value = true
+    // Nettoyer l'URL
+    window.history.replaceState({}, '', '/')
   }
 })
 
-// SEO
+// ========== SEO ==========
 useHead({
   title: 'Dashboard - ChatSeller',
   meta: [
-    { name: 'description', content: 'Tableau de bord de votre Conseillère IA - Conversations, conversions et insights spécialisés pour votre marque beauté' }
+    { name: 'description', content: 'Tableau de bord de votre Conseillère IA beauté - Conversations, ventes et statistiques' }
   ]
 })
 </script>
 
 <style scoped>
 .card-modern {
-  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6;
 }
 
 .card-modern-gradient {
-  @apply bg-gradient-to-br rounded-xl shadow-lg p-6 text-white;
+  @apply bg-gradient-to-br rounded-xl shadow-lg p-4 md:p-6 text-white;
 }
 
-.conversation-item {
-  @apply p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer;
-}
-
-.order-item {
-  @apply p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer;
-}
-
-.avatar-circle {
-  @apply flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-pink-600;
-}
-
-.empty-state {
-  @apply text-center py-8;
-}
-
-.setup-item {
-  @apply p-3 rounded-lg border border-gray-200 hover:border-rose-300 hover:bg-rose-50 transition-all;
-}
-
-.setup-item.completed {
-  @apply border-green-200 bg-green-50;
-}
-
-.setup-icon {
-  @apply w-10 h-10 rounded-lg flex items-center justify-center;
-}
-
-.progress-circle {
-  @apply w-12 h-12 rounded-full border-4 border-gray-200 flex items-center justify-center;
-}
-
+/* Animations */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -1153,13 +1194,20 @@ useHead({
 }
 
 /* Mobile optimizations */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .card-modern {
     @apply p-4;
   }
   
   .card-modern-gradient {
     @apply p-4;
+  }
+}
+
+/* Touch-friendly tap targets */
+@media (pointer: coarse) {
+  button, a {
+    min-height: 44px;
   }
 }
 </style>

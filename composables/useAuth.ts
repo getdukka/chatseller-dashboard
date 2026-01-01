@@ -1,4 +1,4 @@
-// composables/useAuth.ts - VERSION FINALE CORRIGÉE
+// composables/useAuth.ts
 
 import { useAuthStore } from '~/stores/auth'
 

@@ -488,7 +488,7 @@ const getAnalyticsTitle = (): string => {
     'fragrance': 'vos Conseillères Parfums IA',
     'haircare': 'vos Expertes Capillaires IA',
     'bodycare': 'vos Expertes Soins Corps IA',
-    'multi': 'vos Conseillères Beauté IA'
+    'multi': 'vos Conseillère IA'
   }
   return titles[beautyCategory.value] || titles.multi
 }
@@ -1072,7 +1072,7 @@ onMounted(() => {
 useHead({
   title: 'Analytics Beauté - ChatSeller Dashboard',
   meta: [
-    { name: 'description', content: 'Suivez les performances de vos conseillères beauté IA ChatSeller' }
+    { name: 'description', content: 'Suivez les performances de vos Conseillère IA ChatSeller' }
   ]
 })
 </script>

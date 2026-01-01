@@ -1,6 +1,6 @@
 <!-- layouts/default.vue - VERSION CORRIGÉE COMPLÈTE -->
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen">
     
     <!-- DESKTOP SIDEBAR -->
     <div class="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-64 lg:bg-white lg:shadow-xl lg:border-r lg:border-gray-100">
@@ -450,9 +450,9 @@ watch(() => authStore.userShopId, async (newShopId) => {
   }
 })
 
-// WATCHER POUR FERMER MENUS LORS NAVIGATION - SIMPLIFIÉ
+// WATCHER POUR FERMER MENUS LORS NAVIGATION - VERSION SIMPLIFIÉE
 watch(() => route.path, () => {
-  // Fermer tous les menus lors navigation - SIMPLE ET DIRECT
+  // Fermer immédiatement tous les menus lors du changement de route
   mobileMenuOpen.value = false
   showMobileProfileMenu.value = false
   showProfileMenu.value = false

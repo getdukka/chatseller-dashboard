@@ -99,7 +99,7 @@
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
-                    Choisir Starter (49€/mois)
+                    Choisir Starter (45€/mois)
                   </button>
                   
                   <button 
@@ -109,7 +109,7 @@
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
-                    Passer au Growth (149€/mois)
+                    Passer au Growth (145€/mois)
                   </button>
                 </div>
               </div>
@@ -162,7 +162,7 @@
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
-                    Choisir Starter (49€/mois)
+                    Choisir Starter (45€/mois)
                   </button>
                   
                   <button 
@@ -172,7 +172,7 @@
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
-                    Passer au Growth (149€/mois)
+                    Passer au Growth (145€/mois)
                   </button>
                 </div>
               </div>
@@ -296,10 +296,10 @@
                     </div>
                     <h3 class="text-2xl font-bold mb-2">Starter</h3>
                     <div class="pricing">
-                      <span class="price">49€</span>
+                      <span class="price">45€</span>
                       <span class="period">/mois</span>
                     </div>
-                    <p class="text-gray-600 text-sm">ou 42€/mois (facturé annuellement)</p>
+                    <p class="text-gray-600 text-sm">ou 38€/mois (facturé annuellement)</p>
                     <p class="text-gray-600">Pour débuter avec l'IA conversationnelle</p>
                   </div>
                 </div>
@@ -354,10 +354,10 @@
                     </div>
                     <h3 class="text-2xl font-bold mb-2">Growth</h3>
                     <div class="pricing">
-                      <span class="price">149€</span>
+                      <span class="price">145€</span>
                       <span class="period">/mois</span>
                     </div>
-                    <p class="text-gray-600 text-sm">ou 127€/mois (facturé annuellement)</p>
+                    <p class="text-gray-600 text-sm">ou 123€/mois (facturé annuellement)</p>
                     <p class="text-gray-600">Pour les marques en croissance</p>
                   </div>
                 </div>
@@ -543,7 +543,7 @@
                 <div class="text-sm space-y-2">
                   <div class="flex justify-between">
                     <span>Plan de base :</span>
-                    <span class="font-medium">49€/mois</span>
+                    <span class="font-medium">45€/mois</span>
                   </div>
                   <div class="flex justify-between">
                     <span>{{ agentCount - 1 }} Agent{{ agentCount > 2 ? 's' : '' }} supplémentaire{{ agentCount > 2 ? 's' : '' }} :</span>
@@ -609,59 +609,92 @@
       </div>
     </div>
 
-    <!-- Modal de confirmation de paiement -->
-    <div v-if="successModal.show" class="fixed inset-0 z-50 overflow-y-auto">
+    <!-- 🎉 MODAL DE FÉLICITATIONS BEAUTÉ - VERSION AMÉLIORÉE -->
+    <div v-if="successModal.show" class="fixed inset-0 z-50 overflow-y-auto animate-fade-in">
       <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
+        <!-- Background overlay avec animation -->
+        <div class="fixed inset-0 transition-opacity bg-gradient-to-br from-rose-900/80 via-purple-900/80 to-pink-900/80 backdrop-blur-sm" aria-hidden="true"></div>
 
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+        <!-- Modal content avec design beauté premium -->
+        <div class="inline-block align-bottom bg-white rounded-2xl px-6 pt-8 pb-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-10 animate-scale-in">
+
+          <!-- Confetti animation (optionnel - CSS only) -->
+          <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500"></div>
+
           <div>
-            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
-              <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Icon premium avec gradient beauté -->
+            <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-gradient-to-br from-rose-500 via-pink-500 to-purple-500 shadow-xl mb-6 animate-bounce-subtle">
+              <svg class="h-12 w-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
               </svg>
             </div>
-            <div class="mt-3 text-center sm:mt-5">
-              <h3 class="text-2xl leading-6 font-bold text-gray-900">
-                Paiement confirmé !
+
+            <!-- Titre et message -->
+            <div class="text-center">
+              <h3 class="text-3xl sm:text-4xl leading-tight font-bold bg-gradient-to-r from-rose-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                🎉 Félicitations !
               </h3>
-              <div class="mt-4">
-                <p class="text-lg text-gray-600 mb-4">
-                  Félicitations ! Vous êtes maintenant abonné au plan <strong>{{ successModal.planName }}</strong>.
-                </p>
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <h4 class="font-semibold text-green-800 mb-2">Vos Agents IA sont maintenant actifs !</h4>
-                  <ul class="text-sm text-green-700 space-y-1">
-                    <li>• Widget ChatSeller activé sur votre site</li>
-                    <li>• Conversations et réponses IA disponibles</li>
-                    <li>• Accès à toutes les fonctionnalités du plan</li>
-                    <li>• Analytics détaillées activées</li>
-                  </ul>
+              <p class="text-xl text-gray-700 mb-6">
+                Vous êtes maintenant abonné au plan <span class="font-bold text-rose-600">{{ successModal.planName }}</span>
+              </p>
+
+              <!-- Card des fonctionnalités activées -->
+              <div class="bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 border-2 border-rose-200 rounded-xl p-6 mb-6 text-left">
+                <div class="flex items-center mb-4">
+                  <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-3">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                  </div>
+                  <h4 class="text-lg font-bold text-gray-900">Vos Conseillères IA sont maintenant actives !</h4>
                 </div>
-                <p class="text-sm text-gray-500">
-                  Un email de confirmation a été envoyé à votre adresse.
-                </p>
+                <ul class="text-sm text-gray-700 space-y-3 ml-2">
+                  <li class="flex items-start">
+                    <span class="text-green-500 mr-3 text-lg">✓</span>
+                    <span><strong>Widget ChatSeller</strong> activé sur votre boutique en ligne</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-green-500 mr-3 text-lg">✓</span>
+                    <span><strong>Conversations IA</strong> disponibles 24h/24 pour vos clientes</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-green-500 mr-3 text-lg">✓</span>
+                    <span><strong>Toutes les fonctionnalités</strong> de votre plan accessibles</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-green-500 mr-3 text-lg">✓</span>
+                    <span><strong>Analytics détaillées</strong> pour suivre vos performances</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Email confirmation -->
+              <div class="flex items-center justify-center text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Un email de confirmation a été envoyé à votre adresse
               </div>
             </div>
           </div>
-          <div class="mt-6 sm:mt-8">
-            <div class="flex flex-col sm:flex-row gap-3">
-              <button 
+
+          <!-- Actions -->
+          <div class="mt-8">
+            <div class="flex flex-col sm:flex-row gap-4">
+              <button
                 @click="goToAgents"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-600 text-base font-medium text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 sm:text-sm"
+                class="flex-1 inline-flex items-center justify-center rounded-xl border border-transparent shadow-lg px-6 py-4 bg-gradient-to-r from-rose-600 to-pink-600 text-base font-bold text-white hover:from-rose-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-all duration-200 hover:scale-105"
               >
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
-                Configurer mes Agents IA
+                Configurer mes Conseillères IA
               </button>
-              <button 
+              <button
                 @click="closeSuccessModal"
-                class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                class="flex-1 inline-flex items-center justify-center rounded-xl border-2 border-gray-300 shadow-sm px-6 py-4 bg-white text-base font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
               >
                 Continuer sur le tableau de bord
               </button>
@@ -707,6 +740,42 @@
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Animations pour le modal de félicitations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+</style>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
@@ -844,10 +913,10 @@ const getPlanPrice = (plan: SubscriptionPlan): string => {
   }
   
   const prices: Record<Exclude<SubscriptionPlan, 'starter'>, string> = {
-    growth: '149€/mois',
+    growth: '145€/mois',
     performance: 'Sur mesure'
   }
-  return prices[plan] || '49€/mois'
+  return prices[plan] || '45€/mois'
 }
 
 const isPlanPerformance = (plan: SubscriptionPlan): boolean => plan === 'performance'

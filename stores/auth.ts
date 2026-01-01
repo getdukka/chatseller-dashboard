@@ -1,4 +1,4 @@
-// stores/auth.ts - VERSION CORRIGÉE COMPLÈTE
+// stores/auth.ts 
 
 import { defineStore } from 'pinia'
 import { useSupabase } from '~~/composables/useSupabase'

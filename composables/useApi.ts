@@ -1,4 +1,4 @@
-// composables/useApi.ts - VERSION COMPLÈTE CORRIGÉE
+// composables/useApi.ts 
 import { useAuthStore } from "~~/stores/auth"
 import { useSupabase } from "~~/composables/useSupabase"
 
@@ -138,19 +138,23 @@ export const useApi = () => {
     }
   }
 
+  // ✅ HELPER: Attendre avec exponential backoff
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
   const apiCall = async (
-    endpoint: string, 
+    endpoint: string,
     options: any = {},
-    retryCount: number = 0
+    retryCount: number = 0,
+    maxRetries: number = 3
   ): Promise<ApiResponse<any>> => {
     try {
-      console.log(`🔄 [API] Appel: ${endpoint} (tentative ${retryCount + 1})`)
-      
+      console.log(`🔄 [API] Appel: ${endpoint} (tentative ${retryCount + 1}/${maxRetries + 1})`)
+
       const fetchOptions = await createFetchOptions(options)
       const response = await $fetch(endpoint, fetchOptions) as any
-      
+
       console.log(`✅ [API] Réponse ${endpoint}:`, response)
-      
+
       if (response && typeof response === 'object') {
         if ('success' in response) {
           return response
@@ -163,35 +167,52 @@ export const useApi = () => {
           }
         }
       }
-      
+
       return {
         data: response,
         success: true
       }
     } catch (error: any) {
       console.error(`❌ [API] Échec ${endpoint}:`, error)
-      
+
       // ✅ RETRY AUTOMATIQUE EN CAS DE 401 (UNE SEULE FOIS)
       if (error.status === 401 && retryCount === 0) {
         console.log('🔄 [API] Erreur 401, tentative de retry après rafraîchissement token')
-        
+
         const refreshed = await handleUnauthorized()
         if (refreshed) {
           console.log('🔄 [API] Retry de l\'appel après rafraîchissement token')
-          return apiCall(endpoint, options, retryCount + 1)
+          return apiCall(endpoint, options, retryCount + 1, maxRetries)
         }
       }
-      
+
+      // ✅ NOUVEAU: RETRY AUTOMATIQUE POUR ERREURS RÉSEAU (avec exponential backoff)
+      const isNetworkError = !error.status || error.code === 'NETWORK_ERROR' || error.message?.includes('fetch')
+      const shouldRetry = isNetworkError && retryCount < maxRetries
+
+      if (shouldRetry) {
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 10000) // Max 10s
+        console.warn(`⚠️ [API] Erreur réseau, retry dans ${delay}ms... (tentative ${retryCount + 1}/${maxRetries})`)
+
+        await wait(delay)
+        return apiCall(endpoint, options, retryCount + 1, maxRetries)
+      }
+
       let errorMessage = 'Une erreur est survenue'
-      
+
       if (error.data?.error) {
         errorMessage = error.data.error
       } else if (error.data?.message) {
-        errorMessage = error.data.message  
+        errorMessage = error.data.message
       } else if (error.message) {
         errorMessage = error.message
       }
-      
+
+      // Message user-friendly si on a épuisé les retries
+      if (isNetworkError && retryCount >= maxRetries) {
+        errorMessage = 'Impossible de contacter nos serveurs après plusieurs tentatives. Vérifiez votre connexion internet.'
+      }
+
       return {
         error: errorMessage,
         success: false

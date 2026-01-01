@@ -1,4 +1,4 @@
-<!-- pages/conversations/index.vue - VERSION BEAUTÉ ADAPTÉE -->
+<!-- pages/conversations/index.vue -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
     <!-- Header Beauté -->
@@ -6,7 +6,7 @@
       <div class="px-8 py-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900">Conversations Beauté</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Conversations</h1>
             <p class="mt-2 text-gray-600">
               Suivez les conversations de vos {{ getAgentTypeLabel() }} en temps réel
             </p>
@@ -42,17 +42,25 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- KPI Cards Beauté -->
+      <!-- KPI Cards Beauté - Avec messages d'encouragement si stats à 0 -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <!-- Consultations Actives -->
         <div class="card-beauty-gradient from-rose-500 to-pink-600">
           <div class="flex items-center justify-between text-white">
             <div>
               <p class="text-rose-100 text-sm font-medium">Conversations actives</p>
-              <p class="text-3xl font-bold">{{ stats.active }}</p>
-              <p class="text-rose-100 text-sm mt-1">
-                +{{ stats.newToday }} aujourd'hui
-              </p>
+              <template v-if="hasConversations">
+                <p class="text-3xl font-bold">{{ stats.active }}</p>
+                <p class="text-rose-100 text-sm mt-1">
+                  +{{ stats.newToday }} aujourd'hui
+                </p>
+              </template>
+              <template v-else>
+                <p class="text-xl font-semibold mt-1">Bientôt ici</p>
+                <p class="text-rose-100 text-sm mt-1">
+                  Vos premières conversations
+                </p>
+              </template>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,10 +75,18 @@
           <div class="flex items-center justify-between text-white">
             <div>
               <p class="text-purple-100 text-sm font-medium">Conseils terminés</p>
-              <p class="text-3xl font-bold">{{ stats.completed }}</p>
-              <p class="text-purple-100 text-sm mt-1">
-                {{ stats.completionRate }}% satisfaction
-              </p>
+              <template v-if="stats.completed > 0">
+                <p class="text-3xl font-bold">{{ stats.completed }}</p>
+                <p class="text-purple-100 text-sm mt-1">
+                  {{ stats.completionRate }}% de satisfaction
+                </p>
+              </template>
+              <template v-else>
+                <p class="text-xl font-semibold mt-1">En attente</p>
+                <p class="text-purple-100 text-sm mt-1">
+                  Taux de satisfaction à venir
+                </p>
+              </template>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,15 +96,23 @@
           </div>
         </div>
 
-        <!-- Routines Créées -->
+        <!-- Conseils en cours -->
         <div class="card-beauty-gradient from-amber-500 to-orange-500">
           <div class="flex items-center justify-between text-white">
             <div>
-              <p class="text-orange-100 text-sm font-medium">{{ getRoutineLabel() }}</p>
-              <p class="text-3xl font-bold">{{ stats.inProgress }}</p>
-              <p class="text-orange-100 text-sm mt-1">
-                {{ stats.averageWaitTime }}min en moyenne
-              </p>
+              <p class="text-orange-100 text-sm font-medium">Conseils en cours</p>
+              <template v-if="stats.inProgress > 0">
+                <p class="text-3xl font-bold">{{ stats.inProgress }}</p>
+                <p class="text-orange-100 text-sm mt-1">
+                  Clientes accompagnées
+                </p>
+              </template>
+              <template v-else>
+                <p class="text-xl font-semibold mt-1">Prête à aider</p>
+                <p class="text-orange-100 text-sm mt-1">
+                  Votre conseillère attend
+                </p>
+              </template>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,15 +122,23 @@
           </div>
         </div>
 
-        <!-- Ventes Beauté -->
+        <!-- Taux de conversion -->
         <div class="card-beauty-gradient from-emerald-500 to-teal-600">
           <div class="flex items-center justify-between text-white">
             <div>
               <p class="text-emerald-100 text-sm font-medium">Taux de conversion</p>
-              <p class="text-3xl font-bold">{{ stats.conversionRate }}%</p>
-              <p class="text-emerald-100 text-sm mt-1">
-                +{{ stats.conversionGrowth }}% ce mois
-              </p>
+              <template v-if="hasConversations">
+                <p class="text-3xl font-bold">{{ stats.conversionRate }}%</p>
+                <p class="text-emerald-100 text-sm mt-1">
+                  Sur {{ conversations.length }} conversation{{ conversations.length > 1 ? 's' : '' }}
+                </p>
+              </template>
+              <template v-else>
+                <p class="text-xl font-semibold mt-1">À découvrir</p>
+                <p class="text-emerald-100 text-sm mt-1">
+                  Vos performances à venir
+                </p>
+              </template>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +154,7 @@
         <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">
-              Consultations beauté récentes
+              Conversations récentes
             </h3>
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-500">
@@ -139,7 +171,7 @@
         <div v-if="loading" class="p-12">
           <div class="flex items-center justify-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
-            <span class="ml-3 text-gray-600">Chargement des consultations...</span>
+            <span class="ml-3 text-gray-600">Chargement des conversations...</span>
           </div>
         </div>
 
@@ -243,13 +275,13 @@
                 <!-- Type Agent Beauté -->
                 <td class="table-cell">
                   <div class="flex items-center space-x-2">
-                    <span class="text-lg">{{ getAgentIcon(conversation) }}</span>
+                    <span class="text-lg">{{ getAgentIcon() }}</span>
                     <div>
                       <div class="text-sm font-medium text-gray-900">
                         {{ getAgentName(conversation) }}
                       </div>
                       <div class="text-xs text-gray-500">
-                        {{ getAgentSpecialty(conversation) }}
+                        {{ getAgentSpecialty() }}
                       </div>
                     </div>
                   </div>
@@ -304,20 +336,73 @@
           </table>
         </div>
 
-        <!-- Empty State Beauté -->
-        <div v-else class="text-center py-12">
-          <div class="w-20 h-20 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-10 h-10 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-            </svg>
+        <!-- Empty State Beauté - Avec CTA actionnable -->
+        <div v-else class="text-center py-16 px-6">
+          <div class="max-w-md mx-auto">
+            <!-- Illustration -->
+            <div class="w-24 h-24 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <svg class="w-12 h-12 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+            </div>
+
+            <!-- Titre encourageant -->
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
+              Votre conseillère est prête !
+            </h3>
+
+            <!-- Description -->
+            <p class="text-gray-600 mb-2">
+              Les conversations avec vos clientes apparaîtront ici dès qu'elles interagiront avec votre {{ getAgentTypeLabel() }}.
+            </p>
+            <p class="text-sm text-gray-500 mb-8">
+              Assurez-vous que le widget est bien installé sur votre boutique.
+            </p>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <NuxtLink
+                to="/agent-ia"
+                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-medium rounded-xl hover:opacity-90 transition-all shadow-lg"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Configurer ma conseillère
+              </NuxtLink>
+
+              <button
+                @click="refreshConversations"
+                :disabled="refreshing"
+                class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-all"
+              >
+                <svg
+                  class="w-5 h-5 mr-2"
+                  :class="{ 'animate-spin': refreshing }"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                {{ refreshing ? 'Actualisation...' : 'Actualiser' }}
+              </button>
+            </div>
+
+            <!-- Conseil -->
+            <div class="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-xl text-left">
+              <div class="flex items-start space-x-3">
+                <span class="text-2xl">💡</span>
+                <div>
+                  <p class="font-medium text-amber-800 text-sm">Conseil</p>
+                  <p class="text-amber-700 text-sm mt-1">
+                    Testez votre conseillère IA depuis l'onglet "Tester" de la page de configuration pour vérifier qu'elle fonctionne correctement.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <h3 class="mt-4 text-lg font-medium text-gray-900">Aucune consultation beauté</h3>
-          <p class="mt-2 text-gray-500">
-            Les nouvelles consultations avec vos clientes apparaîtront ici
-          </p>
-          <p class="mt-1 text-sm text-gray-400">
-            Votre {{ getAgentTypeLabel() }} vous aidera à transformer 3x plus de visiteurs en clientes
-          </p>
         </div>
       </div>
     </div>
@@ -380,9 +465,7 @@ const stats = ref({
   inProgress: 0,
   conversionRate: 0,
   newToday: 0,
-  completionRate: 0,
-  averageWaitTime: 0,
-  conversionGrowth: 0
+  completionRate: 0
 })
 
 // Notification
@@ -391,6 +474,9 @@ const notification = ref({
   message: '',
   type: 'success' as 'success' | 'error'
 })
+
+// Computed pour vérifier si des conversations existent
+const hasConversations = computed(() => conversations.value.length > 0)
 
 // ✅ MÉTHODES CONTEXTUELLES BEAUTÉ
 const getAgentTypeLabel = () => {
@@ -402,7 +488,7 @@ const getAgentTypeLabel = () => {
     'fragrance': 'Conseillères Parfums IA',
     'haircare': 'Expertes Capillaires IA',
     'bodycare': 'Expertes Soins Corps IA',
-    'multi': 'Conseillères Beauté IA'
+    'multi': 'Conseillère IA'
   }
   
   return labels[userBeautyCategory] || 'Conseillères IA'
@@ -423,21 +509,6 @@ const getProductColumnLabel = () => {
   return labels[userBeautyCategory] || 'Produit'
 }
 
-const getRoutineLabel = () => {
-  const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-  
-  const labels: Record<string, string> = {
-    'skincare': 'Routines créées',
-    'makeup': 'Looks créés',
-    'fragrance': 'Parfums conseillés',
-    'haircare': 'Soins recommandés',
-    'bodycare': 'Rituels créés',
-    'multi': 'Conseils donnés'
-  }
-  
-  return labels[userBeautyCategory] || 'Conseils'
-}
-
 const getConversionLabel = () => {
   const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
   
@@ -453,53 +524,35 @@ const getConversionLabel = () => {
   return labels[userBeautyCategory] || 'Convertie'
 }
 
-// ✅ MÉTHODES CONVERSATION BEAUTÉ
-const getBeautyContext = (conversation: any): string => {
-  // Extraire le contexte beauté depuis les métadonnées
+// ✅ MÉTHODES CONVERSATION BEAUTÉ - Sans données simulées
+const getBeautyContext = (conversation: any): string | null => {
+  // Retourner uniquement les données réelles, null sinon
   if (conversation.beauty_context) return conversation.beauty_context
   if (conversation.product_category) return conversation.product_category
-  
-  // Générer contexte par défaut
-  const contexts = ['Conseil peau', 'Choix teinte', 'Routine soin', 'Diagnostic', 'Recommandation']
-  return contexts[Math.floor(Math.random() * contexts.length)]
+  return null
 }
 
-const getBeautyProfile = (conversation: any): string => {
-  // Profil client beauté extrait
+const getBeautyProfile = (conversation: any): string | null => {
+  // Retourner uniquement les données réelles
   if (conversation.customer_beauty_profile) return conversation.customer_beauty_profile
-  
-  const profiles = ['Peau mixte', 'Peau sensible', 'Teint clair', 'Anti-âge', 'Peau grasse']
-  return profiles[Math.floor(Math.random() * profiles.length)]
+  return null
 }
 
 const getBeautyProductName = (conversation: any): string => {
+  // Retourner le nom du produit ou un texte par défaut
   if (conversation.product_name) return conversation.product_name
-  
-  const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-  
-  const defaultProducts: Record<string, string[]> = {
-    'skincare': ['Sérum Vitamine C', 'Crème Hydratante', 'Nettoyant Doux'],
-    'makeup': ['Fond de Teint', 'Rouge à Lèvres', 'Mascara'],
-    'fragrance': ['Eau de Parfum Rose', 'Parfum Floral', 'Fragrance Boisée'],
-    'haircare': ['Shampoing Réparateur', 'Masque Cheveux', 'Huile Capillaire'],
-    'bodycare': ['Crème Corps', 'Gommage Exfoliant', 'Lait Hydratant'],
-    'multi': ['Produit Beauté', 'Soin Visage', 'Cosmétique']
-  }
-  
-  const products = defaultProducts[userBeautyCategory] || defaultProducts.multi
-  return products[Math.floor(Math.random() * products.length)]
+  return 'Produit non spécifié'
 }
 
-const getProductCategory = (conversation: any): string => {
+const getProductCategory = (conversation: any): string | null => {
+  // Retourner uniquement les données réelles
   if (conversation.product_category) return conversation.product_category
-  
-  const categories = ['Soin', 'Maquillage', 'Parfum', 'Cheveux', 'Corps']
-  return categories[Math.floor(Math.random() * categories.length)]
+  return null
 }
 
-const getAgentIcon = (conversation: any): string => {
+const getAgentIcon = (): string => {
   const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-  
+
   const icons: Record<string, string> = {
     'skincare': '✨',
     'makeup': '💄',
@@ -508,31 +561,19 @@ const getAgentIcon = (conversation: any): string => {
     'bodycare': '🧴',
     'multi': '💋'
   }
-  
+
   return icons[userBeautyCategory] || '💋'
 }
 
 const getAgentName = (conversation: any): string => {
+  // Retourner le nom de l'agent ou le nom de la conseillère configurée
   if (conversation.agent_name) return conversation.agent_name
-  
-  const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-  
-  const names: Record<string, string[]> = {
-    'skincare': ['Camille', 'Emma', 'Léa'],
-    'makeup': ['Sophie', 'Chloé', 'Julie'],
-    'fragrance': ['Rose', 'Lily', 'Iris'],
-    'haircare': ['Amélie', 'Sarah', 'Marine'],
-    'bodycare': ['Clara', 'Manon', 'Jade'],
-    'multi': ['Rose', 'Camille', 'Sophie']
-  }
-  
-  const agentNames = names[userBeautyCategory] || names.multi
-  return agentNames[Math.floor(Math.random() * agentNames.length)]
+  return authStore.user?.shop?.name ? `Conseillère ${authStore.user.shop.name}` : 'Conseillère IA'
 }
 
-const getAgentSpecialty = (conversation: any): string => {
+const getAgentSpecialty = (): string => {
   const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-  
+
   const specialties: Record<string, string> = {
     'skincare': 'Soins visage',
     'makeup': 'Maquillage',
@@ -541,7 +582,7 @@ const getAgentSpecialty = (conversation: any): string => {
     'bodycare': 'Soins corps',
     'multi': 'Multi-beauté'
   }
-  
+
   return specialties[userBeautyCategory] || 'Beauté'
 }
 
@@ -695,16 +736,14 @@ const loadStats = async () => {
   try {
     const convs = conversations.value
     const today = new Date().toDateString()
-    
+
     stats.value = {
       active: convs.filter(c => c.status === 'active').length,
       completed: convs.filter(c => c.status === 'completed').length,
       inProgress: convs.filter(c => c.status === 'active').length,
       newToday: convs.filter(c => new Date(c.started_at).toDateString() === today).length,
       conversionRate: convs.length > 0 ? Math.round((convs.filter(c => c.conversion_completed).length / convs.length) * 100) : 0,
-      completionRate: convs.length > 0 ? Math.round((convs.filter(c => c.status === 'completed').length / convs.length) * 100) : 0,
-      averageWaitTime: 3,
-      conversionGrowth: 12
+      completionRate: convs.length > 0 ? Math.round((convs.filter(c => c.status === 'completed').length / convs.length) * 100) : 0
     }
   } catch (err) {
     console.warn('Erreur chargement stats:', err)
