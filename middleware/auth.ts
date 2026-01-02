@@ -103,29 +103,48 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo('/onboarding')
     }
 
-    // ✅ VÉRIFICATION ONBOARDING COMPLÉTÉ
-    // Si l'utilisateur n'a pas complété l'onboarding, le rediriger
+    // ✅ VÉRIFICATION ONBOARDING COMPLÉTÉ VIA API BACKEND
+    // Le client Supabase frontend ne peut pas accéder aux tables (RLS)
+    // On utilise l'API backend qui a le service_key
     try {
-      const { data: shopData, error: shopError } = await supabase
-        .from('shops')
-        .select('onboarding_completed')
-        .eq('id', user.id)
-        .single()
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData?.session?.access_token
 
-      // Si le shop n'existe pas (nouvel utilisateur) ou onboarding non complété
-      if (shopError || !shopData) {
-        console.log('📋 [AUTH] Shop non trouvé (nouvel utilisateur), redirection onboarding...')
+      if (!token) {
+        console.log('❌ [AUTH] Pas de token pour vérifier onboarding')
+        return navigateTo('/login')
+      }
+
+      const config = useRuntimeConfig()
+      const apiUrl = config.public.apiUrl || 'http://localhost:3001'
+
+      const response = await fetch(`${apiUrl}/api/v1/shops/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      // Si le shop n'existe pas (404) ou erreur (nouvel utilisateur)
+      if (!response.ok) {
+        console.log('📋 [AUTH] Shop non trouvé via API (status:', response.status, '), redirection onboarding...')
         return navigateTo('/onboarding')
       }
 
-      if (!shopData.onboarding_completed) {
+      const shopResponse = await response.json()
+      const shopData = shopResponse.data || shopResponse
+
+      if (!shopData?.onboarding_completed) {
         console.log('📋 [AUTH] Onboarding non complété, redirection...')
         return navigateTo('/onboarding')
       }
+
+      console.log('✅ [AUTH] Onboarding complété, accès autorisé')
     } catch (error) {
-      console.warn('⚠️ [AUTH] Erreur vérification onboarding:', error)
-      // En cas d'erreur, rediriger vers onboarding par précaution pour les nouveaux utilisateurs
-      return navigateTo('/onboarding')
+      console.warn('⚠️ [AUTH] Erreur vérification onboarding via API:', error)
+      // En cas d'erreur réseau, laisser passer pour éviter de bloquer
+      // L'API backend vérifiera de toute façon
+      console.log('⚠️ [AUTH] Erreur réseau, passage autorisé (backend vérifiera)')
     }
 
     console.log('✅ [AUTH] Accès autorisé à:', to.path)

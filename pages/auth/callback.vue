@@ -41,7 +41,7 @@
         </p>
         <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6">
           <p class="text-rose-800 text-sm">
-            <strong>Prochaine étape :</strong> Configurons ensemble votre espace de vente beauté IA
+            <strong>Prochaine étape :</strong> Configurons ensemble votre tableau de bord Chatseller
           </p>
         </div>
         

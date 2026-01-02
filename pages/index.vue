@@ -15,7 +15,7 @@
             {{ agentInfo?.name || 'Votre Conseillère IA' }} est prête !
           </h2>
           <p class="text-green-100">
-            Elle va vendre pour vous 24h/24, même quand vous dormez
+            Elle va conseiller vos clients et vendre pour vous 24h/24, même quand vous dormez
           </p>
         </div>
         
@@ -27,10 +27,10 @@
             <div class="flex items-start space-x-3">
               <span class="text-2xl">📱</span>
               <div>
-                <p class="font-bold text-green-800">Fini les nuits sur WhatsApp !</p>
+                <p class="font-bold text-green-800">Les visiteurs de votre site ne seront plus seuls</p>
                 <p class="text-sm text-green-700 mt-1">
-                  {{ agentInfo?.name || 'Votre Conseillère' }} répond automatiquement aux questions de vos clientes, 
-                  recommande vos produits et les guide vers l'achat.
+                  {{ agentInfo?.name || 'Votre Conseillère' }} répondra automatiquement à leurs questions, 
+                  les conseillera et les guidera vers l'achat.
                 </p>
               </div>
             </div>
@@ -53,7 +53,7 @@
                 </div>
                 <div class="ml-3 flex-1">
                   <p class="font-medium text-green-800">Conseillère IA créée</p>
-                  <p class="text-sm text-green-600">{{ agentInfo?.name || 'Votre agent' }} est configurée et prête</p>
+                  <p class="text-sm text-green-600">{{ agentInfo?.name || 'Votre Conseillère IA' }} est configurée et prête</p>
                 </div>
                 <span class="text-green-500 text-sm font-medium">Fait ✓</span>
               </div>
