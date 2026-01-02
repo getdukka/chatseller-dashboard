@@ -129,43 +129,55 @@ const parseCallbackUrl = () => {
   const url = window.location.href
   const hash = window.location.hash
   const search = window.location.search
-  
+
   console.log('🔍 [Callback] Analyse URL:', url)
-  
-  let tokens = {
+
+  let tokens: Record<string, string> = {
     access_token: '',
     refresh_token: '',
     token_hash: '',
     type: '',
+    code: '',  // ✅ AJOUT: Pour PKCE flow
     error: '',
     error_description: ''
   }
-  
+
   // Hash fragments (#)
   if (hash && hash.length > 1) {
     const hashContent = hash.substring(1)
     const hashParams = new URLSearchParams(hashContent)
-    
+
     tokens.access_token = hashParams.get('access_token') || ''
     tokens.refresh_token = hashParams.get('refresh_token') || ''
     tokens.token_hash = hashParams.get('token_hash') || ''
     tokens.type = hashParams.get('type') || ''
+    tokens.code = hashParams.get('code') || ''
     tokens.error = hashParams.get('error') || ''
     tokens.error_description = hashParams.get('error_description') || ''
   }
-  
+
   // Query parameters (?)
   if (search) {
     const urlParams = new URLSearchParams(search)
-    
+
     if (!tokens.access_token) tokens.access_token = urlParams.get('access_token') || ''
     if (!tokens.refresh_token) tokens.refresh_token = urlParams.get('refresh_token') || ''
     if (!tokens.token_hash) tokens.token_hash = urlParams.get('token_hash') || ''
     if (!tokens.type) tokens.type = urlParams.get('type') || ''
+    if (!tokens.code) tokens.code = urlParams.get('code') || ''
     if (!tokens.error) tokens.error = urlParams.get('error') || ''
     if (!tokens.error_description) tokens.error_description = urlParams.get('error_description') || ''
   }
-  
+
+  console.log('🔍 [Callback] Tokens parsés:', {
+    hasAccessToken: !!tokens.access_token,
+    hasRefreshToken: !!tokens.refresh_token,
+    hasTokenHash: !!tokens.token_hash,
+    hasCode: !!tokens.code,
+    type: tokens.type,
+    error: tokens.error
+  })
+
   return tokens
 }
 
@@ -173,45 +185,80 @@ const parseCallbackUrl = () => {
 const establishSupabaseSession = async (tokens: any) => {
   console.log('🔐 [Callback] Création session Supabase')
   currentStep.value = '🔐 Vérification de votre email...'
-  
+
+  // ✅ MÉTHODE 1: Vérifier si Supabase a déjà établi une session automatiquement
+  // (Supabase gère le callback automatiquement dans certains cas)
+  const { data: existingSession } = await supabase.auth.getSession()
+  if (existingSession?.session?.user) {
+    console.log('✅ [Callback] Session Supabase déjà établie automatiquement')
+    return existingSession
+  }
+
+  // Vérifier les erreurs dans les tokens
   if (tokens.error) {
     throw new Error(tokens.error_description || tokens.error)
   }
-  
+
   let sessionData = null
-  
-  // Méthode moderne avec token_hash
+
+  // ✅ MÉTHODE 2: Utiliser token_hash (format moderne Supabase)
   if (tokens.token_hash) {
     console.log('🔑 [Callback] Utilisation token_hash')
-    
+
     const { data, error } = await supabase.auth.verifyOtp({
       token_hash: tokens.token_hash,
       type: tokens.type || 'email'
     })
-    
+
     if (error) {
       throw new Error(`Erreur vérification: ${error.message}`)
     }
-    
+
     sessionData = data
   }
-  // Méthode classique
+  // ✅ MÉTHODE 3: Utiliser access_token + refresh_token (format classique)
   else if (tokens.access_token && tokens.refresh_token) {
+    console.log('🔑 [Callback] Utilisation access_token + refresh_token')
+
     const { data, error } = await supabase.auth.setSession({
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token
     })
-    
+
     if (error) {
       throw new Error(`Erreur session: ${error.message}`)
     }
-    
+
     sessionData = data
   }
-  else {
-    throw new Error('Aucun token valide trouvé')
+  // ✅ MÉTHODE 4: Essayer exchangeCodeForSession si un 'code' est présent
+  else if (tokens.code) {
+    console.log('🔑 [Callback] Utilisation code PKCE')
+
+    const { data, error } = await supabase.auth.exchangeCodeForSession(tokens.code)
+
+    if (error) {
+      throw new Error(`Erreur échange code: ${error.message}`)
+    }
+
+    sessionData = data
   }
-  
+  // ✅ MÉTHODE 5: Dernière tentative - attendre que Supabase traite l'URL
+  else {
+    console.log('⏳ [Callback] Attente traitement automatique Supabase...')
+
+    // Attendre un peu car Supabase peut avoir besoin de temps pour traiter
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    const { data: retrySession } = await supabase.auth.getSession()
+    if (retrySession?.session?.user) {
+      console.log('✅ [Callback] Session établie après attente')
+      return retrySession
+    }
+
+    throw new Error('Aucun token valide trouvé. Le lien de confirmation a peut-être expiré.')
+  }
+
   return sessionData
 }
 
@@ -260,35 +307,19 @@ const ensureShopExists = async (user: any) => {
   return createResponse.data
 }
 
-// ✅ TRAITEMENT PRINCIPAL SIMPLIFIÉ
-onMounted(async () => {
+// ✅ FONCTION PRINCIPALE: Traiter la session une fois établie
+const processSession = async (session: any) => {
   try {
-    console.log('🔗 [Callback] Début traitement confirmation email')
-    
-    // ✅ ÉTAPE 1: Parser URL
-    currentStep.value = '🔍 Analyse du lien de confirmation...'
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    const tokens = parseCallbackUrl()
-    
-    // ✅ ÉTAPE 2: Établir session
-    currentStep.value = '🔑 Récupération des informations...'
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    const sessionData = await establishSupabaseSession(tokens)
-    
-    if (!sessionData?.user) {
-      throw new Error('Données utilisateur manquantes')
-    }
-    
-    console.log('✅ [Callback] Email confirmé pour:', sessionData.user.email)
-    
+    const user = session.user
+
+    console.log('✅ [Callback] Email confirmé pour:', user.email)
+
     // ✅ ÉTAPE 3: Assurer l'existence du shop beauté AVANT de synchroniser le store
     currentStep.value = '🏪 Configuration de votre espace beauté...'
     await new Promise(resolve => setTimeout(resolve, 500))
 
     try {
-      const shopData = await ensureShopExists(sessionData.user)
+      const shopData = await ensureShopExists(user)
       console.log('✅ [Callback] Shop beauté configuré:', shopData?.id)
     } catch (shopError: any) {
       console.error('❌ [Callback] Erreur shop beauté:', shopError)
@@ -301,44 +332,137 @@ onMounted(async () => {
 
     try {
       // ✅ UTILISER fetchCompleteUserData du composable auth
-      const userData = await auth.fetchCompleteUserData(sessionData.user)
-      authStore.setUser(userData, sessionData.session.access_token)
+      const userData = await auth.fetchCompleteUserData(user)
+      authStore.setUser(userData, session.access_token)
       console.log('✅ [Callback] Store synchronisé')
     } catch (storeError) {
       console.warn('⚠️ [Callback] Erreur store (non critique):', storeError)
     }
-    
+
     // ✅ FINALISATION
     currentStep.value = '✨ Finalisation...'
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // Nettoyer l'URL
     window.history.replaceState({}, '', window.location.pathname)
-    
+
     loading.value = false
     success.value = true
-    
+
     console.log('✅ [Callback] Confirmation beauté terminée avec succès')
     startCountdown()
-    
+
   } catch (err: any) {
-    console.error('❌ [Callback] Erreur:', err)
-    
-    loading.value = false
-    error.value = true
-    
-    // Messages d'erreur beauté appropriés
-    if (err.message?.includes('expired')) {
-      errorMessage.value = 'Le lien de confirmation a expiré. Créez un nouveau compte.'
-    } else if (err.message?.includes('invalid') || err.message?.includes('token')) {
-      errorMessage.value = 'Lien de confirmation invalide. Vérifiez votre email.'
-    } else if (err.message?.includes('shop') || err.message?.includes('espace')) {
-      errorMessage.value = 'Email confirmé mais configuration beauté échouée. Contactez le support.'
-    } else {
-      errorMessage.value = 'Erreur de confirmation. Contactez le support si cela persiste.'
+    console.error('❌ [Callback] Erreur traitement session:', err)
+    throw err
+  }
+}
+
+// ✅ TRAITEMENT PRINCIPAL - APPROCHE ROBUSTE
+onMounted(async () => {
+  console.log('🔗 [Callback] Début traitement confirmation email')
+
+  // ✅ APPROCHE 1: Écouter l'événement SIGNED_IN de Supabase
+  // Supabase avec detectSessionInUrl: true traite automatiquement l'URL
+  let sessionProcessed = false
+  let timeoutId: NodeJS.Timeout
+
+  const authListener = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+    console.log('🔄 [Callback] Auth event reçu:', event)
+
+    if (sessionProcessed) return // Éviter les doubles traitements
+
+    if (event === 'SIGNED_IN' && session?.user) {
+      sessionProcessed = true
+      clearTimeout(timeoutId)
+
+      console.log('✅ [Callback] Session établie via événement SIGNED_IN')
+      currentStep.value = '🔑 Session établie...'
+
+      try {
+        await processSession(session)
+      } catch (err: any) {
+        handleError(err)
+      }
+
+      // Nettoyer le listener
+      authListener.data.subscription.unsubscribe()
+    }
+  })
+
+  // ✅ APPROCHE 2: Vérifier si une session existe déjà (fallback)
+  currentStep.value = '🔍 Analyse du lien de confirmation...'
+
+  // Attendre un peu pour laisser Supabase traiter l'URL
+  await new Promise(resolve => setTimeout(resolve, 1000))
+
+  // Vérifier si la session n'a pas déjà été traitée
+  if (!sessionProcessed) {
+    const { data: sessionData } = await supabase.auth.getSession()
+
+    if (sessionData?.session?.user) {
+      sessionProcessed = true
+      console.log('✅ [Callback] Session trouvée via getSession')
+      currentStep.value = '🔑 Session établie...'
+
+      try {
+        await processSession(sessionData.session)
+      } catch (err: any) {
+        handleError(err)
+      }
+
+      authListener.data.subscription.unsubscribe()
+      return
     }
   }
+
+  // ✅ APPROCHE 3: Parser l'URL manuellement et établir la session
+  if (!sessionProcessed) {
+    currentStep.value = '🔑 Récupération des informations...'
+    const tokens = parseCallbackUrl()
+
+    try {
+      const sessionData = await establishSupabaseSession(tokens)
+
+      if (sessionData?.session?.user) {
+        sessionProcessed = true
+        await processSession(sessionData.session)
+        authListener.data.subscription.unsubscribe()
+        return
+      }
+    } catch (err) {
+      console.warn('⚠️ [Callback] Établissement session manuel échoué:', err)
+    }
+  }
+
+  // ✅ TIMEOUT: Si aucune session après 10 secondes, afficher erreur
+  timeoutId = setTimeout(() => {
+    if (!sessionProcessed) {
+      console.error('❌ [Callback] Timeout - aucune session établie')
+      handleError(new Error('Le lien de confirmation a peut-être expiré ou est invalide.'))
+      authListener.data.subscription.unsubscribe()
+    }
+  }, 10000)
 })
+
+// ✅ GESTION DES ERREURS
+const handleError = (err: any) => {
+  console.error('❌ [Callback] Erreur:', err)
+
+  loading.value = false
+  error.value = true
+
+  // Messages d'erreur beauté appropriés
+  if (err.message?.includes('expired') || err.message?.includes('expiré')) {
+    errorMessage.value = 'Le lien de confirmation a expiré. Créez un nouveau compte.'
+  } else if (err.message?.includes('invalid') || err.message?.includes('token') || err.message?.includes('invalide')) {
+    errorMessage.value = 'Lien de confirmation invalide. Vérifiez votre email.'
+  } else if (err.message?.includes('shop') || err.message?.includes('espace')) {
+    errorMessage.value = 'Email confirmé mais configuration beauté échouée. Contactez le support.'
+  } else {
+    errorMessage.value = err.message || 'Erreur de confirmation. Contactez le support si cela persiste.'
+  }
+}
 
 // ✅ COUNTDOWN SIMPLIFIÉ
 const startCountdown = () => {

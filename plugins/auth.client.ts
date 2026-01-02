@@ -56,20 +56,31 @@ export default defineNuxtPlugin(async () => {
     
     // ✅ ÉCOUTER LES CHANGEMENTS D'AUTHENTIFICATION SUPABASE
     const supabase = useSupabase()
-    
+
     supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       console.log('🔄 [Plugin Auth] Changement état auth Supabase:', event)
-      
+
+      // ✅ VÉRIFIER SI ON EST SUR UNE PAGE AUTH AVANT DE FAIRE restoreSession
+      const currentPathNow = window.location.pathname
+      const isAuthPageNow = currentPathNow.startsWith('/auth/') ||
+                            currentPathNow === '/login' ||
+                            currentPathNow === '/register' ||
+                            currentPathNow === '/reset-password' ||
+                            currentPathNow === '/onboarding'
+
       try {
         switch (event) {
           case 'SIGNED_IN':
             console.log('✅ [Plugin Auth] Utilisateur connecté via Supabase')
-            if (!authStore.isAuthenticated && session?.user) {
+            // ✅ NE PAS faire restoreSession sur les pages auth - elles gèrent leur propre flow
+            if (isAuthPageNow) {
+              console.log('⏭️ [Plugin Auth] Page auth, skip restoreSession automatique')
+            } else if (!authStore.isAuthenticated && session?.user) {
               console.log('🔄 [Plugin Auth] Synchronisation store après connexion')
               await authStore.restoreSession()
             }
             break
-            
+
           case 'SIGNED_OUT':
             console.log('🚪 [Plugin Auth] Utilisateur déconnecté via Supabase')
             if (authStore.isAuthenticated) {
@@ -77,14 +88,14 @@ export default defineNuxtPlugin(async () => {
               authStore.clearAuth()
             }
             break
-            
+
           case 'TOKEN_REFRESHED':
             console.log('🔄 [Plugin Auth] Token rafraîchi')
             if (session?.access_token && authStore.isAuthenticated) {
               authStore.token = session.access_token
             }
             break
-            
+
           default:
             console.log('ℹ️ [Plugin Auth] Événement auth:', event)
         }
