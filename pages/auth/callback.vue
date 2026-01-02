@@ -217,22 +217,20 @@ const establishSupabaseSession = async (tokens: any) => {
 
 // ✅ FONCTION SIMPLIFIÉE : Assurer l'existence du shop - UTILISER useApi()
 const ensureShopExists = async (user: any) => {
-  console.log('🏪 [Callback] Vérification/création shop beauté')
+  console.log('🏪 [Callback] Vérification/création shop beauté pour:', user.id)
   currentStep.value = '🏪 Configuration de votre espace...'
-  
-  try {
-    // ✅ UTILISER useApi() - Vérifier si le shop existe
-    const shopResponse = await api.shops.get(user.id)
-    
-    if (shopResponse.success && shopResponse.data) {
-      console.log('✅ [Callback] Shop beauté existant trouvé')
-      return shopResponse.data
-    }
-  } catch (checkError) {
-    console.log('ℹ️ [Callback] Shop non trouvé, création...')
+
+  // ✅ ÉTAPE 1: Vérifier si le shop existe
+  const shopResponse = await api.shops.get(user.id)
+
+  if (shopResponse.success && shopResponse.data) {
+    console.log('✅ [Callback] Shop beauté existant trouvé:', shopResponse.data.id)
+    return shopResponse.data
   }
-  
-  // ✅ UTILISER useApi() - Créer le shop
+
+  // ✅ ÉTAPE 2: Le shop n'existe pas, on le crée
+  console.log('ℹ️ [Callback] Shop non trouvé, création en cours...')
+
   const createData = {
     id: user.id,
     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} Beauté` : `Shop de ${user.email?.split('@')[0]}`,
@@ -248,14 +246,17 @@ const ensureShopExists = async (user: any) => {
       language: 'fr'
     }
   }
-  
+
+  console.log('📝 [Callback] Données de création shop:', JSON.stringify(createData, null, 2))
+
   const createResponse = await api.shops.create(createData)
-  
+
   if (!createResponse.success) {
+    console.error('❌ [Callback] Erreur création shop:', createResponse.error)
     throw new Error(createResponse.error || 'Erreur création shop beauté')
   }
-  
-  console.log('✅ [Callback] Shop beauté créé avec succès')
+
+  console.log('✅ [Callback] Shop beauté créé avec succès:', createResponse.data?.id)
   return createResponse.data
 }
 
@@ -282,10 +283,22 @@ onMounted(async () => {
     
     console.log('✅ [Callback] Email confirmé pour:', sessionData.user.email)
     
-    // ✅ ÉTAPE 3: Synchroniser store
+    // ✅ ÉTAPE 3: Assurer l'existence du shop beauté AVANT de synchroniser le store
+    currentStep.value = '🏪 Configuration de votre espace beauté...'
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    try {
+      const shopData = await ensureShopExists(sessionData.user)
+      console.log('✅ [Callback] Shop beauté configuré:', shopData?.id)
+    } catch (shopError: any) {
+      console.error('❌ [Callback] Erreur shop beauté:', shopError)
+      throw new Error(`Configuration espace beauté échouée: ${shopError.message}`)
+    }
+
+    // ✅ ÉTAPE 4: Synchroniser store (maintenant que le shop existe)
     currentStep.value = '💾 Préparation de vos données...'
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     try {
       // ✅ UTILISER fetchCompleteUserData du composable auth
       const userData = await auth.fetchCompleteUserData(sessionData.user)
@@ -293,18 +306,6 @@ onMounted(async () => {
       console.log('✅ [Callback] Store synchronisé')
     } catch (storeError) {
       console.warn('⚠️ [Callback] Erreur store (non critique):', storeError)
-    }
-    
-    // ✅ ÉTAPE 4: Assurer l'existence du shop beauté
-    currentStep.value = '🏪 Configuration de votre espace beauté...'
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    try {
-      const shopData = await ensureShopExists(sessionData.user)
-      console.log('✅ [Callback] Shop beauté configuré')
-    } catch (shopError: any) {
-      console.error('❌ [Callback] Erreur shop beauté:', shopError)
-      throw new Error(`Configuration espace beauté échouée: ${shopError.message}`)
     }
     
     // ✅ FINALISATION

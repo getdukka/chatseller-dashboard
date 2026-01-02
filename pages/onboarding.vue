@@ -1170,32 +1170,43 @@ const completeOnboarding = async () => {
     
     console.log('✅ [Onboarding] Shop mis à jour')
     
-    // ÉTAPE 2: CRÉER AUTOMATIQUEMENT L'AGENT IA
+    // ÉTAPE 2: CRÉER AUTOMATIQUEMENT L'AGENT IA (OBLIGATOIRE)
+    console.log('🤖 [Onboarding] Création de la Conseillère IA...')
+
     // Déterminer le type d'agent basé sur la catégorie beauté
-    const agentType = form.beautyCategory ? `${form.beautyCategory}_expert` : 'beauty_expert'
+    const beautyCategory = form.beautyCategory || 'multi'
+    const agentType = `${beautyCategory}_expert` as const
 
     // Déterminer la personnalité (défaut: friendly si non sélectionné)
     const agentPersonality = form.communicationTone || 'friendly'
 
+    // Valider que le type est un des types acceptés
+    const validAgentTypes = ['skincare_expert', 'makeup_expert', 'fragrance_expert', 'haircare_expert', 'bodycare_expert', 'beauty_expert', 'natural_expert', 'multi_expert']
+    const finalAgentType = validAgentTypes.includes(agentType) ? agentType : 'beauty_expert'
+
+    // Valider que la personnalité est une des valeurs acceptées
+    const validPersonalities = ['professional', 'friendly', 'expert', 'casual', 'luxury', 'trendy']
+    const finalPersonality = validPersonalities.includes(agentPersonality) ? agentPersonality : 'friendly'
+
+    const agentConfig = getOptimizedAgentConfig()
+
     const agentData = {
       name: form.agentName || getDefaultAgentName(),
-      type: agentType,
-      personality: agentPersonality,
+      type: finalAgentType,
+      personality: finalPersonality,
       description: `${getAgentTypeName()} spécialisée pour ${form.company}`,
-      welcomeMessage: getOptimizedAgentConfig().welcomeMessage,
-      fallbackMessage: getOptimizedAgentConfig().fallbackMessage,
-      avatar: getOptimizedAgentConfig().avatar,
+      welcomeMessage: agentConfig.welcomeMessage,
+      fallbackMessage: agentConfig.fallbackMessage,
+      avatar: agentConfig.avatar,
       isActive: true,
-      config: getOptimizedAgentConfig().beautySpecialization,
+      config: agentConfig.beautySpecialization,
       productRange: form.priceRange === 'luxury' ? 'premium' : 'accessible',
       customProductRange: form.priceRange === 'luxury' ? 'Premium' : '',
       shopName: form.company,
-      productType: form.beautyCategory || 'multi'
+      productType: beautyCategory
     }
-    
-    console.log('🤖 [Onboarding] Données agent:', agentData)
-    
-    console.log('🤖 [Onboarding] Envoi création agent à l\'API...')
+
+    console.log('🤖 [Onboarding] Données agent à créer:', JSON.stringify(agentData, null, 2))
 
     const agentResponse = await api.agents.create(agentData)
 
@@ -1207,11 +1218,12 @@ const completeOnboarding = async () => {
         received: (agentResponse as any).received,
         agentData: agentData
       })
-      // On continue malgré l'erreur car le shop a été mis à jour
-      // L'utilisateur pourra créer son agent manuellement plus tard
-    } else {
-      console.log('✅ [Onboarding] Agent IA créé avec succès:', agentResponse.data?.id)
+
+      // ❌ NOUVEAU: La création d'agent est OBLIGATOIRE - on ne peut pas continuer sans
+      throw new Error(`Impossible de créer votre Conseillère IA: ${agentResponse.error || 'Erreur inconnue'}`)
     }
+
+    console.log('✅ [Onboarding] Conseillère IA créée avec succès:', agentResponse.data?.id)
     
     // ÉTAPE 3: INDEXATION DU SITE WEB (ASYNCHRONE)
     if (form.website) {

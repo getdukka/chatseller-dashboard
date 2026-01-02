@@ -213,13 +213,24 @@ const checkServiceStatus = async () => {
 }
 
 const initializeApplication = async () => {
-  // ✅ CORRECTION: Utiliser le store directement pour restoreSession
-  try {
-    const authStore = useAuthStore()
-    await authStore.restoreSession() // ✅ Méthode qui existe dans le store
-    console.log('✅ Session restaurée avec succès')
-  } catch (error) {
-    console.error('❌ Erreur initialisation auth:', error)
+  // ✅ CORRECTION: Ne pas restaurer la session sur les pages auth (callback, login, register)
+  // Ces pages gèrent leur propre authentification
+  const currentPath = window.location.pathname
+  const isAuthPage = currentPath.startsWith('/auth/') ||
+                     currentPath === '/login' ||
+                     currentPath === '/register' ||
+                     currentPath === '/reset-password'
+
+  if (!isAuthPage) {
+    try {
+      const authStore = useAuthStore()
+      await authStore.restoreSession()
+      console.log('✅ Session restaurée avec succès')
+    } catch (error) {
+      console.error('❌ Erreur initialisation auth:', error)
+    }
+  } else {
+    console.log('⏭️ [App] Page auth détectée, skip restoreSession')
   }
 
   // Autres initialisations...
