@@ -106,19 +106,26 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     // ✅ VÉRIFICATION ONBOARDING COMPLÉTÉ
     // Si l'utilisateur n'a pas complété l'onboarding, le rediriger
     try {
-      const { data: shopData } = await supabase
+      const { data: shopData, error: shopError } = await supabase
         .from('shops')
         .select('onboarding_completed')
         .eq('id', user.id)
         .single()
 
-      if (shopData && !shopData.onboarding_completed) {
+      // Si le shop n'existe pas (nouvel utilisateur) ou onboarding non complété
+      if (shopError || !shopData) {
+        console.log('📋 [AUTH] Shop non trouvé (nouvel utilisateur), redirection onboarding...')
+        return navigateTo('/onboarding')
+      }
+
+      if (!shopData.onboarding_completed) {
         console.log('📋 [AUTH] Onboarding non complété, redirection...')
         return navigateTo('/onboarding')
       }
-    } catch (shopError) {
-      console.warn('⚠️ [AUTH] Impossible de vérifier onboarding (continuer):', shopError)
-      // Continuer même si la vérification échoue pour ne pas bloquer l'utilisateur
+    } catch (error) {
+      console.warn('⚠️ [AUTH] Erreur vérification onboarding:', error)
+      // En cas d'erreur, rediriger vers onboarding par précaution pour les nouveaux utilisateurs
+      return navigateTo('/onboarding')
     }
 
     console.log('✅ [AUTH] Accès autorisé à:', to.path)

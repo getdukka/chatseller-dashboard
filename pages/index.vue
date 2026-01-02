@@ -2,69 +2,229 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
     
-    <!-- ========== WELCOME MODAL POST-ONBOARDING ========== -->
+    <!-- ========== MODAL DE BIENVENUE POST-ONBOARDING ========== -->
     <div v-if="showWelcomeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div class="text-center">
-          <!-- Success Icon -->
-          <div class="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        
+        <!-- Header avec confetti/célébration -->
+        <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-8 text-center rounded-t-2xl">
+          <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-4xl">🎉</span>
           </div>
-          
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">
-            🎉 {{ getWelcomeTitle() }}
+          <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
+            {{ agentInfo?.name || 'Votre Conseillère IA' }} est prête !
           </h2>
+          <p class="text-green-100">
+            Elle va vendre pour vous 24h/24, même quand vous dormez
+          </p>
+        </div>
+        
+        <!-- Contenu -->
+        <div class="p-6">
           
           <!-- USP WhatsApp -->
-          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6 text-left">
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6">
             <div class="flex items-start space-x-3">
               <span class="text-2xl">📱</span>
               <div>
-                <p class="font-semibold text-green-800">Fini les nuits sur WhatsApp !</p>
-                <p class="text-sm text-green-700">{{ agentInfo?.name || 'Votre Conseillère IA' }} va répondre à vos clientes 24h/24, même quand vous dormez.</p>
+                <p class="font-bold text-green-800">Fini les nuits sur WhatsApp !</p>
+                <p class="text-sm text-green-700 mt-1">
+                  {{ agentInfo?.name || 'Votre Conseillère' }} répond automatiquement aux questions de vos clientes, 
+                  recommande vos produits et les guide vers l'achat.
+                </p>
               </div>
             </div>
           </div>
           
-          <p class="text-gray-600 mb-6">
-            {{ getWelcomeDescription() }}
-          </p>
-          
-          <!-- Prochaines étapes -->
-          <div class="bg-gray-50 rounded-xl p-4 mb-6 text-left">
-            <p class="font-semibold text-gray-800 mb-3">📋 Prochaines étapes :</p>
-            <div class="space-y-2 text-sm">
-              <div class="flex items-center text-gray-600">
-                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">1</span>
-                Synchronisez vos produits depuis votre boutique
+          <!-- Guide des 3 étapes -->
+          <div class="mb-6">
+            <p class="font-semibold text-gray-800 mb-4 flex items-center">
+              <span class="mr-2">📋</span>
+              Pour qu'elle soit 100% opérationnelle :
+            </p>
+            
+            <div class="space-y-3">
+              <!-- Étape 1: Agent créé ✅ -->
+              <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-xl">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div class="ml-3 flex-1">
+                  <p class="font-medium text-green-800">Conseillère IA créée</p>
+                  <p class="text-sm text-green-600">{{ agentInfo?.name || 'Votre agent' }} est configurée et prête</p>
+                </div>
+                <span class="text-green-500 text-sm font-medium">Fait ✓</span>
               </div>
-              <div class="flex items-center text-gray-600">
-                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">2</span>
-                Ajoutez vos connaissances beauté (FAQ, routines, conseils)
+              
+              <!-- Étape 2: Synchroniser produits -->
+              <div 
+                class="flex items-center p-3 rounded-xl"
+                :class="setupStatus.productsSynced ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'"
+              >
+                <div 
+                  class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                  :class="setupStatus.productsSynced ? 'bg-green-500' : 'bg-orange-500'"
+                >
+                  <svg v-if="setupStatus.productsSynced" class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span v-else class="text-white text-sm font-bold">2</span>
+                </div>
+                <div class="ml-3 flex-1">
+                  <p class="font-medium" :class="setupStatus.productsSynced ? 'text-green-800' : 'text-orange-800'">
+                    Synchroniser vos produits
+                  </p>
+                  <p class="text-sm" :class="setupStatus.productsSynced ? 'text-green-600' : 'text-orange-600'">
+                    {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits importés` : 'Pour que l\'IA puisse les recommander' }}
+                  </p>
+                </div>
+                <span 
+                  class="text-sm font-medium"
+                  :class="setupStatus.productsSynced ? 'text-green-500' : 'text-orange-500'"
+                >
+                  {{ setupStatus.productsSynced ? 'Fait ✓' : 'À faire' }}
+                </span>
               </div>
-              <div class="flex items-center text-gray-600">
-                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">3</span>
-                Intégrez le widget sur votre site
+              
+              <!-- Étape 3: Intégrer widget -->
+              <div 
+                class="flex items-center p-3 rounded-xl"
+                :class="setupStatus.widgetIntegrated ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'"
+              >
+                <div 
+                  class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                  :class="setupStatus.widgetIntegrated ? 'bg-green-500' : 'bg-gray-400'"
+                >
+                  <svg v-if="setupStatus.widgetIntegrated" class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span v-else class="text-white text-sm font-bold">3</span>
+                </div>
+                <div class="ml-3 flex-1">
+                  <p class="font-medium" :class="setupStatus.widgetIntegrated ? 'text-green-800' : 'text-gray-800'">
+                    Intégrer le widget sur votre site
+                  </p>
+                  <p class="text-sm" :class="setupStatus.widgetIntegrated ? 'text-green-600' : 'text-gray-600'">
+                    {{ setupStatus.widgetIntegrated ? 'Widget actif sur votre site' : 'Quelques lignes de code à ajouter' }}
+                  </p>
+                </div>
+                <span 
+                  class="text-sm font-medium"
+                  :class="setupStatus.widgetIntegrated ? 'text-green-500' : 'text-gray-400'"
+                >
+                  {{ setupStatus.widgetIntegrated ? 'Fait ✓' : 'À faire' }}
+                </span>
               </div>
             </div>
           </div>
           
-          <!-- Actions -->
-          <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              @click="navigateToProducts"
-              class="px-6 py-3 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-semibold rounded-xl hover:from-rose-700 hover:to-pink-700 transition-all"
-            >
-              Synchroniser mes produits
-            </button>
+          <!-- Actions principales -->
+          <div class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                @click="navigateToProducts"
+                class="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-semibold rounded-xl hover:from-rose-700 hover:to-pink-700 transition-all"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+                Synchroniser mes produits
+              </button>
+              <button
+                @click="navigateToKnowledgeBase"
+                class="flex items-center justify-center px-4 py-3 bg-white border-2 border-purple-300 text-purple-700 font-semibold rounded-xl hover:bg-purple-50 transition-all"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                Former mon IA
+              </button>
+            </div>
+            
             <button
               @click="closeWelcomeModal"
-              class="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+              class="w-full px-4 py-3 text-gray-600 font-medium hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all"
             >
               Explorer le Dashboard
             </button>
+          </div>
+          
+          <!-- Astuce -->
+          <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-xs text-blue-700 text-center">
+              💡 <strong>Astuce :</strong> Vous pouvez tester {{ agentInfo?.name || 'votre Conseillère' }} dans le Playground 
+              avant de l'intégrer sur votre site.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== BARRE DE RAPPEL DISCRÈTE (si config incomplète) ========== -->
+    <div 
+      v-if="showConfigReminder && !showWelcomeModal" 
+      class="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200"
+    >
+      <div class="px-4 md:px-8 py-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <span class="text-xl">💡</span>
+            <p class="text-sm text-amber-800">
+              <span class="font-medium">Il reste {{ 3 - completedSteps }} étape{{ 3 - completedSteps > 1 ? 's' : '' }}</span> 
+              pour activer {{ agentInfo?.name || 'votre Conseillère' }} sur votre site
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button
+              @click="showReminderActions = !showReminderActions"
+              class="text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors hidden sm:inline-flex items-center"
+            >
+              Voir les étapes
+              <svg 
+                class="w-4 h-4 ml-1 transition-transform" 
+                :class="{ 'rotate-180': showReminderActions }"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <button
+              @click="dismissReminder"
+              class="p-1 text-amber-400 hover:text-amber-600 transition-colors"
+              title="Masquer"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Actions dépliables -->
+        <div v-if="showReminderActions" class="mt-3 pt-3 border-t border-amber-200">
+          <div class="flex flex-wrap gap-2">
+            <NuxtLink
+              v-if="!setupStatus.productsSynced"
+              to="/products"
+              class="inline-flex items-center px-3 py-1.5 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+              </svg>
+              Synchroniser produits
+            </NuxtLink>
+            <NuxtLink
+              v-if="!setupStatus.widgetIntegrated"
+              to="/agent-ia?tab=integration"
+              class="inline-flex items-center px-3 py-1.5 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+              Intégrer widget
+            </NuxtLink>
           </div>
         </div>
       </div>
@@ -129,158 +289,6 @@
     <!-- ========== MAIN CONTENT ========== -->
     <div v-else class="px-4 md:px-8 pb-8">
       
-      <!-- ===== SECTION: GUIDE DÉMARRAGE (pour nouveaux utilisateurs) ===== -->
-      <div v-if="isNewUser" class="mb-6">
-        <div class="bg-white rounded-2xl border-2 border-rose-200 shadow-lg overflow-hidden">
-          <!-- Header du guide -->
-          <div class="bg-gradient-to-r from-rose-500 to-pink-500 px-4 md:px-6 py-4">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
-                </div>
-                <div class="text-white">
-                  <h3 class="font-bold text-lg">Lancez votre Conseillère IA</h3>
-                  <p class="text-rose-100 text-sm">3 étapes pour commencer à vendre</p>
-                </div>
-              </div>
-              <div class="hidden sm:block">
-                <span class="bg-white/20 text-white text-sm font-medium px-3 py-1 rounded-full">
-                  {{ completedSteps }}/3 étapes
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Étapes -->
-          <div class="p-4 md:p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              
-              <!-- Étape 1: Agent créé -->
-              <div 
-                class="relative p-4 rounded-xl border-2 transition-all"
-                :class="setupStatus.agentCreated ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'"
-              >
-                <div class="flex items-start space-x-3">
-                  <div 
-                    class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    :class="setupStatus.agentCreated ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'"
-                  >
-                    <svg v-if="setupStatus.agentCreated" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    <span v-else class="text-sm font-bold">1</span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-gray-900 text-sm">Conseillère IA créée</p>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                      {{ setupStatus.agentCreated ? `${agentInfo?.name || 'Votre agent'} est prête !` : 'Créez votre première Conseillère' }}
-                    </p>
-                  </div>
-                </div>
-                <div v-if="!setupStatus.agentCreated" class="mt-3">
-                  <NuxtLink 
-                    to="/agent-ia"
-                    class="inline-flex items-center text-xs font-medium text-rose-600 hover:text-rose-700"
-                  >
-                    Créer maintenant
-                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                  </NuxtLink>
-                </div>
-              </div>
-              
-              <!-- Étape 2: Produits synchronisés -->
-              <div 
-                class="relative p-4 rounded-xl border-2 transition-all"
-                :class="setupStatus.productsSynced ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'"
-              >
-                <div class="flex items-start space-x-3">
-                  <div 
-                    class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    :class="setupStatus.productsSynced ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'"
-                  >
-                    <svg v-if="setupStatus.productsSynced" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    <span v-else class="text-sm font-bold">2</span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-gray-900 text-sm">Produits synchronisés</p>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                      {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits importés` : 'Importez votre catalogue' }}
-                    </p>
-                  </div>
-                </div>
-                <div v-if="!setupStatus.productsSynced" class="mt-3">
-                  <NuxtLink 
-                    to="/products"
-                    class="inline-flex items-center text-xs font-medium text-rose-600 hover:text-rose-700"
-                  >
-                    Synchroniser
-                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                  </NuxtLink>
-                </div>
-              </div>
-              
-              <!-- Étape 3: Widget intégré -->
-              <div 
-                class="relative p-4 rounded-xl border-2 transition-all"
-                :class="setupStatus.widgetIntegrated ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'"
-              >
-                <div class="flex items-start space-x-3">
-                  <div 
-                    class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    :class="setupStatus.widgetIntegrated ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'"
-                  >
-                    <svg v-if="setupStatus.widgetIntegrated" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    <span v-else class="text-sm font-bold">3</span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-gray-900 text-sm">Widget intégré</p>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                      {{ setupStatus.widgetIntegrated ? 'Actif sur votre site' : 'Ajoutez le code sur votre site' }}
-                    </p>
-                  </div>
-                </div>
-                <div v-if="!setupStatus.widgetIntegrated" class="mt-3">
-                  <NuxtLink 
-                    to="/agent-ia?tab=integration"
-                    class="inline-flex items-center text-xs font-medium text-rose-600 hover:text-rose-700"
-                  >
-                    Voir le code
-                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                  </NuxtLink>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Barre de progression mobile -->
-            <div class="mt-4 sm:hidden">
-              <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
-                <span>Progression</span>
-                <span>{{ completedSteps }}/3 étapes</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  class="bg-gradient-to-r from-rose-500 to-pink-500 h-2 rounded-full transition-all duration-500"
-                  :style="{ width: `${(completedSteps / 3) * 100}%` }"
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- ===== KPI CARDS ===== -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
         
@@ -389,9 +397,9 @@
         </div>
       </div>
 
-      <!-- ===== EMPTY STATE MESSAGE (quand pas de données) ===== -->
+      <!-- ===== EMPTY STATE MESSAGE (quand pas de données mais configuration terminée) ===== -->
       <div 
-        v-if="hasNoData && !isNewUser" 
+        v-if="hasNoData && completedSteps === 3" 
         class="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 md:p-6"
       >
         <div class="flex flex-col md:flex-row items-start md:items-center space-y-3 md:space-y-0 md:space-x-4">
@@ -422,7 +430,7 @@
       <!-- ===== MAIN CONTENT GRID ===== -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         
-        <!-- ===== CARD: Votre Conseillère IA ===== -->
+        <!-- ===== CARD: Votre Conseillère IA (AMÉLIORÉE) ===== -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-4 md:mb-6">
             <h3 class="text-base md:text-lg font-semibold text-gray-900">Votre {{ getAgentTypeName() }}</h3>
@@ -466,29 +474,94 @@
               </div>
             </div>
 
-            <!-- Stats rapides -->
-            <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+            <!-- Alertes de configuration manquante -->
+            <div v-if="!setupStatus.productsSynced || !setupStatus.widgetIntegrated" class="space-y-2">
+              <!-- Alerte produits -->
+              <div 
+                v-if="!setupStatus.productsSynced"
+                class="p-3 bg-orange-50 border border-orange-200 rounded-lg"
+              >
+                <div class="flex items-start space-x-3">
+                  <svg class="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-orange-800">Aucun produit synchronisé</p>
+                    <p class="text-xs text-orange-600 mt-0.5">{{ agentInfo.name }} ne peut pas encore recommander vos produits</p>
+                  </div>
+                </div>
+                <NuxtLink 
+                  to="/products"
+                  class="mt-2 inline-flex items-center text-xs font-medium text-orange-700 hover:text-orange-900"
+                >
+                  Synchroniser ma boutique
+                  <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </NuxtLink>
+              </div>
+              
+              <!-- Alerte widget -->
+              <div 
+                v-if="!setupStatus.widgetIntegrated && setupStatus.productsSynced"
+                class="p-3 bg-blue-50 border border-blue-200 rounded-lg"
+              >
+                <div class="flex items-start space-x-3">
+                  <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-blue-800">Widget non intégré</p>
+                    <p class="text-xs text-blue-600 mt-0.5">Ajoutez le code sur votre site pour activer {{ agentInfo.name }}</p>
+                  </div>
+                </div>
+                <NuxtLink 
+                  to="/agent-ia?tab=integration"
+                  class="mt-2 inline-flex items-center text-xs font-medium text-blue-700 hover:text-blue-900"
+                >
+                  Voir le code d'intégration
+                  <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </NuxtLink>
+              </div>
+            </div>
+
+            <!-- Stats rapides (si configuration complète) -->
+            <div v-if="setupStatus.productsSynced" class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+              <div class="text-center p-2 bg-gray-50 rounded-lg">
+                <p class="text-lg md:text-xl font-bold text-gray-900">{{ dashboardStats.products.total }}</p>
+                <p class="text-xs text-gray-500">Produits</p>
+              </div>
               <div class="text-center p-2 bg-gray-50 rounded-lg">
                 <p class="text-lg md:text-xl font-bold text-gray-900">{{ agentInfo.knowledgeBaseCount }}</p>
                 <p class="text-xs text-gray-500">Documents</p>
               </div>
-              <div class="text-center p-2 bg-gray-50 rounded-lg">
-                <p class="text-lg md:text-xl font-bold text-gray-900">{{ dashboardStats.conversations.total }}</p>
-                <p class="text-xs text-gray-500">Conversations</p>
-              </div>
             </div>
 
-            <!-- Bouton action -->
-            <button
-              @click="navigateToAgentDetail"
-              class="w-full py-2.5 px-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all flex items-center justify-center"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-              Voir les détails
-            </button>
+            <!-- Boutons action -->
+            <div class="flex flex-col sm:flex-row gap-2 pt-2">
+              <NuxtLink
+                to="/agent-ia?tab=test"
+                class="flex-1 py-2.5 px-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all flex items-center justify-center"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Tester
+              </NuxtLink>
+              <button
+                @click="navigateToAgentDetail"
+                class="flex-1 py-2.5 px-4 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-all flex items-center justify-center"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Configurer
+              </button>
+            </div>
           </div>
 
           <!-- Aucun agent -->
@@ -616,7 +689,7 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium text-gray-900">Mes produits</p>
-                  <p class="text-xs text-gray-500">{{ dashboardStats.products.total }} produit{{ dashboardStats.products.total > 1 ? 's' : '' }}</p>
+                  <p class="text-xs text-gray-500">{{ dashboardStats.products.total }} produit{{ dashboardStats.products.total !== 1 ? 's' : '' }}</p>
                 </div>
               </div>
               <svg class="w-4 h-4 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -767,6 +840,8 @@ const refreshing = ref(false)
 const loadingStats = ref(true)
 const showSuccessMessage = ref(false)
 const showWelcomeModal = ref(false)
+const showReminderActions = ref(false)
+const reminderDismissed = ref(false)
 const successMessage = ref('')
 
 const dashboardStats = ref<DashboardStats>({
@@ -826,19 +901,6 @@ const userFirstName = computed(() => {
   return 'Utilisateur'
 })
 
-// Nouveau utilisateur = aucune conversation ET agent créé récemment
-const isNewUser = computed(() => {
-  return dashboardStats.value.conversations.total === 0 && 
-         (setupStatus.value.agentCreated || !agentInfo.value)
-})
-
-// Pas de données = toutes les stats à 0
-const hasNoData = computed(() => {
-  return dashboardStats.value.conversations.total === 0 &&
-         dashboardStats.value.orders.total === 0 &&
-         dashboardStats.value.revenue.total === 0
-})
-
 // Nombre d'étapes complétées
 const completedSteps = computed(() => {
   let count = 0
@@ -846,6 +908,20 @@ const completedSteps = computed(() => {
   if (setupStatus.value.productsSynced) count++
   if (setupStatus.value.widgetIntegrated) count++
   return count
+})
+
+// Afficher le rappel de configuration (si pas tout complété et pas masqué)
+const showConfigReminder = computed(() => {
+  return setupStatus.value.agentCreated && 
+         completedSteps.value < 3 && 
+         !reminderDismissed.value
+})
+
+// Pas de données = toutes les stats à 0
+const hasNoData = computed(() => {
+  return dashboardStats.value.conversations.total === 0 &&
+         dashboardStats.value.orders.total === 0 &&
+         dashboardStats.value.revenue.total === 0
 })
 
 // ========== UTILITY METHODS ==========
@@ -860,6 +936,7 @@ const formatCurrency = (amount: number): string => {
 
 const formatConversionRate = (rate: any): string => {
   if (typeof rate === 'number') {
+    if (rate === 0) return '0%'
     return `${rate.toFixed(1)}%`
   }
   if (typeof rate === 'string' && rate.includes('%')) {
@@ -874,6 +951,12 @@ const showNotification = (message: string) => {
   setTimeout(() => {
     showSuccessMessage.value = false
   }, 3000)
+}
+
+const dismissReminder = () => {
+  reminderDismissed.value = true
+  // Stocker dans sessionStorage pour ne pas réafficher pendant la session
+  sessionStorage.setItem('chatseller_reminder_dismissed', 'true')
 }
 
 // ========== MÉTHODES CONTEXTUELLES ==========
@@ -892,20 +975,6 @@ const getDashboardSubtitle = () => {
     'multi': `${agentInfo.value.name} conseille vos clientes en beauté`
   }
   return subtitles[beautyProfile.value.beautyCategory] || subtitles.multi
-}
-
-const getWelcomeTitle = () => {
-  if (agentInfo.value) {
-    return `${agentInfo.value.name} est prête à vendre pour vous !`
-  }
-  return 'Votre espace ChatSeller est prêt !'
-}
-
-const getWelcomeDescription = () => {
-  if (agentInfo.value) {
-    return `${agentInfo.value.name} peut maintenant conseiller vos clientes 24h/24. Synchronisez vos produits pour qu'elle puisse les recommander.`
-  }
-  return 'Configurez votre Conseillère IA et commencez à automatiser vos ventes.'
 }
 
 const getAgentTypeName = () => {
@@ -933,6 +1002,11 @@ const navigateToAgentDetail = () => {
 const navigateToProducts = () => {
   closeWelcomeModal()
   navigateTo('/products')
+}
+
+const navigateToKnowledgeBase = () => {
+  closeWelcomeModal()
+  navigateTo('/knowledge-base')
 }
 
 const closeWelcomeModal = () => {
@@ -1011,7 +1085,7 @@ const loadBeautyProfile = async () => {
         agentName: shop.agent_config?.name || ''
       }
       
-      // Vérifier si le widget est intégré (basé sur une propriété du shop)
+      // Vérifier si le widget est intégré
       setupStatus.value.widgetIntegrated = shop.widget_integrated === true
       
       console.log('✅ Beauty profile chargé:', beautyProfile.value.beautyCategory)
@@ -1131,6 +1205,22 @@ const handleRefreshData = async () => {
 
 // ========== LIFECYCLE ==========
 onMounted(async () => {
+  // ✅ VÉRIFICATION HASH TOKEN - Rediriger vers callback si token de confirmation email détecté
+  // Ceci gère le cas où Supabase redirige vers / au lieu de /auth/callback
+  const hash = window.location.hash
+  if (hash && hash.includes('access_token')) {
+    console.log('🔗 [Index] Token de confirmation détecté, redirection vers /auth/callback...')
+    // Rediriger vers callback avec le hash intact
+    window.location.href = `/auth/callback${hash}`
+    return // Arrêter l'exécution
+  }
+
+  // Vérifier si le rappel a été masqué dans la session
+  const reminderWasDismissed = sessionStorage.getItem('chatseller_reminder_dismissed')
+  if (reminderWasDismissed) {
+    reminderDismissed.value = true
+  }
+
   // Charger l'agent en premier
   await loadAgent()
 

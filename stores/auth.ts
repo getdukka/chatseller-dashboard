@@ -464,10 +464,18 @@ export const useAuthStore = defineStore('auth', {
         const firstName = nameParts[0] || data.firstName || ''
         const lastName = nameParts.slice(1).join(' ') || data.lastName || ''
         
+        // ✅ Construire l'URL de redirection vers /auth/callback
+        const redirectUrl = typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : 'https://dashboard.chatseller.app/auth/callback'
+
+        console.log('🔗 [Register] Email redirect URL:', redirectUrl)
+
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: data.email,
           password: data.password,
           options: {
+            emailRedirectTo: redirectUrl,
             data: {
               name: data.name,
               first_name: firstName,
