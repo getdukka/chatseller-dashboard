@@ -1796,27 +1796,164 @@ const getBeautyIcon = () => getBeautyTypeMapping().icon
 const getBeautyTypeLabel = () => getBeautyTypeMapping().label
 const getColorScheme = () => getBeautyTypeMapping().color
 
-// Classes adaptatives selon le domaine beauté
-const getBeautyIconClasses = () => `text-${getColorScheme()}-600`
+// ✅ MAPPING COMPLET DES CLASSES PAR COULEUR (pour éviter les classes dynamiques non compilées)
+const colorClassMappings: Record<string, Record<string, string>> = {
+  rose: {
+    iconText: 'text-rose-600',
+    saveButton: 'bg-rose-600 hover:bg-rose-700',
+    loading: 'border-rose-500',
+    inputFocus: 'focus:ring-rose-500 focus:border-rose-500',
+    avatarBorder: 'border-rose-200',
+    avatarBackground: 'bg-rose-500',
+    variablesBackground: 'bg-rose-50 border border-rose-200',
+    variablesText: 'text-rose-800',
+    variableButton: 'text-rose-700 border-rose-200 hover:bg-rose-50',
+    previewButton: 'bg-rose-600 hover:bg-rose-700',
+    knowledgeButton: 'bg-rose-600 hover:bg-rose-700',
+    docIcon: 'bg-rose-100 text-rose-600',
+    statsText: 'text-rose-600',
+    toggleActive: 'bg-rose-600',
+    toggleFocus: 'focus:ring-rose-500',
+    testButton: 'bg-rose-600 hover:bg-rose-700',
+    buttonsButton: 'border-rose-600 text-rose-600 hover:bg-rose-50',
+    activateButton: 'border-rose-600 text-rose-600 hover:bg-rose-50',
+    analyticsButton: 'bg-rose-600 hover:bg-rose-700'
+  },
+  pink: {
+    iconText: 'text-pink-600',
+    saveButton: 'bg-pink-600 hover:bg-pink-700',
+    loading: 'border-pink-500',
+    inputFocus: 'focus:ring-pink-500 focus:border-pink-500',
+    avatarBorder: 'border-pink-200',
+    avatarBackground: 'bg-pink-500',
+    variablesBackground: 'bg-pink-50 border border-pink-200',
+    variablesText: 'text-pink-800',
+    variableButton: 'text-pink-700 border-pink-200 hover:bg-pink-50',
+    previewButton: 'bg-pink-600 hover:bg-pink-700',
+    knowledgeButton: 'bg-pink-600 hover:bg-pink-700',
+    docIcon: 'bg-pink-100 text-pink-600',
+    statsText: 'text-pink-600',
+    toggleActive: 'bg-pink-600',
+    toggleFocus: 'focus:ring-pink-500',
+    testButton: 'bg-pink-600 hover:bg-pink-700',
+    buttonsButton: 'border-pink-600 text-pink-600 hover:bg-pink-50',
+    activateButton: 'border-pink-600 text-pink-600 hover:bg-pink-50',
+    analyticsButton: 'bg-pink-600 hover:bg-pink-700'
+  },
+  purple: {
+    iconText: 'text-purple-600',
+    saveButton: 'bg-purple-600 hover:bg-purple-700',
+    loading: 'border-purple-500',
+    inputFocus: 'focus:ring-purple-500 focus:border-purple-500',
+    avatarBorder: 'border-purple-200',
+    avatarBackground: 'bg-purple-500',
+    variablesBackground: 'bg-purple-50 border border-purple-200',
+    variablesText: 'text-purple-800',
+    variableButton: 'text-purple-700 border-purple-200 hover:bg-purple-50',
+    previewButton: 'bg-purple-600 hover:bg-purple-700',
+    knowledgeButton: 'bg-purple-600 hover:bg-purple-700',
+    docIcon: 'bg-purple-100 text-purple-600',
+    statsText: 'text-purple-600',
+    toggleActive: 'bg-purple-600',
+    toggleFocus: 'focus:ring-purple-500',
+    testButton: 'bg-purple-600 hover:bg-purple-700',
+    buttonsButton: 'border-purple-600 text-purple-600 hover:bg-purple-50',
+    activateButton: 'border-purple-600 text-purple-600 hover:bg-purple-50',
+    analyticsButton: 'bg-purple-600 hover:bg-purple-700'
+  },
+  violet: {
+    iconText: 'text-violet-600',
+    saveButton: 'bg-violet-600 hover:bg-violet-700',
+    loading: 'border-violet-500',
+    inputFocus: 'focus:ring-violet-500 focus:border-violet-500',
+    avatarBorder: 'border-violet-200',
+    avatarBackground: 'bg-violet-500',
+    variablesBackground: 'bg-violet-50 border border-violet-200',
+    variablesText: 'text-violet-800',
+    variableButton: 'text-violet-700 border-violet-200 hover:bg-violet-50',
+    previewButton: 'bg-violet-600 hover:bg-violet-700',
+    knowledgeButton: 'bg-violet-600 hover:bg-violet-700',
+    docIcon: 'bg-violet-100 text-violet-600',
+    statsText: 'text-violet-600',
+    toggleActive: 'bg-violet-600',
+    toggleFocus: 'focus:ring-violet-500',
+    testButton: 'bg-violet-600 hover:bg-violet-700',
+    buttonsButton: 'border-violet-600 text-violet-600 hover:bg-violet-50',
+    activateButton: 'border-violet-600 text-violet-600 hover:bg-violet-50',
+    analyticsButton: 'bg-violet-600 hover:bg-violet-700'
+  },
+  amber: {
+    iconText: 'text-amber-600',
+    saveButton: 'bg-amber-600 hover:bg-amber-700',
+    loading: 'border-amber-500',
+    inputFocus: 'focus:ring-amber-500 focus:border-amber-500',
+    avatarBorder: 'border-amber-200',
+    avatarBackground: 'bg-amber-500',
+    variablesBackground: 'bg-amber-50 border border-amber-200',
+    variablesText: 'text-amber-800',
+    variableButton: 'text-amber-700 border-amber-200 hover:bg-amber-50',
+    previewButton: 'bg-amber-600 hover:bg-amber-700',
+    knowledgeButton: 'bg-amber-600 hover:bg-amber-700',
+    docIcon: 'bg-amber-100 text-amber-600',
+    statsText: 'text-amber-600',
+    toggleActive: 'bg-amber-600',
+    toggleFocus: 'focus:ring-amber-500',
+    testButton: 'bg-amber-600 hover:bg-amber-700',
+    buttonsButton: 'border-amber-600 text-amber-600 hover:bg-amber-50',
+    activateButton: 'border-amber-600 text-amber-600 hover:bg-amber-50',
+    analyticsButton: 'bg-amber-600 hover:bg-amber-700'
+  },
+  teal: {
+    iconText: 'text-teal-600',
+    saveButton: 'bg-teal-600 hover:bg-teal-700',
+    loading: 'border-teal-500',
+    inputFocus: 'focus:ring-teal-500 focus:border-teal-500',
+    avatarBorder: 'border-teal-200',
+    avatarBackground: 'bg-teal-500',
+    variablesBackground: 'bg-teal-50 border border-teal-200',
+    variablesText: 'text-teal-800',
+    variableButton: 'text-teal-700 border-teal-200 hover:bg-teal-50',
+    previewButton: 'bg-teal-600 hover:bg-teal-700',
+    knowledgeButton: 'bg-teal-600 hover:bg-teal-700',
+    docIcon: 'bg-teal-100 text-teal-600',
+    statsText: 'text-teal-600',
+    toggleActive: 'bg-teal-600',
+    toggleFocus: 'focus:ring-teal-500',
+    testButton: 'bg-teal-600 hover:bg-teal-700',
+    buttonsButton: 'border-teal-600 text-teal-600 hover:bg-teal-50',
+    activateButton: 'border-teal-600 text-teal-600 hover:bg-teal-50',
+    analyticsButton: 'bg-teal-600 hover:bg-teal-700'
+  }
+}
+
+// Fonction helper pour récupérer les classes de couleur
+const getColorClasses = (classType: string): string => {
+  const scheme = getColorScheme()
+  const mapping = colorClassMappings[scheme] || colorClassMappings.pink
+  return mapping[classType] || colorClassMappings.pink[classType]
+}
+
+// Classes adaptatives selon le domaine beauté (utilisant le mapping)
+const getBeautyIconClasses = () => getColorClasses('iconText')
 const getStatusClasses = () => localConfig.value.agent.isActive ? 'text-green-600' : 'text-red-600'
-const getSaveButtonClasses = () => `bg-${getColorScheme()}-600 hover:bg-${getColorScheme()}-700`
-const getLoadingClasses = () => `border-${getColorScheme()}-500`
-const getInputFocusClasses = () => `focus:ring-${getColorScheme()}-500 focus:border-${getColorScheme()}-500`
-const getAvatarBorderClasses = () => `border-${getColorScheme()}-200`
-const getAvatarBackgroundClasses = () => `bg-${getColorScheme()}-500`
-const getVariablesBackgroundClasses = () => `bg-${getColorScheme()}-50 border border-${getColorScheme()}-200`
-const getVariablesTextClasses = () => `text-${getColorScheme()}-800`
-const getVariableButtonClasses = () => `text-${getColorScheme()}-700 border-${getColorScheme()}-200 hover:bg-${getColorScheme()}-50`
-const getPreviewButtonClasses = () => `bg-${getColorScheme()}-600 hover:bg-${getColorScheme()}-700`
-const getKnowledgeButtonClasses = () => `bg-${getColorScheme()}-600 hover:bg-${getColorScheme()}-700`
-const getDocIconClasses = () => `bg-${getColorScheme()}-100 text-${getColorScheme()}-600`
-const getStatsTextClasses = () => `text-${getColorScheme()}-600`
-const getToggleActiveClasses = () => `bg-${getColorScheme()}-600`
-const getToggleFocusClasses = () => `focus:ring-${getColorScheme()}-500`
-const getTestButtonClasses = () => `bg-${getColorScheme()}-600 hover:bg-${getColorScheme()}-700`
-const getButtonsButtonClasses = () => `border-${getColorScheme()}-600 text-${getColorScheme()}-600 hover:bg-${getColorScheme()}-50`
-const getActivateButtonClasses = () => `border-${getColorScheme()}-600 text-${getColorScheme()}-600 hover:bg-${getColorScheme()}-50`
-const getAnalyticsButtonClasses = () => `bg-${getColorScheme()}-600 hover:bg-${getColorScheme()}-700`
+const getSaveButtonClasses = () => getColorClasses('saveButton')
+const getLoadingClasses = () => getColorClasses('loading')
+const getInputFocusClasses = () => getColorClasses('inputFocus')
+const getAvatarBorderClasses = () => getColorClasses('avatarBorder')
+const getAvatarBackgroundClasses = () => getColorClasses('avatarBackground')
+const getVariablesBackgroundClasses = () => getColorClasses('variablesBackground')
+const getVariablesTextClasses = () => getColorClasses('variablesText')
+const getVariableButtonClasses = () => getColorClasses('variableButton')
+const getPreviewButtonClasses = () => getColorClasses('previewButton')
+const getKnowledgeButtonClasses = () => getColorClasses('knowledgeButton')
+const getDocIconClasses = () => getColorClasses('docIcon')
+const getStatsTextClasses = () => getColorClasses('statsText')
+const getToggleActiveClasses = () => getColorClasses('toggleActive')
+const getToggleFocusClasses = () => getColorClasses('toggleFocus')
+const getTestButtonClasses = () => getColorClasses('testButton')
+const getButtonsButtonClasses = () => getColorClasses('buttonsButton')
+const getActivateButtonClasses = () => getColorClasses('activateButton')
+const getAnalyticsButtonClasses = () => getColorClasses('analyticsButton')
 
 // ✅ NOUVEAU : Classes pour alertes quotas
 const getAlertClasses = (type: string) => {

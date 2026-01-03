@@ -3,8 +3,8 @@
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
     
     <!-- ========== MODAL DE BIENVENUE POST-ONBOARDING ========== -->
-    <div v-if="showWelcomeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div v-if="showWelcomeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-hidden">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
         
         <!-- Header avec confetti/célébration -->
         <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-8 text-center rounded-t-2xl">
@@ -15,7 +15,7 @@
             {{ agentInfo?.name || 'Votre Conseillère IA' }} est prête !
           </h2>
           <p class="text-green-100">
-            Elle va conseiller vos clients et vendre pour vous 24h/24, même quand vous dormez
+            Elle va vendre pour vous 24h/24, même quand vous dormez
           </p>
         </div>
         
@@ -29,8 +29,8 @@
               <div>
                 <p class="font-bold text-green-800">Les visiteurs de votre site ne seront plus seuls</p>
                 <p class="text-sm text-green-700 mt-1">
-                  {{ agentInfo?.name || 'Votre Conseillère' }} répondra automatiquement à leurs questions, 
-                  les conseillera et les guidera vers l'achat.
+                  {{ agentInfo?.name || 'Votre Conseillère' }} les accueillera, répondra instantanément à leurs questions, 
+                  les conseillera et les guidera vers l'achat en toute autonomie.
                 </p>
               </div>
             </div>
@@ -40,7 +40,7 @@
           <div class="mb-6">
             <p class="font-semibold text-gray-800 mb-4 flex items-center">
               <span class="mr-2">📋</span>
-              Pour qu'elle soit 100% opérationnelle :
+              Pour que {{ agentInfo?.name || 'Votre Conseillère IA' }} soit 100% opérationnelle :
             </p>
             
             <div class="space-y-3">
@@ -52,7 +52,7 @@
                   </svg>
                 </div>
                 <div class="ml-3 flex-1">
-                  <p class="font-medium text-green-800">Conseillère IA créée</p>
+                  <p class="font-medium text-green-800">Créer la Conseillère IA</p>
                   <p class="text-sm text-green-600">{{ agentInfo?.name || 'Votre Conseillère IA' }} est configurée et prête</p>
                 </div>
                 <span class="text-green-500 text-sm font-medium">Fait ✓</span>
@@ -77,7 +77,7 @@
                     Synchroniser vos produits
                   </p>
                   <p class="text-sm" :class="setupStatus.productsSynced ? 'text-green-600' : 'text-orange-600'">
-                    {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits importés` : 'Pour que l\'IA puisse les recommander' }}
+                    {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits importés` : 'Pour que votre Conseillère IA puisse les recommander' }}
                   </p>
                 </div>
                 <span 
@@ -107,7 +107,7 @@
                     Intégrer le widget sur votre site
                   </p>
                   <p class="text-sm" :class="setupStatus.widgetIntegrated ? 'text-green-600' : 'text-gray-600'">
-                    {{ setupStatus.widgetIntegrated ? 'Widget actif sur votre site' : 'Quelques lignes de code à ajouter' }}
+                    {{ setupStatus.widgetIntegrated ? 'Widget actif sur votre site' : 'Pour que votre Conseillère IA puisse interagir avec vos visiteurs' }}
                   </p>
                 </div>
                 <span 
@@ -139,7 +139,7 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                 </svg>
-                Former mon IA
+                Former {{ agentInfo?.name || 'ma Conseillère IA' }}
               </button>
             </div>
             
@@ -213,7 +213,7 @@
               <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
               </svg>
-              Synchroniser produits
+              Synchroniser les produits
             </NuxtLink>
             <NuxtLink
               v-if="!setupStatus.widgetIntegrated"
@@ -223,7 +223,7 @@
               <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
               </svg>
-              Intégrer widget
+              Intégrer le Widget
             </NuxtLink>
           </div>
         </div>

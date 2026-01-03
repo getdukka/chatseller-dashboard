@@ -9,6 +9,45 @@ module.exports = {
     "./nuxt.config.{js,ts}",
     "./app.vue"
   ],
+  // ✅ SAFELIST : Classes dynamiques beauté utilisées dans agent-ia/[id].vue
+  safelist: [
+    // Rose (skincare)
+    'bg-rose-50', 'bg-rose-100', 'bg-rose-200', 'bg-rose-500', 'bg-rose-600', 'bg-rose-700',
+    'text-rose-600', 'text-rose-700', 'text-rose-800',
+    'border-rose-200', 'border-rose-500', 'border-rose-600',
+    'hover:bg-rose-50', 'hover:bg-rose-700',
+    'focus:ring-rose-500', 'focus:border-rose-500',
+    // Pink (multi/default)
+    'bg-pink-50', 'bg-pink-100', 'bg-pink-200', 'bg-pink-500', 'bg-pink-600', 'bg-pink-700',
+    'text-pink-600', 'text-pink-700', 'text-pink-800',
+    'border-pink-200', 'border-pink-500', 'border-pink-600',
+    'hover:bg-pink-50', 'hover:bg-pink-700',
+    'focus:ring-pink-500', 'focus:border-pink-500',
+    // Purple (makeup)
+    'bg-purple-50', 'bg-purple-100', 'bg-purple-200', 'bg-purple-500', 'bg-purple-600', 'bg-purple-700',
+    'text-purple-600', 'text-purple-700', 'text-purple-800',
+    'border-purple-200', 'border-purple-500', 'border-purple-600',
+    'hover:bg-purple-50', 'hover:bg-purple-700',
+    'focus:ring-purple-500', 'focus:border-purple-500',
+    // Violet (fragrance)
+    'bg-violet-50', 'bg-violet-100', 'bg-violet-200', 'bg-violet-500', 'bg-violet-600', 'bg-violet-700',
+    'text-violet-600', 'text-violet-700', 'text-violet-800',
+    'border-violet-200', 'border-violet-500', 'border-violet-600',
+    'hover:bg-violet-50', 'hover:bg-violet-700',
+    'focus:ring-violet-500', 'focus:border-violet-500',
+    // Amber (haircare)
+    'bg-amber-50', 'bg-amber-100', 'bg-amber-200', 'bg-amber-500', 'bg-amber-600', 'bg-amber-700',
+    'text-amber-600', 'text-amber-700', 'text-amber-800',
+    'border-amber-200', 'border-amber-500', 'border-amber-600',
+    'hover:bg-amber-50', 'hover:bg-amber-700',
+    'focus:ring-amber-500', 'focus:border-amber-500',
+    // Teal (bodycare)
+    'bg-teal-50', 'bg-teal-100', 'bg-teal-200', 'bg-teal-500', 'bg-teal-600', 'bg-teal-700',
+    'text-teal-600', 'text-teal-700', 'text-teal-800',
+    'border-teal-200', 'border-teal-500', 'border-teal-600',
+    'hover:bg-teal-50', 'hover:bg-teal-700',
+    'focus:ring-teal-500', 'focus:border-teal-500',
+  ],
   theme: {
     extend: {
       colors: {
