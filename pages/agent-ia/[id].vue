@@ -564,8 +564,8 @@
           <div class="h-96 sm:h-[500px] flex flex-col">
             <!-- Zone de messages -->
             <div ref="playgroundMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-              <!-- Message de bienvenue -->
-              <div v-if="playgroundConversation.length === 0" class="flex items-start space-x-3">
+              <!-- Message de bienvenue - TOUJOURS AFFICHÉ -->
+              <div class="flex items-start space-x-3">
                 <div
                   class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
                   :style="playgroundGradientStyle"
