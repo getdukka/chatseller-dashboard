@@ -1251,7 +1251,10 @@ const completeOnboarding = async () => {
     }
     
     console.log('🎉 [Onboarding] Onboarding terminé avec succès !')
-    
+
+    // ✅ Sauvegarder un flag en sessionStorage comme backup pour le modal de bienvenue
+    sessionStorage.setItem('chatseller_onboarding_just_completed', 'true')
+
     // REDIRECTION
     window.location.href = `/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`
     

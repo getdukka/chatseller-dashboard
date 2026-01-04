@@ -15,8 +15,8 @@ export const useDatabase = () => {
     error: conversationsError
   } = useConversations()
   
-  const { 
-    fetchOrders, 
+  const {
+    fetchConversions,
     orders,
     isLoading: ordersLoading,
     error: ordersError
@@ -48,7 +48,7 @@ export const useDatabase = () => {
 
   const getOrders = async () => {
     console.log('🛒 [DB] Récupération commandes via store...')
-    await fetchOrders()
+    await fetchConversions()
     return orders.value || []
   }
 

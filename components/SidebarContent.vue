@@ -308,7 +308,7 @@
 import { ref } from 'vue'
 
 // ✅ TYPES SIMPLIFIÉS
-type SubscriptionPlan = 'free' | 'starter' | 'pro'
+type SubscriptionPlan = 'free' | 'starter' | 'growth' | 'pro' | 'performance'
 
 interface Props {
   unreadCount: number

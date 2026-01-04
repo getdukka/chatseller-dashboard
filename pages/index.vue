@@ -1215,6 +1215,33 @@ onMounted(async () => {
     return // Arrêter l'exécution
   }
 
+  // ✅ IMPORTANT: Capturer les paramètres URL AVANT les appels async
+  const urlParams = new URLSearchParams(window.location.search)
+  const onboardingCompleted = urlParams.get('onboarding') === 'completed'
+  const welcomeParam = urlParams.get('welcome') === 'true'
+  const welcomeShown = localStorage.getItem('chatseller_welcome_shown')
+
+  // ✅ Vérifier aussi si on vient de l'onboarding via sessionStorage (backup)
+  const justCompletedOnboarding = sessionStorage.getItem('chatseller_onboarding_just_completed')
+
+  console.log('🏠 [Index] Paramètres détectés:', {
+    onboardingCompleted,
+    welcomeParam,
+    welcomeShown,
+    justCompletedOnboarding
+  })
+
+  // ✅ Déterminer si on doit afficher le modal AVANT les appels async
+  const shouldShowWelcomeModal = !welcomeShown && (onboardingCompleted || welcomeParam || justCompletedOnboarding)
+
+  if (shouldShowWelcomeModal) {
+    console.log('🎉 [Index] Modal de bienvenue sera affiché')
+    // Nettoyer le flag de session
+    sessionStorage.removeItem('chatseller_onboarding_just_completed')
+    // Nettoyer l'URL immédiatement
+    window.history.replaceState({}, '', '/')
+  }
+
   // Vérifier si le rappel a été masqué dans la session
   const reminderWasDismissed = sessionStorage.getItem('chatseller_reminder_dismissed')
   if (reminderWasDismissed) {
@@ -1230,15 +1257,9 @@ onMounted(async () => {
   // Charger les données dashboard
   await loadDashboardData()
 
-  // Vérifier si on doit afficher le welcome modal
-  const urlParams = new URLSearchParams(window.location.search)
-  const onboardingCompleted = urlParams.get('onboarding') === 'completed'
-  const welcomeShown = localStorage.getItem('chatseller_welcome_shown')
-
-  if (onboardingCompleted && !welcomeShown) {
+  // ✅ Afficher le modal APRÈS le chargement des données (pour avoir agentInfo)
+  if (shouldShowWelcomeModal) {
     showWelcomeModal.value = true
-    // Nettoyer l'URL
-    window.history.replaceState({}, '', '/')
   }
 })
 

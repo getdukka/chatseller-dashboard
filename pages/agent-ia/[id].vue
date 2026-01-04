@@ -414,6 +414,40 @@
           </div>
         </div>
 
+        <!-- Card: Style des bordures -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+              <span class="mr-2">⬜</span>
+              Style des bordures
+            </h2>
+          </div>
+
+          <div class="p-4 sm:p-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Arrondi du bouton</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
+                v-for="radius in borderRadiusOptions"
+                :key="radius.value"
+                @click="selectBorderRadius(radius.value)"
+                class="p-3 border-2 rounded-xl text-center transition-all"
+                :class="localConfig.widget.borderRadius === radius.value
+                  ? 'border-rose-500 bg-rose-50'
+                  : 'border-gray-200 hover:border-gray-300'"
+              >
+                <div
+                  class="w-full h-8 mb-2 mx-auto"
+                  :style="{
+                    backgroundColor: localConfig.widget.primaryColor,
+                    borderRadius: radius.preview
+                  }"
+                ></div>
+                <span class="text-xs font-medium text-gray-700">{{ radius.label }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Card: Position -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
@@ -480,8 +514,8 @@
               <div class="space-y-2">
                 <button
                   v-if="localConfig.widget.position === 'above-cta'"
-                  :style="{ backgroundColor: localConfig.widget.primaryColor }"
-                  class="w-full py-2.5 px-4 text-white font-medium rounded-lg text-sm"
+                  :style="{ backgroundColor: localConfig.widget.primaryColor, borderRadius: borderRadiusCSS }"
+                  class="w-full py-2.5 px-4 text-white font-medium text-sm"
                 >
                   {{ localConfig.widget.buttonText || 'Parler à une conseillère' }}
                 </button>
@@ -492,8 +526,8 @@
 
                 <button
                   v-if="localConfig.widget.position === 'below-cta'"
-                  :style="{ backgroundColor: localConfig.widget.primaryColor }"
-                  class="w-full py-2.5 px-4 text-white font-medium rounded-lg text-sm"
+                  :style="{ backgroundColor: localConfig.widget.primaryColor, borderRadius: borderRadiusCSS }"
+                  class="w-full py-2.5 px-4 text-white font-medium text-sm"
                 >
                   {{ localConfig.widget.buttonText || 'Parler à une conseillère' }}
                 </button>
@@ -501,9 +535,9 @@
 
               <!-- Bouton flottant -->
               <div
-                class="absolute bottom-3 w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg"
+                class="absolute bottom-3 w-12 h-12 flex items-center justify-center text-white shadow-lg"
                 :class="localConfig.widget.floatingPosition === 'bottom-right' ? 'right-3' : 'left-3'"
-                :style="{ backgroundColor: localConfig.widget.primaryColor }"
+                :style="{ backgroundColor: localConfig.widget.primaryColor, borderRadius: borderRadiusCSS }"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -812,31 +846,6 @@
           </div>
         </div>
 
-        <!-- Débogage -->
-        <div class="bg-purple-50 border border-purple-200 rounded-2xl p-4 sm:p-6">
-          <div class="flex items-start space-x-3">
-            <svg class="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-            </svg>
-            <div class="flex-1">
-              <p class="font-medium text-purple-800">Le widget ne s'affiche pas ?</p>
-              <div class="text-sm text-purple-700 mt-2 space-y-2">
-                <p>1. <strong>Ouvrez la console</strong> de votre navigateur (F12 ou clic droit > Inspecter)</p>
-                <p>2. <strong>Recherchez les logs</strong> commençant par <code class="px-1.5 py-0.5 bg-purple-100 rounded text-xs">[ChatSeller]</code></p>
-                <p>3. <strong>Vérifiez les erreurs</strong> en rouge - elles indiqueront le problème</p>
-                <p class="mt-3 pt-2 border-t border-purple-200">
-                  <strong>Erreurs courantes :</strong>
-                </p>
-                <ul class="list-disc list-inside space-y-1 ml-2">
-                  <li>Erreur 404 : Le fichier embed.js n'est pas accessible</li>
-                  <li>CORS error : Problème de permissions entre domaines</li>
-                  <li>shopId invalide : Vérifiez votre configuration</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Besoin d'aide -->
         <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-6">
           <div class="flex items-start space-x-3">
@@ -1043,7 +1052,7 @@ const localConfig = ref<AgentConfig>({
     position: 'above-cta',
     floatingPosition: 'bottom-right',
     widgetSize: 'medium',
-    borderRadius: 'lg',
+    borderRadius: 'medium',
     isActive: true
   }
 })
@@ -1082,6 +1091,18 @@ const playgroundGradientStyle = computed(() => {
   return {
     background: `linear-gradient(135deg, ${primary} 0%, ${adjustColor(primary, -20)} 100%)`
   }
+})
+
+// Convert borderRadius value to CSS
+const borderRadiusCSS = computed(() => {
+  const radius = localConfig.value.widget.borderRadius || 'medium'
+  const radiusMap: Record<string, string> = {
+    'none': '0px',
+    'small': '8px',
+    'medium': '12px',
+    'full': '999px'
+  }
+  return radiusMap[radius] || '12px'
 })
 
 // Helper to darken/lighten a hex color
@@ -1212,6 +1233,13 @@ const floatingPositions = [
   { value: 'bottom-left', label: 'Bas gauche' }
 ]
 
+const borderRadiusOptions = [
+  { value: 'none', label: 'Carré', preview: '0px' },
+  { value: 'small', label: 'Léger', preview: '8px' },
+  { value: 'medium', label: 'Moyen', preview: '12px' },
+  { value: 'full', label: 'Arrondi', preview: '999px' }
+]
+
 const availableVariables = [
   { name: '{nomConseillere}', display: 'Nom conseillère' },
   { name: '{nomMarque}', display: 'Nom marque' }
@@ -1268,6 +1296,11 @@ const selectPosition = (position: string) => {
 
 const selectFloatingPosition = (position: string) => {
   localConfig.value.widget.floatingPosition = position
+  markAsChanged()
+}
+
+const selectBorderRadius = (radius: string) => {
+  localConfig.value.widget.borderRadius = radius
   markAsChanged()
 }
 
