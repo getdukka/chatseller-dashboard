@@ -1127,7 +1127,6 @@ function adjustColor(hex: string, amount: number): string {
 const integrationCode = computed(() => {
   const shopId = authStore.user?.id || 'YOUR_SHOP_ID'
   const agent = localConfig.value.agent
-  const widget = localConfig.value.widget
   const config = useRuntimeConfig()
   const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
@@ -1136,28 +1135,12 @@ const integrationCode = computed(() => {
 (function() {
   'use strict';
 
-  // Configuration du widget ChatSeller
+  // ✅ Configuration MINIMALE - Le reste est chargé automatiquement depuis l'API
+  // Cela garantit que la configuration du Dashboard est toujours appliquée
   window.ChatSellerConfig = {
     shopId: '${shopId}',
-    agentId: '${agent.id}',
     apiUrl: '${apiUrl}',
-    buttonText: '${widget.buttonText || 'Parler à une conseillère'}',
-    primaryColor: '${widget.primaryColor}',
-    position: '${widget.position}',
-    floatingPosition: '${widget.floatingPosition}',
-    theme: 'modern',
-    language: 'fr',
-    borderRadius: '${widget.borderRadius || 'full'}',
-    autoDetectProduct: true,
-    debug: true, // Mode debug activé pour voir les logs console
-    agentConfig: {
-      id: '${agent.id}',
-      name: '${agent.name}',
-      title: '${agent.title || 'Conseillère beauté'}',
-      welcomeMessage: '${(agent.welcomeMessage || getWelcomePlaceholder()).replace(/'/g, "\\'")}',
-      fallbackMessage: '${(agent.fallbackMessage || 'Je transmets votre question à notre équipe, un conseiller vous recontactera bientôt.').replace(/'/g, "\\'")}',
-      personality: '${agent.personality}'
-    }
+    debug: true
   };
 
   // Protection anti-double chargement
