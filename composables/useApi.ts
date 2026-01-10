@@ -28,15 +28,10 @@ export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
 
 export const useApi = () => {
   const config = useRuntimeConfig()
-  
-  const getBaseURL = () => {
-    if (process.dev || process.env.NODE_ENV === 'development') {
-      return 'http://localhost:3001'
-    }
-    return config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
-  }
-  
-  const baseURL = getBaseURL()
+
+  // ✅ TOUJOURS utiliser la config runtime (définie dans .env ou Vercel)
+  // Ne pas hardcoder localhost - laisser .env.local gérer ça
+  const baseURL = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
   // ✅ FONCTION CORRIGÉE : RÉCUPÉRATION TOKEN AVEC FALLBACK SUPABASE
   const getAuthToken = async (): Promise<string | null> => {
