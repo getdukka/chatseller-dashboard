@@ -23,14 +23,31 @@
           >
         </div>
         
-        <div class="mb-6">
+        <div class="mb-4">
           <label class="block text-sm font-medium mb-2">Token d'accès</label>
-          <input 
-            v-model="form.access_token" 
-            type="password" 
+          <input
+            v-model="form.access_token"
+            type="password"
             class="w-full border rounded-lg px-3 py-2"
-            placeholder="Votre token API"
+            placeholder="Votre token API (optionnel pour Shopify)"
           >
+          <p class="text-xs text-gray-500 mt-1">
+            Pour Shopify, laissez vide si l'endpoint public est accessible
+          </p>
+        </div>
+
+        <div class="mb-6">
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="checkbox"
+              v-model="form.auto_enrich"
+              class="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+            >
+            <span class="text-sm font-medium">Enrichir automatiquement avec l'IA</span>
+          </label>
+          <p class="text-xs text-gray-500 mt-1 ml-6">
+            L'IA détectera le domaine (capillaire, visage, etc.) et extraira automatiquement les informations pertinentes
+          </p>
         </div>
         
         <div class="flex justify-end space-x-3">
@@ -61,7 +78,8 @@ const emit = defineEmits(['close', 'sync'])
 const form = ref({
   platform: 'shopify',
   shop_url: '',
-  access_token: ''
+  access_token: '',
+  auto_enrich: false
 })
 
 const handleSubmit = () => {
