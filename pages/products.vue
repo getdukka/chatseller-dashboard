@@ -654,11 +654,23 @@ const handleSync = async (platform, credentials) => {
     
     // Appel API réel
     const response = await api.products.sync(platform, credentials)
-    
+
     if (response.success) {
       showNotification.value = true
-      notificationMessage.value = `${response.data.imported} produits synchronisés avec succès !`
-      notificationType.value = 'success'
+      // Utiliser le nouveau format summary de l'API
+      const summary = response.data?.summary || {}
+      const inserted = summary.inserted || 0
+      const updated = summary.updated || 0
+      const total = inserted + updated
+
+      if (total > 0) {
+        notificationMessage.value = `${inserted} nouveau(x) produit(s) importé(s), ${updated} mis à jour !`
+      } else if (response.data?.message) {
+        notificationMessage.value = response.data.message
+      } else {
+        notificationMessage.value = 'Synchronisation terminée'
+      }
+      notificationType.value = total > 0 ? 'success' : 'warning'
       await refreshCatalog()
     }
     
