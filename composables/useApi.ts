@@ -494,7 +494,10 @@ export const useApi = () => {
     sync: async (platform: string, credentials: any): Promise<ApiResponse<any>> => {
       return apiCall('/api/v1/products/sync', {
         method: 'POST',
-        body: { platform, credentials }
+        body: {
+          platform,
+          ...credentials // ✅ Spread credentials pour format plat: shop_url, access_token, auto_enrich
+        }
       })
     },
 
