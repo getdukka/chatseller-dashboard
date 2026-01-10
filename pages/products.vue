@@ -15,22 +15,12 @@
           <div class="flex items-center space-x-4">
             <button
               @click="showSyncModal = true"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all shadow-md"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
               Synchroniser boutique
-            </button>
-            
-            <button
-              @click="openEnrichmentModal"
-              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-              </svg>
-              Enrichir un produit
             </button>
           </div>
         </div>
@@ -39,75 +29,75 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- Stats Cards Spécialisées Beauté -->
+      <!-- Stats Cards Simplifiées -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Produits Synchronisés -->
+        <!-- Total Produits -->
         <div class="card-beauty-gradient from-blue-500 to-blue-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-blue-100 text-sm font-medium">Produits synchronisés</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ stats.synchronized }}</p>
+              <p class="text-blue-100 text-sm font-medium">Produits au catalogue</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.total || 0 }}</p>
               <p class="text-blue-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.lastSync }}</span> dernière sync
+                <span class="text-white font-medium">{{ stats.lastSync || 'Jamais' }}</span> dernière sync
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <!-- Produits Enrichis -->
+        <!-- Produits avec Images -->
         <div class="card-beauty-gradient from-purple-500 to-purple-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-purple-100 text-sm font-medium">Fiches enrichies</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ stats.enriched }}</p>
+              <p class="text-purple-100 text-sm font-medium">Produits avec images</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.withImages || 0 }}</p>
               <p class="text-purple-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ Math.round((stats.enriched / stats.total) * 100) }}%</span> complétées
+                <span class="text-white font-medium">{{ stats.imagesPercentage || 0 }}%</span> du catalogue
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <!-- Recommandations IA -->
+        <!-- Conversations -->
         <div class="card-beauty-gradient from-green-500 to-green-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-green-100 text-sm font-medium">Recommandations IA</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ stats.aiRecommendations }}</p>
+              <p class="text-green-100 text-sm font-medium">Conversations</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.conversations || 0 }}</p>
               <p class="text-green-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.conversionRate }}%</span> conversion
+                <span class="text-white font-medium">{{ stats.conversationsToday || 0 }}</span> aujourd'hui
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <!-- Top Catégorie -->
+        <!-- Taux de Clic Produits -->
         <div class="card-beauty-gradient from-rose-500 to-pink-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-rose-100 text-sm font-medium">{{ getTopCategoryLabel() }}</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ stats.topCategoryValue }}</p>
+              <p class="text-rose-100 text-sm font-medium">Taux de clic produits</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.clickRate || 0 }}%</p>
               <p class="text-rose-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.topCategoryPercentage }}%</span> du catalogue
+                <span class="text-white font-medium">{{ stats.totalClicks || 0 }}</span> clics total
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {{ getCategoryIcon() }}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
               </svg>
             </div>
           </div>
