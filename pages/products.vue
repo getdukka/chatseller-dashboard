@@ -547,9 +547,27 @@ const getCategoryIcon = () => {
 
 // UTILITY METHODS
 const formatPrice = (price) => {
-  return new Intl.NumberFormat('fr-FR', {
+  // ✅ Utiliser la devise configurée par le shop, ou XOF par défaut (Afrique francophone)
+  const shopCurrency = authStore.user?.shop?.default_currency || 'XOF'
+
+  // Configuration locale selon la devise
+  const localeMap = {
+    'XOF': 'fr-SN', // Sénégal (FCFA)
+    'EUR': 'fr-FR',
+    'USD': 'en-US',
+    'GBP': 'en-GB',
+    'MAD': 'fr-MA', // Maroc
+    'TND': 'fr-TN', // Tunisie
+    'DZD': 'fr-DZ'  // Algérie
+  }
+
+  const locale = localeMap[shopCurrency] || 'fr-FR'
+
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'EUR'
+    currency: shopCurrency,
+    minimumFractionDigits: 0, // Pas de décimales pour FCFA
+    maximumFractionDigits: shopCurrency === 'XOF' ? 0 : 2
   }).format(price)
 }
 
