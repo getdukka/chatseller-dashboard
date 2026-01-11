@@ -194,7 +194,7 @@ export const useAgents = () => {
     try {
       console.log('📡 [Agents] Récupération agents depuis API...')
 
-      const apiUrl = config.public.apiBaseUrl || 'http://localhost:3001'
+      const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
       // ✅ CORRECTION : Utiliser l'endpoint agents directement
       const response = await $fetch('/api/v1/agents', {

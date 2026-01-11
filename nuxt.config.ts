@@ -35,11 +35,8 @@ export default defineNuxtConfig({
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY,
       
-      // ✅ URLS DYNAMIQUES SELON L'ENVIRONNEMENT
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 
-        (process.env.NODE_ENV === 'production' 
-          ? 'https://chatseller-api-production.up.railway.app'
-          : 'http://localhost:3001'),
+      // ✅ URL API - Toujours utiliser la variable d'env, fallback production
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'https://chatseller-api-production.up.railway.app',
           
       widgetUrl: process.env.NUXT_PUBLIC_WIDGET_URL || 
         (process.env.NODE_ENV === 'production'

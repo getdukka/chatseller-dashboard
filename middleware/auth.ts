@@ -116,7 +116,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       }
 
       const config = useRuntimeConfig()
-      const apiUrl = config.public.apiUrl || 'http://localhost:3001'
+      // ✅ Utiliser apiBaseUrl (pas apiUrl) et fallback production
+      const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
       const response = await fetch(`${apiUrl}/api/v1/shops/${user.id}`, {
         headers: {
