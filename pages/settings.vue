@@ -347,6 +347,28 @@
                   <p class="text-xs text-gray-500 mt-1">URL de votre boutique en ligne</p>
                 </div>
 
+                <!-- Devise par défaut -->
+                <div>
+                  <label for="defaultCurrency" class="block text-sm font-medium text-gray-700 mb-2">
+                    Devise d'affichage
+                  </label>
+                  <select
+                    id="defaultCurrency"
+                    v-model="brandForm.defaultCurrency"
+                    :disabled="!editingBrand"
+                    class="input-beauty w-full disabled:bg-gray-50 disabled:text-gray-500"
+                  >
+                    <option value="XOF">Franc CFA (XOF) - Afrique de l'Ouest</option>
+                    <option value="EUR">Euro (EUR)</option>
+                    <option value="USD">Dollar US (USD)</option>
+                    <option value="GBP">Livre Sterling (GBP)</option>
+                    <option value="MAD">Dirham Marocain (MAD)</option>
+                    <option value="TND">Dinar Tunisien (TND)</option>
+                    <option value="DZD">Dinar Algérien (DZD)</option>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1">Devise utilisée pour afficher les prix dans le Dashboard et le Widget</p>
+                </div>
+
                 <!-- Gamme de prix -->
                 <div>
                   <label for="priceRange" class="block text-sm font-medium text-gray-700 mb-2">
@@ -851,6 +873,7 @@ const brandForm = reactive({
   beautyCategory: '',
   platform: '',
   website: '',
+  defaultCurrency: 'XOF',
   priceRange: '',
   targetAge: ''
 })
@@ -985,9 +1008,23 @@ const showNotification = (message: string) => {
 }
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('fr-FR', {
+  const shopCurrency = authStore.user?.shop?.default_currency || brandForm.defaultCurrency || 'XOF'
+
+  const localeMap: Record<string, string> = {
+    'XOF': 'fr-SN',
+    'EUR': 'fr-FR',
+    'USD': 'en-US',
+    'GBP': 'en-GB',
+    'MAD': 'fr-MA',
+    'TND': 'fr-TN',
+    'DZD': 'fr-DZ'
+  }
+
+  return new Intl.NumberFormat(localeMap[shopCurrency] || 'fr-FR', {
     style: 'currency',
-    currency: 'EUR'
+    currency: shopCurrency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: shopCurrency === 'XOF' ? 0 : 2
   }).format(amount)
 }
 
@@ -1008,6 +1045,7 @@ const loadBeautyData = async () => {
       brandForm.beautyCategory = response.data.beauty_category || 'multi'
       brandForm.platform = response.data.platform || ''
       brandForm.website = response.data.website || ''
+      brandForm.defaultCurrency = response.data.default_currency || 'XOF'
       brandForm.priceRange = response.data.price_range || ''
       brandForm.targetAge = response.data.target_age || ''
       
@@ -1102,6 +1140,7 @@ const updateBrand = async () => {
       beauty_category: brandForm.beautyCategory,
       platform: brandForm.platform,
       website: brandForm.website || null,
+      default_currency: brandForm.defaultCurrency,
       price_range: brandForm.priceRange,
       target_age: brandForm.targetAge
     })
@@ -1126,6 +1165,7 @@ const cancelBrandEdit = () => {
   brandForm.beautyCategory = shopData.value?.beauty_category || 'multi'
   brandForm.platform = shopData.value?.platform || ''
   brandForm.website = shopData.value?.website || ''
+  brandForm.defaultCurrency = shopData.value?.default_currency || 'XOF'
   brandForm.priceRange = shopData.value?.price_range || ''
   brandForm.targetAge = shopData.value?.target_age || ''
 }
