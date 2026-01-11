@@ -554,11 +554,17 @@
                       </svg>
                       Indexation automatique de votre site web
                     </div>
+                    <div v-if="form.platform !== 'custom'" class="flex items-center">
+                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      Import automatique de vos produits {{ getPlatformLabel(form.platform) }}
+                    </div>
                     <div class="flex items-center">
                       <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
-                      Base de connaissances beauté pré-remplie
+                      Base de connaissances pré-remplie
                     </div>
                   </div>
                 </div>
@@ -1229,7 +1235,7 @@ const completeOnboarding = async () => {
     if (form.website) {
       try {
         console.log('🔍 [Onboarding] Lancement indexation site web...')
-        
+
         api.knowledgeBase.processWebsite({
           url: form.website,
           title: `Site ${form.company}`,
@@ -1238,12 +1244,40 @@ const completeOnboarding = async () => {
         }).catch(indexError => {
           console.warn('⚠️ [Onboarding] Indexation en arrière-plan échouée (non bloquante):', indexError)
         })
-        
+
       } catch (indexError) {
         console.warn('⚠️ [Onboarding] Erreur lancement indexation (non bloquante):', indexError)
       }
     }
-    
+
+    // ÉTAPE 3.5: IMPORT AUTOMATIQUE DES PRODUITS (ASYNCHRONE - Shopify/WooCommerce)
+    if (form.website && form.platform && form.platform !== 'custom') {
+      try {
+        console.log('📦 [Onboarding] Lancement import automatique des produits...')
+
+        // Construire l'URL de la boutique à partir du website
+        const shopUrl = form.website.startsWith('http') ? form.website : `https://${form.website}`
+
+        // Lancer l'import en arrière-plan (non bloquant)
+        api.products.sync(form.platform, {
+          shop_url: shopUrl,
+          auto_enrich: true // Enrichir automatiquement avec l'IA
+        }).then(syncResponse => {
+          if (syncResponse.success) {
+            const summary = syncResponse.data?.summary || {}
+            console.log(`✅ [Onboarding] Import produits terminé: ${summary.inserted || 0} nouveaux, ${summary.updated || 0} mis à jour`)
+          } else {
+            console.warn('⚠️ [Onboarding] Import produits échoué:', syncResponse.error)
+          }
+        }).catch(syncError => {
+          console.warn('⚠️ [Onboarding] Import produits en arrière-plan échoué (non bloquante):', syncError)
+        })
+
+      } catch (syncError) {
+        console.warn('⚠️ [Onboarding] Erreur lancement import produits (non bloquante):', syncError)
+      }
+    }
+
     // ÉTAPE 4: SYNCHRONISER LE STORE
     if (authStore.user) {
       await authStore.restoreSession(true)
