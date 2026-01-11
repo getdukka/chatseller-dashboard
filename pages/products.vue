@@ -1,18 +1,31 @@
 <!-- pages/products.vue -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
-    <!-- Header Beauté -->
+    <!-- Header -->
     <div class="bg-white shadow-sm border-b border-gray-200">
       <div class="px-8 py-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900">Catalogue Intelligent</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Catalogue produits</h1>
             <p class="mt-2 text-gray-600">
-              Gérez vos produits beauté et optimisez les recommandations de votre {{ getAgentTypeName() }}
+              Synchronisé avec votre boutique {{ platformName }}
             </p>
           </div>
-          
-          <div class="flex items-center space-x-4">
+
+          <div class="flex items-center space-x-3">
+            <!-- Export Button -->
+            <button
+              @click="handleExport"
+              :disabled="!hasProducts"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white text-sm font-medium rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              </svg>
+              Exporter
+            </button>
+
+            <!-- Sync Button -->
             <button
               @click="showSyncModal = true"
               class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all shadow-md"
@@ -20,7 +33,7 @@
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              Synchroniser boutique
+              Synchroniser
             </button>
           </div>
         </div>
@@ -29,16 +42,16 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- Stats Cards Simplifiées -->
+      <!-- Stats Cards - 4 métriques utiles -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total Produits -->
         <div class="card-beauty-gradient from-blue-500 to-blue-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-blue-100 text-sm font-medium">Produits au catalogue</p>
+              <p class="text-blue-100 text-sm font-medium">Produits importés</p>
               <p class="text-2xl md:text-3xl font-bold">{{ stats.total || 0 }}</p>
               <p class="text-blue-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.lastSync || 'Jamais' }}</span> dernière sync
+                depuis {{ platformName }}
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
@@ -49,55 +62,55 @@
           </div>
         </div>
 
-        <!-- Produits avec Images -->
+        <!-- Produits Enrichis -->
         <div class="card-beauty-gradient from-purple-500 to-purple-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-purple-100 text-sm font-medium">Produits avec images</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ stats.withImages || 0 }}</p>
+              <p class="text-purple-100 text-sm font-medium">Fiches enrichies</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.enriched || 0 }}<span class="text-lg">/{{ stats.total || 0 }}</span></p>
               <p class="text-purple-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.imagesPercentage || 0 }}%</span> du catalogue
+                <span class="text-white font-medium">{{ stats.enrichedPercentage || 0 }}%</span> du catalogue
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <!-- Conversations -->
+        <!-- Produits Recommandés par l'IA -->
         <div class="card-beauty-gradient from-green-500 to-green-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-green-100 text-sm font-medium">Conversations</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ stats.conversations || 0 }}</p>
+              <p class="text-green-100 text-sm font-medium">Recommandés par l'IA</p>
+              <p class="text-2xl md:text-3xl font-bold">{{ stats.aiRecommended || 0 }}</p>
               <p class="text-green-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.conversationsToday || 0 }}</span> aujourd'hui
+                ce mois-ci
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <!-- Taux de Clic Produits -->
+        <!-- Dernière Synchronisation -->
         <div class="card-beauty-gradient from-rose-500 to-pink-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-rose-100 text-sm font-medium">Taux de clic produits</p>
-              <p class="text-2xl md:text-3xl font-bold">{{ stats.clickRate || 0 }}%</p>
+              <p class="text-rose-100 text-sm font-medium">Dernière sync</p>
+              <p class="text-xl md:text-2xl font-bold">{{ stats.lastSync || 'Jamais' }}</p>
               <p class="text-rose-100 text-sm mt-1">
-                <span class="text-white font-medium">{{ stats.totalClicks || 0 }}</span> clics total
+                {{ stats.lastSyncProducts || 0 }} produits
               </p>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
             </div>
           </div>
@@ -124,11 +137,11 @@
         </div>
       </div>
 
-      <!-- Filters and Search Beauté -->
+      <!-- Filters and Search -->
       <div class="card-modern mb-6">
         <div class="p-6">
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-            <!-- Search Intelligent -->
+            <!-- Search -->
             <div class="flex-1 max-w-lg">
               <div class="relative">
                 <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,64 +151,45 @@
                   v-model="filters.search"
                   @input="debouncedSearch"
                   type="text"
-                  :placeholder="getSearchPlaceholder()"
+                  placeholder="Rechercher un produit..."
                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
                 >
               </div>
             </div>
-            
-            <!-- Filters Spécialisés Beauté -->
+
+            <!-- Filters simplifiés -->
             <div class="flex flex-wrap items-center space-x-4">
-              <select 
-                v-model="filters.beautyCategory" 
+              <!-- Filtre par statut d'enrichissement -->
+              <select
+                v-model="filters.enrichmentStatus"
                 @change="applyFilters"
                 class="input-beauty"
               >
-                <option value="">{{ getBeautyCategoryFilterLabel() }}</option>
-                <option v-for="category in beautyCategories" :key="category.value" :value="category.value">
-                  {{ category.label }}
-                </option>
+                <option value="">Tous les produits</option>
+                <option value="enriched">Enrichis</option>
+                <option value="needs_enrichment">Non enrichis</option>
               </select>
-              
-              <select 
-                v-model="filters.enrichmentStatus" 
+
+              <!-- Filtre par recommandation IA -->
+              <select
+                v-model="filters.aiRecommend"
                 @change="applyFilters"
                 class="input-beauty"
               >
-                <option value="">Tous les statuts</option>
-                <option value="enriched">Fiches enrichies</option>
-                <option value="basic">Fiches basiques</option>
-                <option value="needs_enrichment">À enrichir</option>
+                <option value="">Recommandation IA</option>
+                <option value="enabled">Activée</option>
+                <option value="disabled">Désactivée</option>
               </select>
-              
-              <select 
-                v-model="filters.aiPerformance" 
-                @change="applyFilters"
-                class="input-beauty"
-              >
-                <option value="">Performance IA</option>
-                <option value="high_conversion">Forte conversion</option>
-                <option value="frequently_recommended">Souvent recommandé</option>
-                <option value="needs_optimization">À optimiser</option>
-              </select>
-              
-              <button
-                @click="handleIntelligentExport"
-                :disabled="!hasProducts"
-                class="text-rose-600 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
-              >
-                Export intelligent
-              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Products Grid Enrichi -->
+      <!-- Products Grid -->
       <div class="card-modern">
         <div class="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">
-            Catalogue intelligent beauté
+            Vos produits
           </h2>
           <div class="flex items-center space-x-4">
             <span class="text-sm text-gray-500">
@@ -215,139 +209,80 @@
         <div v-if="loading" class="p-12">
           <div class="flex items-center justify-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
-            <span class="ml-3 text-gray-600">Chargement du catalogue intelligent...</span>
+            <span class="ml-3 text-gray-600">Chargement du catalogue...</span>
           </div>
         </div>
 
-        <!-- Products Grid avec données enrichies -->
+        <!-- Products Grid simplifié -->
         <div v-else-if="hasProducts" class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <div
               v-for="product in filteredProducts"
               :key="product.id"
-              class="product-card-beauty"
+              class="product-card bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
             >
-              <!-- Product Image avec overlay enrichissement -->
-              <div class="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+              <!-- Product Image -->
+              <div class="relative aspect-square bg-gray-100">
                 <img
-                  v-if="product.featured_image"
-                  :src="product.featured_image"
+                  v-if="product.featured_image || product.image_url"
+                  :src="product.featured_image || product.image_url"
                   :alt="product.name"
-                  class="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                  class="w-full h-full object-cover"
                 >
                 <div v-else class="w-full h-full flex items-center justify-center">
-                  <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                   </svg>
                 </div>
-                
-                <!-- Enrichment Status Badge -->
-                <div class="absolute top-2 right-2">
-                  <span :class="getEnrichmentBadgeClass(product)" class="enrichment-badge">
-                    {{ getEnrichmentStatus(product) }}
-                  </span>
-                </div>
 
-                <!-- AI Performance Indicator -->
-                <div v-if="product.ai_stats?.recommendations > 0" class="absolute bottom-2 left-2">
-                  <div class="bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                    {{ product.ai_stats.recommendations }}
-                  </div>
+                <!-- Statut enrichissement -->
+                <div class="absolute top-2 right-2">
+                  <span
+                    :class="product.is_enriched ? 'bg-green-500' : 'bg-orange-500'"
+                    class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"
+                  >
+                    {{ product.is_enriched ? '✓' : '!' }}
+                  </span>
                 </div>
               </div>
 
-              <!-- Product Info Enrichie -->
-              <div class="flex-1">
-                <div class="flex items-start justify-between mb-2">
-                  <h3 class="text-sm font-medium text-gray-900 line-clamp-2">
-                    {{ product.name }}
-                  </h3>
-                  <span :class="getBeautyCategoryBadgeClass(product.beauty_category)" class="beauty-category-badge ml-2">
-                    {{ getBeautyCategoryLabel(product.beauty_category) }}
+              <!-- Product Info -->
+              <div class="p-4">
+                <h3 class="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
+                  {{ product.name }}
+                </h3>
+
+                <!-- Ingrédients clés si enrichi -->
+                <div v-if="product.beauty_data?.key_ingredients?.length" class="mb-3">
+                  <p class="text-xs text-gray-500">Ingrédients clés:</p>
+                  <p class="text-xs text-gray-700 line-clamp-1">
+                    {{ product.beauty_data.key_ingredients.join(', ') }}
+                  </p>
+                </div>
+
+                <!-- Prix -->
+                <div class="mb-4">
+                  <span class="text-lg font-bold text-gray-900">
+                    {{ formatPrice(product.price) }}
                   </span>
                 </div>
-                
-                <!-- Données Beauté Enrichies -->
-                <div v-if="product.beauty_data" class="mb-3">
-                  <div v-if="product.beauty_data.skin_types" class="mb-1">
-                    <span class="text-xs text-gray-500">Types de peau:</span>
-                    <div class="flex flex-wrap gap-1 mt-1">
-                      <span 
-                        v-for="skinType in product.beauty_data.skin_types.slice(0, 2)" 
-                        :key="skinType"
-                        class="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded"
-                      >
-                        {{ skinType }}
-                      </span>
-                      <span v-if="product.beauty_data.skin_types.length > 2" class="text-xs text-gray-400">
-                        +{{ product.beauty_data.skin_types.length - 2 }}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div v-if="product.beauty_data.key_ingredients" class="mb-1">
-                    <span class="text-xs text-gray-500">Ingrédients clés:</span>
-                    <p class="text-xs text-gray-700 line-clamp-1">
-                      {{ product.beauty_data.key_ingredients.slice(0, 2).join(', ') }}
-                      <span v-if="product.beauty_data.key_ingredients.length > 2">...</span>
-                    </p>
-                  </div>
-                </div>
-                
-                <div class="flex items-center justify-between mb-3">
-                  <div class="flex flex-col">
-                    <span class="text-lg font-bold text-gray-900">
-                      {{ formatPrice(product.price) }}
-                    </span>
-                    <span v-if="product.compare_at_price && product.compare_at_price > product.price" class="text-xs text-gray-400 line-through">
-                      {{ formatPrice(product.compare_at_price) }}
-                    </span>
-                  </div>
-                  <div class="text-right">
-                    <span v-if="product.ai_stats?.conversion_rate" class="text-xs text-green-600 font-medium">
-                      {{ product.ai_stats.conversion_rate }}% conv.
-                    </span>
-                  </div>
-                </div>
 
-                <!-- Performance IA -->
-                <div v-if="product.ai_stats" class="mb-3">
-                  <div class="flex items-center justify-between text-xs text-gray-500">
-                    <span>Recommandations: {{ product.ai_stats.recommendations || 0 }}</span>
-                    <span>Conversions: {{ product.ai_stats.conversions || 0 }}</span>
-                  </div>
-                </div>
-
-                <!-- Actions Enrichies -->
+                <!-- Actions -->
                 <div class="flex flex-col space-y-2">
-                  <div class="flex items-center space-x-2">
-                    <button
-                      @click="enrichProduct(product)"
-                      class="flex-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 px-3 py-2 rounded-lg transition-colors"
-                    >
-                      {{ product.is_enriched ? 'Modifier enrichissement' : 'Enrichir fiche' }}
-                    </button>
-                    <button
-                      @click="viewAIInsights(product)"
-                      class="text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 px-3 py-2 rounded-lg transition-colors"
-                      title="Analytics IA"
-                    >
-                      📊
-                    </button>
-                  </div>
-                  
-                  <div class="flex items-center space-x-2">
-                    <button
-                      @click="toggleAIRecommendation(product)"
-                      :class="product.ai_recommend ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-700'"
-                      class="flex-1 text-xs hover:bg-opacity-80 px-3 py-2 rounded-lg transition-colors"
-                    >
-                      {{ product.ai_recommend ? '✅ Recommandé par IA' : 'Activer recommandation IA' }}
-                    </button>
-                  </div>
+                  <button
+                    @click="enrichProduct(product)"
+                    class="w-full text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 px-3 py-2 rounded-lg transition-colors"
+                  >
+                    {{ product.is_enriched ? 'Modifier enrichissement' : 'Enrichir fiche' }}
+                  </button>
+
+                  <button
+                    @click="toggleAIRecommendation(product)"
+                    :class="product.ai_recommend ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'"
+                    class="w-full text-xs px-3 py-2 rounded-lg transition-colors"
+                  >
+                    {{ product.ai_recommend ? '✓ Recommandé par IA' : 'Activer recommandation' }}
+                  </button>
                 </div>
               </div>
             </div>
@@ -367,7 +302,7 @@
           <p class="text-gray-500 mb-6">
             {{ hasFilters
               ? 'Aucun produit ne correspond à vos critères'
-              : 'Synchronisez votre boutique pour créer votre catalogue intelligent'
+              : 'Synchronisez votre boutique pour importer vos produits'
             }}
           </p>
           <div class="space-x-4">
@@ -440,21 +375,18 @@ const platformName = ref('Shopify') // Ou WooCommerce selon la boutique
 const products = ref([])
 const stats = ref({
   total: 0,
-  synchronized: 0,
   enriched: 0,
-  aiRecommendations: 0,
-  conversionRate: 0,
+  enrichedPercentage: 0,
+  aiRecommended: 0,
   lastSync: 'Jamais',
-  topCategoryValue: 'Skincare',
-  topCategoryPercentage: 45
+  lastSyncProducts: 0
 })
 
-// Filters
+// Filters simplifiés
 const filters = ref({
   search: '',
-  beautyCategory: '',
   enrichmentStatus: '',
-  aiPerformance: ''
+  aiRecommend: ''
 })
 
 // COMPUTED
@@ -464,23 +396,29 @@ const hasFilters = computed(() => Object.values(filters.value).some(f => f !== '
 const filteredProducts = computed(() => {
   let filtered = products.value
 
+  // Filtre par recherche
   if (filters.value.search) {
     const query = filters.value.search.toLowerCase()
-    filtered = filtered.filter(p => 
+    filtered = filtered.filter(p =>
       p.name.toLowerCase().includes(query) ||
-      p.beauty_data?.key_ingredients?.some(i => i.toLowerCase().includes(query))
+      p.description?.toLowerCase().includes(query)
     )
   }
 
-  if (filters.value.beautyCategory) {
-    filtered = filtered.filter(p => p.beauty_category === filters.value.beautyCategory)
-  }
-
+  // Filtre par statut d'enrichissement
   if (filters.value.enrichmentStatus) {
     filtered = filtered.filter(p => {
       if (filters.value.enrichmentStatus === 'enriched') return p.is_enriched
-      if (filters.value.enrichmentStatus === 'basic') return !p.is_enriched && !p.needs_enrichment
-      if (filters.value.enrichmentStatus === 'needs_enrichment') return p.needs_enrichment
+      if (filters.value.enrichmentStatus === 'needs_enrichment') return !p.is_enriched
+      return true
+    })
+  }
+
+  // Filtre par recommandation IA
+  if (filters.value.aiRecommend) {
+    filtered = filtered.filter(p => {
+      if (filters.value.aiRecommend === 'enabled') return p.ai_recommend === true
+      if (filters.value.aiRecommend === 'disabled') return p.ai_recommend === false
       return true
     })
   }
@@ -488,62 +426,7 @@ const filteredProducts = computed(() => {
   return filtered
 })
 
-const beautyCategories = computed(() => {
-  const categories = {
-    'skincare': { label: '✨ Soins visage', value: 'skincare' },
-    'makeup': { label: '💄 Maquillage', value: 'makeup' },
-    'fragrance': { label: '🌸 Parfums', value: 'fragrance' },
-    'haircare': { label: '💇‍♀️ Soins cheveux', value: 'haircare' },
-    'bodycare': { label: '🧴 Soins corps', value: 'bodycare' }
-  }
-  
-  return Object.values(categories)
-})
-
-// BEAUTY-SPECIFIC METHODS
-const getAgentTypeName = () => {
-  const user = authStore.user
-  const beautyCategory = user?.shop?.beauty_category || 'multi'
-  
-  const types = {
-    'skincare': 'Esthéticienne IA',
-    'makeup': 'Experte Makeup IA',
-    'fragrance': 'Conseillère Parfums IA',
-    'haircare': 'Experte Capillaire IA',
-    'bodycare': 'Experte Soins Corps IA',
-    'multi': 'Conseillère Beauté IA'
-  }
-  
-  return types[beautyCategory] || types.multi
-}
-
-const getSearchPlaceholder = () => {
-  const user = authStore.user
-  const beautyCategory = user?.shop?.beauty_category || 'multi'
-  
-  const placeholders = {
-    'skincare': 'Rechercher par nom, type de peau, ingrédient...',
-    'makeup': 'Rechercher par nom, couleur, occasion...',
-    'fragrance': 'Rechercher par nom, famille olfactive...',
-    'haircare': 'Rechercher par nom, type de cheveux...',
-    'bodycare': 'Rechercher par nom, zone corporelle...',
-    'multi': 'Rechercher un produit beauté...'
-  }
-  
-  return placeholders[beautyCategory] || placeholders.multi
-}
-
-const getBeautyCategoryFilterLabel = () => {
-  return 'Toutes les catégories beauté'
-}
-
-const getTopCategoryLabel = () => {
-  return 'Catégorie dominante'
-}
-
-const getCategoryIcon = () => {
-  return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>'
-}
+// HELPER METHODS - Simplifiés
 
 // UTILITY METHODS
 const formatPrice = (price) => {
@@ -571,39 +454,6 @@ const formatPrice = (price) => {
   }).format(price)
 }
 
-const getEnrichmentStatus = (product) => {
-  if (product.is_enriched) return '✅'
-  if (product.needs_enrichment) return '⚠️'
-  return '📝'
-}
-
-const getEnrichmentBadgeClass = (product) => {
-  if (product.is_enriched) return 'bg-green-500 text-white'
-  if (product.needs_enrichment) return 'bg-orange-500 text-white'
-  return 'bg-gray-500 text-white'
-}
-
-const getBeautyCategoryLabel = (category) => {
-  const labels = {
-    'skincare': 'Soin',
-    'makeup': 'Makeup',
-    'fragrance': 'Parfum',
-    'haircare': 'Cheveux',
-    'bodycare': 'Corps'
-  }
-  return labels[category] || 'Beauté'
-}
-
-const getBeautyCategoryBadgeClass = (category) => {
-  const classes = {
-    'skincare': 'bg-rose-100 text-rose-700',
-    'makeup': 'bg-purple-100 text-purple-700',
-    'fragrance': 'bg-violet-100 text-violet-700',
-    'haircare': 'bg-amber-100 text-amber-700',
-    'bodycare': 'bg-teal-100 text-teal-700'
-  }
-  return classes[category] || 'bg-gray-100 text-gray-700'
-}
 
 // ACTION METHODS
 const refreshCatalog = async () => {
@@ -625,32 +475,82 @@ const refreshCatalog = async () => {
 const calculateStats = async () => {
   const total = products.value.length
   const enriched = products.value.filter(p => p.is_enriched).length
-  const aiRecommendations = products.value.reduce((sum, p) => sum + (p.ai_stats?.recommendations || 0), 0)
-  const conversions = products.value.reduce((sum, p) => sum + (p.ai_stats?.conversions || 0), 0)
-  
+  const aiRecommended = products.value.filter(p => p.ai_recommend).length
+
+  // Calculer le temps depuis la dernière sync
+  const lastSyncDate = products.value.length > 0
+    ? products.value.reduce((latest, p) => {
+        const pDate = new Date(p.last_synced_at || p.updated_at || 0)
+        return pDate > latest ? pDate : latest
+      }, new Date(0))
+    : null
+
+  const formatLastSync = (date: Date | null) => {
+    if (!date || date.getTime() === 0) return 'Jamais'
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMins / 60)
+    const diffDays = Math.floor(diffHours / 24)
+
+    if (diffMins < 1) return "À l'instant"
+    if (diffMins < 60) return `Il y a ${diffMins}min`
+    if (diffHours < 24) return `Il y a ${diffHours}h`
+    return `Il y a ${diffDays}j`
+  }
+
   stats.value = {
     total,
-    synchronized: total,
     enriched,
-    aiRecommendations,
-    conversionRate: aiRecommendations > 0 ? Math.round((conversions / aiRecommendations) * 100) : 0,
-    lastSync: 'Il y a 2h',
-    topCategoryValue: 'Skincare',
-    topCategoryPercentage: 45
+    enrichedPercentage: total > 0 ? Math.round((enriched / total) * 100) : 0,
+    aiRecommended,
+    lastSync: formatLastSync(lastSyncDate),
+    lastSyncProducts: total
   }
+}
+
+// Export CSV simple
+const handleExport = () => {
+  const headers = ['Nom', 'Prix', 'Enrichi', 'Recommandé IA', 'URL']
+
+  const csvData = filteredProducts.value.map(p => [
+    p.name,
+    p.price,
+    p.is_enriched ? 'Oui' : 'Non',
+    p.ai_recommend ? 'Oui' : 'Non',
+    p.url || ''
+  ])
+
+  const csvContent = [
+    headers.join(','),
+    ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n')
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `catalogue-${new Date().toISOString().split('T')[0]}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  window.URL.revokeObjectURL(url)
+
+  showNotification.value = true
+  notificationMessage.value = 'Catalogue exporté'
+  notificationType.value = 'success'
 }
 
 const handleSync = async (platform, credentials) => {
   syncing.value = true
   syncProgress.value = 0
-  
+
   try {
-    // Simulation sync avec étapes
+    // Étapes de synchronisation
     const steps = [
       'Connexion à la boutique...',
       'Récupération des produits...',
-      'Analyse des catégories beauté...',
-      'Enrichissement automatique...',
+      'Importation en cours...',
       'Finalisation...'
     ]
     
@@ -750,44 +650,6 @@ const toggleAIRecommendation = async (product) => {
   }
 }
 
-const handleIntelligentExport = () => {
-  // Export avec données enrichies beauté
-  const headers = [
-    'Nom', 'Catégorie Beauté', 'Prix', 'Types de Peau', 'Ingrédients Clés', 
-    'Recommandations IA', 'Taux Conversion', 'Statut Enrichissement'
-  ]
-  
-  const csvData = filteredProducts.value.map(p => [
-    p.name,
-    getBeautyCategoryLabel(p.beauty_category),
-    p.price,
-    p.beauty_data?.skin_types?.join('; ') || '',
-    p.beauty_data?.key_ingredients?.join('; ') || '',
-    p.ai_stats?.recommendations || 0,
-    p.ai_stats?.conversion_rate || 0,
-    getEnrichmentStatus(p)
-  ])
-  
-  const csvContent = [
-    headers.join(','),
-    ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
-  ].join('\n')
-  
-  const blob = new Blob([csvContent], { type: 'text/csv' })
-  const url = window.URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `catalogue-intelligent-${new Date().toISOString().split('T')[0]}.csv`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  window.URL.revokeObjectURL(url)
-  
-  showNotification.value = true
-  notificationMessage.value = 'Catalogue exporté avec succès !'
-  notificationType.value = 'success'
-}
-
 const applyFilters = () => {
   // Les filtres sont appliqués automatiquement via le computed filteredProducts
 }
@@ -795,9 +657,8 @@ const applyFilters = () => {
 const clearFilters = () => {
   filters.value = {
     search: '',
-    beautyCategory: '',
     enrichmentStatus: '',
-    aiPerformance: ''
+    aiRecommend: ''
   }
 }
 
@@ -812,10 +673,7 @@ onMounted(async () => {
 
 // SEO
 useHead({
-  title: 'Catalogue Intelligent - ChatSeller Dashboard',
-  meta: [
-    { name: 'description', content: 'Gérez votre catalogue beauté intelligent avec enrichissement IA et analytics de performance' }
-  ]
+  title: 'Produits - ChatSeller Dashboard'
 })
 </script>
 
@@ -830,18 +688,6 @@ useHead({
 
 .input-beauty {
   @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors text-sm;
-}
-
-.product-card-beauty {
-  @apply bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-rose-200 transition-all duration-200;
-}
-
-.enrichment-badge {
-  @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium;
-}
-
-.beauty-category-badge {
-  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0;
 }
 
 .line-clamp-1 {
