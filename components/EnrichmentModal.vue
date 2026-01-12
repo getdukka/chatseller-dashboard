@@ -7,18 +7,18 @@
           {{ product ? `Compléter les infos produit : "${product.name}"` : 'Compléter les infos produit' }}
         </h3>
 
-        <!-- Bouton d'enrichissement IA automatique -->
+        <!-- Bouton d'enrichissement IA automatique (icône seule) -->
         <button
           type="button"
           @click="autoEnrichWithAI"
           :disabled="aiLoading"
-          class="inline-flex items-center px-3 py-1.5 text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50"
+          :title="aiLoading ? 'Analyse IA en cours...' : 'Enrichir automatiquement avec l\'IA'"
+          class="inline-flex items-center justify-center w-9 h-9 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <svg v-if="!aiLoading" class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="!aiLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
-          <div v-else class="w-4 h-4 mr-1.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          {{ aiLoading ? 'Analyse IA...' : 'Enrichir avec l\'IA' }}
+          <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         </button>
       </div>
 

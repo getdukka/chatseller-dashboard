@@ -66,7 +66,7 @@
         <div class="card-beauty-gradient from-purple-500 to-purple-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-purple-100 text-sm font-medium">Fiches enrichies</p>
+              <p class="text-purple-100 text-sm font-medium">Fiches produits enrichies</p>
               <p class="text-2xl md:text-3xl font-bold">{{ stats.enriched || 0 }}<span class="text-lg">/{{ stats.total || 0 }}</span></p>
               <p class="text-purple-100 text-sm mt-1">
                 <span class="text-white font-medium">{{ stats.enrichedPercentage || 0 }}%</span> du catalogue
