@@ -552,7 +552,7 @@
                   <hr>
                   <div class="flex justify-between font-bold">
                     <span>Total :</span>
-                    <span class="text-green-600">{{ 49 + (agentCount - 1) * 10 }}€/mois</span>
+                    <span class="text-green-600">{{ 45 + (agentCount - 1) * 10 }}€/mois</span>
                   </div>
                 </div>
               </div>

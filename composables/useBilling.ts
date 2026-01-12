@@ -160,8 +160,8 @@ export const useBilling = () => {
   const calculateTotalCost = (plan: SubscriptionPlan, agentCount: number = 1) => {
     // Prix de base des plans
     const basePrices: Record<SubscriptionPlan, number> = {
-      starter: 49,
-      growth: 149,
+      starter: 45,
+      growth: 145,
       performance: 0 // Sur mesure
     }
     
@@ -205,8 +205,8 @@ export const useBilling = () => {
     const planInfos = {
       starter: {
         name: 'Starter',
-        price: 49,
-        priceAnnual: 42, // 504€/an ÷ 12
+        price: 45,
+        priceAnnual: 38, // 456€/an ÷ 12
         currency: 'EUR',
         interval: 'month',
         trialDays: 14,
@@ -229,8 +229,8 @@ export const useBilling = () => {
       },
       growth: {
         name: 'Growth',
-        price: 149,
-        priceAnnual: 127, // 1524€/an ÷ 12
+        price: 145,
+        priceAnnual: 123, // 1476€/an ÷ 12
         currency: 'EUR',
         interval: 'month',
         trialDays: 14,
