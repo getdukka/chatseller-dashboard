@@ -273,7 +273,7 @@
                     @click="enrichProduct(product)"
                     class="w-full text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 px-3 py-2 rounded-lg transition-colors"
                   >
-                    {{ product.is_enriched ? 'Modifier enrichissement' : 'Enrichir fiche' }}
+                    {{ product.is_enriched ? 'Modifier les infos' : 'Compléter les infos' }}
                   </button>
 
                   <button
@@ -610,19 +610,41 @@ const closeEnrichmentModal = () => {
 
 const handleEnrichmentSave = async (enrichmentData) => {
   try {
+    console.log('📝 [Products] Sauvegarde enrichissement pour produit:', selectedProduct.value.id)
+    console.log('📝 [Products] Données enrichissement:', enrichmentData)
+
     const response = await api.products.enrich(selectedProduct.value.id, enrichmentData)
-    
+
+    console.log('📝 [Products] Réponse API enrichissement:', response)
+
     if (response.success) {
+      // ✅ Mettre à jour le produit localement AVANT de rafraîchir
+      const productIndex = products.value.findIndex(p => p.id === selectedProduct.value.id)
+      if (productIndex !== -1) {
+        products.value[productIndex] = {
+          ...products.value[productIndex],
+          beauty_data: enrichmentData,
+          is_enriched: true,
+          needs_enrichment: false,
+          updated_at: new Date().toISOString()
+        }
+        console.log('✅ [Products] Produit mis à jour localement:', products.value[productIndex])
+      }
+
       showNotification.value = true
-      notificationMessage.value = 'Fiche produit enrichie avec succès !'
+      notificationMessage.value = 'Infos produit complétées avec succès !'
       notificationType.value = 'success'
+
+      // Rafraîchir le catalogue complet
       await refreshCatalog()
+    } else {
+      throw new Error(response.error || 'Erreur lors de l\'enrichissement')
     }
-    
-  } catch (error) {
-    console.error('Erreur enrichissement:', error)
+
+  } catch (error: any) {
+    console.error('❌ [Products] Erreur enrichissement:', error)
     showNotification.value = true
-    notificationMessage.value = 'Erreur lors de l\'enrichissement'
+    notificationMessage.value = error.message || 'Erreur lors de la sauvegarde'
     notificationType.value = 'error'
   } finally {
     closeEnrichmentModal()

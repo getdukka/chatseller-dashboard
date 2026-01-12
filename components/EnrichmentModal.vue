@@ -2,9 +2,25 @@
 <template>
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
     <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 my-8">
-      <h3 class="text-lg font-semibold mb-4">
-        {{ product ? `Enrichir "${product.name}"` : 'Enrichir un produit' }}
-      </h3>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">
+          {{ product ? `Compléter les infos produit : "${product.name}"` : 'Compléter les infos produit' }}
+        </h3>
+
+        <!-- Bouton d'enrichissement IA automatique -->
+        <button
+          type="button"
+          @click="autoEnrichWithAI"
+          :disabled="aiLoading"
+          class="inline-flex items-center px-3 py-1.5 text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50"
+        >
+          <svg v-if="!aiLoading" class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <div v-else class="w-4 h-4 mr-1.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          {{ aiLoading ? 'Analyse IA...' : 'Enrichir avec l\'IA' }}
+        </button>
+      </div>
 
       <form @submit.prevent="handleSubmit">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -110,6 +126,10 @@ const props = defineProps(['product'])
 const emit = defineEmits(['close', 'save'])
 
 const authStore = useAuthStore()
+const api = useApi()
+
+// État de chargement IA
+const aiLoading = ref(false)
 
 // Déterminer le domaine de la marque
 const shopCategory = computed(() => authStore.user?.shop?.beauty_category || 'multi')
@@ -179,6 +199,58 @@ const removeIngredient = (ingredient: string) => {
 watch(benefitsInput, (newValue) => {
   form.value.benefits = newValue.split(',').map(b => b.trim()).filter(b => b)
 })
+
+// ✅ ENRICHISSEMENT IA AUTOMATIQUE
+const autoEnrichWithAI = async () => {
+  if (!props.product) return
+
+  aiLoading.value = true
+
+  try {
+    console.log('🤖 [EnrichmentModal] Lancement enrichissement IA pour:', props.product.name)
+
+    const response = await api.products.aiAnalyze({
+      name: props.product.name,
+      description: props.product.description || '',
+      category: props.product.category,
+      tags: props.product.tags || []
+    })
+
+    if (response.success && response.data?.suggestions) {
+      const suggestions = response.data.suggestions
+
+      console.log('✅ [EnrichmentModal] Suggestions IA reçues:', suggestions)
+
+      // Remplir automatiquement le formulaire avec les suggestions IA
+      if (suggestions.key_ingredients?.length) {
+        form.value.key_ingredients = [...new Set([...form.value.key_ingredients, ...suggestions.key_ingredients])]
+      }
+
+      if (suggestions.skin_types?.length && showSkinTypes.value) {
+        form.value.skin_types = [...new Set([...form.value.skin_types, ...suggestions.skin_types])]
+      }
+
+      if (suggestions.benefits?.length) {
+        const newBenefits = [...new Set([...form.value.benefits, ...suggestions.benefits])]
+        form.value.benefits = newBenefits
+        benefitsInput.value = newBenefits.join(', ')
+      }
+
+      if (suggestions.expert_notes && !form.value.expert_notes) {
+        form.value.expert_notes = suggestions.expert_notes
+      }
+
+      // Notification de succès
+      console.log('✅ [EnrichmentModal] Formulaire enrichi automatiquement')
+    } else {
+      console.warn('⚠️ [EnrichmentModal] Aucune suggestion IA reçue')
+    }
+  } catch (error: any) {
+    console.error('❌ [EnrichmentModal] Erreur enrichissement IA:', error)
+  } finally {
+    aiLoading.value = false
+  }
+}
 
 const handleSubmit = () => {
   // Nettoyer les données non pertinentes selon le domaine
