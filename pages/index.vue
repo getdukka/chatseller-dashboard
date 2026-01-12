@@ -502,7 +502,7 @@
               </div>
               
               <!-- Alerte widget -->
-              <div 
+              <div
                 v-if="!setupStatus.widgetIntegrated && setupStatus.productsSynced"
                 class="p-3 bg-blue-50 border border-blue-200 rounded-lg"
               >
@@ -515,15 +515,27 @@
                     <p class="text-xs text-blue-600 mt-0.5">Ajoutez le code sur votre site pour activer {{ agentInfo.name }}</p>
                   </div>
                 </div>
-                <NuxtLink 
-                  to="/agent-ia?tab=integration"
-                  class="mt-2 inline-flex items-center text-xs font-medium text-blue-700 hover:text-blue-900"
-                >
-                  Voir le code d'intégration
-                  <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </NuxtLink>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  <NuxtLink
+                    to="/agent-ia?tab=integration"
+                    class="inline-flex items-center text-xs font-medium text-blue-700 hover:text-blue-900"
+                  >
+                    Voir le code d'intégration
+                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </NuxtLink>
+                  <span class="text-gray-300">|</span>
+                  <button
+                    @click="markWidgetAsIntegrated"
+                    class="inline-flex items-center text-xs font-medium text-green-700 hover:text-green-900"
+                  >
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    J'ai intégré le widget
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1186,6 +1198,32 @@ const loadDashboardData = async () => {
 }
 
 // ========== ACTIONS ==========
+
+// Marquer manuellement le widget comme intégré
+const markWidgetAsIntegrated = async () => {
+  try {
+    const shopId = authStore.userShopId
+    if (!shopId) {
+      showNotification('Erreur: Shop non trouvé')
+      return
+    }
+
+    const response = await api.shops.update(shopId, {
+      widget_integrated: true
+    })
+
+    if (response.success) {
+      setupStatus.value.widgetIntegrated = true
+      showNotification('Widget marqué comme intégré !')
+    } else {
+      showNotification('Erreur lors de la mise à jour')
+    }
+  } catch (error) {
+    console.error('❌ Erreur markWidgetAsIntegrated:', error)
+    showNotification('Erreur lors de la mise à jour')
+  }
+}
+
 const handleRefreshData = async () => {
   refreshing.value = true
   
