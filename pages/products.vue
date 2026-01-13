@@ -618,25 +618,31 @@ const handleEnrichmentSave = async (enrichmentData) => {
     console.log('📝 [Products] Réponse API enrichissement:', response)
 
     if (response.success) {
-      // ✅ Mettre à jour le produit localement AVANT de rafraîchir
+      // ✅ Mettre à jour le produit avec les données retournées par l'API
       const productIndex = products.value.findIndex(p => p.id === selectedProduct.value.id)
-      if (productIndex !== -1) {
+      if (productIndex !== -1 && response.data) {
+        // Utiliser les données retournées par l'API (inclut is_enriched mis à jour par le backend)
         products.value[productIndex] = {
           ...products.value[productIndex],
-          beauty_data: enrichmentData,
-          is_enriched: true,
-          needs_enrichment: false,
-          updated_at: new Date().toISOString()
+          ...response.data
         }
-        console.log('✅ [Products] Produit mis à jour localement:', products.value[productIndex])
+        console.log('✅ [Products] Produit mis à jour avec données API:', {
+          id: response.data.id,
+          is_enriched: response.data.is_enriched,
+          enrichment_score: response.data.enrichment_score
+        })
+      } else {
+        // Fallback si pas de data dans response : rafraîchir tout le catalogue
+        console.log('⚠️ [Products] Pas de data dans response, rafraîchissement complet')
+        await refreshCatalog()
       }
 
       showNotification.value = true
       notificationMessage.value = 'Infos produit complétées avec succès !'
       notificationType.value = 'success'
 
-      // Rafraîchir le catalogue complet
-      await refreshCatalog()
+      // Recalculer les stats
+      await calculateStats()
     } else {
       throw new Error(response.error || 'Erreur lors de l\'enrichissement')
     }
