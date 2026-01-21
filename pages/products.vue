@@ -618,23 +618,29 @@ const handleEnrichmentSave = async (enrichmentData) => {
     console.log('📝 [Products] Réponse API enrichissement:', response)
 
     if (response.success) {
-      // ✅ Mettre à jour le produit avec les données retournées par l'API
+      // ✅ Mettre à jour le produit - FORCER LA RÉACTIVITÉ VUE
       const productIndex = products.value.findIndex(p => p.id === selectedProduct.value.id)
-      if (productIndex !== -1 && response.data) {
-        // Utiliser les données retournées par l'API (inclut is_enriched mis à jour par le backend)
-        products.value[productIndex] = {
-          ...products.value[productIndex],
-          ...response.data
+
+      console.log('📝 [Products] Index trouvé:', productIndex)
+      console.log('📝 [Products] response.data is_enriched:', response.data?.is_enriched)
+
+      if (productIndex !== -1) {
+        // ✅ FORCER la réactivité en créant un nouveau tableau complet
+        const updatedProducts = [...products.value]
+        updatedProducts[productIndex] = {
+          ...updatedProducts[productIndex],
+          beauty_data: enrichmentData,
+          is_enriched: true,  // ✅ FORCER explicitement à true
+          needs_enrichment: false,
+          enrichment_score: response.data?.enrichment_score || 50,
+          updated_at: new Date().toISOString()
         }
-        console.log('✅ [Products] Produit mis à jour avec données API:', {
-          id: response.data.id,
-          is_enriched: response.data.is_enriched,
-          enrichment_score: response.data.enrichment_score
+        products.value = updatedProducts  // ✅ Remplacer le tableau entier pour déclencher réactivité
+
+        console.log('✅ [Products] Produit après mise à jour:', {
+          id: products.value[productIndex].id,
+          is_enriched: products.value[productIndex].is_enriched
         })
-      } else {
-        // Fallback si pas de data dans response : rafraîchir tout le catalogue
-        console.log('⚠️ [Products] Pas de data dans response, rafraîchissement complet')
-        await refreshCatalog()
       }
 
       showNotification.value = true
