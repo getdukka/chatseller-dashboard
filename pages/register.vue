@@ -1,23 +1,15 @@
 <!-- pages/register.vue -->
 <template>
   <div class="w-full max-w-md mx-auto">
-    <!-- Logo et titre premium beauté -->
+    <!-- Titre et sous-titre -->
     <div class="text-center mb-6">
-      <h2 class="text-4xl font-bold bg-gradient-to-r from-gray-900 via-rose-800 to-purple-900 bg-clip-text text-transparent mb-3">
-        Créez et activez votre Conseillère IA
+      <h2 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-rose-800 to-purple-900 bg-clip-text text-transparent mb-3">
+        Créez votre Vendeuse IA
       </h2>
-      <p class="text-sm text-gray-600 leading-relaxed mb-3">
+      <p class="text-sm text-gray-600 leading-relaxed">
         Rejoignez les marques beauté qui augmentent leurs conversions de
-        <span class="font-semibold text-rose-600">+267%</span> grâce à Chatseller.
+        <span class="font-semibold text-rose-600">+150%</span> grâce à ChatSeller.
       </p>
-      
-      <!-- Badge premium -->
-      <div class="inline-flex items-center px-3 py-1 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-full">
-        <svg class="w-3 h-3 text-rose-500 mr-1" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-        </svg>
-        <span class="text-xs font-semibold text-rose-700">14 jours d'essai gratuits - Conversions garanties</span>
-      </div>
     </div>
 
     <!-- Message de succès après inscription -->
@@ -30,15 +22,15 @@
             </svg>
           </div>
         </div>
-        
+
         <h3 class="text-lg font-bold text-gray-900 mb-3">
-          ✨ Confirmez votre email pour démarrer
+          Confirmez votre email pour démarrer
         </h3>
         <p class="text-gray-600 mb-4 text-sm">
           Un email de confirmation a été envoyé à<br>
           <strong class="text-rose-600">{{ form.email }}</strong>
         </p>
-        
+
         <!-- Étapes visuelles compactes -->
         <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-3 mb-4">
           <h4 class="font-semibold text-rose-800 mb-2 text-xs">
@@ -60,15 +52,15 @@
             <div class="flex items-center text-rose-700">
               <div class="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center mr-2 text-xs font-bold">3</div>
               <div class="text-left">
-                <div class="font-semibold">Création de votre Conseillère IA</div>
+                <div class="font-semibold">Création de votre Vendeuse IA</div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <!-- Boutons email compacts -->
         <div class="flex gap-2 mb-4">
-          <a 
+          <a
             :href="getGmailUrl(form.email)"
             target="_blank"
             class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 text-xs"
@@ -78,8 +70,8 @@
             </svg>
             Gmail
           </a>
-          
-          <a 
+
+          <a
             :href="getOutlookUrl(form.email)"
             target="_blank"
             class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 text-xs"
@@ -114,80 +106,45 @@
       </div>
     </div>
 
-    <!-- Formulaire d'inscription optimisé -->
+    <!-- Formulaire d'inscription -->
     <div v-else class="bg-white/80 backdrop-blur-sm py-6 px-5 shadow-2xl rounded-2xl border border-rose-100">
-      <form @submit.prevent="handleRegister" class="space-y-4">
-        
-        <!-- Promesses conversion compactes -->
-        <div class="text-center mb-4">
-          <div class="grid grid-cols-3 gap-2 mb-3">
-            <div class="text-center">
-              <div class="w-8 h-8 bg-gradient-to-br from-rose-100 to-pink-100 rounded-lg flex items-center justify-center mx-auto mb-1">
-                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div class="text-xs font-semibold text-gray-700">Installation</div>
-              <div class="text-xs text-gray-500">2 minutes</div>
-            </div>
-            <div class="text-center">
-              <div class="w-8 h-8 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-1">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <div class="text-xs font-semibold text-gray-700">Conversion</div>
-              <div class="text-xs text-gray-500">+267% ventes</div>
-            </div>
-            <div class="text-center">
-              <div class="w-8 h-8 bg-gradient-to-br from-purple-100 to-rose-100 rounded-lg flex items-center justify-center mx-auto mb-1">
-                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </div>
-              <div class="text-xs font-semibold text-gray-700">Satisfaction</div>
-              <div class="text-xs text-gray-500">94% clients</div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Prénom et Nom -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="firstName" class="block text-sm font-semibold text-gray-700 mb-1">
-              Prénom *
-            </label>
-            <input
-              id="firstName"
-              v-model="form.firstName"
-              type="text"
-              required
-              autocomplete="given-name"
-              class="w-full px-3 py-2.5 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-gray-900 placeholder-gray-500 text-sm"
-              placeholder="Camille"
-            />
-          </div>
 
-          <div>
-            <label for="lastName" class="block text-sm font-semibold text-gray-700 mb-1">
-              Nom *
-            </label>
-            <input
-              id="lastName"
-              v-model="form.lastName"
-              type="text"
-              required
-              autocomplete="family-name"
-              class="w-full px-3 py-2.5 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-gray-900 placeholder-gray-500 text-sm"
-              placeholder="Martin"
-            />
-          </div>
+      <!-- Bouton Google OAuth -->
+      <button
+        type="button"
+        @click="handleGoogleSignIn"
+        :disabled="googleLoading"
+        class="w-full flex items-center justify-center gap-3 py-2.5 px-4 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 mb-5"
+      >
+        <svg v-if="!googleLoading" class="w-5 h-5" viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        <svg v-else class="animate-spin w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        {{ googleLoading ? 'Connexion...' : 'Continuer avec Google' }}
+      </button>
+
+      <!-- Séparateur -->
+      <div class="relative mb-5">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-200" />
         </div>
+        <div class="relative flex justify-center text-xs">
+          <span class="px-3 bg-white text-gray-400">ou</span>
+        </div>
+      </div>
+
+      <form @submit.prevent="handleRegister" class="space-y-4">
 
         <!-- Email -->
         <div>
           <label for="email" class="block text-sm font-semibold text-gray-700 mb-1">
-            Email professionnel *
+            Adresse email
           </label>
           <input
             id="email"
@@ -198,15 +155,12 @@
             class="w-full px-3 py-2.5 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-gray-900 placeholder-gray-500 text-sm"
             placeholder="camille@belle-etoile.fr"
           />
-          <p class="mt-1 text-xs text-gray-500">
-            Pour personnaliser votre expérience
-          </p>
         </div>
 
         <!-- Mot de passe -->
         <div>
           <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">
-            Mot de passe *
+            Mot de passe
           </label>
           <div class="relative">
             <input
@@ -250,11 +204,11 @@
           </div>
           <div class="ml-2 text-xs leading-relaxed">
             <label for="terms" class="text-gray-700">
-              J'accepte les 
+              J'accepte les
               <a href="https://chatseller.app/terms" class="font-semibold text-rose-600 hover:text-rose-800 transition-colors underline" target="_blank">
                 conditions
               </a>
-              et la 
+              et la
               <a href="https://chatseller.app/privacy" class="font-semibold text-rose-600 hover:text-rose-800 transition-colors underline" target="_blank">
                 confidentialité
               </a>
@@ -265,7 +219,7 @@
         <!-- Erreur -->
         <div v-if="registerError" class="p-3 rounded-xl bg-red-50 border border-red-200">
           <div class="flex">
-            <svg class="h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
             <div class="ml-2">
@@ -276,7 +230,7 @@
           </div>
         </div>
 
-        <!-- Bouton inscription optimisé -->
+        <!-- Bouton inscription -->
         <button
           type="submit"
           :disabled="loading"
@@ -286,14 +240,16 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-          </svg>
-          {{ loading ? 'Préparation de votre solution...' : 'Commencer l\'essai gratuit' }}
+          {{ loading ? 'Création en cours...' : 'Commencer l\'essai gratuit' }}
         </button>
+
+        <!-- Réassurance -->
+        <p class="text-center text-xs text-gray-500">
+          14 jours d'essai gratuits, sans carte bancaire
+        </p>
       </form>
 
-      <!-- Séparateur simplifié -->
+      <!-- Lien connexion -->
       <div class="mt-6">
         <div class="relative">
           <div class="absolute inset-0 flex items-center">
@@ -312,7 +268,7 @@
             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            Accéder à mon compte Chatseller
+            Se connecter
           </NuxtLink>
         </div>
       </div>
@@ -321,14 +277,14 @@
     <!-- Support compact -->
     <div class="mt-6 text-center">
       <div class="flex flex-col gap-1 justify-center items-center">
-        <a 
-          href="https://chatseller.app/support" 
+        <a
+          href="https://chatseller.app/support"
           class="font-semibold text-rose-600 hover:text-rose-800 transition-colors inline-flex items-center text-sm"
         >
           <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Contacter le Support 
+          Contacter le Support
         </a>
         <span class="text-xs text-gray-500">
           Réponse sous 2h
@@ -341,145 +297,160 @@
 <script setup lang="ts">
 import { useSupabase } from '~~/composables/useSupabase'
 
-// ✅ UTILISATION DU COMPOSABLE AUTH CORRIGÉ
 const auth = useAuth()
 
-// Layout
 definePageMeta({
   layout: 'auth'
 })
 
 // État du composant
 const loading = ref(false)
+const googleLoading = ref(false)
 const showPassword = ref(false)
 const registerError = ref('')
 const registrationSuccess = ref(false)
 const resendLoading = ref(false)
 const resendCooldown = ref(0)
 
-// Formulaire avec placeholders beauté
+// Formulaire simplifié (sans prénom/nom)
 const form = reactive({
-  firstName: '',
-  lastName: '',
   email: '',
   password: '',
   acceptTerms: false
 })
 
-// ✅ INSCRIPTION VIA COMPOSABLE AUTH
+// INSCRIPTION VIA GOOGLE OAUTH
+const handleGoogleSignIn = async () => {
+  googleLoading.value = true
+  registerError.value = ''
+
+  try {
+    console.log('🔐 [Register] Connexion via Google...')
+    const result = await auth.signInWithGoogle()
+
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur de connexion Google')
+    }
+
+    // La redirection est gérée par Supabase
+    console.log('✅ [Register] Redirection Google OAuth en cours...')
+  } catch (error: any) {
+    console.error('❌ [Register] Erreur Google OAuth:', error)
+    registerError.value = error.message || 'Erreur de connexion avec Google. Veuillez réessayer.'
+    googleLoading.value = false
+  }
+}
+
+// INSCRIPTION VIA EMAIL/PASSWORD
 const handleRegister = async () => {
   if (!validateForm()) return
-  
+
   loading.value = true
   registerError.value = ''
-  
+
   try {
-    console.log('📝 [Register ] Inscription via composable auth...')
-    
+    console.log('📝 [Register] Inscription via email...')
+
     const result = await auth.register({
       email: form.email.trim().toLowerCase(),
       password: form.password,
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
+      firstName: '',
+      lastName: '',
       company: '',
       platform: '',
       newsletter: true
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur de création de compte')
     }
-    
-    console.log('✅ [Register ] Inscription réussie')
+
+    console.log('✅ [Register] Inscription réussie')
     registrationSuccess.value = true
     startResendCooldown()
-    
+
   } catch (error: any) {
-    console.error('❌ [Register ] Erreur inscription:', error)
+    console.error('❌ [Register] Erreur inscription:', error)
     registerError.value = getErrorMessage(error)
   } finally {
     loading.value = false
   }
 }
 
-// ✅ MESSAGES D'ERREUR PERSONNALISÉS BEAUTÉ
+// MESSAGES D'ERREUR PERSONNALISÉS
 const getErrorMessage = (error: any): string => {
   const message = error.message || error
-  
+
   if (message.includes('User already registered') || message.includes('already registered')) {
     return 'Cette adresse email est déjà utilisée. Essayez de vous connecter.'
   }
-  
+
   if (message.includes('email')) {
     return 'Problème avec l\'adresse email fournie'
   }
-  
+
   if (message.includes('password')) {
     return 'Le mot de passe ne respecte pas les critères (minimum 8 caractères)'
   }
-  
+
   if (message.includes('rate limit')) {
     return 'Trop de tentatives. Veuillez patienter quelques minutes.'
   }
-  
+
   return message || 'Une erreur s\'est produite lors de la création de votre compte'
 }
 
-// ✅ VALIDATION
+// VALIDATION
 const validateForm = () => {
   registerError.value = ''
-  
-  if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.password || !form.acceptTerms) {
-    registerError.value = 'Veuillez remplir tous les champs obligatoires'
+
+  if (!form.email.trim() || !form.password || !form.acceptTerms) {
+    registerError.value = 'Veuillez remplir tous les champs et accepter les conditions'
     return false
   }
-  
+
   if (form.password.length < 8) {
     registerError.value = 'Le mot de passe doit contenir au moins 8 caractères'
     return false
   }
-  
+
   if (!form.email.includes('@') || !form.email.includes('.')) {
     registerError.value = 'Veuillez saisir une adresse email valide'
     return false
   }
-  
+
   return true
 }
 
-// ✅ RENVOYER EMAIL
+// RENVOYER EMAIL
 const resendEmail = async () => {
   if (resendCooldown.value > 0) return
-  
+
   resendLoading.value = true
-  
+
   try {
-    console.log('🔄 [Register Beauty] Renvoi email de confirmation...')
-    
-    // ✅ UTILISER SUPABASE DIRECTEMENT POUR RENVOYER EMAIL CONFIRMATION
     const supabase = useSupabase()
-    
+
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: form.email.trim().toLowerCase()
     })
-    
+
     if (error) {
       throw new Error(error.message)
     }
-    
-    console.log('✅ [Register Beauty] Email de confirmation renvoyé')
+
     startResendCooldown()
-    
+
   } catch (error: any) {
-    console.error('❌ [Register Beauty] Erreur renvoi email:', error)
+    console.error('❌ [Register] Erreur renvoi email:', error)
     registerError.value = `Erreur lors du renvoi: ${error.message}`
   } finally {
     resendLoading.value = false
   }
 }
 
-// ✅ COOLDOWN
+// COOLDOWN
 const startResendCooldown = () => {
   resendCooldown.value = 60
   const timer = setInterval(() => {
@@ -508,19 +479,19 @@ const getOutlookUrl = (email: string) => {
   return 'https://outlook.office.com/mail/'
 }
 
-// ✅ REDIRECTION SI DÉJÀ CONNECTÉ
+// REDIRECTION SI DÉJÀ CONNECTÉ
 onMounted(async () => {
   if (auth.isAuthenticated.value) {
     await navigateTo('/')
   }
 })
 
-// ✅ SEO BEAUTÉ
+// SEO
 useHead({
-  title: 'Boostez vos ventes beauté de 267% - ChatSeller',
+  title: 'Créer un compte - ChatSeller',
   meta: [
-    { name: 'description', content: 'Offrez l\'expérience conseil d\'une boutique physique premium directement sur votre site beauté. +267% de conversions garanties.' },
-    { name: 'keywords', content: 'conversion beauté, ventes beauté, conseil en ligne, marque beauté, skincare, maquillage' }
+    { name: 'description', content: 'Créez votre vendeuse IA beauté en 5 minutes. +150% de conversions en moyenne. 14 jours d\'essai gratuits.' },
+    { name: 'keywords', content: 'ChatSeller, vendeuse IA, marque beauté, conversion, e-commerce beauté' }
   ]
 })
 </script>
@@ -535,22 +506,19 @@ useHead({
   to { transform: rotate(360deg); }
 }
 
-/* Animations premium */
 .transform {
   transition: transform 0.3s ease;
 }
 
-.hover\\:scale-105:hover {
+.hover\:scale-105:hover {
   transform: scale(1.05);
 }
 
-/* Effet glassmorphism */
 .backdrop-blur-sm {
   backdrop-filter: blur(4px);
 }
 
-/* Focus states premium */
-.focus\\:ring-rose-500:focus {
+.focus\:ring-rose-500:focus {
   box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.1);
 }
 </style>

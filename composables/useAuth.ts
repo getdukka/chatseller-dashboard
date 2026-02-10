@@ -1,6 +1,7 @@
 // composables/useAuth.ts
 
 import { useAuthStore } from '~/stores/auth'
+import { useSupabase } from '~~/composables/useSupabase'
 
 export const useAuth = () => {
   const authStore = useAuthStore()
@@ -61,6 +62,36 @@ export const useAuth = () => {
     
     // ✅ PAS DE NAVIGATION AUTOMATIQUE - LAISSE LA PAGE REGISTER GÉRER
     return result
+  }
+
+  // ✅ CONNEXION VIA GOOGLE OAUTH
+  const signInWithGoogle = async () => {
+    try {
+      const supabase = useSupabase()
+      const redirectUrl = `${window.location.origin}/auth/callback`
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
+        }
+      })
+
+      if (error) {
+        console.error('❌ [Auth] Erreur Google OAuth:', error)
+        return { success: false, error: error.message }
+      }
+
+      // La redirection est gérée automatiquement par Supabase
+      return { success: true, data }
+    } catch (error: any) {
+      console.error('❌ [Auth] Erreur Google OAuth:', error)
+      return { success: false, error: error.message || 'Erreur de connexion Google' }
+    }
   }
 
   const logout = async () => {
@@ -171,6 +202,7 @@ export const useAuth = () => {
     // Actions
     login,
     register,
+    signInWithGoogle,
     logout,
     resetPassword,
     updateProfile,
