@@ -8,7 +8,7 @@
         Accédez à votre espace ChatSeller
       </h2>
       <p class="text-sm text-gray-600">
-        Suivez les performances de votre conseillère IA.
+        Suivez les performances de votre Vendeuse IA.
       </p>
     </div>
 
@@ -62,7 +62,7 @@
               'border-red-300 focus:ring-red-500 focus:border-red-500': errors.email,
               'border-rose-200 focus:ring-rose-500 focus:border-rose-500': !errors.email
             }"
-            placeholder="votre.email@marque-beaute.fr"
+            placeholder="prenom@mamarque.com"
           />
           <p v-if="errors.email" class="mt-1 text-xs text-red-600">
             {{ errors.email }}
@@ -182,23 +182,13 @@
             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
             </svg>
-            Créez votre Vendeuse IA en 2 minutes
+            Créer ma Vendeuse IA en 2 minutes
             <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
           </NuxtLink>
         </div>
       </div>
-    </div>
-
-    <!-- Support minimal -->
-    <div class="mt-6 text-center">
-      <a 
-        href="https://chatseller.app/support" 
-        class="font-medium text-rose-600 hover:text-rose-800 transition-colors underline text-sm"
-      >
-        Besoin d'aide ?
-      </a>
     </div>
 
     <!-- Modal Reset Password -->
@@ -220,7 +210,7 @@
               v-model="resetEmail"
               type="email"
               required
-              placeholder="votre.email@marque-beaute.fr"
+              placeholder="prenom@mamarque.com"
               class="w-full px-3 py-3 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-300 text-sm"
             />
           </div>

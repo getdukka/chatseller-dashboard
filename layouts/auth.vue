@@ -19,53 +19,23 @@
       <div class="absolute top-1/2 left-1/3 w-1 h-1 bg-purple-400 rounded-full animate-ping" style="animation-delay: 2.5s"></div>
     </div>
 
-    <!-- Header avec logo et navigation -->
-    <header class="relative z-10 px-4 py-6">
-      <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <!-- Logo ChatSeller original -->
-        <NuxtLink to="https://chatseller.app" class="flex items-center space-x-3 group">
-          <div class="relative">
-            <div class="flex h-10 w-10 items-center justify-center bg-transparent">
-              <img 
-                src="/assets/images/logos/fav.svg" 
-                alt="ChatSeller" 
-                class="w-10 h-10"
-              />
-            </div>
+    <!-- Logo minimal centré -->
+    <div class="relative z-10 pt-8 pb-2 flex justify-center">
+      <NuxtLink to="https://chatseller.app" class="flex items-center space-x-2 group">
+        <div class="flex h-9 w-9 items-center justify-center">
+          <img
+            src="/assets/images/logos/fav.svg"
+            alt="ChatSeller"
+            class="w-9 h-9"
+          />
+        </div>
+        <div>
+          <div class="font-bold text-lg text-gray-900">
+            ChatSeller<span class="text-rose-500">.</span>
           </div>
-          <div class="hidden sm:block">
-            <div class="font-bold text-xl bg-clip-text text-black">
-              ChatSeller
-            </div>
-            <div class="text-xs font-medium text-rose-600">
-              by Dukka
-            </div>
-          </div>
-        </NuxtLink>
-
-        <!-- Navigation -->
-        <nav class="flex items-center space-x-6">
-          <a 
-            href="https://chatseller.app" 
-            class="text-sm font-medium text-gray-600 hover:text-rose-600 transition-colors duration-200"
-          >
-            Accueil
-          </a>
-          <a 
-            href="https://chatseller.app#demo" 
-            class="text-sm font-medium text-gray-600 hover:text-rose-600 transition-colors duration-200"
-          >
-            Démo
-          </a>
-          <a 
-            href="https://chatseller.app/support" 
-            class="text-sm font-medium text-gray-600 hover:text-rose-600 transition-colors duration-200"
-          >
-            Support
-          </a>
-        </nav>
-      </div>
-    </header>
+        </div>
+      </NuxtLink>
+    </div>
 
     <!-- Contenu principal centré -->
     <div class="flex-1 flex flex-col justify-center py-6 px-4 sm:px-6 lg:px-8 relative z-10">
@@ -74,52 +44,12 @@
       </div>
     </div>
 
-    <!-- Footer premium beauté -->
-    <footer class="relative z-10 py-8 bg-white/30 backdrop-blur-sm border-t border-rose-100/50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        <!-- Liens footer -->
-        <div class="flex justify-center items-center space-x-8 text-sm text-gray-500 mb-4">
-          <a 
-            href="https://chatseller.app/privacy" 
-            class="hover:text-rose-600 transition-colors duration-200 font-medium"
-            target="_blank"
-          >
-            Confidentialité
-          </a>
-          <a 
-            href="https://chatseller.app/terms" 
-            class="hover:text-rose-600 transition-colors duration-200 font-medium"
-            target="_blank"
-          >
-            CGU
-          </a>
-          <a 
-            href="https://chatseller.app/support" 
-            class="hover:text-rose-600 transition-colors duration-200 font-medium"
-            target="_blank"
-          >
-            Support
-          </a>
-          <a 
-            href="https://docs.chatseller.app" 
-            class="hover:text-rose-600 transition-colors duration-200 font-medium"
-            target="_blank"
-          >
-            Documentation
-          </a>
-        </div>
-
-        <!-- Copyright avec badge beauté -->
-        <div class="text-center">
-          <div class="flex justify-center items-center space-x-3 mb-2">
-            <div class="text-xs text-gray-400">
-              © 2025 ChatSeller. Solution dédiée aux marques beauté.
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
+    <!-- Footer minimal -->
+    <div class="relative z-10 py-4 text-center">
+      <p class="text-xs text-gray-400">
+        © 2026 ChatSeller
+      </p>
+    </div>
   </div>
 </template>
 

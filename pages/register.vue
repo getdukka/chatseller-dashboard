@@ -7,7 +7,7 @@
         Créez votre Vendeuse IA
       </h2>
       <p class="text-sm text-gray-600 leading-relaxed">
-        Rejoignez les marques beauté qui augmentent leurs conversions de
+        Rejoignez les marques beauté qui augmentent leurs ventes de
         <span class="font-semibold text-rose-600">+150%</span> grâce à ChatSeller.
       </p>
     </div>
@@ -153,7 +153,7 @@
             required
             autocomplete="email"
             class="w-full px-3 py-2.5 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-gray-900 placeholder-gray-500 text-sm"
-            placeholder="camille@belle-etoile.fr"
+            placeholder="prenom@mamarque.com"
           />
         </div>
 
@@ -240,7 +240,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          {{ loading ? 'Création en cours...' : 'Commencer l\'essai gratuit' }}
+          {{ loading ? 'Création en cours...' : 'Démarrer l\'essai gratuit' }}
         </button>
 
         <!-- Réassurance -->
@@ -274,23 +274,6 @@
       </div>
     </div>
 
-    <!-- Support compact -->
-    <div class="mt-6 text-center">
-      <div class="flex flex-col gap-1 justify-center items-center">
-        <a
-          href="https://chatseller.app/support"
-          class="font-semibold text-rose-600 hover:text-rose-800 transition-colors inline-flex items-center text-sm"
-        >
-          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Contacter le Support
-        </a>
-        <span class="text-xs text-gray-500">
-          Réponse sous 2h
-        </span>
-      </div>
-    </div>
   </div>
 </template>
 
