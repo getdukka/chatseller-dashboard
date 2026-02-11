@@ -184,19 +184,19 @@
               class="flex"
               :class="getMessageAlignment(message.role)"
             >
-              <!-- Message de la conseillère beauté -->
+              <!-- Message de la Vendeuse IA -->
               <div
                 v-if="isBeautyAgentMessage(message.role)"
                 class="flex items-start space-x-3 max-w-2xl"
               >
-                <!-- Avatar Conseillère -->
+                <!-- Avatar Vendeuse IA -->
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex-shrink-0 shadow-md">
                   <span class="text-lg">{{ getAgentIcon() }}</span>
                 </div>
-                
-                <!-- Bulle Conseillère -->
+
+                <!-- Bulle Vendeuse IA -->
                 <div class="bg-white rounded-2xl rounded-tl-md shadow-sm border border-rose-200 p-4 relative group">
-                  <!-- Nom de la conseillère beauté -->
+                  <!-- Nom de la Vendeuse IA -->
                   <div class="flex items-center justify-between mb-2">
                     <div class="text-sm font-semibold text-rose-900">
                       {{ getBeautyAgentName() }}

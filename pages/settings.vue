@@ -922,18 +922,7 @@ const beautyInsights = ref<any>({
 
 // ✅ COMPUTED BEAUTÉ
 const getAgentTypeName = () => {
-  const beautyCategory = brandForm.beautyCategory || authStore.user?.shop?.beauty_category || 'multi'
-  
-  const types = {
-    'skincare': 'Esthéticienne IA',
-    'makeup': 'Experte Makeup IA', 
-    'fragrance': 'Conseillère Parfums IA',
-    'haircare': 'Experte Capillaire IA',
-    'bodycare': 'Experte Soins Corps IA',
-    'multi': 'Conseillère Beauté IA'
-  }
-  
-  return types[beautyCategory] || types.multi
+  return 'Vendeuse IA'
 }
 
 const memberSince = computed(() => {

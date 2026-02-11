@@ -482,15 +482,7 @@ const detailedAnalytics = ref<any>({
 
 // ✅ MÉTHODES CONTEXTUELLES BEAUTÉ
 const getAnalyticsTitle = (): string => {
-  const titles: Record<string, string> = {
-    'skincare': 'vos Esthéticiennes IA',
-    'makeup': 'vos Expertes Maquillage IA',
-    'fragrance': 'vos Conseillères Parfums IA',
-    'haircare': 'vos Expertes Capillaires IA',
-    'bodycare': 'vos Expertes Soins Corps IA',
-    'multi': 'vos Conseillère IA'
-  }
-  return titles[beautyCategory.value] || titles.multi
+  return 'votre Vendeuse IA'
 }
 
 const getAnalyticsIcon = (): string => {
@@ -1072,7 +1064,7 @@ onMounted(() => {
 useHead({
   title: 'Analytics Beauté - ChatSeller Dashboard',
   meta: [
-    { name: 'description', content: 'Suivez les performances de vos Conseillère IA ChatSeller' }
+    { name: 'description', content: 'Suivez les performances de votre Vendeuse IA ChatSeller' }
   ]
 })
 </script>

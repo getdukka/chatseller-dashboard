@@ -123,7 +123,7 @@ export interface BeautyAgentTypeInfo {
 
 export const BEAUTY_AGENT_TYPES: Record<BeautyAgentType, BeautyAgentTypeInfo> = {
   skincare_expert: {
-    label: 'Esthéticienne IA',
+    label: 'Vendeuse IA',
     icon: '✨',
     color: 'rose',
     defaultName: 'Camille',
@@ -131,7 +131,7 @@ export const BEAUTY_AGENT_TYPES: Record<BeautyAgentType, BeautyAgentTypeInfo> = 
     welcomeTemplate: 'Bonjour ! Je suis {agentName}, esthéticienne IA chez {shopName}. Quel est votre type de peau ? Je vais vous conseiller la routine idéale.'
   },
   makeup_expert: {
-    label: 'Experte Makeup IA',
+    label: 'Vendeuse IA',
     icon: '💄',
     color: 'purple',
     defaultName: 'Léa',
@@ -139,15 +139,15 @@ export const BEAUTY_AGENT_TYPES: Record<BeautyAgentType, BeautyAgentTypeInfo> = 
     welcomeTemplate: 'Salut ! Moi c\'est {agentName}, experte makeup chez {shopName}. Quel look souhaitez-vous créer aujourd\'hui ?'
   },
   fragrance_expert: {
-    label: 'Conseillère Parfums IA',
+    label: 'Vendeuse IA',
     icon: '🌸',
     color: 'violet',
     defaultName: 'Chloé',
     description: 'Experte fragrances et familles olfactives',
-    welcomeTemplate: 'Bonjour ! Je suis {agentName}, conseillère parfums chez {shopName}. Quelle fragrance vous ferait rêver ?'
+    welcomeTemplate: 'Bonjour ! Je suis {agentName}, experte parfums chez {shopName}. Quelle fragrance vous ferait rêver ?'
   },
   haircare_expert: {
-    label: 'Experte Capillaire IA',
+    label: 'Vendeuse IA',
     icon: '💇‍♀️',
     color: 'amber',
     defaultName: 'Amélie',
@@ -155,7 +155,7 @@ export const BEAUTY_AGENT_TYPES: Record<BeautyAgentType, BeautyAgentTypeInfo> = 
     welcomeTemplate: 'Hello ! Je suis {agentName}, experte capillaire chez {shopName}. Parlez-moi de vos cheveux, je vais vous chouchouter !'
   },
   bodycare_expert: {
-    label: 'Experte Soins Corps IA',
+    label: 'Vendeuse IA',
     icon: '🧴',
     color: 'teal',
     defaultName: 'Sarah',
@@ -163,12 +163,12 @@ export const BEAUTY_AGENT_TYPES: Record<BeautyAgentType, BeautyAgentTypeInfo> = 
     welcomeTemplate: 'Bonjour ! Je suis {agentName}, experte bien-être chez {shopName}. Créons ensemble votre rituel beauté idéal.'
   },
   beauty_expert: {
-    label: 'Conseillère Beauté IA',
+    label: 'Vendeuse IA',
     icon: '🎀',
     color: 'pink',
     defaultName: 'Rose',
     description: 'Multi-spécialités beauté et expertise transversale',
-    welcomeTemplate: 'Bonjour ! Je suis {agentName}, conseillère beauté chez {shopName}. Dans quel domaine beauté puis-je vous accompagner ?'
+    welcomeTemplate: 'Bonjour ! Je suis {agentName}, experte beauté chez {shopName}. Dans quel domaine beauté puis-je vous accompagner ?'
   }
 }
 

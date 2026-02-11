@@ -648,7 +648,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                   </div>
-                  <h4 class="text-lg font-bold text-gray-900">Vos Conseillères IA sont maintenant actives !</h4>
+                  <h4 class="text-lg font-bold text-gray-900">Votre Vendeuse IA est maintenant active !</h4>
                 </div>
                 <ul class="text-sm text-gray-700 space-y-3 ml-2">
                   <li class="flex items-start">
@@ -690,7 +690,7 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
-                Configurer mes Conseillères IA
+                Configurer ma Vendeuse IA
               </button>
               <button
                 @click="closeSuccessModal"

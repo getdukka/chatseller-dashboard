@@ -1,7 +1,7 @@
 <!-- pages/agent-ia/index.vue -->
 <!--
-  Page de redirection automatique vers la Conseillère IA de l'utilisateur.
-  Dans le modèle single-agent, chaque utilisateur a une seule Conseillère IA
+  Page de redirection automatique vers la Vendeuse IA de l'utilisateur.
+  Dans le modèle single-agent, chaque utilisateur a une seule Vendeuse IA
   créée lors de l'onboarding. Cette page redirige vers sa page de gestion.
 -->
 <template>
@@ -9,7 +9,7 @@
     <!-- État de chargement -->
     <div v-if="loading" class="text-center">
       <div class="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-rose-200 border-t-rose-500 animate-spin"></div>
-      <p class="text-gray-600 font-medium">Chargement de votre Conseillère IA...</p>
+      <p class="text-gray-600 font-medium">Chargement de votre Vendeuse IA...</p>
       <p class="text-sm text-gray-500 mt-2">Un instant s'il vous plaît</p>
     </div>
 
@@ -17,9 +17,9 @@
     <div v-else-if="!loading && !agentId" class="text-center max-w-md mx-auto px-4">
       <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/60">
         <div class="text-5xl mb-6">💅</div>
-        <h2 class="text-xl font-bold text-gray-900 mb-3">Aucune Conseillère IA trouvée</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-3">Aucune Vendeuse IA trouvée</h2>
         <p class="text-gray-600 mb-6">
-          Il semble que vous n'ayez pas encore créé votre Conseillère IA.
+          Il semble que vous n'ayez pas encore créé votre Vendeuse IA.
           Complétez la configuration pour commencer.
         </p>
         <NuxtLink
@@ -29,7 +29,7 @@
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
           </svg>
-          Créer ma Conseillère IA
+          Créer ma Vendeuse IA
         </NuxtLink>
       </div>
     </div>

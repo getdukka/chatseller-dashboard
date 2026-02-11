@@ -38,7 +38,7 @@
 
             <div class="min-w-0 flex-1">
               <h1 class="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                {{ localConfig.agent.name || 'Ma Conseillère' }}
+                {{ localConfig.agent.name || 'Ma Vendeuse IA' }}
               </h1>
               <p class="text-xs sm:text-sm text-gray-500 truncate">
                 {{ localConfig.agent.isActive ? 'Active' : 'Inactive' }}
@@ -100,7 +100,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <div class="w-12 h-12 mx-auto mb-4 rounded-full border-4 border-rose-200 border-t-rose-500 animate-spin"></div>
-        <p class="text-gray-600">Chargement de votre conseillère...</p>
+        <p class="text-gray-600">Chargement de votre Vendeuse IA...</p>
       </div>
     </div>
 
@@ -151,7 +151,7 @@
           <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">👩‍💼</span>
-              Identité de votre conseillère
+              Identité de votre Vendeuse IA
             </h2>
           </div>
 
@@ -188,7 +188,7 @@
 
               <div class="flex-1 min-w-0">
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                  Nom de votre conseillère *
+                  Nom de votre Vendeuse IA *
                 </label>
                 <input
                   v-model="localConfig.agent.name"
@@ -209,7 +209,7 @@
                 v-model="localConfig.agent.title"
                 @input="markAsChanged"
                 type="text"
-                placeholder="Ex: Experte skincare, Conseillère maquillage..."
+                placeholder="Ex: Experte skincare, Vendeuse maquillage..."
                 class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
               />
             </div>
@@ -299,7 +299,7 @@
 
           <div class="p-4 sm:p-6">
             <p class="text-sm text-gray-600 mb-4">
-              Sélectionnez les documents que votre conseillère doit connaître pour bien conseiller vos clientes.
+              Sélectionnez les documents que votre Vendeuse IA doit connaître pour bien conseiller vos clientes.
             </p>
 
             <button
@@ -337,7 +337,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="font-medium text-gray-900">Activer la conseillère</h3>
+              <h3 class="font-medium text-gray-900">Activer la Vendeuse IA</h3>
               <p class="text-sm text-gray-500">Elle pourra répondre à vos visiteurs</p>
             </div>
             <button
@@ -371,7 +371,7 @@
               v-model="localConfig.widget.buttonText"
               @input="markAsChanged"
               type="text"
-              placeholder="Parler à une conseillère"
+              placeholder="Parler à une vendeuse"
               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
             />
           </div>
@@ -517,7 +517,7 @@
                   :style="{ backgroundColor: localConfig.widget.primaryColor, borderRadius: borderRadiusCSS }"
                   class="w-full py-2.5 px-4 text-white font-medium text-sm"
                 >
-                  {{ localConfig.widget.buttonText || 'Parler à une conseillère' }}
+                  {{ localConfig.widget.buttonText || 'Parler à une vendeuse' }}
                 </button>
 
                 <button class="w-full py-2.5 px-4 bg-gray-900 text-white font-medium rounded-lg text-sm">
@@ -529,7 +529,7 @@
                   :style="{ backgroundColor: localConfig.widget.primaryColor, borderRadius: borderRadiusCSS }"
                   class="w-full py-2.5 px-4 text-white font-medium text-sm"
                 >
-                  {{ localConfig.widget.buttonText || 'Parler à une conseillère' }}
+                  {{ localConfig.widget.buttonText || 'Parler à une vendeuse' }}
                 </button>
               </div>
 
@@ -558,9 +558,9 @@
               <span class="text-xl">🧪</span>
             </div>
             <div>
-              <h3 class="font-semibold text-gray-900">Testez {{ localConfig.agent.name || 'votre Conseillère' }}</h3>
+              <h3 class="font-semibold text-gray-900">Testez {{ localConfig.agent.name || 'votre Vendeuse IA' }}</h3>
               <p class="text-sm text-gray-600 mt-1">
-                Simulez une conversation avec {{ localConfig.agent.name || 'votre conseillère' }} avant de l'activer sur votre site.
+                Simulez une conversation avec {{ localConfig.agent.name || 'votre Vendeuse IA' }} avant de l'activer sur votre site.
               </p>
             </div>
           </div>
@@ -615,7 +615,7 @@
                   </div>
                 </div>
                 <div class="max-w-[80%]">
-                  <p class="text-xs text-gray-500 mb-1">{{ localConfig.agent.name || 'Conseillère' }}</p>
+                  <p class="text-xs text-gray-500 mb-1">{{ localConfig.agent.name || 'Vendeuse IA' }}</p>
                   <div class="bg-white rounded-2xl rounded-tl-sm p-3 shadow-sm border border-gray-100">
                     <p class="text-sm text-gray-800">
                       {{ processedWelcomeMessage }}
@@ -656,7 +656,7 @@
                     </div>
                   </div>
                   <div class="max-w-[80%]">
-                    <p class="text-xs text-gray-500 mb-1">{{ localConfig.agent.name || 'Conseillère' }}</p>
+                    <p class="text-xs text-gray-500 mb-1">{{ localConfig.agent.name || 'Vendeuse IA' }}</p>
                     <div class="bg-white rounded-2xl rounded-tl-sm p-3 shadow-sm border border-gray-100">
                       <p class="text-sm text-gray-800 whitespace-pre-wrap">{{ msg.content }}</p>
                     </div>
@@ -737,7 +737,7 @@
             <div>
               <p class="font-medium text-amber-800">Important</p>
               <p class="text-sm text-amber-700 mt-1">
-                Les réponses ici sont générées par l'IA en utilisant la configuration et la base de connaissances de votre conseillère.
+                Les réponses ici sont générées par l'IA en utilisant la configuration et la base de connaissances de votre Vendeuse IA.
                 Assurez-vous d'avoir <strong>sauvegardé vos modifications</strong> avant de tester.
               </p>
             </div>
@@ -764,7 +764,7 @@
             <svg class="w-4 h-4 text-orange-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span class="text-orange-700 font-medium text-sm">Activez votre conseillère d'abord</span>
+            <span class="text-orange-700 font-medium text-sm">Activez votre Vendeuse IA d'abord</span>
           </div>
         </div>
 
@@ -839,7 +839,7 @@
                 <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">✓</span>
                 <div>
                   <p class="font-medium text-gray-900">C'est terminé !</p>
-                  <p class="text-sm text-gray-500">Votre conseillère apparaîtra automatiquement</p>
+                  <p class="text-sm text-gray-500">Votre Vendeuse IA apparaîtra automatiquement</p>
                 </div>
               </li>
             </ol>
@@ -1047,7 +1047,7 @@ const localConfig = ref<AgentConfig>({
     config: {}
   },
   widget: {
-    buttonText: 'Parler à une conseillère',
+    buttonText: 'Parler à une vendeuse',
     primaryColor: '#E91E63',
     position: 'above-cta',
     floatingPosition: 'bottom-right',
@@ -1073,7 +1073,7 @@ const processedWelcomeMessage = computed(() => {
 
   // Replace variables with actual values
   const variables: Record<string, string> = {
-    '{nomConseillere}': localConfig.value.agent.name || 'Conseillère',
+    '{nomConseillere}': localConfig.value.agent.name || 'Vendeuse IA',
     '{nomMarque}': authStore.user?.shop?.name || authStore.user?.name || 'Votre marque',
     '{prenom}': authStore.user?.firstName || 'Client',
   }
@@ -1130,7 +1130,7 @@ const integrationCode = computed(() => {
   const config = useRuntimeConfig()
   const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
-  return `<!-- ChatSeller Widget - Agent: ${agent.name || 'Conseillère'} -->
+  return `<!-- ChatSeller Widget - Agent: ${agent.name || 'Vendeuse IA'} -->
 <script>
 (function() {
   'use strict';
@@ -1224,7 +1224,7 @@ const borderRadiusOptions = [
 ]
 
 const availableVariables = [
-  { name: '{nomConseillere}', display: 'Nom conseillère' },
+  { name: '{nomConseillere}', display: 'Nom Vendeuse IA' },
   { name: '{nomMarque}', display: 'Nom marque' }
 ]
 
@@ -1238,7 +1238,7 @@ const markAsChanged = () => {
 }
 
 const getWelcomePlaceholder = () => {
-  return `Bonjour ! Je suis ${localConfig.value.agent.name || 'votre conseillère'}, comment puis-je vous aider ?`
+  return `Bonjour ! Je suis ${localConfig.value.agent.name || 'votre experte beauté'}, comment puis-je vous aider ?`
 }
 
 const triggerAvatarUpload = () => {
@@ -1416,7 +1416,7 @@ const fetchAgentConfig = async () => {
           config: agent.config || {}
         },
         widget: {
-          buttonText: agent.config?.widget?.buttonText || 'Parler à une conseillère',
+          buttonText: agent.config?.widget?.buttonText || 'Parler à une vendeuse',
           primaryColor: agent.config?.widget?.primaryColor || '#E91E63',
           position: agent.config?.widget?.position || 'above-cta',
           floatingPosition: agent.config?.widget?.floatingPosition || 'bottom-right',
@@ -1578,7 +1578,7 @@ onMounted(() => {
 
 // SEO
 useHead({
-  title: computed(() => `${localConfig.value.agent.name || 'Ma Conseillère'} - ChatSeller`)
+  title: computed(() => `${localConfig.value.agent.name || 'Ma Vendeuse IA'} - ChatSeller`)
 })
 </script>
 

@@ -335,7 +335,7 @@ export const useAgentConfig = () => {
           updatedAt: agentData.data.agent.updatedAt || new Date().toISOString()
         },
         widget: {
-          buttonText: shopData?.data?.widget_config?.buttonText || 'Parler à votre conseillère beauté',
+          buttonText: shopData?.data?.widget_config?.buttonText || 'Parler à votre vendeuse beauté',
           primaryColor: shopData?.data?.widget_config?.primaryColor || '#E91E63',
           position: (shopData?.data?.widget_config?.position as WidgetPosition) || 'above-cta',
           floatingPosition: (shopData?.data?.widget_config?.floatingPosition as 'bottom-right' | 'bottom-left') || 'bottom-right',
@@ -591,7 +591,7 @@ export const useAgentConfig = () => {
         
         const widgetPayload = {
           widget_config: {
-            buttonText: updates.widget.buttonText || 'Parler à votre conseillère beauté',
+            buttonText: updates.widget.buttonText || 'Parler à votre vendeuse beauté',
             primaryColor: updates.widget.primaryColor || '#E91E63',
             position: updates.widget.position || 'above-cta',
             theme: updates.widget.theme || 'beauty_modern',

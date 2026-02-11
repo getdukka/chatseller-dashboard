@@ -533,15 +533,15 @@ export const useAuthStore = defineStore('auth', {
                     theme: 'beauty_modern',
                     primaryColor: '#E91E63',
                     position: 'above-cta',
-                    buttonText: 'Parler à votre conseillère beauté',
+                    buttonText: 'Parler à votre vendeuse beauté',
                     language: 'fr'
                   },
                   agent_config: {
                     name: 'Rose',
-                    title: 'Conseillère Beauté IA',
+                    title: 'Vendeuse IA',
                     type: 'beauty_expert',
                     avatar: 'https://ui-avatars.com/api/?name=Rose&background=E91E63&color=fff',
-                    welcomeMessage: 'Bonjour ! Je suis Rose, votre conseillère beauté. Comment puis-je vous aider ?',
+                    welcomeMessage: 'Bonjour ! Je suis Rose, votre experte beauté. Comment puis-je vous aider ?',
                     fallbackMessage: 'Je transmets votre question à notre équipe beauté.',
                     collectBeautyProfile: true,
                     upsellEnabled: true

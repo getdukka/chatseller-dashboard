@@ -1011,16 +1011,7 @@ const getDefaultAgentName = () => {
 }
 
 const getAgentTypeName = () => {
-  const types = {
-    'skincare': 'Vendeuse Skincare',
-    'haircare': 'Vendeuse Capillaire',
-    'makeup': 'Vendeuse Makeup',
-    'fragrance': 'Vendeuse Parfums',
-    'bodycare': 'Vendeuse Beauté',
-    'natural': 'Vendeuse Produits Naturels',
-    'multi': 'Vendeuse IA'
-  }
-  return types[form.beautyCategory] || 'Vendeuse IA'
+  return 'Vendeuse IA'
 }
 
 // ========== NAVIGATION ==========
@@ -1142,11 +1133,14 @@ const completeOnboarding = async () => {
     console.log('✅ [Onboarding] Utilisateur connecté:', user.email)
     
     // ÉTAPE 1: MISE À JOUR SHOP
+    const trialEndsAt = new Date()
+    trialEndsAt.setDate(trialEndsAt.getDate() + 14) // Essai gratuit 14 jours
+
     const shopData = {
       name: form.company || `${getBeautyCategoryLabel(form.beautyCategory)} de ${user.email?.split('@')[0]}`,
       domain: extractDomain(form.website),
       platform: form.platform,
-      
+
       // Spécialisation beauté
       beauty_category: form.beautyCategory,
       specialized_target: form.specializedTarget,
@@ -1155,13 +1149,17 @@ const completeOnboarding = async () => {
       expertise_level: form.expertiseLevel,
       communication_tone: form.communicationTone,
       primary_goal: form.primaryGoal,
-      
+
+      // Plan & essai
+      subscription_plan: 'starter',
+      trial_ends_at: trialEndsAt.toISOString(),
+
       // Métadonnées
       acquisition_source: form.acquisitionSource,
       newsletter_subscribed: form.newsletter,
       onboarding_completed: true,
       onboarding_completed_at: new Date().toISOString(),
-      
+
       // Configuration widget
       widget_config: getOptimizedWidgetConfig()
     }
@@ -1231,37 +1229,42 @@ const completeOnboarding = async () => {
 
     console.log('✅ [Onboarding] Vendeuse IA créée avec succès:', agentResponse.data?.id)
     
-    // ÉTAPE 3: INDEXATION DU SITE WEB (ASYNCHRONE)
-    if (form.website) {
-      try {
-        console.log('🔍 [Onboarding] Lancement indexation site web...')
+    // ÉTAPE 3: INDEXATION DU SITE + IMPORT PRODUITS (PARALLÈLE, AWAIT)
+    // IMPORTANT: On await ces appels car window.location.href tue les requêtes en cours
+    const syncPromises: Promise<any>[] = []
 
+    // ✅ Normaliser l'URL une seule fois pour toutes les opérations
+    const normalizedWebsite = form.website
+      ? (form.website.startsWith('http') ? form.website : `https://${form.website}`)
+      : null
+
+    if (normalizedWebsite) {
+      console.log('🔍 [Onboarding] Lancement indexation site web:', normalizedWebsite)
+      syncPromises.push(
         api.knowledgeBase.processWebsite({
-          url: form.website,
+          url: normalizedWebsite,
           title: `Site ${form.company}`,
           tags: ['website', 'onboarding', form.beautyCategory || 'multi'],
           beautyCategory: form.beautyCategory
+        }).then(res => {
+          if (res.success) {
+            console.log('✅ [Onboarding] Indexation site terminée:', res.meta || res.data)
+          } else {
+            console.warn('⚠️ [Onboarding] Indexation échouée:', res.error)
+          }
         }).catch(indexError => {
-          console.warn('⚠️ [Onboarding] Indexation en arrière-plan échouée (non bloquante):', indexError)
+          console.warn('⚠️ [Onboarding] Indexation échouée (non bloquante):', indexError)
         })
-
-      } catch (indexError) {
-        console.warn('⚠️ [Onboarding] Erreur lancement indexation (non bloquante):', indexError)
-      }
+      )
     }
 
-    // ÉTAPE 3.5: IMPORT AUTOMATIQUE DES PRODUITS (ASYNCHRONE - Shopify/WooCommerce)
-    if (form.website && form.platform && form.platform !== 'custom') {
-      try {
-        console.log('📦 [Onboarding] Lancement import automatique des produits...')
+    if (normalizedWebsite && form.platform && form.platform !== 'custom') {
+      console.log('📦 [Onboarding] Lancement import automatique des produits:', normalizedWebsite)
 
-        // Construire l'URL de la boutique à partir du website
-        const shopUrl = form.website.startsWith('http') ? form.website : `https://${form.website}`
-
-        // Lancer l'import en arrière-plan (non bloquant)
+      syncPromises.push(
         api.products.sync(form.platform, {
-          shop_url: shopUrl,
-          auto_enrich: true // Enrichir automatiquement avec l'IA
+          shop_url: normalizedWebsite,
+          auto_enrich: true
         }).then(syncResponse => {
           if (syncResponse.success) {
             const summary = syncResponse.data?.summary || {}
@@ -1270,12 +1273,19 @@ const completeOnboarding = async () => {
             console.warn('⚠️ [Onboarding] Import produits échoué:', syncResponse.error)
           }
         }).catch(syncError => {
-          console.warn('⚠️ [Onboarding] Import produits en arrière-plan échoué (non bloquante):', syncError)
+          console.warn('⚠️ [Onboarding] Import produits échoué (non bloquant):', syncError)
         })
+      )
+    }
 
-      } catch (syncError) {
-        console.warn('⚠️ [Onboarding] Erreur lancement import produits (non bloquante):', syncError)
-      }
+    // Attendre la fin de tous les sync (avec timeout de 60s max)
+    if (syncPromises.length > 0) {
+      console.log(`⏳ [Onboarding] Attente de ${syncPromises.length} opération(s) de synchronisation...`)
+      await Promise.race([
+        Promise.allSettled(syncPromises),
+        new Promise(resolve => setTimeout(resolve, 60000)) // Timeout 60s
+      ])
+      console.log('✅ [Onboarding] Synchronisations terminées (ou timeout)')
     }
 
     // ÉTAPE 4: SYNCHRONISER LE STORE

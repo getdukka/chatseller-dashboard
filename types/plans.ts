@@ -119,7 +119,7 @@ export const BEAUTY_PLANS: Record<string, PlanFeatures> = {
     ],
     beautySpecific: [
       'IA custom entraînée sur vos données beauté',
-      'Conseillères virtuelles avec votre identité',
+      'Vendeuses IA virtuelles avec votre identité',
       'Intégration ERP/CRM beauté avancée',
       'Analytics prédictives tendances beauté',
       'Support technique dédié secteur beauté'

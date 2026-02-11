@@ -10,7 +10,7 @@
               Base de connaissances
             </h1>
             <p class="mt-2 text-gray-600">
-              Formez vos Conseillères IA avec des informations sur votre marque et vos produits
+              Formez votre Vendeuse IA avec des informations sur votre marque et vos produits
             </p>
           </div>
 
@@ -52,7 +52,7 @@
               {{ uploadProgress > 0 ? 'Upload en cours...' : 'Entraînement en cours...' }}
             </h3>
             <p class="text-sm text-rose-700">
-              {{ uploadProgress > 0 ? 'Téléchargement de vos fichiers beauté' : 'Votre Conseillère IA apprend de nouvelles données beauté' }}
+              {{ uploadProgress > 0 ? 'Téléchargement de vos fichiers beauté' : 'Votre Vendeuse IA apprend de nouvelles données beauté' }}
             </p>
             <div v-if="uploadProgress > 0" class="mt-2 bg-rose-200 rounded-full h-2">
               <div 
@@ -324,7 +324,7 @@
                     <span>Ajouté le {{ formatDate(item.createdAt) }}</span>
                     <span v-if="item.metadata?.fileSize">{{ formatFileSize(item.metadata.fileSize) }}</span>
                     <span v-if="item.metadata?.wordCount">{{ item.metadata.wordCount }} mots</span>
-                    <span v-if="item.linkedAgents?.length">Lié à {{ item.linkedAgents.length }} conseillère(s)</span>
+                    <span v-if="item.linkedAgents?.length">Lié à {{ item.linkedAgents.length }} Vendeuse(s) IA</span>
                     <span v-if="item.tags.length" class="flex items-center">
                       <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
@@ -403,7 +403,7 @@
           <p class="mt-2 text-gray-500">
             {{ hasActiveFilters 
               ? 'Aucune connaissance ne correspond à vos critères de recherche'
-              : 'Ajoutez vos premières connaissances pour former votre Conseillère IA afin que ses réponses soient plus précises.'
+              : 'Ajoutez vos premières connaissances pour former votre Vendeuse IA afin que ses réponses soient plus précises.'
             }}
           </p>
           <div class="mt-6">
@@ -921,7 +921,7 @@ Pour choisir son fond de teint :
                 class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
               >
               <label for="editActive" class="ml-2 text-sm text-gray-700">
-                Document actif (utilisé par la Conseillère IA)
+                Document actif (utilisé par la Vendeuse IA)
               </label>
             </div>
           </div>

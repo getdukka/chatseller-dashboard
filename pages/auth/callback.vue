@@ -289,7 +289,7 @@ const ensureShopExists = async (user: any) => {
       theme: 'beauty_modern',
       primaryColor: '#E91E63',
       position: 'bottom-right',
-      buttonText: 'Parler à votre conseillère beauté',
+      buttonText: 'Parler à votre vendeuse beauté',
       language: 'fr'
     }
   }
