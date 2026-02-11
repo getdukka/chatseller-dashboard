@@ -27,8 +27,8 @@
         </div>
         
         <div v-if="!initializing" class="hidden md:block text-right">
-          <p class="text-rose-600 text-sm font-medium">Configuration de votre Conseillère IA</p>
-          <p class="text-gray-800 font-semibold">{{ userFirstName }}, créons votre assistante beauté !</p>
+          <p class="text-rose-600 text-sm font-medium">Configuration de votre Vendeuse IA</p>
+          <p class="text-gray-800 font-semibold">{{ userFirstName }}, créons votre Vendeuse IA !</p>
         </div>
       </div>
     </header>
@@ -64,10 +64,10 @@
               <span class="text-sm text-rose-600">⏱️ 3 minutes</span>
             </div>
             <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-rose-800 to-purple-900 bg-clip-text text-transparent mb-3">
-              Créons votre Conseillère IA
+              Créons votre Vendeuse IA
             </h1>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-              Ces informations nous permettent de créer une Conseillère IA 
+              Ces informations nous permettent de créer une Vendeuse IA
               <span class="font-semibold text-rose-600">parfaitement adaptée</span> à votre marque et vos clientes.
             </p>
           </div>
@@ -107,13 +107,13 @@
                   Parlez-nous de votre marque beauté
                 </p>
                 
-                <!-- 🆕 USP WHATSAPP -->
+                <!-- 🆕 USP VENTE -->
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 mb-6 text-left">
                   <div class="flex items-start space-x-4">
-                    <span class="text-3xl">📱</span>
+                    <span class="text-3xl">💰</span>
                     <div>
-                      <p class="font-bold text-green-800 mb-1">Fini les nuits sur WhatsApp !</p>
-                      <p class="text-sm text-green-700">Votre Conseillère IA va répondre à vos clientes 24h/24, même quand vous dormez. Plus besoin de répéter les mêmes conseils des dizaines de fois.</p>
+                      <p class="font-bold text-green-800 mb-1">Ne perdez plus aucune vente !</p>
+                      <p class="text-sm text-green-700">Votre Vendeuse IA accueille chaque visiteur, le conseille et l'accompagne jusqu'à l'achat, 24h/24. Résultat : +150% de ventes en moyenne.</p>
                     </div>
                   </div>
                 </div>
@@ -121,7 +121,7 @@
                 <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-5 text-left">
                   <p class="text-rose-800 text-sm leading-relaxed">
                     <strong class="text-rose-900">Configuration intelligente :</strong><br>
-                    Nous analysons votre site web pour créer automatiquement une base de connaissances. Votre Conseillère IA connaîtra vos produits dès le premier jour.
+                    Nous analysons votre site web pour créer automatiquement une base de connaissances. Votre Vendeuse IA connaîtra vos produits dès le premier jour.
                   </p>
                 </div>
               </div>
@@ -159,7 +159,7 @@
                           <svg class="w-4 h-4 text-green-500 inline mr-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
-                          Nous analyserons votre catalogue pour former votre Conseillère IA
+                          Nous analyserons votre catalogue pour former votre Vendeuse IA
                         </p>
                       </div>
 
@@ -181,7 +181,7 @@
                           <option value="natural" class="bg-white">🌿 Cosmétiques naturels & Bio</option>
                           <option value="multi" class="bg-white">✨ Multi-catégories beauté</option>
                         </select>
-                        <p class="text-gray-500 text-sm mt-2">Votre Conseillère sera experte dans ce domaine</p>
+                        <p class="text-gray-500 text-sm mt-2">Votre Vendeuse IA sera experte dans ce domaine</p>
                       </div>
 
                       <div>
@@ -352,15 +352,15 @@
                 </svg>
               </div>
               <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 bg-clip-text text-transparent">
-                Personnalité de votre Conseillère
+                Personnalité de votre Vendeuse IA
               </h1>
               <p class="text-xl lg:text-2xl text-gray-700 max-w-4xl mx-auto mb-8">
-                Comment souhaitez-vous que votre Conseillère IA s'adresse à vos clientes ?
+                Comment souhaitez-vous que votre Vendeuse IA s'adresse à vos clientes ?
               </p>
               <div class="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-xl p-6 max-w-2xl mx-auto">
                 <p class="text-pink-800 text-sm leading-relaxed">
                   <strong class="text-pink-900">Personnalité adaptée :</strong><br>
-                  Votre Conseillère IA adoptera le ton et l'approche qui correspondent à votre marque et vos clientes.
+                  Votre Vendeuse IA adoptera le ton et l'approche qui correspondent à votre marque et vos clientes.
                 </p>
               </div>
             </div>
@@ -371,7 +371,7 @@
                 <!-- Niveau d'expertise -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Niveau d'expertise de votre Conseillère *
+                    Niveau d'expertise de votre Vendeuse IA *
                   </label>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <label v-for="expertise in expertiseLevels" :key="expertise.value" class="relative group cursor-pointer">
@@ -431,7 +431,7 @@
                 <!-- Objectif principal -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Objectif principal de votre Conseillère *
+                    Objectif principal de votre Vendeuse IA *
                   </label>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <label v-for="goal in primaryGoals" :key="goal.value" class="relative group cursor-pointer">
@@ -576,7 +576,7 @@
                   <div class="bg-white/80 backdrop-blur-sm border border-rose-200 rounded-2xl p-8 shadow-xl">
                     <div class="space-y-6">
                       
-                      <!-- Nom de la Conseillère -->
+                      <!-- Nom de la Vendeuse IA -->
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
                           Nom de votre {{ getAgentTypeName() }}
@@ -642,7 +642,7 @@
                           <div>
                             <p class="font-bold text-green-800 mb-2 text-lg">14 jours d'essai gratuit !</p>
                             <p class="text-green-700 text-sm">
-                              Testez toutes les fonctionnalités sans engagement. Aucune carte bancaire requise. Votre Conseillère IA commence à vendre pour vous dès maintenant.
+                              Testez toutes les fonctionnalités sans engagement. Aucune carte bancaire requise. Votre Vendeuse IA commence à vendre pour vous dès maintenant.
                             </p>
                           </div>
                         </div>
@@ -822,7 +822,7 @@ const expertiseLevels = [
   { 
     value: 'luxury', 
     icon: '💎', 
-    label: 'Conseillère Premium', 
+    label: 'Vendeuse Premium', 
     description: 'Service haut de gamme avec expertise pointue' 
   }
 ]
@@ -840,8 +840,8 @@ const communicationTones = [
     value: 'professional',
     icon: '👩‍💼',
     label: 'Professionnelle & Experte',
-    description: 'Approche conseillère beauté en institut',
-    example: 'Bonjour Madame, je suis votre conseillère beauté. Comment puis-je vous accompagner aujourd\'hui ?'
+    description: 'Approche experte beauté en institut',
+    example: 'Bonjour Madame, je suis votre experte beauté. Comment puis-je vous accompagner aujourd\'hui ?'
   },
   {
     value: 'luxury',
@@ -927,20 +927,20 @@ const getClienteleDescription = () => {
     fragrance: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs préférences olfactives.',
     bodycare: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs besoins corporels.',
     natural: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs préférences naturelles.',
-    multi: 'Qui sont vos clientes ? Cela permet d\'adapter le langage et les recommandations de votre Conseillère IA.'
+    multi: 'Qui sont vos clientes ? Cela permet d\'adapter le langage et les recommandations de votre Vendeuse IA.'
   }
   return descriptions[form.beautyCategory] || descriptions.multi
 }
 
 const getClienteleExplanation = () => {
   const explanations = {
-    skincare: 'Plus nous connaissons les types de peau de vos clientes, mieux votre Conseillère pourra recommander les soins adaptés.',
-    haircare: 'Plus nous connaissons les textures capillaires de vos clientes, mieux votre Conseillère pourra conseiller les soins adaptés.',
-    makeup: 'Plus nous connaissons les occasions maquillage de vos clientes, mieux votre Conseillère pourra proposer les looks appropriés.',
-    fragrance: 'Plus nous connaissons les goûts olfactifs de vos clientes, mieux votre Conseillère pourra orienter vers les bonnes familles de parfums.',
-    bodycare: 'Plus nous connaissons les besoins corporels de vos clientes, mieux votre Conseillère pourra recommander les soins adaptés.',
-    natural: 'Plus nous connaissons les préférences de vos clientes, mieux votre Conseillère pourra conseiller les ingrédients naturels adaptés.',
-    multi: 'Plus nous connaissons vos clientes, mieux votre Conseillère pourra les accompagner selon leurs besoins beauté.'
+    skincare: 'Plus nous connaissons les types de peau de vos clientes, mieux votre Vendeuse IA pourra recommander les soins adaptés.',
+    haircare: 'Plus nous connaissons les textures capillaires de vos clientes, mieux votre Vendeuse IA pourra conseiller les soins adaptés.',
+    makeup: 'Plus nous connaissons les occasions maquillage de vos clientes, mieux votre Vendeuse IA pourra proposer les looks appropriés.',
+    fragrance: 'Plus nous connaissons les goûts olfactifs de vos clientes, mieux votre Vendeuse IA pourra orienter vers les bonnes familles de parfums.',
+    bodycare: 'Plus nous connaissons les besoins corporels de vos clientes, mieux votre Vendeuse IA pourra recommander les soins adaptés.',
+    natural: 'Plus nous connaissons les préférences de vos clientes, mieux votre Vendeuse IA pourra conseiller les ingrédients naturels adaptés.',
+    multi: 'Plus nous connaissons vos clientes, mieux votre Vendeuse IA pourra les accompagner selon leurs besoins beauté.'
   }
   return explanations[form.beautyCategory] || explanations.multi
 }
@@ -1012,15 +1012,15 @@ const getDefaultAgentName = () => {
 
 const getAgentTypeName = () => {
   const types = {
-    'skincare': 'Conseillère Skincare',
-    'haircare': 'Conseillère Capillaire',
-    'makeup': 'Conseillère Makeup',
-    'fragrance': 'Conseillère Parfums',
-    'bodycare': 'Conseillère Beauté',
-    'natural': 'Conseillère Produits Naturels',
-    'multi': 'Conseillère IA'
+    'skincare': 'Vendeuse Skincare',
+    'haircare': 'Vendeuse Capillaire',
+    'makeup': 'Vendeuse Makeup',
+    'fragrance': 'Vendeuse Parfums',
+    'bodycare': 'Vendeuse Beauté',
+    'natural': 'Vendeuse Produits Naturels',
+    'multi': 'Vendeuse IA'
   }
-  return types[form.beautyCategory] || 'Conseillère IA'
+  return types[form.beautyCategory] || 'Vendeuse IA'
 }
 
 // ========== NAVIGATION ==========
@@ -1054,13 +1054,13 @@ const getOptimizedAgentConfig = () => {
   const agentName = form.agentName || getDefaultAgentName()
   
   const welcomeMessages = {
-    'skincare': `Bonjour ! Je suis ${agentName}, votre conseillère skincare. Quel est votre type de peau ? Je vais vous recommander la routine parfaite !`,
-    'makeup': `Salut ! Je suis ${agentName}, votre conseillère maquillage. Pour quelle occasion cherchez-vous le look parfait ?`,
+    'skincare': `Bonjour ! Je suis ${agentName}, votre experte skincare. Quel est votre type de peau ? Je vais vous recommander la routine parfaite !`,
+    'makeup': `Salut ! Je suis ${agentName}, votre experte maquillage. Pour quelle occasion cherchez-vous le look parfait ?`,
     'fragrance': `Bonjour ! Je suis ${agentName}, votre spécialiste parfums. Quel type de fragrance vous fait rêver ?`,
     'haircare': `Hello ! ${agentName} ici, experte capillaire. Parlez-moi de vos cheveux, je vais vous aider à trouver les soins adaptés !`,
     'bodycare': `Bonjour ! Je suis ${agentName}, spécialiste soins du corps. Comment puis-je sublimer votre routine bien-être ?`,
-    'natural': `Bonjour ! Je suis ${agentName}, votre conseillère cosmétiques naturels. Quels sont vos besoins beauté aujourd'hui ?`,
-    'multi': `Bonjour ! Je suis ${agentName}, votre conseillère beauté. Dans quel domaine puis-je vous accompagner aujourd'hui ?`
+    'natural': `Bonjour ! Je suis ${agentName}, votre experte cosmétiques naturels. Quels sont vos besoins beauté aujourd'hui ?`,
+    'multi': `Bonjour ! Je suis ${agentName}, votre experte beauté. Dans quel domaine puis-je vous accompagner aujourd'hui ?`
   }
 
   const fallbackMessages = {
@@ -1106,7 +1106,7 @@ const getOptimizedWidgetConfig = () => {
     'haircare': '💇‍♀️ Conseil capillaire',
     'bodycare': '🧴 Conseil soins corps',
     'natural': '🌿 Conseil naturel',
-    'multi': '💝 Parler à ma conseillère'
+    'multi': '💝 Parler à ma vendeuse'
   }
   
   return {
@@ -1177,7 +1177,7 @@ const completeOnboarding = async () => {
     console.log('✅ [Onboarding] Shop mis à jour')
     
     // ÉTAPE 2: CRÉER AUTOMATIQUEMENT L'AGENT IA (OBLIGATOIRE)
-    console.log('🤖 [Onboarding] Création de la Conseillère IA...')
+    console.log('🤖 [Onboarding] Création de la Vendeuse IA...')
 
     // Déterminer le type d'agent basé sur la catégorie beauté
     const beautyCategory = form.beautyCategory || 'multi'
@@ -1226,10 +1226,10 @@ const completeOnboarding = async () => {
       })
 
       // ❌ NOUVEAU: La création d'agent est OBLIGATOIRE - on ne peut pas continuer sans
-      throw new Error(`Impossible de créer votre Conseillère IA: ${agentResponse.error || 'Erreur inconnue'}`)
+      throw new Error(`Impossible de créer votre Vendeuse IA: ${agentResponse.error || 'Erreur inconnue'}`)
     }
 
-    console.log('✅ [Onboarding] Conseillère IA créée avec succès:', agentResponse.data?.id)
+    console.log('✅ [Onboarding] Vendeuse IA créée avec succès:', agentResponse.data?.id)
     
     // ÉTAPE 3: INDEXATION DU SITE WEB (ASYNCHRONE)
     if (form.website) {
@@ -1295,7 +1295,7 @@ const completeOnboarding = async () => {
   } catch (error: any) {
     console.error('❌ [Onboarding] Erreur finalisation:', error)
     
-    let userMessage = 'Une erreur s\'est produite lors de la création de votre Conseillère IA.'
+    let userMessage = 'Une erreur s\'est produite lors de la création de votre Vendeuse IA.'
     
     if (error.message?.includes('Token') || error.message?.includes('401')) {
       userMessage = 'Session expirée. Reconnexion en cours...'
@@ -1346,10 +1346,10 @@ onMounted(async () => {
 })
 
 useHead({
-  title: 'Créez votre Conseillère IA - ChatSeller',
+  title: 'Créez votre Vendeuse IA - ChatSeller',
   meta: [
-    { name: 'description', content: 'Configurez votre Conseillère IA beauté en 3 minutes. Skincare, maquillage, parfums, soins capillaires - votre assistante vend pour vous 24h/24.' },
-    { name: 'keywords', content: 'Conseillère IA, skincare, maquillage, parfums, capillaire, beauté Afrique, e-commerce' }
+    { name: 'description', content: 'Configurez votre Vendeuse IA beauté en 3 minutes. Skincare, maquillage, parfums, soins capillaires - votre Vendeuse IA vend pour vous 24h/24.' },
+    { name: 'keywords', content: 'Vendeuse IA, skincare, maquillage, parfums, capillaire, beauté Afrique, e-commerce' }
   ]
 })
 </script>
