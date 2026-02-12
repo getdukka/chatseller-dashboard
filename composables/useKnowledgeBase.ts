@@ -4,6 +4,7 @@ import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useQuotas } from '~/composables/useQuotas'
 import { BEAUTY_CATEGORIES, validateBeautyFile } from '../constants/beauty'
+import { checkQuotaUsage } from '~/types/plans'
 import type { ApiErrorResponse, ApiResponse } from '~/composables/useApi'
 
 // ✅ TYPES COMPLETS (restaurés)
@@ -129,7 +130,6 @@ export const useKnowledgeBase = () => {
       // ✅ Calcul sécurisé du statut des quotas
       let quotasStatus
       try {
-        const { checkQuotaUsage } = require('~/types/plans')
         quotasStatus = checkQuotaUsage(normalizedPlan, authStore.quotasUsage)
       } catch (quotaError) {
         console.warn('⚠️ [useKnowledgeBase] Erreur checkQuotaUsage, utilisation des valeurs par défaut:', quotaError)

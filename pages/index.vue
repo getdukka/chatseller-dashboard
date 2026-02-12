@@ -1254,6 +1254,27 @@ onMounted(async () => {
     justCompletedOnboarding
   })
 
+  // ✅ Lire et afficher le diagnostic sync de l'onboarding (s'il existe)
+  try {
+    const syncDiag = sessionStorage.getItem('chatseller_sync_diagnostic')
+    if (syncDiag) {
+      const diagnostic = JSON.parse(syncDiag)
+      console.log('📋 [Index] Diagnostic sync onboarding:', diagnostic)
+      if (diagnostic.productsStatus === 'error') {
+        console.error('❌ [Index] Import produits a échoué pendant l\'onboarding:', diagnostic.productsError)
+      }
+      if (diagnostic.kbStatus === 'error') {
+        console.error('❌ [Index] Indexation KB a échoué pendant l\'onboarding:', diagnostic.kbError)
+      }
+      if (diagnostic.syncResult === 'no_promises') {
+        console.error('❌ [Index] Aucune opération sync n\'a été créée! Vérifier form.website et form.platform')
+      }
+      // Garder le diagnostic pour consultation ultérieure, ne pas le supprimer
+    }
+  } catch (e) {
+    // Ignorer les erreurs de parsing
+  }
+
   // ✅ Déterminer si on doit afficher le modal AVANT les appels async
   const shouldShowWelcomeModal = !welcomeShown && (onboardingCompleted || welcomeParam || justCompletedOnboarding)
 

@@ -1238,8 +1238,22 @@ const completeOnboarding = async () => {
       ? (form.website.startsWith('http') ? form.website : `https://${form.website}`)
       : null
 
+    // ✅ Diagnostic persistant pour debug (survit au redirect)
+    const syncDiagnostic: Record<string, any> = {
+      formWebsite: form.website,
+      formPlatform: form.platform,
+      normalizedWebsite,
+      startedAt: new Date().toISOString(),
+      kbStatus: 'skipped',
+      productsStatus: 'skipped',
+      promisesCreated: 0
+    }
+
+    console.log('🔍 [Onboarding] Diagnostic sync:', JSON.stringify(syncDiagnostic))
+
     if (normalizedWebsite) {
       console.log('🔍 [Onboarding] Lancement indexation site web:', normalizedWebsite)
+      syncDiagnostic.kbStatus = 'pending'
       syncPromises.push(
         api.knowledgeBase.processWebsite({
           url: normalizedWebsite,
@@ -1248,18 +1262,27 @@ const completeOnboarding = async () => {
           beautyCategory: form.beautyCategory
         }).then(res => {
           if (res.success) {
+            syncDiagnostic.kbStatus = 'success'
+            syncDiagnostic.kbMeta = res.meta || res.data
             console.log('✅ [Onboarding] Indexation site terminée:', res.meta || res.data)
           } else {
+            syncDiagnostic.kbStatus = 'error'
+            syncDiagnostic.kbError = res.error
             console.warn('⚠️ [Onboarding] Indexation échouée:', res.error)
           }
         }).catch(indexError => {
+          syncDiagnostic.kbStatus = 'error'
+          syncDiagnostic.kbError = indexError?.message || String(indexError)
           console.warn('⚠️ [Onboarding] Indexation échouée (non bloquante):', indexError)
         })
       )
+    } else {
+      console.warn('⚠️ [Onboarding] Pas de website fourni, indexation KB ignorée')
     }
 
     if (normalizedWebsite && form.platform && form.platform !== 'custom') {
-      console.log('📦 [Onboarding] Lancement import automatique des produits:', normalizedWebsite)
+      console.log('📦 [Onboarding] Lancement import automatique des produits:', normalizedWebsite, 'platform:', form.platform)
+      syncDiagnostic.productsStatus = 'pending'
 
       syncPromises.push(
         api.products.sync(form.platform, {
@@ -1267,25 +1290,54 @@ const completeOnboarding = async () => {
           auto_enrich: true
         }).then(syncResponse => {
           if (syncResponse.success) {
-            const summary = syncResponse.data?.summary || {}
+            const summary = syncResponse.data?.summary || syncResponse.summary || {}
+            syncDiagnostic.productsStatus = 'success'
+            syncDiagnostic.productsSummary = summary
             console.log(`✅ [Onboarding] Import produits terminé: ${summary.inserted || 0} nouveaux, ${summary.updated || 0} mis à jour`)
           } else {
+            syncDiagnostic.productsStatus = 'error'
+            syncDiagnostic.productsError = syncResponse.error
             console.warn('⚠️ [Onboarding] Import produits échoué:', syncResponse.error)
           }
         }).catch(syncError => {
+          syncDiagnostic.productsStatus = 'error'
+          syncDiagnostic.productsError = syncError?.message || String(syncError)
           console.warn('⚠️ [Onboarding] Import produits échoué (non bloquant):', syncError)
         })
       )
+    } else {
+      console.warn('⚠️ [Onboarding] Conditions import produits non remplies:', {
+        hasWebsite: !!normalizedWebsite,
+        platform: form.platform,
+        isCustom: form.platform === 'custom'
+      })
     }
 
-    // Attendre la fin de tous les sync (avec timeout de 60s max)
+    syncDiagnostic.promisesCreated = syncPromises.length
+
+    // Attendre la fin de tous les sync (avec timeout de 90s max)
     if (syncPromises.length > 0) {
       console.log(`⏳ [Onboarding] Attente de ${syncPromises.length} opération(s) de synchronisation...`)
-      await Promise.race([
-        Promise.allSettled(syncPromises),
-        new Promise(resolve => setTimeout(resolve, 60000)) // Timeout 60s
+
+      const syncResult = await Promise.race([
+        Promise.allSettled(syncPromises).then(() => 'completed'),
+        new Promise<string>(resolve => setTimeout(() => resolve('timeout'), 90000))
       ])
-      console.log('✅ [Onboarding] Synchronisations terminées (ou timeout)')
+
+      syncDiagnostic.syncResult = syncResult
+      syncDiagnostic.completedAt = new Date().toISOString()
+      console.log(`✅ [Onboarding] Synchronisations: ${syncResult}`)
+    } else {
+      syncDiagnostic.syncResult = 'no_promises'
+      console.warn('⚠️ [Onboarding] Aucune opération de synchronisation créée!')
+    }
+
+    // ✅ Sauvegarder le diagnostic dans sessionStorage (survit au redirect)
+    try {
+      sessionStorage.setItem('chatseller_sync_diagnostic', JSON.stringify(syncDiagnostic))
+      console.log('📋 [Onboarding] Diagnostic sync sauvegardé:', syncDiagnostic)
+    } catch (e) {
+      console.warn('⚠️ Impossible de sauvegarder le diagnostic sync')
     }
 
     // ÉTAPE 4: SYNCHRONISER LE STORE
@@ -1293,14 +1345,14 @@ const completeOnboarding = async () => {
       await authStore.restoreSession(true)
       console.log('✅ [Onboarding] Store synchronisé')
     }
-    
+
     console.log('🎉 [Onboarding] Onboarding terminé avec succès !')
 
     // ✅ Sauvegarder un flag en sessionStorage comme backup pour le modal de bienvenue
     sessionStorage.setItem('chatseller_onboarding_just_completed', 'true')
 
-    // REDIRECTION
-    window.location.href = `/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`
+    // REDIRECTION via navigateTo (préserve le contexte SPA et les logs console)
+    await navigateTo(`/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`, { replace: true })
     
   } catch (error: any) {
     console.error('❌ [Onboarding] Erreur finalisation:', error)
