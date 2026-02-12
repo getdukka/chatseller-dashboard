@@ -441,16 +441,17 @@
                   </div>
                 </div>
 
-                <!-- Objectif principal -->
+                <!-- Objectifs de votre Vendeuse IA (multi-select, tous pré-cochés) -->
                 <div class="mb-8">
-                  <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Objectif principal de votre Vendeuse IA *
+                  <label class="block text-xl font-semibold text-gray-800 mb-2">
+                    Votre Vendeuse IA pourra
                   </label>
+                  <p class="text-sm text-gray-500 mb-6">Décochez uniquement ce que vous ne souhaitez pas</p>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <label v-for="goal in primaryGoals" :key="goal.value" class="relative group cursor-pointer">
-                      <input v-model="form.primaryGoal" :value="goal.value" type="radio" class="sr-only" required>
+                      <input v-model="form.primaryGoals" :value="goal.value" type="checkbox" class="sr-only">
                       <div class="p-6 bg-white border-2 rounded-xl transition-all group-hover:bg-purple-50 h-full"
-                           :class="form.primaryGoal === goal.value ? 'border-purple-500 bg-purple-50 shadow-lg shadow-purple-500/20' : 'border-gray-300'">
+                           :class="form.primaryGoals.includes(goal.value) ? 'border-purple-500 bg-purple-50 shadow-lg shadow-purple-500/20' : 'border-gray-300'">
                         <div class="space-y-3">
                           <div class="flex items-center space-x-3">
                             <div class="text-2xl">{{ goal.icon }}</div>
@@ -458,7 +459,7 @@
                           </div>
                           <div class="text-sm text-gray-600">{{ goal.description }}</div>
                         </div>
-                        <div v-if="form.primaryGoal === goal.value" class="absolute top-4 right-4">
+                        <div v-if="form.primaryGoals.includes(goal.value)" class="absolute top-4 right-4">
                           <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
                             <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -720,9 +721,9 @@
                           Création en cours...
                         </span>
                         <span v-else class="flex items-center justify-center">
-                          Créer ma {{ getAgentTypeName() }}
+                          Lancer {{ form.agentName || getDefaultAgentName() }}
                           <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                           </svg>
                         </span>
                       </button>
@@ -773,7 +774,7 @@ const form = reactive({
   // Étape 3 : Style de conseil
   expertiseLevel: '',
   communicationTone: '',
-  primaryGoal: '',
+  primaryGoals: ['conversions', 'upsell', 'support', 'education'] as string[],
   
   // Étape 4 : Finalisation
   agentName: '',
@@ -1130,12 +1131,19 @@ const launchStep1Sync = async () => {
 
 // ========== PRÉ-REMPLISSAGE ÉTAPE 2 ==========
 const prefillStep2 = () => {
-  // Pré-remplir la gamme de prix si détectée par le sync
   if (syncStore.detectedPriceRange && !form.priceRange) {
     form.priceRange = syncStore.detectedPriceRange
     console.log('🔍 [Onboarding] Gamme de prix pré-remplie:', form.priceRange)
   }
 }
+
+// Watcher réactif : si le sync termine pendant qu'on est à l'étape 2
+watch(() => syncStore.detectedPriceRange, (newRange) => {
+  if (newRange && currentStep.value === 2 && !form.priceRange) {
+    form.priceRange = newRange
+    console.log('🔍 [Onboarding] Gamme de prix pré-remplie (réactif):', newRange)
+  }
+})
 
 const previousStep = () => {
   if (currentStep.value > 1) {
@@ -1181,7 +1189,7 @@ const getOptimizedAgentConfig = () => {
     welcomeMessage: welcomeMessages[form.beautyCategory] || welcomeMessages['multi'],
     fallbackMessage: fallbackMessages[form.expertiseLevel] || fallbackMessages['expert'],
     collectPaymentMethod: true,
-    upsellEnabled: form.primaryGoal === 'upsell',
+    upsellEnabled: form.primaryGoals.includes('upsell'),
     beautySpecialization: {
       category: form.beautyCategory,
       expertiseLevel: form.expertiseLevel,
@@ -1189,7 +1197,7 @@ const getOptimizedAgentConfig = () => {
       specializedTarget: form.specializedTarget,
       targetAgeRange: form.targetAgeRange,
       priceRange: form.priceRange,
-      primaryGoal: form.primaryGoal
+      primaryGoals: form.primaryGoals
     }
   }
 }
@@ -1260,7 +1268,7 @@ const completeOnboarding = async () => {
       price_range: form.priceRange,
       expertise_level: form.expertiseLevel,
       communication_tone: form.communicationTone,
-      primary_goal: form.primaryGoal,
+      primary_goals: form.primaryGoals,
 
       // Métadonnées
       acquisition_source: form.acquisitionSource,

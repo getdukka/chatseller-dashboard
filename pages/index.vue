@@ -4,11 +4,16 @@
     
     <!-- ========== MODAL DE BIENVENUE POST-ONBOARDING ========== -->
     <div v-if="showWelcomeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-hidden">
-      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
-        
-        <!-- Header avec confetti/célébration -->
-        <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-8 text-center rounded-t-2xl">
-          <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden relative">
+
+        <!-- Confetti animation -->
+        <div class="confetti-container absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
+          <div v-for="i in 30" :key="i" class="confetti-piece" :style="getConfettiStyle(i)"></div>
+        </div>
+
+        <!-- Header avec célébration -->
+        <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-8 text-center rounded-t-2xl relative z-20">
+          <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-once">
             <span class="text-4xl">🎉</span>
           </div>
           <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
@@ -1011,6 +1016,28 @@ const closeWelcomeModal = () => {
   localStorage.setItem('chatseller_welcome_shown', 'true')
 }
 
+// ========== CONFETTI ANIMATION ==========
+const confettiColors = ['#E91E63', '#9C27B0', '#FF9800', '#4CAF50', '#2196F3', '#FF5722', '#FFEB3B', '#00BCD4']
+
+const getConfettiStyle = (index: number) => {
+  const color = confettiColors[index % confettiColors.length]
+  const left = Math.random() * 100
+  const delay = Math.random() * 2
+  const duration = 2.5 + Math.random() * 2
+  const size = 6 + Math.random() * 6
+  const rotation = Math.random() * 360
+
+  return {
+    left: `${left}%`,
+    backgroundColor: color,
+    width: `${size}px`,
+    height: `${size * 0.4}px`,
+    animationDelay: `${delay}s`,
+    animationDuration: `${duration}s`,
+    transform: `rotate(${rotation}deg)`
+  }
+}
+
 // ========== DATA LOADING ==========
 const loadAgent = async () => {
   try {
@@ -1364,5 +1391,38 @@ useHead({
   button, a {
     min-height: 44px;
   }
+}
+
+/* Confetti animation */
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(-20px) rotate(0deg) scale(1);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(400px) rotate(720deg) scale(0.5);
+  }
+}
+
+@keyframes bounce-once {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.05); }
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  border-radius: 2px;
+  animation: confetti-fall ease-out forwards;
+}
+
+.animate-bounce-once {
+  animation: bounce-once 0.8s ease-out;
 }
 </style>

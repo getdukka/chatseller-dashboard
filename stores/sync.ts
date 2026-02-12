@@ -126,12 +126,15 @@ export const useSyncStore = defineStore('sync', {
         }).then(res => {
           if (res.success) {
             this.productsStatus = 'success'
-            const summary = res.data?.summary || (res as any).summary || {}
+            // L'API retourne { success, data: Product[], summary: {...} }
+            // apiCall passe la réponse telle quelle (success in response)
+            const summary = (res as any).summary || {}
             this.productsCount = (summary.inserted || 0) + (summary.updated || 0)
             console.log('✅ [SyncStore] Produits importés:', this.productsCount)
 
-            // Détection de la gamme de prix
-            this._detectPriceRange(res.data?.data || res.data?.products || [])
+            // res.data EST le tableau de produits directement
+            const products = Array.isArray(res.data) ? res.data : []
+            this._detectPriceRange(products)
           } else {
             this.productsStatus = 'error'
             this.productsError = res.error || 'Erreur inconnue'
