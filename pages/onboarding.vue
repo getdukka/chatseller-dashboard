@@ -239,6 +239,19 @@
                   {{ getClienteleExplanation() }}
                 </p>
               </div>
+
+              <!-- Indicateur sync en cours -->
+              <div v-if="syncStore.isSyncing" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-700">
+                <svg class="animate-spin w-4 h-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Votre IA analyse votre catalogue en arrière-plan...
+              </div>
+              <div v-else-if="syncStore.detectedPriceRange && !form.priceRange" class="mt-4 inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-full text-sm text-green-700">
+                <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Gamme de prix détectée depuis votre catalogue
+              </div>
             </div>
 
             <form @submit.prevent="nextStep" class="max-w-4xl mx-auto space-y-8">
@@ -482,90 +495,124 @@
             </form>
           </div>
 
-          <!-- ========== ÉTAPE 4: FINALISATION ========== -->
+          <!-- ========== ÉTAPE 4: FINALISATION + AHA MOMENT ========== -->
           <div v-if="currentStep === 4" class="transition-all duration-500 ease-in-out">
             <div class="grid lg:grid-cols-2 gap-12 items-center">
-              
-              <!-- Colonne gauche : Récapitulatif -->
+
+              <!-- Colonne gauche : Aha Moment + Statut Sync -->
               <div class="text-center lg:text-left">
                 <div class="inline-flex p-4 bg-gradient-to-br from-emerald-100 to-green-100 rounded-2xl mb-8">
-                  <svg class="w-12 h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="syncStore.isSyncComplete && syncStore.hasAnySuccess" class="w-12 h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                   </svg>
+                  <svg v-else class="w-12 h-12 text-emerald-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
                 </div>
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
+
+                <!-- Titre dynamique selon l'état du sync -->
+                <h1 v-if="syncStore.isSyncComplete && syncStore.hasAnySuccess" class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
+                  {{ form.agentName || getDefaultAgentName() }} est prête !
+                </h1>
+                <h1 v-else-if="syncStore.isSyncing" class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
                   Presque terminé !
                 </h1>
-                <p class="text-xl lg:text-2xl text-gray-700 mb-8">
-                  Votre {{ getAgentTypeName() }} va être créée automatiquement
+                <h1 v-else class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
+                  Dernière étape !
+                </h1>
+
+                <!-- Message dynamique -->
+                <p v-if="syncStore.isSyncComplete && syncStore.hasAnySuccess" class="text-xl lg:text-2xl text-gray-700 mb-8">
+                  {{ getSyncAhaMessage() }}
+                </p>
+                <p v-else-if="syncStore.isSyncing" class="text-xl lg:text-2xl text-gray-700 mb-8">
+                  {{ form.agentName || getDefaultAgentName() }} termine de lire vos fiches produits...
+                </p>
+                <p v-else class="text-xl lg:text-2xl text-gray-700 mb-8">
+                  Donnez un nom à votre {{ getAgentTypeName() }}
                 </p>
 
-                <!-- Récapitulatif des choix -->
-                <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-6 mb-8 text-left">
-                  <h3 class="font-bold text-emerald-800 mb-4 text-lg">Récapitulatif de vos choix :</h3>
-                  <div class="space-y-3 text-sm text-emerald-700">
-                    <div class="flex justify-between">
-                      <span class="font-medium">Marque :</span>
-                      <span>{{ form.company }}</span>
+                <!-- Statut sync détaillé -->
+                <div class="space-y-4 mb-8">
+
+                  <!-- KB Status -->
+                  <div v-if="syncStore.kbStatus !== 'idle'" class="bg-white/80 border rounded-xl p-4 text-left flex items-center space-x-3"
+                       :class="syncStore.kbStatus === 'success' ? 'border-green-200' : syncStore.kbStatus === 'error' ? 'border-orange-200' : 'border-blue-200'">
+                    <!-- Icône -->
+                    <div v-if="syncStore.kbStatus === 'pending'" class="flex-shrink-0">
+                      <svg class="animate-spin w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
                     </div>
-                    <div class="flex justify-between">
-                      <span class="font-medium">Domaine :</span>
-                      <span>{{ getBeautyCategoryLabel(form.beautyCategory) }}</span>
+                    <div v-else-if="syncStore.kbStatus === 'success'" class="flex-shrink-0">
+                      <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
-                    <div class="flex justify-between">
-                      <span class="font-medium">Clientèle :</span>
-                      <span>{{ getAgeRangeLabel(form.targetAgeRange) }}</span>
+                    <div v-else class="flex-shrink-0">
+                      <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.924-.833-2.694 0L4.07 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
                     </div>
-                    <div class="flex justify-between">
-                      <span class="font-medium">Style :</span>
-                      <span>{{ getCommunicationToneLabel(form.communicationTone) }}</span>
+                    <!-- Texte -->
+                    <div class="flex-1">
+                      <p v-if="syncStore.kbStatus === 'pending'" class="text-sm text-blue-700 font-medium">
+                        Lecture de votre site web en cours...
+                      </p>
+                      <p v-else-if="syncStore.kbStatus === 'success'" class="text-sm text-green-700 font-medium">
+                        {{ syncStore.kbDocumentsCount }} page{{ syncStore.kbDocumentsCount > 1 ? 's' : '' }} de votre site mémorisée{{ syncStore.kbDocumentsCount > 1 ? 's' : '' }}
+                      </p>
+                      <p v-else class="text-sm text-orange-600 font-medium">
+                        Indexation du site reportée (sera relancée automatiquement)
+                      </p>
                     </div>
-                    <div class="flex justify-between">
-                      <span class="font-medium">Niveau d'expertise :</span>
-                      <span>{{ getExpertiseLevelLabel(form.expertiseLevel) }}</span>
+                  </div>
+
+                  <!-- Products Status -->
+                  <div v-if="syncStore.productsStatus !== 'idle'" class="bg-white/80 border rounded-xl p-4 text-left flex items-center space-x-3"
+                       :class="syncStore.productsStatus === 'success' ? 'border-green-200' : syncStore.productsStatus === 'error' ? 'border-orange-200' : 'border-blue-200'">
+                    <!-- Icône -->
+                    <div v-if="syncStore.productsStatus === 'pending'" class="flex-shrink-0">
+                      <svg class="animate-spin w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
                     </div>
+                    <div v-else-if="syncStore.productsStatus === 'success'" class="flex-shrink-0">
+                      <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div v-else class="flex-shrink-0">
+                      <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.924-.833-2.694 0L4.07 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    </div>
+                    <!-- Texte -->
+                    <div class="flex-1">
+                      <p v-if="syncStore.productsStatus === 'pending'" class="text-sm text-blue-700 font-medium">
+                        Import de vos produits {{ getPlatformLabel(form.platform) }} en cours...
+                      </p>
+                      <p v-else-if="syncStore.productsStatus === 'success'" class="text-sm text-green-700 font-medium">
+                        {{ syncStore.productsCount }} produit{{ syncStore.productsCount > 1 ? 's' : '' }} importé{{ syncStore.productsCount > 1 ? 's' : '' }} depuis {{ getPlatformLabel(form.platform) }}
+                      </p>
+                      <p v-else class="text-sm text-orange-600 font-medium">
+                        Import produits reporté (sera relancé automatiquement)
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Message plateforme custom -->
+                  <div v-if="form.platform === 'custom' && syncStore.kbStatus !== 'idle'" class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 text-left">
+                    <p class="text-sm text-purple-700">
+                      <strong>Site personnalisé :</strong> Votre {{ getAgentTypeName() }} se base sur le contenu de votre site web pour conseiller vos clientes. Vous pourrez ajouter vos produits manuellement depuis le dashboard.
+                    </p>
                   </div>
                 </div>
 
-                <!-- Actions automatiques -->
-                <div class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-2xl p-6 text-left">
-                  <h3 class="font-bold text-blue-800 mb-4 text-lg flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                    Configuration automatique :
-                  </h3>
-                  <div class="space-y-2 text-sm text-blue-700">
-                    <div class="flex items-center">
-                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Création de votre {{ getAgentTypeName() }} personnalisée
-                    </div>
-                    <div class="flex items-center">
-                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Configuration du Widget pour {{ getPlatformLabel(form.platform) }}
-                    </div>
-                    <div class="flex items-center">
-                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Indexation automatique de votre site web
-                    </div>
-                    <div v-if="form.platform !== 'custom'" class="flex items-center">
-                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Import automatique de vos produits {{ getPlatformLabel(form.platform) }}
-                    </div>
-                    <div class="flex items-center">
-                      <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Base de connaissances pré-remplie
-                    </div>
+                <!-- Récapitulatif compact -->
+                <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-5 text-left">
+                  <h3 class="font-bold text-emerald-800 mb-3 text-sm uppercase tracking-wider">Récapitulatif</h3>
+                  <div class="grid grid-cols-2 gap-2 text-sm text-emerald-700">
+                    <span class="font-medium">Marque</span>
+                    <span class="text-right">{{ form.company }}</span>
+                    <span class="font-medium">Domaine</span>
+                    <span class="text-right">{{ getBeautyCategoryLabel(form.beautyCategory) }}</span>
+                    <span class="font-medium">Style</span>
+                    <span class="text-right">{{ getCommunicationToneLabel(form.communicationTone) }}</span>
                   </div>
                 </div>
               </div>
@@ -694,9 +741,11 @@
 <script setup lang="ts">
 import { useSupabase } from '~~/composables/useSupabase'
 import { useAuthStore } from '~~/stores/auth'
+import { useSyncStore } from '~~/stores/sync'
 
 const auth = useAuth()
 const authStore = useAuthStore()
+const syncStore = useSyncStore()
 const api = useApi()
 
 definePageMeta({
@@ -976,16 +1025,8 @@ const getBeautyCategoryLabel = (value: string) => {
   return categories[value] || value
 }
 
-const getAgeRangeLabel = (value: string) => {
-  return ageRanges.find(range => range.value === value)?.label || value
-}
-
 const getCommunicationToneLabel = (value: string) => {
   return communicationTones.find(tone => tone.value === value)?.label || value
-}
-
-const getExpertiseLevelLabel = (value: string) => {
-  return expertiseLevels.find(level => level.value === value)?.label || value
 }
 
 const getPlatformLabel = (value: string) => {
@@ -1014,11 +1055,85 @@ const getAgentTypeName = () => {
   return 'Vendeuse IA'
 }
 
+const getSyncAhaMessage = () => {
+  const agentName = form.agentName || getDefaultAgentName()
+  const parts: string[] = []
+
+  if (syncStore.productsStatus === 'success' && syncStore.productsCount > 0) {
+    parts.push(`mémorisé vos ${syncStore.productsCount} produits`)
+  }
+  if (syncStore.kbStatus === 'success' && syncStore.kbDocumentsCount > 0) {
+    parts.push(`lu ${syncStore.kbDocumentsCount} pages de votre site`)
+  }
+
+  if (parts.length > 0) {
+    return `${agentName} a déjà ${parts.join(' et ')}. Elle est prête à vendre pour vous !`
+  }
+
+  return `${agentName} va être créée et commencera à vendre pour vous immédiatement.`
+}
+
 // ========== NAVIGATION ==========
-const nextStep = () => {
+const nextStep = async () => {
+  // À l'étape 1 : lancer mini shop update + sync background
+  if (currentStep.value === 1) {
+    await launchStep1Sync()
+  }
+
   if (currentStep.value < 4) {
     currentStep.value++
     window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    // À l'arrivée sur l'étape 2 : pré-remplir si données dispo
+    if (currentStep.value === 2) {
+      prefillStep2()
+    }
+  }
+}
+
+// ========== SYNC BACKGROUND (ÉTAPE 1) ==========
+const launchStep1Sync = async () => {
+  if (!form.website || syncStore.isSyncing || syncStore.isSyncComplete) {
+    console.log('ℹ️ [Onboarding] Sync déjà lancé ou pas de website')
+    return
+  }
+
+  const user = authStore.user
+  if (!user?.id) return
+
+  // Mini shop update immédiate (domain, platform, plan, trial)
+  try {
+    const trialEndsAt = new Date()
+    trialEndsAt.setDate(trialEndsAt.getDate() + 14)
+
+    await api.shops.update(user.id, {
+      name: form.company || undefined,
+      domain: extractDomain(form.website),
+      platform: form.platform,
+      beauty_category: form.beautyCategory,
+      subscription_plan: 'starter',
+      trial_ends_at: trialEndsAt.toISOString()
+    })
+    console.log('✅ [Onboarding] Mini shop update OK')
+  } catch (err) {
+    console.warn('⚠️ [Onboarding] Mini shop update échoué (non bloquant):', err)
+  }
+
+  // Lancer le sync en background (non bloquant)
+  syncStore.startSync({
+    website: form.website,
+    platform: form.platform,
+    beautyCategory: form.beautyCategory,
+    companyName: form.company
+  })
+}
+
+// ========== PRÉ-REMPLISSAGE ÉTAPE 2 ==========
+const prefillStep2 = () => {
+  // Pré-remplir la gamme de prix si détectée par le sync
+  if (syncStore.detectedPriceRange && !form.priceRange) {
+    form.priceRange = syncStore.detectedPriceRange
+    console.log('🔍 [Onboarding] Gamme de prix pré-remplie:', form.priceRange)
   }
 }
 
@@ -1115,33 +1230,30 @@ const getOptimizedWidgetConfig = () => {
 // ========== COMPLETION ONBOARDING ==========
 const completeOnboarding = async () => {
   loading.value = true
-  
+
   try {
     console.log('🚀 [Onboarding] Finalisation avec auto-création agent IA...')
-    
+
     if (!auth.isAuthenticated.value) {
       console.error('❌ [Onboarding] Non connecté')
       await navigateTo('/login')
       return
     }
-    
+
     const user = authStore.user
     if (!user?.id) {
       throw new Error('Données utilisateur manquantes')
     }
-    
-    console.log('✅ [Onboarding] Utilisateur connecté:', user.email)
-    
-    // ÉTAPE 1: MISE À JOUR SHOP
-    const trialEndsAt = new Date()
-    trialEndsAt.setDate(trialEndsAt.getDate() + 14) // Essai gratuit 14 jours
 
+    console.log('✅ [Onboarding] Utilisateur connecté:', user.email)
+
+    // ÉTAPE 1: MISE À JOUR COMPLÈTE DU SHOP (les champs beauté récoltés aux étapes 2-3)
     const shopData = {
       name: form.company || `${getBeautyCategoryLabel(form.beautyCategory)} de ${user.email?.split('@')[0]}`,
       domain: extractDomain(form.website),
       platform: form.platform,
 
-      // Spécialisation beauté
+      // Spécialisation beauté (étapes 2-3)
       beauty_category: form.beautyCategory,
       specialized_target: form.specializedTarget,
       target_age_range: form.targetAgeRange,
@@ -1149,10 +1261,6 @@ const completeOnboarding = async () => {
       expertise_level: form.expertiseLevel,
       communication_tone: form.communicationTone,
       primary_goal: form.primaryGoal,
-
-      // Plan & essai
-      subscription_plan: 'starter',
-      trial_ends_at: trialEndsAt.toISOString(),
 
       // Métadonnées
       acquisition_source: form.acquisitionSource,
@@ -1163,32 +1271,27 @@ const completeOnboarding = async () => {
       // Configuration widget
       widget_config: getOptimizedWidgetConfig()
     }
-    
-    console.log('📊 [Onboarding] Données shop:', shopData)
-    
+
+    console.log('📊 [Onboarding] Mise à jour shop (données beauté):', shopData)
+
     const shopResponse = await api.shops.update(user.id, shopData)
-    
+
     if (!shopResponse.success) {
       throw new Error(shopResponse.error || 'Erreur mise à jour shop')
     }
-    
+
     console.log('✅ [Onboarding] Shop mis à jour')
-    
+
     // ÉTAPE 2: CRÉER AUTOMATIQUEMENT L'AGENT IA (OBLIGATOIRE)
     console.log('🤖 [Onboarding] Création de la Vendeuse IA...')
 
-    // Déterminer le type d'agent basé sur la catégorie beauté
     const beautyCategory = form.beautyCategory || 'multi'
     const agentType = `${beautyCategory}_expert` as const
-
-    // Déterminer la personnalité (défaut: friendly si non sélectionné)
     const agentPersonality = form.communicationTone || 'friendly'
 
-    // Valider que le type est un des types acceptés
     const validAgentTypes = ['skincare_expert', 'makeup_expert', 'fragrance_expert', 'haircare_expert', 'bodycare_expert', 'beauty_expert', 'natural_expert', 'multi_expert']
     const finalAgentType = validAgentTypes.includes(agentType) ? agentType : 'beauty_expert'
 
-    // Valider que la personnalité est une des valeurs acceptées
     const validPersonalities = ['professional', 'friendly', 'expert', 'casual', 'luxury', 'trendy']
     const finalPersonality = validPersonalities.includes(agentPersonality) ? agentPersonality : 'friendly'
 
@@ -1215,132 +1318,51 @@ const completeOnboarding = async () => {
     const agentResponse = await api.agents.create(agentData)
 
     if (!agentResponse.success) {
-      // Log détaillé de l'erreur
       console.error('❌ [Onboarding] Erreur création agent:', {
         error: agentResponse.error,
         details: (agentResponse as any).details,
         received: (agentResponse as any).received,
         agentData: agentData
       })
-
-      // ❌ NOUVEAU: La création d'agent est OBLIGATOIRE - on ne peut pas continuer sans
       throw new Error(`Impossible de créer votre Vendeuse IA: ${agentResponse.error || 'Erreur inconnue'}`)
     }
 
     console.log('✅ [Onboarding] Vendeuse IA créée avec succès:', agentResponse.data?.id)
-    
-    // ÉTAPE 3: INDEXATION DU SITE + IMPORT PRODUITS (PARALLÈLE, AWAIT)
-    // IMPORTANT: On await ces appels car window.location.href tue les requêtes en cours
-    const syncPromises: Promise<any>[] = []
 
-    // ✅ Normaliser l'URL une seule fois pour toutes les opérations
-    const normalizedWebsite = form.website
-      ? (form.website.startsWith('http') ? form.website : `https://${form.website}`)
-      : null
-
-    // ✅ Diagnostic persistant pour debug (survit au redirect)
-    const syncDiagnostic: Record<string, any> = {
-      formWebsite: form.website,
-      formPlatform: form.platform,
-      normalizedWebsite,
-      startedAt: new Date().toISOString(),
-      kbStatus: 'skipped',
-      productsStatus: 'skipped',
-      promisesCreated: 0
-    }
-
-    console.log('🔍 [Onboarding] Diagnostic sync:', JSON.stringify(syncDiagnostic))
-
-    if (normalizedWebsite) {
-      console.log('🔍 [Onboarding] Lancement indexation site web:', normalizedWebsite)
-      syncDiagnostic.kbStatus = 'pending'
-      syncPromises.push(
-        api.knowledgeBase.processWebsite({
-          url: normalizedWebsite,
-          title: `Site ${form.company}`,
-          tags: ['website', 'onboarding', form.beautyCategory || 'multi'],
-          beautyCategory: form.beautyCategory
-        }).then(res => {
-          if (res.success) {
-            syncDiagnostic.kbStatus = 'success'
-            syncDiagnostic.kbMeta = res.meta || res.data
-            console.log('✅ [Onboarding] Indexation site terminée:', res.meta || res.data)
-          } else {
-            syncDiagnostic.kbStatus = 'error'
-            syncDiagnostic.kbError = res.error
-            console.warn('⚠️ [Onboarding] Indexation échouée:', res.error)
-          }
-        }).catch(indexError => {
-          syncDiagnostic.kbStatus = 'error'
-          syncDiagnostic.kbError = indexError?.message || String(indexError)
-          console.warn('⚠️ [Onboarding] Indexation échouée (non bloquante):', indexError)
-        })
-      )
-    } else {
-      console.warn('⚠️ [Onboarding] Pas de website fourni, indexation KB ignorée')
-    }
-
-    if (normalizedWebsite && form.platform && form.platform !== 'custom') {
-      console.log('📦 [Onboarding] Lancement import automatique des produits:', normalizedWebsite, 'platform:', form.platform)
-      syncDiagnostic.productsStatus = 'pending'
-
-      syncPromises.push(
-        api.products.sync(form.platform, {
-          shop_url: normalizedWebsite,
-          auto_enrich: true
-        }).then(syncResponse => {
-          if (syncResponse.success) {
-            const summary = syncResponse.data?.summary || syncResponse.summary || {}
-            syncDiagnostic.productsStatus = 'success'
-            syncDiagnostic.productsSummary = summary
-            console.log(`✅ [Onboarding] Import produits terminé: ${summary.inserted || 0} nouveaux, ${summary.updated || 0} mis à jour`)
-          } else {
-            syncDiagnostic.productsStatus = 'error'
-            syncDiagnostic.productsError = syncResponse.error
-            console.warn('⚠️ [Onboarding] Import produits échoué:', syncResponse.error)
-          }
-        }).catch(syncError => {
-          syncDiagnostic.productsStatus = 'error'
-          syncDiagnostic.productsError = syncError?.message || String(syncError)
-          console.warn('⚠️ [Onboarding] Import produits échoué (non bloquant):', syncError)
-        })
-      )
-    } else {
-      console.warn('⚠️ [Onboarding] Conditions import produits non remplies:', {
-        hasWebsite: !!normalizedWebsite,
+    // ÉTAPE 3: ATTENDRE LE SYNC BACKGROUND (lancé à l'étape 1)
+    // Si le sync est toujours en cours, on attend avec timeout
+    if (syncStore.isSyncing) {
+      console.log('⏳ [Onboarding] Sync encore en cours, attente...')
+      const syncResult = await syncStore.waitForCompletion(60000) // 60s max ici
+      console.log('✅ [Onboarding] Sync terminé:', syncResult)
+    } else if (!syncStore.isSyncComplete && form.website) {
+      // Sync jamais lancé (edge case) → lancer maintenant
+      console.log('⚠️ [Onboarding] Sync jamais lancé, lancement de rattrapage...')
+      syncStore.startSync({
+        website: form.website,
         platform: form.platform,
-        isCustom: form.platform === 'custom'
+        beautyCategory: form.beautyCategory,
+        companyName: form.company
       })
-    }
-
-    syncDiagnostic.promisesCreated = syncPromises.length
-
-    // Attendre la fin de tous les sync (avec timeout de 90s max)
-    if (syncPromises.length > 0) {
-      console.log(`⏳ [Onboarding] Attente de ${syncPromises.length} opération(s) de synchronisation...`)
-
-      const syncResult = await Promise.race([
-        Promise.allSettled(syncPromises).then(() => 'completed'),
-        new Promise<string>(resolve => setTimeout(() => resolve('timeout'), 90000))
-      ])
-
-      syncDiagnostic.syncResult = syncResult
-      syncDiagnostic.completedAt = new Date().toISOString()
-      console.log(`✅ [Onboarding] Synchronisations: ${syncResult}`)
+      await syncStore.waitForCompletion(90000)
     } else {
-      syncDiagnostic.syncResult = 'no_promises'
-      console.warn('⚠️ [Onboarding] Aucune opération de synchronisation créée!')
+      console.log('✅ [Onboarding] Sync déjà terminé ou pas de website')
     }
 
-    // ✅ Sauvegarder le diagnostic dans sessionStorage (survit au redirect)
+    // Sauvegarder le diagnostic sync en sessionStorage
     try {
-      sessionStorage.setItem('chatseller_sync_diagnostic', JSON.stringify(syncDiagnostic))
-      console.log('📋 [Onboarding] Diagnostic sync sauvegardé:', syncDiagnostic)
+      sessionStorage.setItem('chatseller_sync_diagnostic', JSON.stringify({
+        productsStatus: syncStore.productsStatus,
+        productsCount: syncStore.productsCount,
+        kbStatus: syncStore.kbStatus,
+        kbDocumentsCount: syncStore.kbDocumentsCount,
+        completedAt: new Date().toISOString()
+      }))
     } catch (e) {
       console.warn('⚠️ Impossible de sauvegarder le diagnostic sync')
     }
 
-    // ÉTAPE 4: SYNCHRONISER LE STORE
+    // ÉTAPE 4: SYNCHRONISER LE STORE AUTH
     if (authStore.user) {
       await authStore.restoreSession(true)
       console.log('✅ [Onboarding] Store synchronisé')
@@ -1348,25 +1370,24 @@ const completeOnboarding = async () => {
 
     console.log('🎉 [Onboarding] Onboarding terminé avec succès !')
 
-    // ✅ Sauvegarder un flag en sessionStorage comme backup pour le modal de bienvenue
     sessionStorage.setItem('chatseller_onboarding_just_completed', 'true')
 
-    // REDIRECTION via navigateTo (préserve le contexte SPA et les logs console)
+    // REDIRECTION via navigateTo (SPA)
     await navigateTo(`/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`, { replace: true })
-    
+
   } catch (error: any) {
     console.error('❌ [Onboarding] Erreur finalisation:', error)
-    
+
     let userMessage = 'Une erreur s\'est produite lors de la création de votre Vendeuse IA.'
-    
+
     if (error.message?.includes('Token') || error.message?.includes('401')) {
       userMessage = 'Session expirée. Reconnexion en cours...'
       await navigateTo('/login')
       return
     }
-    
+
     alert(userMessage + '\n\nDétails: ' + (error.message || 'Erreur inconnue'))
-    
+
   } finally {
     loading.value = false
   }
