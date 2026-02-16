@@ -34,14 +34,15 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          🎉 Email confirmé avec succès !
+          {{ isReturningUser ? '👋 Bon retour !' : '🎉 Email confirmé avec succès !' }}
         </h2>
         <p class="text-gray-600 mb-4">
-          Votre compte ChatSeller est maintenant activé
+          {{ isReturningUser ? 'Connexion réussie à votre compte ChatSeller' : 'Votre compte ChatSeller est maintenant activé' }}
         </p>
         <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6">
           <p class="text-rose-800 text-sm">
-            <strong>Prochaine étape :</strong> Configurons ensemble votre tableau de bord Chatseller
+            <strong>{{ isReturningUser ? 'Redirection :' : 'Prochaine étape :' }}</strong>
+            {{ isReturningUser ? 'Vous allez être redirigé vers votre tableau de bord' : 'Configurons ensemble votre tableau de bord Chatseller' }}
           </p>
         </div>
         
@@ -58,10 +59,10 @@
         </div>
         
         <button
-          @click="redirectToOnboarding"
+          @click="redirectAfterAuth"
           class="w-full bg-gradient-to-r from-rose-600 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-rose-700 hover:to-green-700 transition-all shadow-lg transform hover:scale-105"
         >
-          Configurer mon espace maintenant
+          {{ isReturningUser ? 'Accéder à mon espace' : 'Configurer mon espace maintenant' }}
         </button>
       </div>
 
@@ -123,6 +124,7 @@ const errorMessage = ref('')
 const countdown = ref(3) // ✅ 3 SECONDES
 const countdownProgress = ref(0)
 const currentStep = ref('Analyse du lien de confirmation...')
+const isReturningUser = ref(false) // ✅ NOUVEAU: Distinguer login vs register
 
 // ✅ FONCTION SIMPLIFIÉE : Analyser URL callback
 const parseCallbackUrl = () => {
@@ -321,6 +323,12 @@ const processSession = async (session: any) => {
     try {
       const shopData = await ensureShopExists(user)
       console.log('✅ [Callback] Shop beauté configuré:', shopData?.id)
+
+      // ✅ DÉTECTER SI L'UTILISATEUR A DÉJÀ COMPLÉTÉ L'ONBOARDING
+      if (shopData?.onboarding_completed) {
+        isReturningUser.value = true
+        console.log('✅ [Callback] Utilisateur existant détecté (onboarding déjà complété)')
+      }
     } catch (shopError: any) {
       console.error('❌ [Callback] Erreur shop beauté:', shopError)
       throw new Error(`Configuration espace beauté échouée: ${shopError.message}`)
@@ -472,15 +480,20 @@ const startCountdown = () => {
     
     if (countdown.value <= 0) {
       clearInterval(interval)
-      redirectToOnboarding()
+      redirectAfterAuth()
     }
   }, 1000)
 }
 
-// ✅ REDIRECTION VERS ONBOARDING
-const redirectToOnboarding = async () => {
-  console.log('🚀 [Callback] Redirection vers onboarding beauté')
-  await navigateTo('/onboarding?from=email-confirmation&beauty=true&welcome=true')
+// ✅ REDIRECTION INTELLIGENTE : DASHBOARD OU ONBOARDING
+const redirectAfterAuth = async () => {
+  if (isReturningUser.value) {
+    console.log('🚀 [Callback] Utilisateur existant → redirection vers Dashboard')
+    await navigateTo('/')
+  } else {
+    console.log('🚀 [Callback] Nouvel utilisateur → redirection vers Onboarding')
+    await navigateTo('/onboarding?from=email-confirmation&beauty=true&welcome=true')
+  }
 }
 
 useHead({
