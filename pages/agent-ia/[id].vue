@@ -800,6 +800,17 @@
                 {{ codeCopied ? 'Copié !' : 'Copier' }}
               </button>
             </div>
+
+            <!-- Bouton envoyer au développeur -->
+            <button
+              @click="showSendDevModal = true"
+              class="mt-4 w-full flex items-center justify-center px-4 py-2.5 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-sm font-medium transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+              Envoyer à mon développeur
+            </button>
           </div>
         </div>
 
@@ -964,6 +975,77 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- ========== MODAL ENVOYER AU DÉVELOPPEUR ========== -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-if="showSendDevModal"
+          class="fixed inset-0 z-50 overflow-y-auto"
+          style="font-family: inherit"
+        >
+          <div class="flex items-center justify-center min-h-screen px-4 text-center">
+            <div
+              class="fixed inset-0 bg-black/50 transition-opacity"
+              @click="showSendDevModal = false"
+            ></div>
+            <span class="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+            <div class="inline-block w-full max-w-md text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl relative">
+              <!-- Header -->
+              <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Envoyer à mon développeur</h3>
+                  <p class="text-sm text-gray-500 mt-0.5">Le code sera envoyé par email avec les instructions</p>
+                </div>
+                <button
+                  @click="showSendDevModal = false"
+                  class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <!-- Body -->
+              <div class="px-6 py-5">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Email du développeur
+                </label>
+                <input
+                  v-model="devEmail"
+                  type="email"
+                  placeholder="dev@exemple.com"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400"
+                  @keyup.enter="sendToDeveloper"
+                />
+                <p class="text-xs text-gray-400 mt-2">
+                  Votre application email s'ouvrira avec le code pré-rempli.
+                </p>
+              </div>
+              <!-- Footer -->
+              <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                <button
+                  @click="showSendDevModal = false"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Annuler
+                </button>
+                <button
+                  @click="sendToDeveloper"
+                  :disabled="!devEmail.trim()"
+                  class="px-4 py-2 text-sm font-medium text-white bg-rose-500 rounded-lg hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center"
+                >
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                  Envoyer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1025,6 +1107,8 @@ const activeTab = ref('customize')
 const codeCopied = ref(false)
 const showKnowledgeModal = ref(false)
 const savingKnowledge = ref(false)
+const showSendDevModal = ref(false)
+const devEmail = ref('')
 
 // Playground state
 const playgroundInput = ref('')
@@ -1305,6 +1389,18 @@ const copyCode = async () => {
   } catch (error) {
     console.error('Erreur copie:', error)
   }
+}
+
+const sendToDeveloper = () => {
+  if (!devEmail.value.trim()) return
+  const agentName = localConfig.value.agent.name || 'Vendeuse IA'
+  const subject = encodeURIComponent(`Installation widget ChatSeller — ${agentName}`)
+  const body = encodeURIComponent(
+    `Bonjour,\n\nMerci d'installer le widget ChatSeller sur notre site.\n\nCopiez ce code et collez-le juste avant la balise </body> de chaque page :\n\n${integrationCode.value}\n\nUne fois installé, le widget "${agentName}" apparaîtra automatiquement sur le site.\n\nMerci !`
+  )
+  window.open(`mailto:${devEmail.value.trim()}?subject=${subject}&body=${body}`, '_blank')
+  showSendDevModal.value = false
+  devEmail.value = ''
 }
 
 // Playground Methods
