@@ -104,24 +104,13 @@
                   Votre marque
                 </h1>
                 <p class="text-xl lg:text-2xl text-gray-700 mb-8 leading-relaxed">
-                  Parlez-nous de votre marque beauté
+                  Parlez-nous de votre marque
                 </p>
-                
-                <!-- 🆕 USP VENTE -->
-                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 mb-6 text-left">
-                  <div class="flex items-start space-x-4">
-                    <span class="text-3xl">💰</span>
-                    <div>
-                      <p class="font-bold text-green-800 mb-1">Ne perdez plus aucune vente !</p>
-                      <p class="text-sm text-green-700">Votre Vendeuse IA accueille chaque visiteur, le conseille et l'accompagne jusqu'à l'achat, 24h/24. Résultat : +150% de ventes en moyenne.</p>
-                    </div>
-                  </div>
-                </div>
-                
+
                 <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-5 text-left">
+                  <p class="font-bold text-rose-900 mb-2">Ces informations créent votre Vendeuse IA</p>
                   <p class="text-rose-800 text-sm leading-relaxed">
-                    <strong class="text-rose-900">Configuration intelligente :</strong><br>
-                    Nous analysons votre site web pour créer automatiquement une base de connaissances. Votre Vendeuse IA connaîtra vos produits dès le premier jour.
+                    Le nom de votre marque personnalise les échanges avec vos clients. L'URL de votre boutique permet à votre Vendeuse IA d'analyser votre catalogue. Votre domaine d'activité et plateforme assurent une intégration parfaite sur votre site.
                   </p>
                 </div>
               </div>
@@ -159,13 +148,13 @@
                           <svg class="w-4 h-4 text-green-500 inline mr-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
-                          Nous analyserons votre catalogue pour former votre Vendeuse IA
+                          Votre Vendeuse IA analysera votre site pour se former
                         </p>
                       </div>
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Votre domaine beauté *
+                          Votre domaine d'activité *
                         </label>
                         <select
                           v-model="form.beautyCategory"
@@ -181,7 +170,7 @@
                           <option value="natural" class="bg-white">🌿 Cosmétiques naturels & Bio</option>
                           <option value="multi" class="bg-white">✨ Multi-catégories beauté</option>
                         </select>
-                        <p class="text-gray-500 text-sm mt-2">Votre Vendeuse IA sera experte dans ce domaine</p>
+                        <p class="text-gray-500 text-sm mt-2">Votre Vendeuse IA sera spécialisée dans ce domaine</p>
                       </div>
 
                       <div>
@@ -198,7 +187,7 @@
                           <option value="woocommerce" class="bg-white">🔗 WooCommerce</option>
                           <option value="custom" class="bg-white">⚙️ Site personnalisé</option>
                         </select>
-                        <p class="text-gray-500 text-sm mt-2">Pour préparer l'intégration du widget sur votre site</p>
+                        <p class="text-gray-500 text-sm mt-2">Pour mieux intégrer votre Vendeuse IA sur votre site</p>
                       </div>
                     </div>
 
@@ -228,17 +217,11 @@
                 </svg>
               </div>
               <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 bg-clip-text text-transparent">
-                {{ getClienteleTitle() }}
+                Vos clients
               </h1>
               <p class="text-xl lg:text-2xl text-gray-700 max-w-4xl mx-auto mb-8">
-                {{ getClienteleDescription() }}
+                Votre Vendeuse IA a besoin de savoir qui sont vos clients pour adapter ses réponses et conseils à leurs besoins spécifiques.
               </p>
-              <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6 max-w-2xl mx-auto">
-                <p class="text-purple-800 text-sm leading-relaxed">
-                  <strong class="text-purple-900">Conseils personnalisés :</strong><br>
-                  {{ getClienteleExplanation() }}
-                </p>
-              </div>
 
               <!-- Indicateur sync en cours -->
               <div v-if="syncStore.isSyncing" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-700">
@@ -256,11 +239,35 @@
 
             <form @submit.prevent="nextStep" class="max-w-4xl mx-auto space-y-8">
               <div class="bg-white/80 backdrop-blur-sm border border-rose-200 rounded-2xl p-8 shadow-xl">
-                
+
+                <!-- Genre de la clientèle -->
+                <div class="mb-8">
+                  <label class="block text-xl font-semibold text-gray-800 mb-6">
+                    Qui sont principalement vos clients ? *
+                  </label>
+                  <div class="grid grid-cols-3 gap-4">
+                    <label v-for="gender in genderOptions" :key="gender.value" class="relative group cursor-pointer">
+                      <input v-model="form.targetGender" :value="gender.value" type="radio" class="sr-only" required>
+                      <div class="p-4 bg-white border-2 rounded-xl transition-all group-hover:bg-rose-50 text-center"
+                           :class="form.targetGender === gender.value ? 'border-rose-500 bg-rose-50 shadow-lg shadow-rose-500/20' : 'border-gray-300'">
+                        <div class="text-2xl mb-2">{{ gender.icon }}</div>
+                        <div class="font-semibold text-gray-800 text-sm">{{ gender.label }}</div>
+                        <div v-if="form.targetGender === gender.value" class="absolute top-2 right-2">
+                          <div class="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
+                            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
                 <!-- Question spécialisée selon domaine -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    {{ getSpecializedQuestion() }} *
+                    {{ getSpecializedQuestion() }}
                   </label>
                   <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <label v-for="option in getSpecializedOptions()" :key="option.value" class="relative group cursor-pointer">
@@ -285,7 +292,7 @@
                 <!-- Tranche d'âge -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Tranche d'âge principale de vos clientes *
+                    Quelle est la tranche d'âge principale de vos clients ? *
                   </label>
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <label v-for="ageRange in ageRanges" :key="ageRange.value" class="relative group cursor-pointer">
@@ -527,10 +534,10 @@
                   {{ getSyncAhaMessage() }}
                 </p>
                 <p v-else-if="syncStore.isSyncing" class="text-xl lg:text-2xl text-gray-700 mb-8">
-                  {{ form.agentName || getDefaultAgentName() }} termine de lire vos fiches produits...
+                  {{ form.agentName || getDefaultAgentName() }} analyse votre catalogue en ce moment...
                 </p>
                 <p v-else class="text-xl lg:text-2xl text-gray-700 mb-8">
-                  Donnez un nom à votre {{ getAgentTypeName() }}
+                  Nommez votre {{ getAgentTypeName() }} et lancez-la.
                 </p>
 
                 <!-- Statut sync détaillé -->
@@ -627,7 +634,7 @@
                       <!-- Nom de la Vendeuse IA -->
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Nom de votre {{ getAgentTypeName() }}
+                          Nommez votre {{ getAgentTypeName() }}
                         </label>
                         <input
                           v-model="form.agentName"
@@ -659,28 +666,6 @@
                         </select>
                       </div>
 
-                      <!-- Newsletter (optionnel) -->
-                      <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-6">
-                        <div class="flex items-start space-x-4">
-                          <div class="flex items-center h-6 mt-1">
-                            <input
-                              id="newsletter"
-                              v-model="form.newsletter"
-                              type="checkbox"
-                              class="h-5 w-5 text-rose-600 focus:ring-rose-500 border-rose-300 rounded transition-colors duration-200"
-                            />
-                          </div>
-                          <div>
-                            <label for="newsletter" class="text-lg font-semibold text-rose-800">
-                              Conseils pour vendre plus
-                            </label>
-                            <p class="text-sm text-rose-700 mt-1">
-                              Recevez nos meilleures stratégies pour maximiser vos ventes, les nouvelles fonctionnalités et des études de cas de marques africaines (1-2 emails/mois max)
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
                       <!-- Essai gratuit reminder -->
                       <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
                         <div class="flex items-start space-x-4">
@@ -690,11 +675,19 @@
                           <div>
                             <p class="font-bold text-green-800 mb-2 text-lg">14 jours d'essai gratuit !</p>
                             <p class="text-green-700 text-sm">
-                              Testez toutes les fonctionnalités sans engagement. Aucune carte bancaire requise. Votre Vendeuse IA commence à vendre pour vous dès maintenant.
+                              Vous bénéficiez de 14 jours gratuits pour tester, sans engagement, toutes les fonctionnalités de ChatSeller. Testez {{ form.agentName || getDefaultAgentName() }} dans votre espace puis activez-la sur votre site pour qu'elle commence à vendre pour vous.
                             </p>
                           </div>
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Erreur inline -->
+                    <div v-if="submitError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
+                      <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.924-.833-2.694 0L4.07 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                      </svg>
+                      <p class="text-sm text-red-700">{{ submitError }}</p>
                     </div>
 
                     <div class="flex flex-col sm:flex-row justify-between gap-4 pt-8">
@@ -757,6 +750,7 @@ definePageMeta({
 const currentStep = ref(1)
 const loading = ref(false)
 const initializing = ref(true)
+const submitError = ref('')
 
 // ========== FORMULAIRE ==========
 const form = reactive({
@@ -767,6 +761,7 @@ const form = reactive({
   platform: '',
   
   // Étape 2 : Clientèle cible
+  targetGender: '',
   specializedTarget: [] as string[],
   targetAgeRange: '',
   priceRange: '',
@@ -843,6 +838,12 @@ const specializedTargetOptions = {
 }
 
 // ========== OPTIONS COMMUNES ==========
+const genderOptions = [
+  { value: 'women', icon: '👩', label: 'Femmes principalement' },
+  { value: 'men', icon: '👨', label: 'Hommes principalement' },
+  { value: 'both', icon: '👥', label: 'Hommes & Femmes' }
+]
+
 const ageRanges = [
   { value: '18-25', label: '18-25 ans', description: 'Jeunes adultes' },
   { value: '26-35', label: '26-35 ans', description: 'Adultes actives' },
@@ -956,52 +957,13 @@ const userFirstName = computed(() => {
 })
 
 // ========== HELPERS POUR TEXTES ADAPTATIFS ==========
-const getClienteleTitle = () => {
-  const titles = {
-    skincare: 'Vos clientes skincare',
-    haircare: 'Vos clientes capillaires',
-    makeup: 'Vos clientes maquillage',
-    fragrance: 'Vos clientes parfums',
-    bodycare: 'Vos clientes soins corps',
-    natural: 'Vos clientes cosmétiques naturels',
-    multi: 'Vos clientes'
-  }
-  return titles[form.beautyCategory] || 'Vos clientes'
-}
-
-const getClienteleDescription = () => {
-  const descriptions = {
-    skincare: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leur type de peau.',
-    haircare: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leur type de cheveux et texture.',
-    makeup: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs occasions et carnation.',
-    fragrance: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs préférences olfactives.',
-    bodycare: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs besoins corporels.',
-    natural: 'Qui sont vos clientes ? Cela permet d\'adapter les conseils selon leurs préférences naturelles.',
-    multi: 'Qui sont vos clientes ? Cela permet d\'adapter le langage et les recommandations de votre Vendeuse IA.'
-  }
-  return descriptions[form.beautyCategory] || descriptions.multi
-}
-
-const getClienteleExplanation = () => {
-  const explanations = {
-    skincare: 'Plus nous connaissons les types de peau de vos clientes, mieux votre Vendeuse IA pourra recommander les soins adaptés.',
-    haircare: 'Plus nous connaissons les textures capillaires de vos clientes, mieux votre Vendeuse IA pourra conseiller les soins adaptés.',
-    makeup: 'Plus nous connaissons les occasions maquillage de vos clientes, mieux votre Vendeuse IA pourra proposer les looks appropriés.',
-    fragrance: 'Plus nous connaissons les goûts olfactifs de vos clientes, mieux votre Vendeuse IA pourra orienter vers les bonnes familles de parfums.',
-    bodycare: 'Plus nous connaissons les besoins corporels de vos clientes, mieux votre Vendeuse IA pourra recommander les soins adaptés.',
-    natural: 'Plus nous connaissons les préférences de vos clientes, mieux votre Vendeuse IA pourra conseiller les ingrédients naturels adaptés.',
-    multi: 'Plus nous connaissons vos clientes, mieux votre Vendeuse IA pourra les accompagner selon leurs besoins beauté.'
-  }
-  return explanations[form.beautyCategory] || explanations.multi
-}
-
 const getSpecializedQuestion = () => {
   const questions = {
-    skincare: 'Quels types de peau conseillez-vous principalement ?',
-    haircare: 'Quels types de cheveux conseillez-vous principalement ?',
+    skincare: 'Quels types de peau traitez-vous principalement ?',
+    haircare: 'Quels types de cheveux traitez-vous principalement ?',
     makeup: 'Quels styles de maquillage proposez-vous principalement ?',
     fragrance: 'Quelles familles olfactives proposez-vous principalement ?',
-    bodycare: 'Quels types de soins corporels proposez-vous principalement ?',
+    bodycare: 'Quels types de soins corporels traitez-vous principalement ?',
     natural: 'Quels ingrédients naturels proposez-vous principalement ?',
     multi: 'Quels domaines beauté couvrez-vous principalement ?'
   }
@@ -1058,17 +1020,9 @@ const getAgentTypeName = () => {
 
 const getSyncAhaMessage = () => {
   const agentName = form.agentName || getDefaultAgentName()
-  const parts: string[] = []
 
   if (syncStore.productsStatus === 'success' && syncStore.productsCount > 0) {
-    parts.push(`mémorisé vos ${syncStore.productsCount} produits`)
-  }
-  if (syncStore.kbStatus === 'success' && syncStore.kbDocumentsCount > 0) {
-    parts.push(`lu ${syncStore.kbDocumentsCount} pages de votre site`)
-  }
-
-  if (parts.length > 0) {
-    return `${agentName} a déjà ${parts.join(' et ')}. Elle est prête à vendre pour vous !`
+    return `${agentName} a ajouté les ${syncStore.productsCount} produits de votre site à sa base de connaissance. Elle maîtrise votre marque et est prête à vendre pour vous.`
   }
 
   return `${agentName} va être créée et commencera à vendre pour vous immédiatement.`
@@ -1192,6 +1146,7 @@ const getOptimizedAgentConfig = () => {
     upsellEnabled: form.primaryGoals.includes('upsell'),
     beautySpecialization: {
       category: form.beautyCategory,
+      targetGender: form.targetGender,
       expertiseLevel: form.expertiseLevel,
       communicationTone: form.communicationTone,
       specializedTarget: form.specializedTarget,
@@ -1238,6 +1193,7 @@ const getOptimizedWidgetConfig = () => {
 // ========== COMPLETION ONBOARDING ==========
 const completeOnboarding = async () => {
   loading.value = true
+  submitError.value = ''
 
   try {
     console.log('🚀 [Onboarding] Finalisation avec auto-création agent IA...')
@@ -1263,6 +1219,7 @@ const completeOnboarding = async () => {
 
       // Spécialisation beauté (étapes 2-3)
       beauty_category: form.beautyCategory,
+      target_gender: form.targetGender,
       specialized_target: form.specializedTarget,
       target_age_range: form.targetAgeRange,
       price_range: form.priceRange,
@@ -1341,7 +1298,7 @@ const completeOnboarding = async () => {
     // Si le sync est toujours en cours, on attend avec timeout
     if (syncStore.isSyncing) {
       console.log('⏳ [Onboarding] Sync encore en cours, attente...')
-      const syncResult = await syncStore.waitForCompletion(60000) // 60s max ici
+      const syncResult = await syncStore.waitForCompletion(20000) // 20s max
       console.log('✅ [Onboarding] Sync terminé:', syncResult)
     } else if (!syncStore.isSyncComplete && form.website) {
       // Sync jamais lancé (edge case) → lancer maintenant
@@ -1394,7 +1351,7 @@ const completeOnboarding = async () => {
       return
     }
 
-    alert(userMessage + '\n\nDétails: ' + (error.message || 'Erreur inconnue'))
+    submitError.value = userMessage + (error.message ? ` (${error.message})` : '')
 
   } finally {
     loading.value = false
