@@ -1433,12 +1433,20 @@ const sendPlaygroundMessage = async () => {
     const config = useRuntimeConfig()
     const baseURL = config.public.apiBaseUrl
 
-    // Historique de la conversation AVANT le nouveau message (exclu le dernier user message)
-    const historyBeforeThisMessage = playgroundConversation.value
+    // Le message de bienvenue est TOUJOURS affiché dans le template (statique)
+    // → l'inclure dans l'historique pour que l'IA sache que la conv a déjà commencé
+    const welcomeContent = processedWelcomeMessage.value || ''
+    const conversationHistory = playgroundConversation.value
       .slice(0, -1) // exclure le message qu'on vient d'ajouter
-      .map(msg => ({ role: msg.role, content: msg.content }))
+      .map(msg => ({ role: msg.role as 'user' | 'assistant', content: msg.content }))
 
-    const isFirstMessage = historyBeforeThisMessage.length === 0
+    const historyBeforeThisMessage = [
+      ...(welcomeContent ? [{ role: 'assistant' as const, content: welcomeContent }] : []),
+      ...conversationHistory
+    ]
+
+    // Le message de bienvenue est toujours visible → jamais le premier message
+    const isFirstMessage = false
 
     const response = await $fetch('/api/v1/chat/test', {
       method: 'POST',
