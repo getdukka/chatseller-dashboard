@@ -108,7 +108,7 @@
                 </p>
 
                 <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-5 text-left">
-                  <p class="font-bold text-rose-900 mb-2">Ces informations créent votre Vendeuse IA</p>
+                  <p class="font-bold text-rose-900 mb-2">Pourquoi nous vous le demandons ?</p>
                   <p class="text-rose-800 text-sm leading-relaxed">
                     Le nom de votre marque personnalise les échanges avec vos clients. L'URL de votre boutique permet à votre Vendeuse IA d'analyser votre catalogue. Votre domaine d'activité et plateforme assurent une intégration parfaite sur votre site.
                   </p>
@@ -1003,13 +1003,13 @@ const getPlatformLabel = (value: string) => {
 
 const getDefaultAgentName = () => {
   const names = {
-    'skincare': 'Awa',
-    'makeup': 'Fatou', 
-    'fragrance': 'Aïcha',
-    'haircare': 'Mariama',
-    'bodycare': 'Aminata',
-    'natural': 'Binta',
-    'multi': 'Adama'
+    'skincare': 'Anna',
+    'makeup': 'Sophie', 
+    'fragrance': 'Mia',
+    'haircare': 'Fatou',
+    'bodycare': 'Paola',
+    'natural': 'Rita',
+    'multi': 'Sarah'
   }
   return names[form.beautyCategory] || 'Adama'
 }
@@ -1337,18 +1337,18 @@ const completeOnboarding = async () => {
 
     sessionStorage.setItem('chatseller_onboarding_just_completed', 'true')
 
-    // REDIRECTION via navigateTo (SPA)
-    await navigateTo(`/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`, { replace: true })
+    // REDIRECTION : return navigateTo (sans await) pour éviter que NavigationAborted
+    // remonte dans le catch et affiche brièvement une erreur (comportement Nuxt 3 connu)
+    return navigateTo(`/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`, { replace: true })
 
   } catch (error: any) {
     console.error('❌ [Onboarding] Erreur finalisation:', error)
 
-    let userMessage = 'Une erreur s\'est produite lors de la création de votre Vendeuse IA.'
+    let userMessage = 'Une erreur s\'est produite lors de la création de ta Vendeuse IA.'
 
     if (error.message?.includes('Token') || error.message?.includes('401')) {
       userMessage = 'Session expirée. Reconnexion en cours...'
-      await navigateTo('/login')
-      return
+      return navigateTo('/login')
     }
 
     submitError.value = userMessage + (error.message ? ` (${error.message})` : '')
