@@ -1422,19 +1422,24 @@ const sendPlaygroundMessage = async () => {
   const message = playgroundInput.value.trim()
   if (!message || playgroundTyping.value) return
 
-  // Ajouter le message utilisateur
+  // Ajouter le message utilisateur localement
   playgroundConversation.value.push({ role: 'user', content: message })
   playgroundInput.value = ''
   scrollToBottom()
 
-  // Afficher l'indicateur de frappe
   playgroundTyping.value = true
 
   try {
     const config = useRuntimeConfig()
     const baseURL = config.public.apiBaseUrl
 
-    // Appeler l'API de chat TEST (route correcte)
+    // Historique de la conversation AVANT le nouveau message (exclu le dernier user message)
+    const historyBeforeThisMessage = playgroundConversation.value
+      .slice(0, -1) // exclure le message qu'on vient d'ajouter
+      .map(msg => ({ role: msg.role, content: msg.content }))
+
+    const isFirstMessage = historyBeforeThisMessage.length === 0
+
     const response = await $fetch('/api/v1/chat/test', {
       method: 'POST',
       baseURL,
@@ -1446,7 +1451,9 @@ const sendPlaygroundMessage = async () => {
         shopId: authStore.user?.id,
         agentId: localConfig.value.agent.id,
         message,
-        testMode: true
+        testMode: true,
+        conversationHistory: historyBeforeThisMessage, // ✅ historique complet
+        isFirstMessage // ✅ premier message ou non
       }
     }) as { success: boolean; data: { message: string } }
 
@@ -1461,10 +1468,9 @@ const sendPlaygroundMessage = async () => {
 
   } catch (error: any) {
     console.error('Erreur playground:', error)
-    // Message d'erreur utilisateur-friendly
     playgroundConversation.value.push({
       role: 'assistant',
-      content: `Désolée, je n'ai pas pu traiter votre demande. ${error.data?.error || error.message || 'Veuillez réessayer.'}`
+      content: `Désolée, je n'ai pas pu traiter ta demande. ${error.data?.error || error.message || 'Réessaie dans quelques instants.'}`
     })
   } finally {
     playgroundTyping.value = false
