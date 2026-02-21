@@ -45,7 +45,7 @@
           </div>
         </div>
         <h3 class="text-2xl font-bold text-gray-900 mb-3">Préparation de votre espace...</h3>
-        <p class="text-gray-600">Configuration de votre tableau de bord ChatSeller.</p>
+        <p class="text-gray-600">Configuration de votre espace ChatSeller.</p>
       </div>
     </div>
 
@@ -67,8 +67,8 @@
               Créons votre Vendeuse IA
             </h1>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-              Ces informations nous permettent de créer une Vendeuse IA
-              <span class="font-semibold text-rose-600">parfaitement adaptée</span> à votre marque et vos clientes.
+              Ces informations nous permettent de créer la Vendeuse IA
+              <span class="font-semibold text-rose-600">parfaitement adaptée</span> à votre marque, votre domaine d'activité et vos clientes.
             </p>
           </div>
           
@@ -121,21 +121,21 @@
                     <div class="space-y-6">
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Nom de votre marque *
+                          Quel est son nom *
                         </label>
                         <input
                           v-model="form.company"
                           type="text"
                           required
                           class="w-full px-6 py-4 bg-white/70 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-gray-900 text-lg placeholder-gray-500"
-                          placeholder="Ex: Nappy Queen, Carapate Beauty, Mariam Cosmetics..."
+                          placeholder="Ex: Soso Beauty, Yass Hair, Kari Cosmetics..."
                         />
                         <p class="text-gray-500 text-sm mt-2">Ce nom apparaîtra dans les conversations avec vos clientes</p>
                       </div>
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Site web de votre boutique *
+                          Quel est son site web *
                         </label>
                         <input
                           v-model="form.website"
@@ -154,7 +154,7 @@
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Votre domaine d'activité *
+                          Quel est son domaine d'activité ? *
                         </label>
                         <select
                           v-model="form.beautyCategory"
@@ -175,7 +175,7 @@
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Plateforme e-commerce *
+                          Quelle plateforme utilisez-vous ? *
                         </label>
                         <select
                           v-model="form.platform"
@@ -243,7 +243,7 @@
                 <!-- Genre de la clientèle -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Qui sont principalement vos clients ? *
+                    Vos clients sont principalement *
                   </label>
                   <div class="grid grid-cols-3 gap-4">
                     <label v-for="gender in genderOptions" :key="gender.value" class="relative group cursor-pointer">
@@ -292,7 +292,7 @@
                 <!-- Tranche d'âge -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Quelle est la tranche d'âge principale de vos clients ? *
+                    Quelle est leur tranche d'âge principale ? *
                   </label>
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <label v-for="ageRange in ageRanges" :key="ageRange.value" class="relative group cursor-pointer">
@@ -316,7 +316,7 @@
                 <!-- Gamme de prix -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Gamme de prix de vos produits *
+                    Quelle est la gamme de prix de vos produits ? *
                   </label>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <label v-for="priceRange in priceRanges" :key="priceRange.value" class="relative group cursor-pointer">
@@ -375,12 +375,12 @@
                 Personnalité de votre Vendeuse IA
               </h1>
               <p class="text-xl lg:text-2xl text-gray-700 max-w-4xl mx-auto mb-8">
-                Comment souhaitez-vous que votre Vendeuse IA s'adresse à vos clientes ?
+                Comment souhaitez-vous que votre Vendeuse IA s'adresse à vos clients ?
               </p>
               <div class="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-xl p-6 max-w-2xl mx-auto">
                 <p class="text-pink-800 text-sm leading-relaxed">
                   <strong class="text-pink-900">Personnalité adaptée :</strong><br>
-                  Votre Vendeuse IA adoptera le ton et l'approche qui correspondent à votre marque et vos clientes.
+                  Votre Vendeuse IA adoptera le ton et l'approche qui correspondent à votre marque et vos clients.
                 </p>
               </div>
             </div>
@@ -391,7 +391,7 @@
                 <!-- Niveau d'expertise -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Niveau d'expertise de votre Vendeuse IA *
+                    Quel doit être son niveau d'expertise *
                   </label>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <label v-for="expertise in expertiseLevels" :key="expertise.value" class="relative group cursor-pointer">
@@ -418,7 +418,7 @@
                 <!-- Ton de communication -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-6">
-                    Ton de communication souhaité *
+                    Quel doit être son ton de communication ? *
                   </label>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <label v-for="tone in communicationTones" :key="tone.value" class="relative group cursor-pointer">
@@ -1006,7 +1006,7 @@ const getDefaultAgentName = () => {
     'skincare': 'Anna',
     'makeup': 'Sophie', 
     'fragrance': 'Mia',
-    'haircare': 'Fatou',
+    'haircare': 'Julie',
     'bodycare': 'Paola',
     'natural': 'Rita',
     'multi': 'Sarah'
