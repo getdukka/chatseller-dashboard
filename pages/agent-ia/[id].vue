@@ -459,7 +459,7 @@
 
           <div class="p-4 sm:p-6 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Sur la page produit</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Par rapport au bouton "Ajouter au panier"</label>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button
                   v-for="pos in buttonPositions"
@@ -476,7 +476,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Bouton flottant (autres pages)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Sur les autres pages du site</label>
               <div class="grid grid-cols-2 gap-2">
                 <button
                   v-for="pos in floatingPositions"

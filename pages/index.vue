@@ -32,10 +32,10 @@
             <div class="flex items-start space-x-3">
               <span class="text-2xl">🚀</span>
               <div>
-                <p class="font-bold text-rose-800">Ne perdez plus aucune vente sur votre boutique</p>
+                <p class="font-bold text-rose-800">Ce qui va changer sur votre boutique</p>
                 <p class="text-sm text-rose-700 mt-1">
-                  {{ agentInfo?.name || 'Votre Vendeuse IA' }} accueille vos visiteurs, répond à leurs questions,
-                  recommande les bons produits et les guide vers l'achat, 24h/24.
+                  {{ agentInfo?.name || 'Votre Vendeuse IA' }} accueillera vos visiteurs, répondra à leurs questions,
+                  recommandera les bons produits et les guidera jusqu'à l'achat, 24h/24.
                 </p>
               </div>
             </div>
@@ -45,7 +45,7 @@
           <div class="mb-6">
             <p class="font-semibold text-gray-800 mb-4 flex items-center">
               <span class="mr-2">📋</span>
-              Pour que {{ agentInfo?.name || 'Votre Vendeuse IA' }} soit 100% opérationnelle :
+              Récapitulatif des étapes pour activer {{ agentInfo?.name || 'votre Vendeuse IA' }}
             </p>
             
             <div class="space-y-3">
@@ -145,7 +145,7 @@
           <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p class="text-xs text-blue-700 text-center">
               💡 <strong>Astuce :</strong> Après le test, intégrez le code du widget sur votre site
-              pour activer {{ agentInfo?.name || 'votre Vendeuse IA' }} auprès de vos visiteurs.
+              pour activer {{ agentInfo?.name || 'votre Vendeuse IA' }}.
             </p>
           </div>
         </div>

@@ -8,7 +8,7 @@
       </h2>
       <p class="text-sm text-gray-600 leading-relaxed">
         Rejoignez les marques beauté qui augmentent leurs ventes de
-        <span class="font-semibold text-rose-600">+150%</span> en moyenne grâce à ChatSeller.
+        <span class="font-semibold text-rose-600">+150%</span> en moyenne grâce à leur Vendeuse IA.
       </p>
     </div>
 
