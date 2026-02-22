@@ -364,125 +364,80 @@
         </div>
       </div>
 
-      <!-- Sidebar droite avec informations beauté -->
-      <div class="w-80 bg-white border-l border-rose-200 flex-shrink-0 overflow-y-auto">
-        <div class="p-6 space-y-6">
-          <!-- Profil cliente beauté -->
+      <!-- Sidebar droite — infos essentielles -->
+      <div class="w-72 bg-white border-l border-gray-200 flex-shrink-0 overflow-y-auto hidden lg:block">
+        <div class="p-5 space-y-5" v-if="conversation && !loading">
+
+          <!-- Client -->
           <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <span class="mr-2">👩‍💼</span>
-              Profil cliente
-            </h3>
-            <div v-if="conversation && !loading" class="space-y-4">
-              <div class="bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg p-3 border border-rose-200">
-                <label class="text-sm font-medium text-rose-700 block mb-1">Nom</label>
-                <p class="text-sm text-gray-900 font-medium">{{ getClientName() }}</p>
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Client</h3>
+            <div class="space-y-2">
+              <div class="flex items-center space-x-3">
+                <div class="flex h-9 w-9 items-center justify-center rounded-full bg-rose-100">
+                  <span class="text-xs font-semibold text-rose-700">{{ getInitials(getClientName()) }}</span>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">{{ getClientName() }}</p>
+                  <p class="text-xs text-gray-500">{{ formatDate(conversation.started_at) }}</p>
+                </div>
               </div>
-              <div class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-3 border border-purple-200">
-                <label class="text-sm font-medium text-purple-700 block mb-1">Email</label>
-                <p class="text-sm text-gray-900">{{ getClientEmail() || 'Non renseigné' }}</p>
-              </div>
-              <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-200">
-                <label class="text-sm font-medium text-amber-700 block mb-1">Téléphone</label>
-                <p class="text-sm text-gray-900">{{ getClientPhone() || 'Non renseigné' }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-lg p-3">
-                <label class="text-sm font-medium text-gray-700 block mb-1">Première consultation</label>
-                <p class="text-sm text-gray-900">{{ formatDate(conversation.started_at) }}</p>
-              </div>
-              <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg p-3 border border-emerald-200">
-                <label class="text-sm font-medium text-emerald-700 block mb-1">{{ getProductTypeLabel() }}</label>
-                <p class="text-sm text-gray-900 font-medium">{{ getBeautyProductName() }}</p>
-                <p v-if="getProductPrice()" class="text-xs text-emerald-600 mt-1">{{ formatCurrency(getProductPrice()) }}</p>
-              </div>
+              <div v-if="getClientEmail() && getClientEmail() !== 'Non renseigné'" class="text-sm text-gray-600 pl-12">{{ getClientEmail() }}</div>
+              <div v-if="getClientPhone() && getClientPhone() !== 'Non renseigné'" class="text-sm text-gray-600 pl-12">{{ getClientPhone() }}</div>
             </div>
           </div>
 
-          <!-- Métriques de la consultation beauté -->
+          <!-- Produit consulté (si existant) -->
+          <div v-if="getBeautyProductName()">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Produit consulté</h3>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <p class="text-sm font-medium text-gray-900">{{ getBeautyProductName() }}</p>
+              <p v-if="getProductPrice()" class="text-xs text-emerald-600 mt-1">{{ formatCurrency(getProductPrice()) }}</p>
+            </div>
+          </div>
+
+          <!-- Métriques -->
           <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <span class="mr-2">📊</span>
-              Métriques consultation
-            </h3>
-            <div v-if="conversation && !loading" class="space-y-3">
-              <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <span class="text-sm font-medium text-blue-900">Messages échangés</span>
-                <span class="text-sm font-bold text-blue-700">{{ conversation.message_count || messages.length }}</span>
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Métriques</h3>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-600">Messages</span>
+                <span class="font-semibold text-gray-900">{{ messages.length }}</span>
               </div>
-              <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                <span class="text-sm font-medium text-green-900">Durée consultation</span>
-                <span class="text-sm font-bold text-green-700">{{ getConsultationDuration() }}</span>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-600">Durée</span>
+                <span class="font-semibold text-gray-900">{{ getConsultationDuration() }}</span>
               </div>
-              <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span class="text-sm font-medium text-gray-700">Statut</span>
-                <span class="text-sm font-bold" :class="getBeautyStatusTextClass(conversation?.status)">
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-600">Statut</span>
+                <span class="font-semibold" :class="getBeautyStatusTextClass(conversation?.status)">
                   {{ getBeautyStatusLabel(conversation?.status) }}
                 </span>
               </div>
-              <div class="flex justify-between items-center p-3 rounded-lg" :class="conversation.conversion_completed ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'">
-                <span class="text-sm font-medium" :class="conversation.conversion_completed ? 'text-emerald-900' : 'text-red-900'">Conversion</span>
-                <span class="text-sm font-bold" :class="conversation.conversion_completed ? 'text-emerald-700' : 'text-red-700'">
-                  {{ conversation.conversion_completed ? getConversionSuccessLabel() : 'Non convertie' }}
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-600">Conversion</span>
+                <span class="font-semibold" :class="conversation.conversion_completed ? 'text-emerald-600' : 'text-gray-400'">
+                  {{ conversation.conversion_completed ? 'Convertie' : 'Non convertie' }}
                 </span>
               </div>
             </div>
           </div>
 
-          <!-- Actions rapides beauté -->
+          <!-- Actions -->
           <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <span class="mr-2">⚡</span>
-              Actions rapides
-            </h3>
-            <div class="space-y-3">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Actions</h3>
+            <div class="space-y-2">
               <button
                 @click="createBeautyOrder"
-                class="w-full btn-beauty-primary-outline"
-                :disabled="!conversation"
+                class="w-full btn-beauty-primary-outline text-sm"
               >
-                <span class="mr-2">🛍️</span>
                 Créer une commande
               </button>
               <button
-                @click="createBeautyRoutine"
-                class="w-full btn-beauty-secondary"
-                :disabled="!conversation"
-              >
-                <span class="mr-2">✨</span>
-                Créer routine {{ getBeautyRoutineType() }}
-              </button>
-              <button
                 @click="exportConversation"
-                class="w-full btn-beauty-secondary"
-                :disabled="!conversation"
+                class="w-full btn-beauty-secondary text-sm"
               >
-                <span class="mr-2">📋</span>
-                Exporter consultation
+                Exporter la conversation
               </button>
-              <button
-                @click="addBeautyNote"
-                class="w-full btn-beauty-secondary"
-                :disabled="!conversation"
-              >
-                <span class="mr-2">📝</span>
-                Ajouter note beauté
-              </button>
-            </div>
-          </div>
-
-          <!-- Profil beauté client -->
-          <div v-if="getBeautyClientProfile()">
-            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <span class="mr-2">💫</span>
-              Profil beauté
-            </h3>
-            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
-              <div class="space-y-2 text-sm">
-                <div v-for="(value, key) in getBeautyClientProfile()" :key="key" class="flex justify-between">
-                  <span class="font-medium text-purple-700 capitalize">{{ String(key).replace('_', ' ') }}:</span>
-                  <span class="text-gray-900">{{ value }}</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>

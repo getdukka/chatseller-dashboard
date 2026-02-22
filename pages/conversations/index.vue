@@ -289,13 +289,11 @@
                 
                 <!-- Messages -->
                 <td class="table-cell">
-                  <div class="flex items-center space-x-2">
-                    <div class="text-sm font-semibold text-gray-900">
-                      {{ conversation.message_count || 0 }}
-                    </div>
-                    <div class="text-xs text-gray-500">
-                      message{{ (conversation.message_count || 0) !== 1 ? 's' : '' }}
-                    </div>
+                  <div class="text-sm font-semibold text-gray-900">
+                    {{ conversation.message_count || 0 }} message{{ (conversation.message_count || 0) !== 1 ? 's' : '' }}
+                  </div>
+                  <div v-if="conversation.last_message" class="text-xs text-gray-500 truncate max-w-[200px]" :title="conversation.last_message.content">
+                    {{ conversation.last_message.role === 'assistant' ? '🤖 ' : '👤 ' }}{{ truncateText(conversation.last_message.content, 50) }}
                   </div>
                 </td>
                 
@@ -651,6 +649,11 @@ const formatDate = (date: string): string => {
   })
 }
 
+const truncateText = (text: string, maxLength: number): string => {
+  if (!text) return ''
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+}
+
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -703,7 +706,8 @@ const loadConversations = async () => {
     if (response.success && response.data) {
       conversations.value = response.data.map((conv: any) => ({
         ...conv,
-        message_count: conv.message_count || (conv.messages ? conv.messages.length : 0),
+        message_count: conv.messageCount || conv.message_count || 0,
+        last_message: conv.lastMessage || null,
         started_at: conv.started_at || conv.startedAt,
         last_activity: conv.last_activity || conv.lastActivity || conv.started_at
       }))
