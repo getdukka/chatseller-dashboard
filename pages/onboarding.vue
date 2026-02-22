@@ -839,8 +839,8 @@ const specializedTargetOptions = {
 
 // ========== OPTIONS COMMUNES ==========
 const genderOptions = [
-  { value: 'women', icon: '👩', label: 'Femmes principalement' },
-  { value: 'men', icon: '👨', label: 'Hommes principalement' },
+  { value: 'women', icon: '👩', label: 'Des Femmes' },
+  { value: 'men', icon: '👨', label: 'Des Hommes' },
   { value: 'both', icon: '👥', label: 'Hommes & Femmes' }
 ]
 
@@ -1121,15 +1121,18 @@ const extractDomain = (url: string): string | null => {
 const getOptimizedAgentConfig = () => {
   const agentName = form.agentName || getDefaultAgentName()
   
-  const welcomeMessages = {
-    'skincare': `Bonjour ! Je suis ${agentName}, votre experte skincare. Quel est votre type de peau ? Je vais vous recommander la routine parfaite !`,
-    'makeup': `Salut ! Je suis ${agentName}, votre experte maquillage. Pour quelle occasion cherchez-vous le look parfait ?`,
-    'fragrance': `Bonjour ! Je suis ${agentName}, votre spécialiste parfums. Quel type de fragrance vous fait rêver ?`,
-    'haircare': `Hello ! ${agentName} ici, experte capillaire. Parlez-moi de vos cheveux, je vais vous aider à trouver les soins adaptés !`,
-    'bodycare': `Bonjour ! Je suis ${agentName}, spécialiste soins du corps. Comment puis-je sublimer votre routine bien-être ?`,
-    'natural': `Bonjour ! Je suis ${agentName}, votre experte cosmétiques naturels. Quels sont vos besoins beauté aujourd'hui ?`,
-    'multi': `Bonjour ! Je suis ${agentName}, votre experte beauté. Dans quel domaine puis-je vous accompagner aujourd'hui ?`
+  const specialties: Record<string, string> = {
+    'skincare': 'votre conseillère skincare',
+    'makeup': 'votre conseillère maquillage',
+    'fragrance': 'votre conseillère parfums',
+    'haircare': 'votre conseillère capillaire',
+    'bodycare': 'votre conseillère soins du corps',
+    'natural': 'votre conseillère cosmétiques naturels',
+    'multi': 'votre conseillère beauté'
   }
+  const brandName = form.company || 'notre boutique'
+  const specialty = specialties[form.beautyCategory] || specialties['multi']
+  const welcomeMessage = `Bonjour ! Je suis ${agentName}, ${specialty} chez ${brandName}. Comment puis-je vous aider ?`
 
   const fallbackMessages = {
     'beginner': `Je transmets votre question à notre équipe pour un conseil personnalisé adapté à vos besoins.`,
@@ -1140,7 +1143,7 @@ const getOptimizedAgentConfig = () => {
   return {
     name: agentName,
     avatar: `https://ui-avatars.com/api/?name=${agentName}&background=E91E63&color=fff`,
-    welcomeMessage: welcomeMessages[form.beautyCategory] || welcomeMessages['multi'],
+    welcomeMessage: welcomeMessage,
     fallbackMessage: fallbackMessages[form.expertiseLevel] || fallbackMessages['expert'],
     collectPaymentMethod: true,
     upsellEnabled: form.primaryGoals.includes('upsell'),
