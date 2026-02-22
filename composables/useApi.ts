@@ -33,36 +33,38 @@ export const useApi = () => {
   // Ne pas hardcoder localhost - laisser .env.local gérer ça
   const baseURL = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
-  // ✅ FONCTION CORRIGÉE : RÉCUPÉRATION TOKEN AVEC FALLBACK SUPABASE
+  // ✅ FONCTION CORRIGÉE : TOUJOURS RÉCUPÉRER LE TOKEN FRAIS DEPUIS SUPABASE
+  // (Le store peut contenir un token périmé après inactivité)
   const getAuthToken = async (): Promise<string | null> => {
     if (!process.client) return null
 
     try {
-      const authStore = useAuthStore()
-      
-      // ✅ ÉTAPE 1 : ESSAYER LE TOKEN DU STORE
-      if (authStore.token && authStore.isAuthenticated) {
-        console.log('🎫 [API] Token récupéré depuis store')
-        return authStore.token
-      }
-
-      // ✅ ÉTAPE 2 : FALLBACK - RÉCUPÉRER DIRECTEMENT DEPUIS SUPABASE
-      console.log('🔄 [API] Store vide, récupération token depuis Supabase...')
       const supabase = useSupabase()
+      const authStore = useAuthStore()
+
+      // ✅ TOUJOURS demander la session à Supabase (gère le refresh auto)
       const { data: { session }, error } = await supabase.auth.getSession()
-      
+
       if (error || !session?.access_token) {
-        console.warn('❌ [API] Impossible de récupérer le token Supabase')
-        return null
+        // Session expirée et non-rafraîchissable → tenter un refresh explicite
+        console.warn('⚠️ [API] Session Supabase invalide, tentative de refresh...')
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+
+        if (refreshError || !refreshData.session?.access_token) {
+          console.warn('❌ [API] Impossible de récupérer/rafraîchir le token')
+          return null
+        }
+
+        // Refresh réussi → synchroniser le store
+        authStore.token = refreshData.session.access_token
+        return refreshData.session.access_token
       }
 
-      // ✅ SYNCHRONISER LE STORE AVEC LE TOKEN FRAIS
+      // ✅ Synchroniser le store si le token a changé (refresh auto en arrière-plan)
       if (session.access_token !== authStore.token) {
-        console.log('🔄 [API] Synchronisation token store avec Supabase')
         authStore.token = session.access_token
       }
 
-      console.log('✅ [API] Token récupéré depuis Supabase et synchronisé')
       return session.access_token
 
     } catch (error) {
@@ -81,7 +83,6 @@ export const useApi = () => {
 
     if (token) {
       headers.Authorization = `Bearer ${token}`
-      console.log('🔑 [API] Token utilisé pour auth:', token.substring(0, 20) + '...')
     } else {
       console.warn('⚠️ [API] Aucun token d\'authentification trouvé')
     }
@@ -92,11 +93,8 @@ export const useApi = () => {
       headers,
       onResponseError({ response }: any) {
         console.error('❌ [API] Erreur réponse:', response.status, response.statusText, response._data)
-        
-        if (response.status === 401) {
-          console.warn('🔐 [API] Token expiré ou invalide')
-          handleUnauthorized()
-        }
+        // Note: le 401 est géré dans le catch de apiCall() avec retry automatique
+        // Ne PAS appeler handleUnauthorized() ici pour éviter un double refresh
       }
     }
   }
