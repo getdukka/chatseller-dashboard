@@ -1433,39 +1433,46 @@ const sendPlaygroundMessage = async () => {
     const config = useRuntimeConfig()
     const baseURL = config.public.apiBaseUrl
 
-    // Le message de bienvenue est TOUJOURS affiché dans le template (statique)
-    // → l'inclure dans l'historique pour que l'IA sache que la conv a déjà commencé
-    const welcomeContent = processedWelcomeMessage.value || ''
-    const conversationHistory = playgroundConversation.value
-      .slice(0, -1) // exclure le message qu'on vient d'ajouter
-      .map(msg => ({ role: msg.role as 'user' | 'assistant', content: msg.content }))
+    // ✅ UNIFICATION : Utiliser le MÊME endpoint que le widget (/api/v1/public/chat)
+    // Ainsi le playground et le widget ont exactement le même comportement
+    const isFirstUserMessage = !playgroundConversationId.value
 
-    const historyBeforeThisMessage = [
-      ...(welcomeContent ? [{ role: 'assistant' as const, content: welcomeContent }] : []),
-      ...conversationHistory
-    ]
+    // Si c'est le 1er message, d'abord créer la conversation (welcome message)
+    if (isFirstUserMessage) {
+      const initResponse = await $fetch('/api/v1/public/chat', {
+        method: 'POST',
+        baseURL,
+        body: {
+          shopId: authStore.user?.id,
+          message: 'init',
+          isFirstMessage: true
+        }
+      }) as any
 
-    // Le message de bienvenue est toujours visible → jamais le premier message
-    const isFirstMessage = false
+      if (initResponse.success && initResponse.data?.conversationId) {
+        playgroundConversationId.value = initResponse.data.conversationId
+        console.log('✅ [PLAYGROUND] Conversation créée:', playgroundConversationId.value)
+      }
+    }
 
-    const response = await $fetch('/api/v1/chat/test', {
+    // Envoyer le message utilisateur via le même endpoint public
+    const response = await $fetch('/api/v1/public/chat', {
       method: 'POST',
       baseURL,
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json'
-      },
       body: {
         shopId: authStore.user?.id,
-        agentId: localConfig.value.agent.id,
         message,
-        testMode: true,
-        conversationHistory: historyBeforeThisMessage, // ✅ historique complet
-        isFirstMessage // ✅ premier message ou non
+        conversationId: playgroundConversationId.value,
+        isFirstMessage: false
       }
-    }) as { success: boolean; data: { message: string } }
+    }) as any
 
     if (response.success && response.data) {
+      // Sauvegarder le conversationId si retourné
+      if (response.data.conversationId && !playgroundConversationId.value) {
+        playgroundConversationId.value = response.data.conversationId
+      }
+
       playgroundConversation.value.push({
         role: 'assistant',
         content: response.data.message
