@@ -14,10 +14,10 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Confirmation en cours...
+          Votre Vendeuse IA vous attend...
         </h2>
         <p class="text-gray-600 mb-4">
-          Vérification de votre adresse email
+          Nous préparons votre espace Mia
         </p>
         <div class="text-sm text-gray-500">
           {{ currentStep }}
@@ -34,15 +34,15 @@
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          {{ isReturningUser ? '👋 Bon retour !' : '🎉 Email confirmé avec succès !' }}
+          {{ isReturningUser ? '👋 Bon retour !' : '🎉 Email confirmé !' }}
         </h2>
         <p class="text-gray-600 mb-4">
-          {{ isReturningUser ? 'Connexion réussie à votre compte ChatSeller' : 'Votre compte ChatSeller est maintenant activé' }}
+          {{ isReturningUser ? 'Mia vous attend dans votre espace de gestion' : 'Mia est prête à rejoindre votre boutique' }}
         </p>
         <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6">
           <p class="text-rose-800 text-sm">
             <strong>{{ isReturningUser ? 'Redirection :' : 'Prochaine étape :' }}</strong>
-            {{ isReturningUser ? 'Vous allez être redirigé vers votre tableau de bord' : 'Configurons ensemble votre tableau de bord Chatseller' }}
+            {{ isReturningUser ? 'Vous allez retrouver Mia dans votre espace de gestion' : 'Finalisons ensemble le recrutement de Mia pour votre boutique' }}
           </p>
         </div>
         
@@ -52,7 +52,7 @@
           </p>
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div 
-              class="bg-gradient-to-r from-rose-600 to-green-600 h-2 rounded-full transition-all duration-100 ease-linear"
+              class="bg-gradient-to-r from-rose-600 to-pink-600 h-2 rounded-full transition-all duration-100 ease-linear"
               :style="{ width: `${countdownProgress}%` }"
             ></div>
           </div>
@@ -60,9 +60,9 @@
         
         <button
           @click="redirectAfterAuth"
-          class="w-full bg-gradient-to-r from-rose-600 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-rose-700 hover:to-green-700 transition-all shadow-lg transform hover:scale-105"
+          class="w-full bg-gradient-to-r from-rose-600 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:from-rose-700 hover:to-pink-700 transition-all shadow-lg transform hover:scale-105"
         >
-          {{ isReturningUser ? 'Accéder à mon espace' : 'Configurer mon espace maintenant' }}
+          {{ isReturningUser ? 'Accéder à mon espace de gestion' : 'Finaliser le recrutement de Mia' }}
         </button>
       </div>
 
@@ -87,13 +87,13 @@
             to="/register"
             class="w-full inline-flex justify-center items-center px-4 py-2 bg-rose-600 text-white font-medium rounded-lg hover:bg-rose-700 transition-colors"
           >
-            Créer un nouveau compte
+            Recruter Mia
           </NuxtLink>
           <NuxtLink
             to="/login"
             class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Se connecter
+            Rejoindre Mia
           </NuxtLink>
         </div>
       </div>
@@ -186,7 +186,7 @@ const parseCallbackUrl = () => {
 // ✅ FONCTION SIMPLIFIÉE : Établir session Supabase
 const establishSupabaseSession = async (tokens: any) => {
   console.log('🔐 [Callback] Création session Supabase')
-  currentStep.value = '🔐 Vérification de votre email...'
+  currentStep.value = '🔑 Vérification de votre identité...'
 
   // ✅ MÉTHODE 1: Vérifier si Supabase a déjà établi une session automatiquement
   // (Supabase gère le callback automatiquement dans certains cas)
@@ -267,7 +267,7 @@ const establishSupabaseSession = async (tokens: any) => {
 // ✅ FONCTION SIMPLIFIÉE : Assurer l'existence du shop - UTILISER useApi()
 const ensureShopExists = async (user: any) => {
   console.log('🏪 [Callback] Vérification/création shop beauté pour:', user.id)
-  currentStep.value = '🏪 Configuration de votre espace...'
+  currentStep.value = '✨ Préparation de votre espace Mia...'
 
   // ✅ ÉTAPE 1: Vérifier si le shop existe
   const shopResponse = await api.shops.get(user.id)
@@ -291,7 +291,7 @@ const ensureShopExists = async (user: any) => {
       theme: 'beauty_modern',
       primaryColor: '#E91E63',
       position: 'bottom-right',
-      buttonText: 'Parler à votre vendeuse beauté',
+      buttonText: 'Parler à Mia',
       language: 'fr'
     }
   }
@@ -317,7 +317,7 @@ const processSession = async (session: any) => {
     console.log('✅ [Callback] Email confirmé pour:', user.email)
 
     // ✅ ÉTAPE 3: Assurer l'existence du shop beauté AVANT de synchroniser le store
-    currentStep.value = '🏪 Configuration de votre espace beauté...'
+    currentStep.value = '✨ Préparation de votre espace Mia...'
     await new Promise(resolve => setTimeout(resolve, 500))
 
     try {
@@ -330,12 +330,12 @@ const processSession = async (session: any) => {
         console.log('✅ [Callback] Utilisateur existant détecté (onboarding déjà complété)')
       }
     } catch (shopError: any) {
-      console.error('❌ [Callback] Erreur shop beauté:', shopError)
-      throw new Error(`Configuration espace beauté échouée: ${shopError.message}`)
+      console.error('❌ [Callback] Erreur configuration Mia:', shopError)
+      throw new Error(`Configuration de Mia échouée: ${shopError.message}`)
     }
 
     // ✅ ÉTAPE 4: Synchroniser store (maintenant que le shop existe)
-    currentStep.value = '💾 Préparation de vos données...'
+    currentStep.value = '💾 Chargement de vos données...'
     await new Promise(resolve => setTimeout(resolve, 500))
 
     try {
@@ -348,7 +348,7 @@ const processSession = async (session: any) => {
     }
 
     // ✅ FINALISATION
-    currentStep.value = '✨ Finalisation...'
+    currentStep.value = '🚀 Mia est presque prête...'
     await new Promise(resolve => setTimeout(resolve, 500))
 
     // Nettoyer l'URL
@@ -465,8 +465,8 @@ const handleError = (err: any) => {
     errorMessage.value = 'Le lien de confirmation a expiré. Créez un nouveau compte.'
   } else if (err.message?.includes('invalid') || err.message?.includes('token') || err.message?.includes('invalide')) {
     errorMessage.value = 'Lien de confirmation invalide. Vérifiez votre email.'
-  } else if (err.message?.includes('shop') || err.message?.includes('espace')) {
-    errorMessage.value = 'Email confirmé mais configuration beauté échouée. Contactez le support.'
+  } else if (err.message?.includes('shop') || err.message?.includes('Mia')) {
+    errorMessage.value = 'Email confirmé mais la configuration de Mia a échoué. Contactez le support.'
   } else {
     errorMessage.value = err.message || 'Erreur de confirmation. Contactez le support si cela persiste.'
   }
@@ -497,9 +497,9 @@ const redirectAfterAuth = async () => {
 }
 
 useHead({
-  title: 'Confirmation de compte - ChatSeller',
+  title: 'Votre Vendeuse IA vous attend | ChatSeller',
   meta: [
-    { name: 'description', content: 'Confirmation de votre compte ChatSeller' },
+    { name: 'description', content: 'Confirmez votre email et recrutez Mia, votre Vendeuse IA pour boutique en ligne.' },
     { name: 'robots', content: 'noindex' }
   ]
 })
