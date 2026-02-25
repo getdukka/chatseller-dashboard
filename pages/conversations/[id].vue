@@ -1,7 +1,7 @@
 <!-- pages/conversations/[id].vue - VERSION BEAUTÉ COMPLÈTE -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
-    <!-- Header de la consultation beauté -->
+    <!-- Header de la conversation -->
     <div class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
       <div class="px-6 py-4">
         <div class="flex items-center justify-between">
@@ -16,7 +16,7 @@
               </svg>
             </button>
 
-            <!-- Informations de la consultation beauté -->
+            <!-- Informations de la conversation -->
             <div v-if="conversation && !loading">
               <div class="flex items-center space-x-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-100 to-pink-100">
@@ -26,7 +26,7 @@
                 </div>
                 <div>
                   <h1 class="text-xl font-bold text-gray-900">
-                    Consultation avec {{ getClientName() }}
+                    Conversation avec {{ getClientName() }}
                   </h1>
                   <div class="flex items-center space-x-4 text-sm text-gray-600">
                     <span>{{ getClientEmail() || 'Pas d\'email' }}</span>
@@ -63,7 +63,7 @@
               </div>
               <div>
                 <h1 class="text-xl font-bold text-red-900">Erreur de chargement</h1>
-                <div class="text-sm text-red-600">Consultation ID: {{ conversationId }}</div>
+                <div class="text-sm text-red-600">Conversation ID: {{ conversationId }}</div>
               </div>
             </div>
           </div>
@@ -109,7 +109,7 @@
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-rose-50 transition-colors"
                   >
                     <span class="mr-2">👩‍⚕️</span>
-                    Prendre en charge la consultation
+                    Prendre en charge la conversation
                   </button>
                   <button
                     @click="createBeautyRoutine"
@@ -123,7 +123,7 @@
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
                   >
                     <span class="mr-2">📋</span>
-                    Exporter la consultation
+                    Exporter la conversation
                   </button>
                   <hr class="my-1">
                   <button
@@ -150,13 +150,13 @@
       </div>
       <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
       <p class="text-gray-500 mb-2">{{ error }}</p>
-      <p class="text-xs text-gray-400 mb-4">Consultation ID: {{ conversationId }}</p>
+      <p class="text-xs text-gray-400 mb-4">Conversation ID: {{ conversationId }}</p>
       <div class="space-x-3">
         <button @click="() => loadConversation()" class="btn-beauty-primary">
           Réessayer
         </button>
         <button @click="$router.push('/conversations')" class="btn-beauty-secondary">
-          Retour aux consultations
+          Retour aux conversations
         </button>
       </div>
     </div>
@@ -173,7 +173,7 @@
         >
           <div v-if="loading" class="flex justify-center items-center h-full">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
-            <span class="ml-3 text-gray-600">Chargement de la consultation...</span>
+            <span class="ml-3 text-gray-600">Chargement des conversations...</span>
           </div>
 
           <!-- Messages -->
@@ -190,8 +190,16 @@
                 class="flex items-start space-x-3 max-w-2xl"
               >
                 <!-- Avatar Vendeuse IA -->
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex-shrink-0 shadow-md">
-                  <span class="text-lg">{{ getAgentIcon() }}</span>
+                <div class="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-rose-500 to-pink-600 flex-shrink-0 shadow-md">
+                  <img
+                    v-if="agentAvatar"
+                    :src="agentAvatar"
+                    :alt="getBeautyAgentName()"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center text-white font-bold text-lg">
+                    {{ (getBeautyAgentName() || 'M').charAt(0).toUpperCase() }}
+                  </div>
                 </div>
 
                 <!-- Bulle Vendeuse IA -->
@@ -256,25 +264,18 @@
                   <div v-else>
                     <div class="text-gray-800 leading-relaxed" v-html="formatBeautyMessageContent(message.content)"></div>
                     
-                    <!-- Meta informations beauté -->
+                    <!-- Meta informations -->
                     <div class="flex items-center justify-between mt-3 pt-3 border-t border-rose-100">
                       <div class="text-xs text-gray-500">{{ formatTime(message.created_at) }}</div>
-                      <div class="flex items-center space-x-3">
-                        <div
-                          v-if="message.tokens_used !== undefined && message.tokens_used > 0"
-                          class="flex items-center space-x-1"
-                          :title="`Tokens utilisés: ${message.tokens_used}`"
-                        >
-                          <div class="w-2 h-2 rounded-full bg-rose-400"></div>
-                          <span class="text-xs text-gray-500">{{ message.tokens_used }}</span>
-                        </div>
-                        <div
-                          v-if="message.response_time_ms !== undefined && message.response_time_ms > 0"
-                          class="text-xs text-gray-500"
-                          :title="`Temps de réponse: ${message.response_time_ms}ms`"
-                        >
-                          {{ message.response_time_ms }}ms
-                        </div>
+                      <div
+                        v-if="message.response_time_ms !== undefined && message.response_time_ms > 0"
+                        class="flex items-center space-x-1 text-xs text-gray-400"
+                        :title="`Temps de réponse: ${message.response_time_ms}ms`"
+                      >
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ formatResponseTime(message.response_time_ms) }}</span>
                       </div>
                     </div>
                   </div>
@@ -311,7 +312,7 @@
                 </svg>
               </div>
               <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun message</h3>
-              <p class="text-gray-500 mb-1">Cette consultation n'a pas encore de messages</p>
+              <p class="text-gray-500 mb-1">Cette conversation n'a pas encore de messages</p>
               <p class="text-xs text-gray-400">Messages chargés: {{ messages ? messages.length : 0 }}</p>
             </div>
           </div>
@@ -329,7 +330,7 @@
                   <textarea
                     v-model="newMessage"
                     rows="2"
-                    :placeholder="`Tapez votre conseil beauté...`"
+                    :placeholder="`Ecrivez votre réponse...`"
                     class="w-full p-3 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 resize-none"
                     @keydown.enter.exact.prevent="sendMessage"
                     @keydown.enter.shift.exact="null"
@@ -357,9 +358,9 @@
             </div>
           </div>
           
-          <!-- État consultation inactive -->
+          <!-- État conversation inactive -->
           <div v-else class="p-4 bg-gradient-to-r from-rose-50 to-pink-50 text-center">
-            <p class="text-sm text-gray-500">Cette consultation est {{ getBeautyStatusLabel(conversation?.status)?.toLowerCase() || 'terminée' }}</p>
+            <p class="text-sm text-gray-500">Cette conversation est {{ getBeautyStatusLabel(conversation?.status)?.toLowerCase() || 'terminée' }}</p>
           </div>
         </div>
       </div>
@@ -405,7 +406,7 @@
               </div>
               <div class="flex justify-between items-center text-sm">
                 <span class="text-gray-600">Durée</span>
-                <span class="font-semibold text-gray-900">{{ getConsultationDuration() }}</span>
+                <span class="font-semibold text-gray-900">{{ getConversationDuration() }}</span>
               </div>
               <div class="flex justify-between items-center text-sm">
                 <span class="text-gray-600">Statut</span>
@@ -524,6 +525,8 @@ definePageMeta({
 const api = useApi()
 const route = useRoute()
 const authStore = useAuthStore()
+const agentName = ref('Mia')
+const agentAvatar = ref<string | null>(null)
 const conversationId = route.params.id as string
 
 // STATE
@@ -563,24 +566,9 @@ const getBeautyIcon = (): string => {
   return icons[beautyCategory.value] || '💋'
 }
 
-const getAgentIcon = (): string => {
-  return getBeautyIcon()
-}
-
 const getBeautyAgentName = (): string => {
   if (conversation.value?.agent_name) return conversation.value.agent_name
-  
-  const names: Record<string, string[]> = {
-    'skincare': ['Camille', 'Emma', 'Léa'],
-    'makeup': ['Sophie', 'Chloé', 'Julie'],
-    'fragrance': ['Rose', 'Lily', 'Iris'],
-    'haircare': ['Amélie', 'Sarah', 'Marine'],
-    'bodycare': ['Clara', 'Manon', 'Jade'],
-    'multi': ['Rose', 'Camille', 'Sophie']
-  }
-  
-  const agentNames = names[beautyCategory.value] || names.multi
-  return agentNames[0] // Premier nom par défaut
+  return agentName.value
 }
 
 const getBeautyContext = (): string => {
@@ -656,10 +644,10 @@ const getBeautyStatusLabel = (status: string | undefined): string => {
   if (!status) return 'Inconnu'
   
   const labels = {
-    active: 'En consultation',
+    active: 'Conversation en cours',
     pending: 'En attente',
-    completed: 'Consultation terminée',
-    abandoned: 'Consultation interrompue'
+    completed: 'Conversation terminée',
+    abandoned: 'Conversation interrompue'
   }
   return labels[status as keyof typeof labels] || status
 }
@@ -832,6 +820,15 @@ const formatCurrency = (amount: number): string => {
   }).format(amount)
 }
 
+const formatResponseTime = (ms: number): string => {
+  if (ms < 1000) return '< 1s'
+  const seconds = Math.round(ms / 1000)
+  if (seconds < 60) return `${seconds}s`
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return remainingSeconds > 0 ? `${minutes}min ${remainingSeconds}s` : `${minutes}min`
+}
+
 // ✅ FORMATAGE MARKDOWN POUR MESSAGES BEAUTÉ
 const formatBeautyMessageContent = (content: string): string => {
   if (!content) return ''
@@ -851,7 +848,7 @@ const formatBeautyMessageContent = (content: string): string => {
     .replace(/(<li.*<\/li>)/g, '<ul class="list-disc list-inside space-y-1 my-2 bg-rose-50 p-3 rounded-lg border-l-4 border-rose-300">$1</ul>')
 }
 
-const getConsultationDuration = (): string => {
+const getConversationDuration = (): string => {
   if (!conversation.value || !conversation.value.started_at) return 'N/A'
   
   const start = new Date(conversation.value.started_at)
@@ -897,16 +894,16 @@ const loadConversation = async (retryCount = 0) => {
   error.value = null
 
   try {
-    console.log(`🔄 Chargement consultation beauté ID: ${conversationId}`)
+    console.log(`🔄 Chargement conversation ID: ${conversationId}`)
     
     if (!conversationId || conversationId === 'undefined') {
-      throw new Error('ID de consultation invalide')
+      throw new Error('ID de conversation invalide')
     }
     
     const conversationResponse = await api.conversations.get(conversationId)
     
     if (!conversationResponse.success) {
-      throw new Error(conversationResponse.error || 'Consultation non trouvée')
+      throw new Error(conversationResponse.error || 'Conversation non trouvée')
     }
     
     conversation.value = conversationResponse.data
@@ -917,14 +914,14 @@ const loadConversation = async (retryCount = 0) => {
       await loadMessagesOnly()
     }
     
-    console.log('✅ Consultation beauté et messages chargés')
+    console.log('✅ Conversation et messages chargés')
     
     nextTick(() => {
       scrollToBottom()
     })
     
   } catch (err: any) {
-    console.error('❌ Erreur chargement consultation beauté:', err)
+    console.error('❌ Erreur chargement conversation:', err)
     
     if (retryCount === 0 && (err.message?.includes('401') || err.message?.includes('Unauthorized'))) {
       console.log('🔄 Retry après erreur d\'authentification...')
@@ -932,7 +929,7 @@ const loadConversation = async (retryCount = 0) => {
       return
     }
     
-    error.value = err.message || 'Erreur lors du chargement de la consultation'
+    error.value = err.message || 'Erreur lors du chargement de la conversation'
   } finally {
     loading.value = false
   }
@@ -957,7 +954,7 @@ const refreshConversation = async () => {
   refreshing.value = true
   try {
     await loadConversation()
-    showNotification('Consultation beauté actualisée')
+    showNotification('Conversation actualisée')
   } catch (err) {
     console.error('Erreur actualisation:', err)
     showNotification('Erreur lors de l\'actualisation', 'error')
@@ -1165,7 +1162,7 @@ const takeOverConversation = async () => {
     const response = await api.conversations.takeover(conversationId)
     
     if (response.success) {
-      showNotification('Consultation beauté prise en charge')
+      showNotification('Conversation prise en charge')
       await loadConversation()
     } else {
       throw new Error(response.error || 'Erreur lors de la prise en charge')
@@ -1180,7 +1177,7 @@ const takeOverConversation = async () => {
 const exportConversation = () => {
   try {
     const data = {
-      consultation: conversation.value,
+      conversation: conversation.value,
       messages: messages.value,
       beautyContext: {
         category: beautyCategory.value,
@@ -1193,11 +1190,11 @@ const exportConversation = () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `consultation-beaute-${conversationId}.json`
+    a.download = `conversation-${conversationId}.json`
     a.click()
     URL.revokeObjectURL(url)
     
-    showNotification('Consultation beauté exportée')
+    showNotification('Conversation exportée')
   } catch (err) {
     console.error('Erreur export:', err)
     showNotification('Erreur lors de l\'export', 'error')
@@ -1206,7 +1203,7 @@ const exportConversation = () => {
 }
 
 const deleteConversation = async () => {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer cette consultation beauté ?')) {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
     showActionsMenu.value = false
     return
   }
@@ -1215,7 +1212,7 @@ const deleteConversation = async () => {
     const response = await api.conversations.delete(conversationId)
     
     if (response.success) {
-      showNotification('Consultation beauté supprimée')
+      showNotification('Conversation supprimée')
       navigateTo('/conversations')
     } else {
       throw new Error(response.error || 'Erreur lors de la suppression')
@@ -1238,6 +1235,13 @@ const closeActionMenu = (event: Event) => {
 onMounted(() => {
   loadConversation()
   document.addEventListener('click', closeActionMenu)
+  // Load agent name
+  api.agents.list().then((res: any) => {
+    if (res.success && res.data?.length > 0) {
+      agentName.value = res.data[0].name || 'Mia'
+      agentAvatar.value = res.data[0].avatar || null
+    }
+  }).catch(() => {})
 })
 
 onUnmounted(() => {
@@ -1245,7 +1249,7 @@ onUnmounted(() => {
 })
 
 useHead({
-  title: `Consultation Beauté ${conversationId.slice(-8)} - ChatSeller Dashboard`
+  title: `Conversation ${conversationId.slice(-8)} - ChatSeller Dashboard`
 })
 </script>
 

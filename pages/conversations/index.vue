@@ -8,17 +8,12 @@
           <div>
             <h1 class="text-3xl font-bold text-gray-900">Conversations</h1>
             <p class="mt-2 text-gray-600">
-              Suivez les conversations de vos {{ getAgentTypeLabel() }} en temps réel
+              Suivez les conversations de {{ agentName }} en temps réel
             </p>
           </div>
           
           <div class="flex items-center space-x-4">
-            <!-- Live indicator beauté -->
-            <div class="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-lg">
-              <div class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
-              <span class="text-sm font-medium text-rose-700">Conseils en direct</span>
-            </div>
-            
+            <!-- Live indicator beauté -->          
             <button
               @click="refreshConversations"
               :disabled="refreshing"
@@ -42,9 +37,10 @@
 
     <!-- Content -->
     <div class="p-8">
-      <!-- KPI Cards Beauté - Avec messages d'encouragement si stats à 0 -->
+      <!-- KPI Cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <!-- Consultations Actives -->
+
+        <!-- KPI 1 : Conversations actives -->
         <div class="card-beauty-gradient from-rose-500 to-pink-600">
           <div class="flex items-center justify-between text-white">
             <div>
@@ -57,20 +53,18 @@
               </template>
               <template v-else>
                 <p class="text-xl font-semibold mt-1">Bientôt ici</p>
-                <p class="text-rose-100 text-sm mt-1">
-                  Vos premières conversations
-                </p>
+                <p class="text-rose-100 text-sm mt-1">Vos premières conversations</p>
               </template>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <!-- Conseils Terminés -->
+        <!-- KPI 2 : Conseils terminés -->
         <div class="card-beauty-gradient from-purple-500 to-violet-600">
           <div class="flex items-center justify-between text-white">
             <div>
@@ -78,14 +72,12 @@
               <template v-if="stats.completed > 0">
                 <p class="text-3xl font-bold">{{ stats.completed }}</p>
                 <p class="text-purple-100 text-sm mt-1">
-                  {{ stats.completionRate }}% de satisfaction
+                  {{ stats.completionRate }}% des conversations
                 </p>
               </template>
               <template v-else>
                 <p class="text-xl font-semibold mt-1">En attente</p>
-                <p class="text-purple-100 text-sm mt-1">
-                  Taux de satisfaction à venir
-                </p>
+                <p class="text-purple-100 text-sm mt-1">Aucun conseil clôturé</p>
               </template>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
@@ -96,33 +88,36 @@
           </div>
         </div>
 
-        <!-- Conseils en cours -->
+        <!-- KPI 3 : Commandes via chat -->
         <div class="card-beauty-gradient from-amber-500 to-orange-500">
           <div class="flex items-center justify-between text-white">
             <div>
-              <p class="text-orange-100 text-sm font-medium">Conseils en cours</p>
-              <template v-if="stats.inProgress > 0">
-                <p class="text-3xl font-bold">{{ stats.inProgress }}</p>
+              <p class="text-orange-100 text-sm font-medium">Commandes via chat</p>
+              <template v-if="hasConversations">
+                <p class="text-3xl font-bold">{{ stats.ordersViaChat }}</p>
                 <p class="text-orange-100 text-sm mt-1">
-                  Clientes accompagnées
+                  <template v-if="stats.ordersViaChat > 0">
+                    Ventes générées par {{ agentName }}
+                  </template>
+                  <template v-else>
+                    {{ agentName }} n'a pas encore vendu
+                  </template>
                 </p>
               </template>
               <template v-else>
-                <p class="text-xl font-semibold mt-1">Prête à aider</p>
-                <p class="text-orange-100 text-sm mt-1">
-                  Votre Vendeuse IA attend
-                </p>
+                <p class="text-xl font-semibold mt-1">Prête à vendre</p>
+                <p class="text-orange-100 text-sm mt-1">{{ agentName }} attend ses clients</p>
               </template>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <!-- Taux de conversion -->
+        <!-- KPI 4 : Taux de conversion -->
         <div class="card-beauty-gradient from-emerald-500 to-teal-600">
           <div class="flex items-center justify-between text-white">
             <div>
@@ -130,14 +125,12 @@
               <template v-if="hasConversations">
                 <p class="text-3xl font-bold">{{ stats.conversionRate }}%</p>
                 <p class="text-emerald-100 text-sm mt-1">
-                  Sur {{ conversations.length }} conversation{{ conversations.length > 1 ? 's' : '' }}
+                  Conversations → commandes
                 </p>
               </template>
               <template v-else>
                 <p class="text-xl font-semibold mt-1">À découvrir</p>
-                <p class="text-emerald-100 text-sm mt-1">
-                  Vos performances à venir
-                </p>
+                <p class="text-emerald-100 text-sm mt-1">Vos performances à venir</p>
               </template>
             </div>
             <div class="p-3 bg-white bg-opacity-20 rounded-xl">
@@ -147,6 +140,7 @@
             </div>
           </div>
         </div>
+
       </div>
 
       <!-- Table des Conversations Beauté -->
@@ -158,7 +152,7 @@
             </h3>
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-500">
-                {{ conversations.length }} consultation(s)
+                {{ conversations.length }} conversation(s)
               </span>
               <div class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
                 Cliquez sur une ligne pour voir les détails
@@ -194,12 +188,10 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gradient-to-r from-rose-50 to-pink-50">
               <tr>
-                <th class="table-header">Consultation</th>
-                <th class="table-header">Cliente</th>
-                <th class="table-header">{{ getProductColumnLabel() }}</th>
-                <th class="table-header">{{ getAgentTypeLabel() }}</th>
-                <th class="table-header">Messages</th>
                 <th class="table-header">Statut</th>
+                <th class="table-header">Client</th>
+                <th class="table-header">Produit consulté</th>
+                <th class="table-header">Messages</th>
                 <th class="table-header">Date</th>
                 <th class="table-header text-right">Actions</th>
               </tr>
@@ -210,32 +202,28 @@
                 :key="conversation.id"
                 @click="navigateToConversation(conversation)"
                 class="conversation-row cursor-pointer hover:bg-gradient-to-r hover:from-rose-50 hover:to-pink-50 transition-all duration-200 border-l-4 border-transparent hover:border-rose-400"
-                :title="`Voir la consultation #${conversation.id.slice(-8).toUpperCase()}`"
+                :title="`Voir la conversation #${conversation.id.slice(-8).toUpperCase()}`"
               >
-                <!-- Consultation ID avec contexte beauté -->
+                <!-- Statut + ID court -->
                 <td class="table-cell">
-                  <div class="flex items-center space-x-3">
-                    <div class="flex-shrink-0">
-                      <div class="w-2 h-2 rounded-full" :class="getBeautyStatusIndicator(conversation.status)"></div>
-                    </div>
+                  <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 rounded-full flex-shrink-0" :class="getBeautyStatusIndicator(conversation.status)"></div>
                     <div>
-                      <div class="text-sm font-medium text-gray-900">
-                        #{{ conversation.id.slice(-8).toUpperCase() }}
-                      </div>
-                      <div v-if="conversation.conversion_completed" class="text-xs text-emerald-600 font-medium flex items-center">
+                      <span :class="getBeautyStatusBadge(conversation.status)" class="beauty-status-badge">
+                        {{ getBeautyStatusLabel(conversation.status) }}
+                      </span>
+                      <div v-if="conversation.conversion_completed" class="text-xs text-emerald-600 font-medium flex items-center mt-1">
                         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                           <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
-                        {{ getConversionLabel() }}
+                        Commandé
                       </div>
-                      <div v-if="getBeautyContext(conversation)" class="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-full mt-1 inline-block">
-                        {{ getBeautyContext(conversation) }}
-                      </div>
+                      <div class="text-xs text-gray-400 mt-0.5">#{{ conversation.id.slice(-8).toUpperCase() }}</div>
                     </div>
                   </div>
                 </td>
-                
-                <!-- Cliente -->
+
+                <!-- Client + localisation -->
                 <td class="table-cell">
                   <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0 h-8 w-8">
@@ -249,17 +237,14 @@
                       <div class="text-sm font-medium text-gray-900">
                         {{ getVisitorInfo(conversation) }}
                       </div>
-                      <div v-if="conversation.visitor_ip" class="text-xs text-gray-500">
-                        {{ conversation.visitor_ip }}
-                      </div>
-                      <div v-if="getBeautyProfile(conversation)" class="text-xs text-rose-600">
-                        {{ getBeautyProfile(conversation) }}
+                      <div class="text-xs text-gray-500">
+                        {{ getVisitorLocation(conversation) }}
                       </div>
                     </div>
                   </div>
                 </td>
-                
-                <!-- Produit Beauté -->
+
+                <!-- Produit consulté -->
                 <td class="table-cell">
                   <div class="text-sm text-gray-900 font-medium">
                     {{ getBeautyProductName(conversation) }}
@@ -267,61 +252,38 @@
                   <div v-if="conversation.product_price" class="text-sm text-rose-600 font-semibold">
                     {{ formatCurrency(conversation.product_price) }}
                   </div>
-                  <div v-if="getProductCategory(conversation)" class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded mt-1 inline-block">
-                    {{ getProductCategory(conversation) }}
-                  </div>
                 </td>
 
-                <!-- Type Agent Beauté -->
-                <td class="table-cell">
-                  <div class="flex items-center space-x-2">
-                    <span class="text-lg">{{ getAgentIcon() }}</span>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ getAgentName(conversation) }}
-                      </div>
-                      <div class="text-xs text-gray-500">
-                        {{ getAgentSpecialty() }}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                
-                <!-- Messages -->
+                <!-- Messages + aperçu -->
                 <td class="table-cell">
                   <div class="text-sm font-semibold text-gray-900">
                     {{ conversation.message_count || 0 }} message{{ (conversation.message_count || 0) !== 1 ? 's' : '' }}
                   </div>
                   <div v-if="conversation.last_message" class="text-xs text-gray-500 truncate max-w-[200px]" :title="conversation.last_message.content">
-                    {{ conversation.last_message.role === 'assistant' ? '🤖 ' : '👤 ' }}{{ truncateText(conversation.last_message.content, 50) }}
+                    {{ conversation.last_message.role === 'assistant' ? '🤖 ' : '👤 ' }}{{ truncateText(conversation.last_message.content, 45) }}
                   </div>
                 </td>
-                
-                <!-- Statut -->
+
+                <!-- Date (une ligne + tooltip) -->
                 <td class="table-cell">
-                  <span :class="getBeautyStatusBadge(conversation.status)" class="beauty-status-badge">
-                    {{ getBeautyStatusLabel(conversation.status) }}
-                  </span>
-                </td>
-                
-                <!-- Date -->
-                <td class="table-cell">
-                  <div class="text-sm text-gray-900">
-                    {{ formatDate(conversation.started_at) }}
+                  <div
+                    class="text-sm text-gray-900"
+                    :title="formatDate(conversation.started_at)"
+                  >
+                    {{ formatSmartDate(conversation.started_at) }}
                   </div>
-                  <div class="text-xs text-gray-500">
-                    {{ formatTimeAgo(conversation.last_activity) }}
+                  <div v-if="conversation.last_activity && conversation.last_activity !== conversation.started_at" class="text-xs text-gray-400">
+                    Actif {{ formatTimeAgo(conversation.last_activity) }}
                   </div>
                 </td>
-                
+
                 <!-- Actions -->
                 <td class="table-cell text-right" @click.stop="">
                   <div class="flex items-center justify-end space-x-2">
                     <div v-if="conversation.status === 'active'" class="flex items-center space-x-1">
                       <div class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
-                      <span class="text-xs text-rose-600 font-medium">En consultation</span>
+                      <span class="text-xs text-rose-600 font-medium">En direct</span>
                     </div>
-                    
                     <div class="flex items-center text-gray-400 group-hover:text-rose-500 transition-colors">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -346,12 +308,12 @@
 
             <!-- Titre encourageant -->
             <h3 class="text-xl font-bold text-gray-900 mb-3">
-              Votre Vendeuse IA est prête !
+              {{ agentName }} est prête à accueillir vos clients !
             </h3>
 
             <!-- Description -->
             <p class="text-gray-600 mb-2">
-              Les conversations avec vos clientes apparaîtront ici dès qu'elles interagiront avec votre {{ getAgentTypeLabel() }}.
+              Les conversations avec vos clients apparaîtront ici dès qu'ils interagiront avec {{ agentName }}.
             </p>
             <p class="text-sm text-gray-500 mb-8">
               Assurez-vous que le widget est bien installé sur votre boutique.
@@ -367,7 +329,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                Configurer ma Vendeuse IA
+                Personnaliser {{ agentName }}
               </NuxtLink>
 
               <button
@@ -395,7 +357,7 @@
                 <div>
                   <p class="font-medium text-amber-800 text-sm">Conseil</p>
                   <p class="text-amber-700 text-sm mt-1">
-                    Testez votre Vendeuse IA depuis l'onglet "Tester" de la page de configuration pour vérifier qu'elle fonctionne correctement.
+                    Testez {{ agentName }} depuis l'onglet "Tester" de la page de configuration pour vérifier qu'elle fonctionne correctement.
                   </p>
                 </div>
               </div>
@@ -438,7 +400,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useAuthStore } from '~/stores/auth'
 
 // PAGE META
 definePageMeta({
@@ -447,8 +408,8 @@ definePageMeta({
 })
 
 // COMPOSABLES
-const authStore = useAuthStore()
 const api = useApi()
+const agentName = ref('Mia')
 
 // REACTIVE STATE
 const loading = ref(true)
@@ -460,7 +421,7 @@ const conversations = ref<any[]>([])
 const stats = ref({
   active: 0,
   completed: 0,
-  inProgress: 0,
+  ordersViaChat: 0,
   conversionRate: 0,
   newToday: 0,
   completionRate: 0
@@ -477,41 +438,6 @@ const notification = ref({
 const hasConversations = computed(() => conversations.value.length > 0)
 
 // ✅ MÉTHODES CONTEXTUELLES BEAUTÉ
-const getAgentTypeLabel = () => {
-  const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-  
-  return 'Vendeuse IA'
-}
-
-const getProductColumnLabel = () => {
-  const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-  
-  const labels: Record<string, string> = {
-    'skincare': 'Soin consulté',
-    'makeup': 'Produit makeup',
-    'fragrance': 'Parfum',
-    'haircare': 'Soin capillaire',
-    'bodycare': 'Soin corps',
-    'multi': 'Produit beauté'
-  }
-  
-  return labels[userBeautyCategory] || 'Produit'
-}
-
-const getConversionLabel = () => {
-  const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-  
-  const labels: Record<string, string> = {
-    'skincare': 'Routine adoptée',
-    'makeup': 'Look commandé',
-    'fragrance': 'Parfum choisi',
-    'haircare': 'Soins commandés',
-    'bodycare': 'Rituel adopté',
-    'multi': 'Produits commandés'
-  }
-  
-  return labels[userBeautyCategory] || 'Convertie'
-}
 
 // ✅ MÉTHODES CONVERSATION BEAUTÉ - Sans données simulées
 const getBeautyContext = (conversation: any): string | null => {
@@ -539,42 +465,6 @@ const getProductCategory = (conversation: any): string | null => {
   return null
 }
 
-const getAgentIcon = (): string => {
-  const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-
-  const icons: Record<string, string> = {
-    'skincare': '✨',
-    'makeup': '💄',
-    'fragrance': '🌸',
-    'haircare': '💇‍♀️',
-    'bodycare': '🧴',
-    'multi': '💋'
-  }
-
-  return icons[userBeautyCategory] || '💋'
-}
-
-const getAgentName = (conversation: any): string => {
-  // Retourner le nom de l'agent ou le nom de la Vendeuse IA configurée
-  if (conversation.agent_name) return conversation.agent_name
-  return authStore.user?.shop?.name ? `Vendeuse IA ${authStore.user.shop.name}` : 'Vendeuse IA'
-}
-
-const getAgentSpecialty = (): string => {
-  const userBeautyCategory = authStore.user?.shop?.beauty_category || 'multi'
-
-  const specialties: Record<string, string> = {
-    'skincare': 'Soins visage',
-    'makeup': 'Maquillage',
-    'fragrance': 'Parfums',
-    'haircare': 'Soins capillaires',
-    'bodycare': 'Soins corps',
-    'multi': 'Multi-beauté'
-  }
-
-  return specialties[userBeautyCategory] || 'Beauté'
-}
-
 // ✅ MÉTHODES STATUT BEAUTÉ
 const getBeautyStatusIndicator = (status: string): string => {
   const classes = {
@@ -596,9 +486,9 @@ const getBeautyStatusBadge = (status: string): string => {
 
 const getBeautyStatusLabel = (status: string): string => {
   const labels = {
-    active: 'En consultation',
+    active: 'En cours',
     completed: 'Conseil terminé',
-    abandoned: 'Consultation interrompue'
+    abandoned: 'Conversation interrompue'
   }
   return labels[status as keyof typeof labels] || status
 }
@@ -606,7 +496,7 @@ const getBeautyStatusLabel = (status: string): string => {
 // ✅ MÉTHODES UTILITAIRES (INCHANGÉES)
 const getVisitorInfo = (conversation: any): string => {
   try {
-    if (!conversation) return 'Cliente anonyme'
+    if (!conversation) return 'Client anonyme'
     
     if (conversation.customer_data && typeof conversation.customer_data === 'object') {
       const data = conversation.customer_data
@@ -614,19 +504,54 @@ const getVisitorInfo = (conversation: any): string => {
       if (data.email && typeof data.email === 'string') return data.email
     }
     
-    return conversation.visitor_id ? `Cliente ${conversation.visitor_id.slice(0, 8)}` : 'Cliente anonyme'
+    return conversation.visitor_id ? `Client ${conversation.visitor_id.slice(0, 8)}` : 'Client anonyme'
   } catch (error) {
     console.warn('Erreur getVisitorInfo:', error)
-    return 'Cliente anonyme'
+    return 'Client anonyme'
   }
 }
 
 const getVisitorInitials = (conversation: any): string => {
   const visitorInfo = getVisitorInfo(conversation)
-  if (visitorInfo.includes('Cliente')) {
+  if (visitorInfo.includes('Client')) {
     return 'C'
   }
   return visitorInfo.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)
+}
+
+// Affiche "🇸🇳 Dakar" ou "Visiteur anonyme" selon les données geo disponibles
+const getVisitorLocation = (conversation: any): string => {
+  const country = conversation.visitorCountry || conversation.visitor_country
+  const city = conversation.visitorCity || conversation.visitor_city
+
+  if (!country && !city) return 'Localisation inconnue'
+
+  const flagMap: Record<string, string> = {
+    SN: '🇸🇳', FR: '🇫🇷', CI: '🇨🇮', CM: '🇨🇲', ML: '🇲🇱',
+    BJ: '🇧🇯', BF: '🇧🇫', TG: '🇹🇬', GN: '🇬🇳', MR: '🇲🇷',
+    MA: '🇲🇦', TN: '🇹🇳', DZ: '🇩🇿', BE: '🇧🇪', CH: '🇨🇭',
+    CA: '🇨🇦', US: '🇺🇸', GB: '🇬🇧', DE: '🇩🇪', ES: '🇪🇸'
+  }
+  const flag = country ? (flagMap[country] || '🌍') : ''
+  const location = [city, country].filter(Boolean).join(', ')
+  return `${flag} ${location}`.trim()
+}
+
+// Date intelligente : "Il y a 2h", "Hier", ou "24 févr." selon l'ancienneté
+const formatSmartDate = (date: string): string => {
+  const now = new Date()
+  const d = new Date(date)
+  const diffMs = now.getTime() - d.getTime()
+  const diffMins = Math.floor(diffMs / (1000 * 60))
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffMins < 1) return 'À l\'instant'
+  if (diffMins < 60) return `Il y a ${diffMins}min`
+  if (diffHours < 24) return `Il y a ${diffHours}h`
+  if (diffDays === 1) return `Hier, ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+  if (diffDays < 7) return `Il y a ${diffDays}j`
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
 const formatTimeAgo = (date: string): string => {
@@ -676,15 +601,15 @@ const showNotification = (message: string, type: 'success' | 'error' = 'success'
 // ✅ NAVIGATION INCHANGÉE
 const navigateToConversation = (conversation: any) => {
   try {
-    console.log('🔄 Navigation vers consultation beauté:', conversation?.id)
+    console.log('🔄 Navigation vers la conversation:', conversation?.id)
     
     if (!conversation?.id) {
-      console.error('❌ ID consultation invalide')
-      showNotification('Erreur: données de consultation manquantes', 'error')
+      console.error('❌ ID conversation invalide')
+      showNotification('Erreur: données de conversation manquantes', 'error')
       return
     }
 
-    console.log('✅ Navigation vers consultation ID:', conversation.id)
+    console.log('✅ Navigation vers conversation ID:', conversation.id)
     navigateTo(`/conversations/${conversation.id}`)
     
   } catch (err: any) {
@@ -699,7 +624,7 @@ const loadConversations = async () => {
   error.value = null
 
   try {
-    console.log('Chargement consultations beauté via API...')
+    console.log('Chargement de la conversations via API...')
     
     const response = await api.conversations.list()
     
@@ -712,16 +637,16 @@ const loadConversations = async () => {
         last_activity: conv.last_activity || conv.lastActivity || conv.started_at
       }))
       
-      console.log('Consultations beauté chargées:', conversations.value.length)
+      console.log('Conversations chargées:', conversations.value.length)
       
       await loadStats()
     } else {
-      throw new Error(response.error || 'Erreur lors du chargement des consultations')
+      throw new Error(response.error || 'Erreur lors du chargement des conversations')
     }
     
   } catch (err: any) {
-    console.error('Erreur chargement consultations beauté:', err)
-    error.value = err.message || 'Erreur lors du chargement des consultations'
+    console.error('Erreur chargement conversations:', err)
+    error.value = err.message || 'Erreur lors du chargement des conversations'
   } finally {
     loading.value = false
   }
@@ -732,13 +657,17 @@ const loadStats = async () => {
     const convs = conversations.value
     const today = new Date().toDateString()
 
+    const totalConvs = convs.length
+    const completed = convs.filter(c => c.status === 'completed').length
+    const orders = convs.filter(c => c.conversion_completed).length
+
     stats.value = {
       active: convs.filter(c => c.status === 'active').length,
-      completed: convs.filter(c => c.status === 'completed').length,
-      inProgress: convs.filter(c => c.status === 'active').length,
+      completed,
+      ordersViaChat: orders,
       newToday: convs.filter(c => new Date(c.started_at).toDateString() === today).length,
-      conversionRate: convs.length > 0 ? Math.round((convs.filter(c => c.conversion_completed).length / convs.length) * 100) : 0,
-      completionRate: convs.length > 0 ? Math.round((convs.filter(c => c.status === 'completed').length / convs.length) * 100) : 0
+      conversionRate: totalConvs > 0 ? Math.round((orders / totalConvs) * 100) : 0,
+      completionRate: totalConvs > 0 ? Math.round((completed / totalConvs) * 100) : 0
     }
   } catch (err) {
     console.warn('Erreur chargement stats:', err)
@@ -749,7 +678,7 @@ const refreshConversations = async () => {
   refreshing.value = true
   try {
     await loadConversations()
-    showNotification('Consultations beauté actualisées')
+    showNotification('Conversations actualisées')
   } finally {
     refreshing.value = false
   }
@@ -758,11 +687,17 @@ const refreshConversations = async () => {
 // LIFECYCLE
 onMounted(() => {
   loadConversations()
+  // Load agent name
+  api.agents.list().then((res: any) => {
+    if (res.success && res.data?.length > 0) {
+      agentName.value = res.data[0].name || 'Mia'
+    }
+  }).catch(() => {})
 })
 
 // SEO
 useHead({
-  title: 'Consultations Beauté - ChatSeller Dashboard'
+  title: 'Conversations - Espace de travail - Chatseller'
 })
 </script>
 

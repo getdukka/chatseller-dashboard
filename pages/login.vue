@@ -5,10 +5,10 @@
     <div class="text-center mb-6">
       
       <h2 class="text-4xl font-bold bg-gradient-to-r from-gray-900 via-rose-800 to-purple-900 bg-clip-text text-transparent mb-3">
-        Accédez à votre espace ChatSeller
+        Bienvenue.<br>Mia vous attend.
       </h2>
       <p class="text-sm text-gray-600">
-        Suivez les performances de votre Vendeuse IA.
+        Votre espace pour la suivre, la former et voir ce qu'elle génère.
       </p>
     </div>
 
@@ -169,7 +169,7 @@
             <div class="w-full border-t border-rose-200" />
           </div>
           <div class="relative flex justify-center text-sm">
-            <span class="px-3 bg-white rounded-xl text-rose-500 font-semibold">Nouveau client ?</span>
+            <span class="px-3 bg-white rounded-xl text-rose-500 font-semibold">Mia ne travaille pas encore pour vous ?</span>
           </div>
         </div>
 
@@ -182,7 +182,7 @@
             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
             </svg>
-            Créer ma Vendeuse IA en 2 minutes
+            Recruter Mia →
             <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>

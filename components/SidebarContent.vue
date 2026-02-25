@@ -109,7 +109,7 @@
         <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Passer à Starter' }}</span>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `${agentName} Découverte` }}</span>
       </button>
 
       <!-- Plan Free + Essai expiré : Bouton rouge "Réactiver" -->
@@ -127,10 +127,10 @@
         <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
-        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver (Starter)' }}</span>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName} Découverte` }}</span>
       </button>
 
-      <!-- Plan Starter + Actif : Bouton "Passer au Growth" -->
+      <!-- Plan Starter + Actif : Bouton "Passer {agentName} en Pro" -->
       <button
         v-else-if="userSubscriptionPlan === 'starter' && userSubscriptionActive"
         @click="handleUpgradeClick('growth')"
@@ -145,10 +145,10 @@
         <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
         </svg>
-        <span>{{ upgradingToPlan === 'growth' ? 'Redirection...' : 'Passer au Growth' }}</span>
+        <span>{{ upgradingToPlan === 'growth' ? 'Redirection...' : `Passer ${agentName} en Pro` }}</span>
       </button>
 
-      <!-- Plan Growth + Actif : Badge statique "Plan Growth Actif" -->
+      <!-- Plan Growth + Actif : Badge statique "{agentName} Pro Actif" -->
       <div
         v-else-if="userSubscriptionPlan === 'growth' && userSubscriptionActive"
         class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 mb-3"
@@ -156,10 +156,10 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
-        <span>Plan Growth Actif</span>
+        <span>{{ agentName }} Pro Actif</span>
       </div>
 
-      <!-- Plan Starter + Inactif : Bouton "Réactiver Starter" -->
+      <!-- Plan Starter + Inactif : Bouton "Réactiver {agentName} Découverte" -->
       <button
         v-else-if="userSubscriptionPlan === 'starter' && !userSubscriptionActive"
         @click="handleUpgradeClick('starter')"
@@ -174,7 +174,7 @@
         <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
-        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver Starter' }}</span>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName} Découverte` }}</span>
       </button>
 
       <!-- Plan Growth + Inactif : Bouton "Réactiver Growth" -->
@@ -192,7 +192,7 @@
         <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
-        <span>{{ upgradingToPlan === 'growth' ? 'Redirection...' : 'Réactiver Growth' }}</span>
+        <span>{{ upgradingToPlan === 'growth' ? 'Redirection...' : `Réactiver ${agentName} Pro` }}</span>
       </button>
 
       <!-- Affichage des jours d'essai restants -->
@@ -320,6 +320,7 @@ interface Props {
   userSubscriptionPlan: SubscriptionPlan
   userSubscriptionActive: boolean
   trialDaysLeft?: number
+  agentName?: string
 }
 
 // ✅ PROPS ET EMITS SIMPLIFIÉS
@@ -327,7 +328,8 @@ const props = withDefaults(defineProps<Props>(), {
   isMobile: false,
   userSubscriptionPlan: 'free',
   userSubscriptionActive: false,
-  trialDaysLeft: 0
+  trialDaysLeft: 0,
+  agentName: 'Mia'
 })
 
 const emit = defineEmits<{

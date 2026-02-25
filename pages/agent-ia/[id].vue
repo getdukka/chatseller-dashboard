@@ -38,7 +38,7 @@
 
             <div class="min-w-0 flex-1">
               <h1 class="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                {{ localConfig.agent.name || 'Ma Vendeuse IA' }}
+                {{ localConfig.agent.name || 'Mia' }}
               </h1>
               <p class="text-xs sm:text-sm text-gray-500 truncate">
                 {{ localConfig.agent.isActive ? 'Active' : 'Inactive' }}
@@ -100,7 +100,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <div class="w-12 h-12 mx-auto mb-4 rounded-full border-4 border-rose-200 border-t-rose-500 animate-spin"></div>
-        <p class="text-gray-600">Chargement de votre Vendeuse IA...</p>
+        <p class="text-gray-600">Préparation de {{ localConfig.agent.name || 'Mia' }}...</p>
       </div>
     </div>
 
@@ -151,7 +151,7 @@
           <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">👩‍💼</span>
-              Identité de votre Vendeuse IA
+              L'identité de {{ localConfig.agent.name || 'Mia' }}
             </h2>
           </div>
 
@@ -188,7 +188,7 @@
 
               <div class="flex-1 min-w-0">
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                  Nom de votre Vendeuse IA *
+                  Son prénom *
                 </label>
                 <input
                   v-model="localConfig.agent.name"
@@ -203,7 +203,7 @@
             <!-- Spécialité -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                Sa spécialité (optionnel)
+                Son titre (optionnel)
               </label>
               <input
                 v-model="localConfig.agent.title"
@@ -249,7 +249,7 @@
 
           <div class="p-4 sm:p-6">
             <p class="text-sm text-gray-600 mb-3">
-              C'est le premier message que vos visiteurs verront
+              C'est le premier message de {{ localConfig.agent.name || 'Mia' }} que vos clients verront
             </p>
 
             <textarea
@@ -259,27 +259,6 @@
               :placeholder="getWelcomePlaceholder()"
               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 resize-none transition-colors"
             ></textarea>
-
-            <!-- Variables rapides -->
-            <div class="mt-3">
-              <div class="flex flex-wrap gap-2 items-center">
-                <span class="text-xs text-gray-500">Variables :</span>
-                <button
-                  v-for="variable in availableVariables"
-                  :key="variable.name"
-                  @click="insertVariable(variable.name)"
-                  class="text-xs px-2 py-1 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition-colors"
-                >
-                  {{ variable.display }}
-                </button>
-              </div>
-              <p class="text-xs text-gray-500 mt-2 flex items-start">
-                <svg class="w-3.5 h-3.5 mr-1 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Ces variables seront automatiquement remplacées par les vraies valeurs dans le chat
-              </p>
-            </div>
           </div>
         </div>
 
@@ -299,7 +278,7 @@
 
           <div class="p-4 sm:p-6">
             <p class="text-sm text-gray-600 mb-4">
-              Sélectionnez les documents que votre Vendeuse IA doit connaître pour bien conseiller vos clientes.
+              Sélectionnez les documents que {{ localConfig.agent.name || 'Mia' }} doit connaître pour bien conseiller vos clients.
             </p>
 
             <button
@@ -337,8 +316,8 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="font-medium text-gray-900">Activer la Vendeuse IA</h3>
-              <p class="text-sm text-gray-500">Elle pourra répondre à vos visiteurs</p>
+              <h3 class="font-medium text-gray-900">Activer {{ localConfig.agent.name || 'Mia' }} sur votre boutique en ligne</h3>
+              <p class="text-sm text-gray-500">Elle pourra répondre à vos visiteurs et vendre vos produits</p>
             </div>
             <button
               @click="toggleActive"
@@ -371,7 +350,7 @@
               v-model="localConfig.widget.buttonText"
               @input="markAsChanged"
               type="text"
-              placeholder="Parler à une vendeuse"
+              placeholder="Parler à la conseillère"
               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
             />
           </div>
@@ -419,7 +398,7 @@
           <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">⬜</span>
-              Style des bordures
+              Style des bordures du bouton
             </h2>
           </div>
 
@@ -558,9 +537,9 @@
               <span class="text-xl">🧪</span>
             </div>
             <div>
-              <h3 class="font-semibold text-gray-900">Testez {{ localConfig.agent.name || 'votre Vendeuse IA' }}</h3>
+              <h3 class="font-semibold text-gray-900">Testez {{ localConfig.agent.name || 'Mia' }}</h3>
               <p class="text-sm text-gray-600 mt-1">
-                Simulez une conversation avec {{ localConfig.agent.name || 'votre Vendeuse IA' }} avant de l'activer sur votre site.
+                Simulez une conversation avec {{ localConfig.agent.name || 'Mia' }} avant de l'activer sur votre boutique en ligne.
               </p>
             </div>
           </div>
@@ -579,7 +558,7 @@
             <div class="flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
                 <span class="mr-2">💬</span>
-                Playground
+                Espace de test
                 <span class="ml-2 text-xs font-normal text-gray-500">(aperçu réel)</span>
               </h2>
               <button
@@ -615,7 +594,7 @@
                   </div>
                 </div>
                 <div class="max-w-[80%]">
-                  <p class="text-xs text-gray-500 mb-1">{{ localConfig.agent.name || 'Vendeuse IA' }}</p>
+                  <p class="text-xs text-gray-500 mb-1">{{ localConfig.agent.name || 'Mia' }}</p>
                   <div class="bg-white rounded-2xl rounded-tl-sm p-3 shadow-sm border border-gray-100">
                     <p class="text-sm text-gray-800">
                       {{ processedWelcomeMessage }}
@@ -656,7 +635,7 @@
                     </div>
                   </div>
                   <div class="max-w-[80%]">
-                    <p class="text-xs text-gray-500 mb-1">{{ localConfig.agent.name || 'Vendeuse IA' }}</p>
+                    <p class="text-xs text-gray-500 mb-1">{{ localConfig.agent.name || 'Mia' }}</p>
                     <div class="bg-white rounded-2xl rounded-tl-sm p-3 shadow-sm border border-gray-100">
                       <p class="text-sm text-gray-800 whitespace-pre-wrap">{{ msg.content }}</p>
                     </div>
@@ -737,8 +716,8 @@
             <div>
               <p class="font-medium text-amber-800">Important</p>
               <p class="text-sm text-amber-700 mt-1">
-                Les réponses ici sont générées par l'IA en utilisant la configuration et la base de connaissances de votre Vendeuse IA.
-                Assurez-vous d'avoir <strong>sauvegardé vos modifications</strong> avant de tester.
+                Les réponses de {{ localConfig.agent.name || 'Mia' }} se basent sur les connaissances que vous lui avez fournies.
+                Assurez-vous d'avoir <strong>sauvegardé vos modifications</strong> avant de la tester.
               </p>
             </div>
           </div>
@@ -755,7 +734,7 @@
             class="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-full"
           >
             <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-            <span class="text-green-700 font-medium text-sm">{{ localConfig.agent.name }} est prête !</span>
+            <span class="text-green-700 font-medium text-sm">{{ localConfig.agent.name }} est prête à commencer !</span>
           </div>
           <div
             v-else
@@ -764,7 +743,7 @@
             <svg class="w-4 h-4 text-orange-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span class="text-orange-700 font-medium text-sm">Activez votre Vendeuse IA d'abord</span>
+            <span class="text-orange-700 font-medium text-sm">Activer {{ localConfig.agent.name || 'Mia' }} d'abord</span>
           </div>
         </div>
 
@@ -779,7 +758,7 @@
 
           <div class="p-4 sm:p-6">
             <p class="text-sm text-gray-600 mb-4">
-              Copiez ce code et collez-le juste avant la balise <code class="bg-gray-100 px-1 rounded">&lt;/body&gt;</code> de votre site.
+              Copiez ce code et collez-le juste avant la balise <code class="bg-gray-100 px-1 rounded">&lt;/body&gt;</code> de votre site pour activer {{ localConfig.agent.name || 'Mia' }}.
             </p>
 
             <div class="relative">
@@ -819,7 +798,7 @@
           <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">📋</span>
-              Instructions d'installation
+              Instructions d'activation de {{ localConfig.agent.name || 'Mia' }}
             </h2>
           </div>
 
@@ -850,7 +829,7 @@
                 <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">✓</span>
                 <div>
                   <p class="font-medium text-gray-900">C'est terminé !</p>
-                  <p class="text-sm text-gray-500">Votre Vendeuse IA apparaîtra automatiquement</p>
+                  <p class="text-sm text-gray-500">{{ localConfig.agent.name || 'Mia' }} apparaîtra automatiquement sur votre boutique</p>
                 </div>
               </li>
             </ol>
@@ -864,12 +843,12 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <div>
-              <p class="font-medium text-blue-800">Besoin d'aide pour l'installation ?</p>
+              <p class="font-medium text-blue-800">Besoin d'aide pour activer {{ localConfig.agent.name || 'Mia' }} ?</p>
               <p class="text-sm text-blue-700 mt-1">
-                Contactez-nous et nous vous aiderons à installer le widget sur votre site gratuitement.
+                Contactez-nous et nous vous aiderons à l'installer sur votre boutique en ligne, gratuitement.
               </p>
               <a
-                href="mailto:support@chatseller.io?subject=Aide installation widget"
+                href="mailto:support@chatseller.app?subject=Aide installation widget"
                 class="inline-flex items-center mt-2 text-sm font-medium text-blue-600 hover:text-blue-800"
               >
                 Demander de l'aide
@@ -1157,7 +1136,7 @@ const processedWelcomeMessage = computed(() => {
 
   // Replace variables with actual values
   const variables: Record<string, string> = {
-    '{nomConseillere}': localConfig.value.agent.name || 'Vendeuse IA',
+    '{nomConseillere}': localConfig.value.agent.name || 'Mia',
     '{nomMarque}': authStore.user?.shop?.name || authStore.user?.name || 'Votre marque',
     '{prenom}': authStore.user?.firstName || 'Client',
   }
@@ -1214,7 +1193,7 @@ const integrationCode = computed(() => {
   const config = useRuntimeConfig()
   const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
-  return `<!-- ChatSeller Widget - Agent: ${agent.name || 'Vendeuse IA'} -->
+  return `<!-- ChatSeller - ${agent.name || 'Mia'} -->
 <script>
 (function() {
   'use strict';
@@ -1308,7 +1287,7 @@ const borderRadiusOptions = [
 ]
 
 const availableVariables = [
-  { name: '{nomConseillere}', display: 'Nom Vendeuse IA' },
+  { name: '{nomConseillere}', display: 'Prénom' },
   { name: '{nomMarque}', display: 'Nom marque' }
 ]
 
@@ -1393,10 +1372,10 @@ const copyCode = async () => {
 
 const sendToDeveloper = () => {
   if (!devEmail.value.trim()) return
-  const agentName = localConfig.value.agent.name || 'Vendeuse IA'
-  const subject = encodeURIComponent(`Installation widget ChatSeller — ${agentName}`)
+  const agentName = localConfig.value.agent.name || 'Mia'
+  const subject = encodeURIComponent(`Installation de Mia sur notre site — ${agentName}`)
   const body = encodeURIComponent(
-    `Bonjour,\n\nMerci d'installer le widget ChatSeller sur notre site.\n\nCopiez ce code et collez-le juste avant la balise </body> de chaque page :\n\n${integrationCode.value}\n\nUne fois installé, le widget "${agentName}" apparaîtra automatiquement sur le site.\n\nMerci !`
+    `Bonjour,\n\nMerci d'installer l'interface de Mia sur notre site.\n\nCopiez ce code et collez-le juste avant la balise </body> de chaque page :\n\n${integrationCode.value}\n\nUne fois installé, "${agentName}" apparaîtra automatiquement sur le site.\n\nMerci !`
   )
   window.open(`mailto:${devEmail.value.trim()}?subject=${subject}&body=${body}`, '_blank')
   showSendDevModal.value = false
@@ -1695,7 +1674,7 @@ onMounted(() => {
 
 // SEO
 useHead({
-  title: computed(() => `${localConfig.value.agent.name || 'Ma Vendeuse IA'} - ChatSeller`)
+  title: computed(() => `${localConfig.value.agent.name || 'Mia'} - ChatSeller`)
 })
 </script>
 

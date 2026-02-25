@@ -75,7 +75,7 @@
             <div class="lg:col-span-2">
               <div class="card-beauty">
                 <div class="flex items-center justify-between mb-6">
-                  <h2 class="text-xl font-semibold text-gray-900">Profil personnel</h2>
+                  <h2 class="text-xl font-semibold text-gray-900">Votre profil personnel</h2>
                   <button 
                     @click="editingProfile = !editingProfile"
                     class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200"
@@ -136,10 +136,10 @@
                     <p class="text-xs text-gray-500 mt-1">L'email ne peut pas être modifié</p>
                   </div>
 
-                  <!-- Rôle dans la beauté -->
+                  <!-- Position chez la marque -->
                   <div>
                     <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
-                      Votre rôle dans la beauté
+                      Votre position chez {{ brandForm.name || 'votre marque' }}
                     </label>
                     <select
                       id="role"
@@ -157,10 +157,10 @@
                     </select>
                   </div>
 
-                  <!-- Expérience beauté -->
+                  <!-- Expérience -->
                   <div>
                     <label for="experience" class="block text-sm font-medium text-gray-700 mb-2">
-                      Années d'expérience dans la beauté
+                      Années d'expérience
                     </label>
                     <select
                       id="experience"
@@ -219,39 +219,16 @@
                     </span>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Consultations beauté</span>
+                    <span class="text-sm text-gray-600">Conversations avec vos clients</span>
                     <span class="text-sm font-medium text-gray-900">{{ beautyStats.totalConsultations || 0 }}</span>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">{{ getAgentTypeName() }}s actives</span>
-                    <span class="text-sm font-medium text-gray-900">{{ beautyStats.activeAgents || 0 }}</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Conversion beauté</span>
+                    <span class="text-sm text-gray-600">Taux de conversion</span>
                     <span class="text-sm font-medium text-rose-600">{{ beautyStats.conversionRate || 0 }}%</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Insights Beauté -->
-              <div class="card-beauty bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200">
-                <h3 class="text-lg font-semibold text-rose-900 mb-4">Insights de votre clientèle</h3>
-                
-                <div class="space-y-3">
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm text-rose-700">Type de peau dominant</span>
-                    <span class="text-sm font-medium text-rose-900">{{ beautyInsights.dominantSkinType || 'Mixte' }}</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm text-rose-700">Âge moyen</span>
-                    <span class="text-sm font-medium text-rose-900">{{ beautyInsights.averageAge || '25-35' }} ans</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm text-rose-700">Budget moyen</span>
-                    <span class="text-sm font-medium text-rose-900">{{ formatCurrency(beautyInsights.averageBudget || 75) }}</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -461,7 +438,7 @@
                 <div class="grid grid-cols-2 gap-4">
                   <div class="text-center p-4 bg-rose-50 rounded-lg">
                     <div class="text-2xl font-bold text-rose-600">{{ beautyStats.totalConsultations || 0 }}</div>
-                    <div class="text-sm text-rose-600">Consultations beauté</div>
+                    <div class="text-sm text-rose-600">Conversations avec vos clients</div>
                   </div>
                   <div class="text-center p-4 bg-purple-50 rounded-lg">
                     <div class="text-2xl font-bold text-purple-600">{{ beautyStats.conversions || 0 }}</div>
@@ -496,27 +473,6 @@
                       </div>
                     </div>
                     
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-gray-600">{{ getAgentTypeName() }}s utilisées</span>
-                      <span class="text-sm font-medium text-gray-900">
-                        {{ beautyStats.activeAgents || 0 }} 
-                        <span class="text-xs text-gray-500">({{ getAgentCostText() }})</span>
-                      </span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-gray-600">Réponses IA ce mois</span>
-                      <span class="text-sm font-medium text-gray-900">
-                        {{ beautyStats.aiResponses || 0 }} / {{ getAIResponsesLimit() }}
-                      </span>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-gray-600">Documents base connaissance</span>
-                      <span class="text-sm font-medium text-gray-900">
-                        {{ beautyStats.documentsCount || 0 }} / {{ getDocumentsLimit() }}
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -529,17 +485,17 @@
           <div class="max-w-2xl">
             
             <div class="card-beauty">
-              <h2 class="text-xl font-semibold text-gray-900 mb-6">Notifications beauté</h2>
-              
+              <h2 class="text-xl font-semibold text-gray-900 mb-6">Notifications</h2>
+
               <div class="space-y-6">
-                <!-- Notifications beauté spécialisées -->
+                <!-- Notifications activité -->
                 <div>
-                  <h3 class="text-sm font-medium text-gray-900 mb-4">Notifications métier beauté</h3>
+                  <h3 class="text-sm font-medium text-gray-900 mb-4">Activité ChatSeller</h3>
                   <div class="space-y-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm font-medium text-gray-700">Nouvelles consultations beauté</p>
-                        <p class="text-xs text-gray-500">Notification quand une cliente démarre une consultation</p>
+                        <p class="text-sm font-medium text-gray-700">Nouvelles conversations</p>
+                        <p class="text-xs text-gray-500">Notification quand une cliente démarre une conversation</p>
                       </div>
                       <ToggleSwitch 
                         :modelValue="notificationSettings.beautyConsultations"
@@ -549,10 +505,10 @@
 
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm font-medium text-gray-700">Conversions de routines beauté</p>
-                        <p class="text-xs text-gray-500">Alerte quand une routine complète est achetée</p>
+                        <p class="text-sm font-medium text-gray-700">Nouvelles commandes via chat</p>
+                        <p class="text-xs text-gray-500">Alerte quand une commande est passée via votre Vendeuse IA</p>
                       </div>
-                      <ToggleSwitch 
+                      <ToggleSwitch
                         :modelValue="notificationSettings.routineConversions"
                         @update:modelValue="(value) => updateNotificationSetting('routineConversions', value)"
                       />
@@ -560,36 +516,25 @@
 
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm font-medium text-gray-700">Insights clientèle beauté</p>
-                        <p class="text-xs text-gray-500">Résumé hebdomadaire des profils de peau et préférences</p>
+                        <p class="text-sm font-medium text-gray-700">Résumé hebdomadaire</p>
+                        <p class="text-xs text-gray-500">Bilan de la semaine : conversations, ventes, taux de conversion</p>
                       </div>
-                      <ToggleSwitch 
+                      <ToggleSwitch
                         :modelValue="notificationSettings.beautyInsights"
                         @update:modelValue="(value) => updateNotificationSetting('beautyInsights', value)"
-                      />
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <p class="text-sm font-medium text-gray-700">Tendances saisonnières</p>
-                        <p class="text-xs text-gray-500">Suggestions d'adaptation selon les saisons beauté</p>
-                      </div>
-                      <ToggleSwitch 
-                        :modelValue="notificationSettings.seasonalTrends"
-                        @update:modelValue="(value) => updateNotificationSetting('seasonalTrends', value)"
                       />
                     </div>
                   </div>
                 </div>
 
-                <!-- Notifications business classiques -->
+                <!-- Notifications business -->
                 <div class="pt-6 border-t border-gray-100">
-                  <h3 class="text-sm font-medium text-gray-900 mb-4">Notifications business</h3>
+                  <h3 class="text-sm font-medium text-gray-900 mb-4">Emails & alertes</h3>
                   <div class="space-y-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm font-medium text-gray-700">Nouvelles ventes</p>
-                        <p class="text-xs text-gray-500">Email pour chaque vente générée par vos agents IA</p>
+                        <p class="text-sm font-medium text-gray-700">Email par vente</p>
+                        <p class="text-xs text-gray-500">Recevoir un email pour chaque vente générée par votre Vendeuse IA</p>
                       </div>
                       <ToggleSwitch 
                         :modelValue="notificationSettings.sales"
@@ -600,7 +545,7 @@
                     <div class="flex items-center justify-between">
                       <div>
                         <p class="text-sm font-medium text-gray-700">Rapports de performance</p>
-                        <p class="text-xs text-gray-500">Analytics hebdomadaires de vos {{ getAgentTypeName() }}s</p>
+                        <p class="text-xs text-gray-500">Analytics hebdomadaires de votre Vendeuse IA</p>
                       </div>
                       <ToggleSwitch 
                         :modelValue="notificationSettings.performanceReports"
@@ -642,7 +587,7 @@
             
             <!-- Export de données beauté -->
             <div class="card-beauty">
-              <h2 class="text-xl font-semibold text-gray-900 mb-6">Gestion des données beauté</h2>
+              <h2 class="text-xl font-semibold text-gray-900 mb-6">Gestion des données</h2>
               
               <div class="space-y-6">
                 <div class="p-4 bg-rose-50 border border-rose-200 rounded-lg">
@@ -653,9 +598,9 @@
                       </svg>
                     </div>
                     <div class="ml-3">
-                      <h3 class="text-sm font-medium text-rose-800">Export complet de vos données beauté</h3>
+                      <h3 class="text-sm font-medium text-rose-800">Export complet de vos données</h3>
                       <div class="mt-2 text-sm text-rose-700">
-                        <p>Inclut profils clients, consultations, préférences beauté, routines et analytics spécialisés.</p>
+                        <p>Inclut les conversations, commandes, analytics et configurations de votre boutique.</p>
                       </div>
                     </div>
                   </div>
@@ -663,8 +608,8 @@
 
                 <div class="flex items-center justify-between py-4 border-b border-gray-100">
                   <div>
-                    <h3 class="text-sm font-medium text-gray-900">Exporter mes données beauté</h3>
-                    <p class="text-sm text-gray-500">Données clients, consultations et insights spécialisés</p>
+                    <h3 class="text-sm font-medium text-gray-900">Exporter mes données</h3>
+                    <p class="text-sm text-gray-500">Conversations, commandes, analytics et paramètres</p>
                   </div>
                   <button
                     @click="exportBeautyData"
@@ -678,7 +623,7 @@
                     <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                     </svg>
-                    {{ exporting ? 'Export en cours...' : 'Télécharger données beauté' }}
+                    {{ exporting ? 'Export en cours...' : 'Télécharger mes données' }}
                   </button>
                 </div>
 
@@ -691,9 +636,9 @@
                       </svg>
                     </div>
                     <div class="ml-3">
-                      <h3 class="text-sm font-medium text-blue-800">Conformité RGPD pour données beauté</h3>
+                      <h3 class="text-sm font-medium text-blue-800">Conformité RGPD</h3>
                       <div class="mt-2 text-sm text-blue-700">
-                        <p>Vos données clients beauté sont protégées selon le RGPD. Elles incluent types de peau, allergies et préférences esthétiques.</p>
+                        <p>Vos données clients sont protégées selon le RGPD. Vous pouvez les exporter ou les supprimer à tout moment.</p>
                       </div>
                     </div>
                   </div>
@@ -709,9 +654,9 @@
                         </svg>
                       </div>
                       <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Suppression de votre marque beauté</h3>
+                        <h3 class="text-sm font-medium text-red-800">Suppression du compte</h3>
                         <div class="mt-2 text-sm text-red-700">
-                          <p>Suppression définitive de tous vos données : profils clients, consultations beauté, agents IA spécialisés.</p>
+                          <p>Suppression définitive de toutes vos données : conversations, commandes, produits et configuration de votre Vendeuse IA.</p>
                         </div>
                         <div class="mt-4">
                           <button
@@ -721,7 +666,7 @@
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            Supprimer ma marque beauté
+                            Supprimer mon compte
                           </button>
                         </div>
                       </div>
@@ -757,9 +702,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Supprimer votre marque beauté ?</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Supprimer votre compte ?</h3>
           <p class="text-sm text-gray-600 mb-6">
-            Cette action supprimera définitivement toutes vos données beauté : consultations, profils clients, agents IA spécialisés. Cette action est irréversible.
+            Cette action supprimera définitivement toutes vos données : conversations, commandes, produits et votre Vendeuse IA. Cette action est irréversible.
           </p>
           <div class="flex space-x-4">
             <button
@@ -818,6 +763,8 @@ const authStore = useAuthStore()
 const route = useRoute()
 const api = useApi()
 
+const agentName = ref('Mia')
+
 // ✅ REACTIVE STATE
 const initialLoading = ref(true)
 const loading = ref(false)
@@ -831,7 +778,7 @@ const editingBrand = ref(false)
 const showSuccessToast = ref(false)
 const showDeleteConfirmation = ref(false)
 const successMessage = ref('')
-const connectionStatus = ref('Marque beauté active')
+const connectionStatus = computed(() => `${agentName.value} est active`)
 
 // ✅ TABS BEAUTÉ SPÉCIALISÉS
 const tabs = [
@@ -902,29 +849,16 @@ const notificationSettings = reactive({
   quotaAlerts: true
 })
 
-// ✅ DATA STATE BEAUTÉ
+// ✅ DATA STATE
 const shopData = ref<any>(null)
 const beautyStats = ref<any>({
   totalConsultations: 0,
   conversions: 0,
   revenue: 0,
-  conversionRate: 0,
-  activeAgents: 0,
-  documentsCount: 0,
-  aiResponses: 0
-})
-
-const beautyInsights = ref<any>({
-  dominantSkinType: 'Mixte',
-  averageAge: '25-35',
-  averageBudget: 75
+  conversionRate: 0
 })
 
 // ✅ COMPUTED BEAUTÉ
-const getAgentTypeName = () => {
-  return 'Vendeuse IA'
-}
-
 const memberSince = computed(() => {
   if (authStore.user?.createdAt) {
     return new Date(authStore.user.createdAt).toLocaleDateString('fr-FR', {
@@ -955,32 +889,6 @@ const planBadgeClass = computed(() => {
   }
 })
 
-const getAgentCostText = () => {
-  const agentCount = beautyStats.value.activeAgents || 0
-  if (agentCount <= 1) return 'incluse'
-  const additionalCost = (agentCount - 1) * 10
-  return `+${additionalCost}€/mois`
-}
-
-const getAIResponsesLimit = () => {
-  const plan = authStore.currentPlan
-  switch (plan) {
-    case 'starter': return '1000'
-    case 'growth': return '10000'
-    case 'performance': return '∞'
-    default: return '1000'
-  }
-}
-
-const getDocumentsLimit = () => {
-  const plan = authStore.currentPlan
-  switch (plan) {
-    case 'starter': return '50'
-    case 'growth': return '200'
-    case 'performance': return '∞'
-    default: return '50'
-  }
-}
 
 // ✅ UTILITY METHODS
 const setActiveTab = (tabId: string) => {
@@ -1033,10 +941,10 @@ const loadBeautyData = async () => {
       brandForm.name = response.data.name || ''
       brandForm.beautyCategory = response.data.beauty_category || 'multi'
       brandForm.platform = response.data.platform || ''
-      brandForm.website = response.data.website || ''
+      brandForm.website = response.data.domain || response.data.website || ''
       brandForm.defaultCurrency = response.data.default_currency || 'XOF'
       brandForm.priceRange = response.data.price_range || ''
-      brandForm.targetAge = response.data.target_age || ''
+      brandForm.targetAge = response.data.target_age_range || response.data.target_age || ''
       
       console.log('✅ Données marque beauté chargées:', response.data)
     }
@@ -1053,13 +961,10 @@ const loadBeautyStats = async () => {
     const response = await api.analytics.dashboard()
     if (response.success && response.data) {
       beautyStats.value = {
-        totalConsultations: response.data.totalConversations || 0,
-        conversions: response.data.totalOrders || 0,
-        revenue: response.data.totalRevenue || 0,
-        conversionRate: response.data.conversionRate || 0,
-        activeAgents: response.data.activeAgents || 0,
-        documentsCount: response.data.documentsCount || 0,
-        aiResponses: response.data.aiResponses || 0
+        totalConsultations: response.data.conversations?.current || 0,
+        conversions: response.data.orders?.current || 0,
+        revenue: response.data.revenue?.current || 0,
+        conversionRate: response.data.conversionRate?.current || 0
       }
       console.log('✅ Stats beauté chargées:', beautyStats.value)
     }
@@ -1075,7 +980,7 @@ const refreshData = async () => {
       loadBeautyData(),
       loadBeautyStats()
     ])
-    showNotification('Données beauté actualisées avec succès !')
+    showNotification('Données actualisées avec succès !')
   } catch (error) {
     console.error('❌ Erreur actualisation:', error)
   } finally {
@@ -1091,13 +996,14 @@ const updateProfile = async () => {
     const result = await authStore.updateProfile({
       firstName: profileForm.firstName,
       lastName: profileForm.lastName,
-      name: `${profileForm.firstName} ${profileForm.lastName}`.trim()
-      // Note: beautyRole et beautyExperience seront ajoutés plus tard
+      name: `${profileForm.firstName} ${profileForm.lastName}`.trim(),
+      beautyRole: profileForm.beautyRole,
+      beautyExperience: profileForm.beautyExperience
     })
-    
+
     if (result.success) {
       editingProfile.value = false
-      showNotification('Profil beauté mis à jour avec succès !')
+      showNotification('Profil mis à jour avec succès !')
     } else {
       console.error('❌ Erreur mise à jour profil:', result.error)
     }
@@ -1113,7 +1019,8 @@ const cancelEdit = () => {
   profileForm.firstName = authStore.user?.firstName || ''
   profileForm.lastName = authStore.user?.lastName || ''
   profileForm.email = authStore.userEmail || ''
-  // Note: beautyRole et beautyExperience récupérés plus tard
+  profileForm.beautyRole = authStore.user?.beautyRole || ''
+  profileForm.beautyExperience = authStore.user?.beautyExperience || ''
 }
 
 // ✅ BRAND ACTIONS (UTILISE api.shops EXISTANT)
@@ -1128,16 +1035,16 @@ const updateBrand = async () => {
       name: brandForm.name,
       beauty_category: brandForm.beautyCategory,
       platform: brandForm.platform,
-      website: brandForm.website || null,
+      domain: brandForm.website || null,
       default_currency: brandForm.defaultCurrency,
       price_range: brandForm.priceRange,
-      target_age: brandForm.targetAge
+      target_age_range: brandForm.targetAge
     })
-    
+
     if (response.success) {
       editingBrand.value = false
       shopData.value = response.data
-      showNotification('Marque beauté mise à jour avec succès !')
+      showNotification('Marque mise à jour avec succès !')
     } else {
       console.error('❌ Erreur mise à jour marque:', response.error)
     }
@@ -1153,10 +1060,10 @@ const cancelBrandEdit = () => {
   brandForm.name = shopData.value?.name || ''
   brandForm.beautyCategory = shopData.value?.beauty_category || 'multi'
   brandForm.platform = shopData.value?.platform || ''
-  brandForm.website = shopData.value?.website || ''
+  brandForm.website = shopData.value?.domain || shopData.value?.website || ''
   brandForm.defaultCurrency = shopData.value?.default_currency || 'XOF'
   brandForm.priceRange = shopData.value?.price_range || ''
-  brandForm.targetAge = shopData.value?.target_age || ''
+  brandForm.targetAge = shopData.value?.target_age_range || shopData.value?.target_age || ''
 }
 
 const copyBrandId = async () => {
@@ -1236,7 +1143,7 @@ const exportBeautyData = async () => {
   exporting.value = true
   
   try {
-    console.log('📥 Export des données beauté...')
+    console.log('📥 Export des données...')
     
     // Utiliser les APIs existantes
     const [brandResponse, statsResponse] = await Promise.all([
@@ -1258,11 +1165,9 @@ const exportBeautyData = async () => {
         agents: agentSettings,
         notifications: notificationSettings
       },
-      insights: beautyInsights.value,
       metadata: {
         exportedAt: new Date().toISOString(),
-        version: '2.0-beauty-compatible',
-        dataType: 'beauty-specialized'
+        version: '2.0'
       }
     }
 
@@ -1273,14 +1178,14 @@ const exportBeautyData = async () => {
     const url = window.URL.createObjectURL(dataBlob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `chatseller-beauty-export-${new Date().toISOString().split('T')[0]}.json`
+    link.download = `chatseller-export-${new Date().toISOString().split('T')[0]}.json`
     
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
     
-    showNotification('Données beauté exportées avec succès !')
+    showNotification('Données exportées avec succès !')
     
   } catch (error) {
     console.error('❌ Erreur export beauté:', error)
@@ -1291,7 +1196,7 @@ const exportBeautyData = async () => {
 
 const deleteBeautyBrand = async () => {
   try {
-    console.log('⚠️ Suppression marque beauté demandée')
+    console.log('⚠️ Suppression compte demandée')
     showDeleteConfirmation.value = false
     
     // Pour l'instant, juste déconnecter (API delete pas disponible)
@@ -1310,7 +1215,15 @@ onMounted(async () => {
     profileForm.firstName = authStore.user?.firstName || ''
     profileForm.lastName = authStore.user?.lastName || ''
     profileForm.email = authStore.userEmail || ''
-    // beautyRole et beautyExperience seront supportés plus tard
+    profileForm.beautyRole = authStore.user?.beautyRole || ''
+    profileForm.beautyExperience = authStore.user?.beautyExperience || ''
+
+    // Load agent name
+    api.agents.list().then((res: any) => {
+      if (res.success && res.data?.length > 0) {
+        agentName.value = res.data[0].name || 'Mia'
+      }
+    }).catch(() => {})
 
     // Charger les données beauté
     await Promise.all([

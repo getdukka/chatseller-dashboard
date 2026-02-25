@@ -8,7 +8,7 @@
           <div>
             <h1 class="text-3xl font-bold text-gray-900">Catalogue produits</h1>
             <p class="mt-2 text-gray-600">
-              Synchronisé avec votre boutique {{ platformName }}
+              Produits importés depuis votre boutique {{ platformName }}
             </p>
           </div>
 
@@ -84,7 +84,7 @@
         <div class="card-beauty-gradient from-green-500 to-green-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-green-100 text-sm font-medium">Recommandés par l'IA</p>
+              <p class="text-green-100 text-sm font-medium">Recommandés par {{ agentName }}</p>
               <p class="text-2xl md:text-3xl font-bold">{{ stats.aiRecommended || 0 }}</p>
               <p class="text-green-100 text-sm mt-1">
                 ce mois-ci
@@ -102,7 +102,7 @@
         <div class="card-beauty-gradient from-rose-500 to-pink-600">
           <div class="flex items-center justify-between">
             <div class="text-white">
-              <p class="text-rose-100 text-sm font-medium">Dernière sync</p>
+              <p class="text-rose-100 text-sm font-medium">Dernière synchronisation</p>
               <p class="text-xl md:text-2xl font-bold">{{ stats.lastSync || 'Jamais' }}</p>
               <p class="text-rose-100 text-sm mt-1">
                 {{ stats.lastSyncProducts || 0 }} produits
@@ -176,7 +176,7 @@
                 @change="applyFilters"
                 class="input-beauty"
               >
-                <option value="">Recommandation IA</option>
+                <option value="">Recommandation par {{ agentName }}</option>
                 <option value="enabled">Activée</option>
                 <option value="disabled">Désactivée</option>
               </select>
@@ -281,7 +281,7 @@
                     :class="product.ai_recommend ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'"
                     class="w-full text-xs px-3 py-2 rounded-lg transition-colors"
                   >
-                    {{ product.ai_recommend ? '✓ Recommandé par IA' : 'Activer recommandation' }}
+                    {{ product.ai_recommend ? '✓ Recommandé par ' + agentName : 'Activer recommandation' }}
                   </button>
                 </div>
               </div>
@@ -356,6 +356,7 @@ definePageMeta({
 // COMPOSABLES
 const authStore = useAuthStore()
 const api = useApi()
+const agentName = ref('Mia')
 
 // REACTIVE STATE
 const loading = ref(true)
@@ -578,7 +579,7 @@ const handleSync = async (platform, credentials) => {
       } else {
         notificationMessage.value = 'Synchronisation terminée'
       }
-      notificationType.value = total > 0 ? 'success' : 'warning'
+      notificationType.value = total > 0 ? 'success' : 'success'
       await refreshCatalog()
     }
     
@@ -703,6 +704,12 @@ const debouncedSearch = useDebounce(() => {
 // LIFECYCLE
 onMounted(async () => {
   await refreshCatalog()
+  // Load agent name
+  api.agents.list().then((res: any) => {
+    if (res.success && res.data?.length > 0) {
+      agentName.value = res.data[0].name || 'Mia'
+    }
+  }).catch(() => {})
 })
 
 // SEO

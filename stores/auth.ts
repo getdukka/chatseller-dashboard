@@ -18,6 +18,8 @@ interface User {
   createdAt?: string
   updatedAt?: string
   shop?: any
+  beautyRole?: string
+  beautyExperience?: string
 }
 
 interface AuthState {

@@ -382,7 +382,7 @@
               @click="goToBilling" 
               class="bg-white text-rose-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-rose-50 transition-colors shadow-lg"
             >
-              Passer au Growth - {{ formatCurrency(149) }}/mois
+              Passer {{ agentName }} en Pro - {{ formatCurrency(145) }}/mois
               <span class="block text-sm font-normal opacity-80">Ou {{ formatCurrency(127) }}/mois facturé annuellement</span>
             </button>
           </div>
@@ -454,6 +454,9 @@ const isAdvancedPlan = computed(() => {
 
 // COMPUTED - BEAUTY CATEGORY
 const beautyCategory = computed(() => authStore.user?.shop?.beauty_category || 'multi')
+
+// Agent name
+const agentName = ref('Mia')
 
 // REACTIVE STATE
 const loading = ref(false)
@@ -1058,6 +1061,11 @@ const goToBilling = async () => {
 // LIFECYCLE
 onMounted(() => {
   loadAnalytics()
+  api.agents.list().then((res: any) => {
+    if (res.success && res.data?.length > 0) {
+      agentName.value = res.data[0].name || 'Mia'
+    }
+  }).catch(() => {})
 })
 
 // SEO

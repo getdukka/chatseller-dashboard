@@ -6,9 +6,9 @@
       <div class="px-8 py-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900">Facturation & Abonnement</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Facturation</h1>
             <p class="mt-2 text-gray-600">
-              Gérez votre plan et vos paiements en toute sécurité
+              Gérez le salaire de {{ agentName }} et vos factures
             </p>
           </div>
           
@@ -16,17 +16,17 @@
             <!-- Status Badge -->
             <div v-if="subscriptionData.isActive && !isPlanStarter(subscriptionData.plan)" class="flex items-center space-x-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
               <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span class="text-sm font-medium text-green-700">Abonnement actif</span>
+              <span class="text-sm font-medium text-green-700">Contrat actif</span>
             </div>
             
             <div v-else-if="isPlanStarter(subscriptionData.plan) && subscriptionData.trialDaysLeft > 0" class="flex items-center space-x-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
               <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <span class="text-sm font-medium text-blue-700">Essai gratuit - {{ subscriptionData.trialDaysLeft }} jour(s)</span>
+              <span class="text-sm font-medium text-blue-700">Période d'essai - {{ subscriptionData.trialDaysLeft }} jour(s)</span>
             </div>
             
             <div v-else class="flex items-center space-x-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
               <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span class="text-sm font-medium text-red-700">Accès suspendu</span>
+              <span class="text-sm font-medium text-red-700">Contrat suspendu</span>
             </div>
             
             <button
@@ -57,7 +57,7 @@
         <div class="bg-white rounded-xl p-8 max-w-md mx-4 text-center">
           <div class="animate-spin h-12 w-12 border-4 border-rose-600 border-t-transparent rounded-full mx-auto mb-4"></div>
           <h3 class="text-lg font-semibold mb-2">Synchronisation en cours...</h3>
-          <p class="text-gray-600">Nous mettons à jour votre abonnement</p>
+          <p class="text-gray-600">Nous mettons à jour votre contrat</p>
           <div class="mt-4 text-sm text-gray-500">
             Tentative {{ syncAttempt }}/{{ maxSyncAttempts }}
           </div>
@@ -79,13 +79,13 @@
                   </div>
                   <div>
                     <h2 class="text-3xl font-bold mb-2">
-                      Essai gratuit : {{ subscriptionData.trialDaysLeft }} jour(s) restant(s)
+                      Période d'essai : {{ subscriptionData.trialDaysLeft }} jour(s) restant(s)
                     </h2>
                     <p class="text-blue-100 text-lg">
-                      Profitez de toutes les fonctionnalités Starter gratuitement pendant 14 jours.
+                      {{ agentName }} travaille gratuitement pour vous pendant 14 jours.
                       <br>
                       <span class="font-semibold text-yellow-200">
-                        Après {{ subscriptionData.trialDaysLeft }} jour(s), choisissez un plan pour continuer.
+                        Après {{ subscriptionData.trialDaysLeft }} jour(s), choisissez son salaire pour continuer.
                       </span>
                     </p>
                   </div>
@@ -99,17 +99,17 @@
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
-                    Choisir Starter (45€/mois)
+                    {{ agentName }} Découverte — 45€/mois
                   </button>
-                  
-                  <button 
+
+                  <button
                     @click="scrollToPlans"
                     class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl text-gray-900 font-bold text-lg hover:from-yellow-300 hover:to-orange-300 transition-all shadow-lg"
                   >
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
-                    Passer au Growth (145€/mois)
+                    {{ agentName }} Pro — 145€/mois
                   </button>
                 </div>
               </div>
@@ -133,12 +133,12 @@
                     </div>
                   </div>
                   <div>
-                    <h2 class="text-3xl font-bold mb-2">Essai gratuit terminé</h2>
+                    <h2 class="text-3xl font-bold mb-2">Le contrat d'essai de {{ agentName }} est terminé</h2>
                     <p class="text-red-100 text-lg">
-                      Vos Agents IA et votre widget sont maintenant <span class="font-bold">désactivés</span>.
+                      {{ agentName }} a quitté votre boutique.
                       <br>
                       <span class="font-semibold text-yellow-200">
-                        Choisissez un plan pour réactiver vos Agents IA !
+                        Choisissez son salaire pour la réembaucher.
                       </span>
                     </p>
                   </div>
@@ -147,9 +147,9 @@
                 <div class="bg-red-800 bg-opacity-50 rounded-lg p-4 mb-6">
                   <h3 class="font-semibold mb-2">Fonctionnalités désactivées :</h3>
                   <ul class="text-sm text-red-100 space-y-1">
-                    <li>• Vos Agents IA ne répondent plus aux visiteurs</li>
-                    <li>• Le widget ChatSeller est invisible sur votre site</li>
-                    <li>• Aucune nouvelle conversation ne peut être créée</li>
+                    <li>• {{ agentName }} ne répond plus à vos clients</li>
+                    <li>• Son interface a été retirée de votre boutique</li>
+                    <li>• Aucune nouvelle conversation ne peut démarrer</li>
                     <li>• L'accès à la configuration est restreint</li>
                   </ul>
                 </div>
@@ -162,17 +162,17 @@
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
-                    Choisir Starter (45€/mois)
+                    Réembaucher {{ agentName }} — Découverte (45€/mois)
                   </button>
-                  
-                  <button 
+
+                  <button
                     @click="scrollToPlans"
                     class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl text-gray-900 font-bold text-lg hover:from-yellow-300 hover:to-orange-300 transition-all shadow-lg"
                   >
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
-                    Passer au Growth (145€/mois)
+                    Réembaucher {{ agentName }} — Pro (145€/mois)
                   </button>
                 </div>
               </div>
@@ -188,9 +188,9 @@
           <!-- Current Plan -->
           <div class="card-modern">
             <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-semibold text-gray-900">Plan actuel</h2>
+              <h2 class="text-xl font-semibold text-gray-900">Salaire actuel</h2>
               <div v-if="isPlanStarter(subscriptionData.plan)" class="plan-upgrade-badge">
-                <span class="text-xs font-medium">Choisissez un plan pour continuer</span>
+                <span class="text-xs font-medium">Choisissez un salaire pour continuer</span>
               </div>
             </div>
             
@@ -215,7 +215,7 @@
                     {{ getStatusLabel(subscriptionData.plan) }}
                   </span>
                   <p v-if="subscriptionData.nextBillingDate && subscriptionData.isActive && !isPlanStarter(subscriptionData.plan)" class="text-sm text-gray-500 mt-2">
-                    Prochain paiement : {{ formatDate(subscriptionData.nextBillingDate) }}
+                    Prochain salaire : {{ formatDate(subscriptionData.nextBillingDate) }}
                   </p>
                   <p v-else-if="subscriptionData.trialDaysLeft > 0" class="text-sm text-blue-600 mt-2 font-medium">
                     Fin d'essai : {{ formatDate(subscriptionData.trialEndDate) }}
@@ -243,7 +243,7 @@
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                   </svg>
-                  {{ subscriptionData.trialDaysLeft > 0 ? 'Choisir un plan' : 'Réactiver vos Agents IA' }}
+                  {{ subscriptionData.trialDaysLeft > 0 ? 'Choisir un salaire' : `Réembaucher ${agentName}` }}
                 </button>
 
                 <button 
@@ -254,7 +254,7 @@
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                   </svg>
-                  Passer au Growth
+                  Augmenter son salaire
                 </button>
                 
                 <button 
@@ -271,7 +271,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
-                  {{ loading.subscription ? 'Ouverture...' : 'Gérer l\'abonnement' }}
+                  {{ loading.subscription ? 'Ouverture...' : 'Gérer le contrat' }}
                 </button>
               </div>
             </div>
@@ -280,8 +280,8 @@
           <!-- Plans disponibles -->
           <div v-if="!isPlanPerformance(subscriptionData.plan)" ref="plansSection" class="card-modern">
             <div class="mb-8 text-center">
-              <h2 class="text-3xl font-bold text-gray-900 mb-4">Choisissez votre plan</h2>
-              <p class="text-lg text-gray-600">Déverrouillez tout le potentiel de ChatSeller</p>
+              <h2 class="text-3xl font-bold text-gray-900 mb-4">Choisir le salaire de {{ agentName }}</h2>
+              <p class="text-lg text-gray-600">Une vendeuse en boutique physique coûte 1 800€/mois — congés, charges et imprévus inclus. {{ agentName }} commence à 45€.</p>
             </div>
 
             <div class="grid md:grid-cols-2 gap-8">
@@ -294,13 +294,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                       </svg>
                     </div>
-                    <h3 class="text-2xl font-bold mb-2">Starter</h3>
+                    <h3 class="text-2xl font-bold mb-2">{{ agentName }} Découverte</h3>
                     <div class="pricing">
                       <span class="price">45€</span>
                       <span class="period">/mois</span>
                     </div>
-                    <p class="text-gray-600 text-sm">ou 38€/mois (facturé annuellement)</p>
-                    <p class="text-gray-600">Pour débuter avec l'IA conversationnelle</p>
+                    <p class="text-gray-600 text-sm">~ 29 500 FCFA/mois</p>
+                    <p class="text-gray-600">Testez {{ agentName }} sans engagement</p>
                   </div>
                 </div>
                 
@@ -326,15 +326,15 @@
                       </svg>
                       Traitement...
                     </span>
-                    <span v-else-if="subscriptionData.plan === 'starter'">Plan actuel</span>
-                    <span v-else>Choisir Starter</span>
+                    <span v-else-if="subscriptionData.plan === 'starter'">Salaire actuel</span>
+                    <span v-else>Tester {{ agentName }} pendant 14 jours</span>
                   </button>
                   
                   <div class="plan-guarantee">
                     <svg class="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.065.01l.032.006M12 21a9 9 0 110-18 9 9 0 010 18z"/>
                     </svg>
-                    <span class="text-xs text-gray-600">14 jours gratuits • Annulation à tout moment</span>
+                    <span class="text-xs text-gray-600">14 jours d'essai sans engagement • Licenciez-la à tout moment</span>
                   </div>
                 </div>
               </div>
@@ -352,13 +352,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                       </svg>
                     </div>
-                    <h3 class="text-2xl font-bold mb-2">Growth</h3>
+                    <h3 class="text-2xl font-bold mb-2">{{ agentName }} Pro</h3>
                     <div class="pricing">
                       <span class="price">145€</span>
                       <span class="period">/mois</span>
                     </div>
-                    <p class="text-gray-600 text-sm">ou 123€/mois (facturé annuellement)</p>
-                    <p class="text-gray-600">Pour les marques en croissance</p>
+                    <p class="text-gray-600 text-sm">~ 95 000 FCFA/mois</p>
+                    <p class="text-gray-600">{{ agentName }} vend à pleine puissance</p>
                   </div>
                 </div>
                 
@@ -384,15 +384,15 @@
                       </svg>
                       Traitement...
                     </span>
-                    <span v-else-if="subscriptionData.plan === 'growth'">Plan actuel</span>
-                    <span v-else>Passer au Growth</span>
+                    <span v-else-if="subscriptionData.plan === 'growth'">Salaire actuel</span>
+                    <span v-else>Passer {{ agentName }} en Pro</span>
                   </button>
                   
                   <div class="plan-guarantee">
                     <svg class="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.065.01l.032.006M12 21a9 9 0 110-18 9 9 0 010 18z"/>
                     </svg>
-                    <span class="text-xs text-gray-600">Annulation à tout moment</span>
+                    <span class="text-xs text-gray-600">Licenciez-la à tout moment</span>
                   </div>
                 </div>
               </div>
@@ -406,32 +406,33 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h2M7 3h10M12 13l-3-3 3-3m-3 3h12.5"/>
                   </svg>
                 </div>
-                <h3 class="text-3xl font-bold mb-4">Performance</h3>
-                <p class="text-xl text-gray-300 mb-6">Solution sur-mesure pour les entreprises</p>
+                <h3 class="text-3xl font-bold mb-4">{{ agentName }} Premium</h3>
+                <p class="text-xl text-gray-300 mb-2">299€/mois <span class="text-base text-gray-400">~ 196 000 FCFA/mois</span></p>
+                <p class="text-gray-400 mb-6">Pour les boutiques ambitieuses</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-sm">
                   <div class="flex items-center justify-center space-x-2">
                     <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    <span>Agents illimités</span>
+                    <span>Tout de {{ agentName }} Pro</span>
                   </div>
                   <div class="flex items-center justify-center space-x-2">
                     <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    <span>Réponses illimitées</span>
+                    <span>Expert dédié</span>
                   </div>
                   <div class="flex items-center justify-center space-x-2">
                     <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    <span>Support dédié</span>
+                    <span>Accès API & Webhooks</span>
                   </div>
                   <div class="flex items-center justify-center space-x-2">
                     <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    <span>API avancée</span>
+                    <span>Boutiques illimitées</span>
                   </div>
                 </div>
                 <button 
@@ -475,7 +476,7 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
-                Commencer à créer vos Agents IA
+                Personnaliser {{ agentName }}
               </NuxtLink>
             </div>
           </div>
@@ -486,7 +487,7 @@
           
           <!-- Trial Progress (si essai en cours) -->
           <div v-if="isPlanStarter(subscriptionData.plan) && subscriptionData.trialDaysLeft > 0" class="card-modern bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Votre essai gratuit</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Periode d'essai</h3>
             
             <div class="text-center mb-6">
               <div class="relative inline-flex items-center justify-center w-24 h-24 mb-4">
@@ -504,15 +505,15 @@
             
             <div class="space-y-3">
               <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600">Agents IA actifs</span>
+                <span class="text-gray-600">{{ agentName }} est active sur le site</span>
                 <span class="text-green-600 font-medium">Oui</span>
               </div>
               <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600">Widget fonctionnel</span>
+                <span class="text-gray-600">Elle accompagne les visiteurs</span>
                 <span class="text-green-600 font-medium">Oui</span>
               </div>
               <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600">Toutes les fonctionnalités</span>
+                <span class="text-gray-600">Elle recommande des produits</span>
                 <span class="text-green-600 font-medium">Oui</span>
               </div>
             </div>
@@ -521,46 +522,8 @@
               @click="scrollToPlans"
               class="w-full mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Souscrire maintenant
+              Choisir le salaire de {{ agentName }}
             </button>
-          </div>
-
-          <!-- Cost Calculator -->
-          <div class="card-modern bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Calculateur de coût</h3>
-            
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre d'Agents IA souhaités
-                </label>
-                <select v-model="agentCount" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                  <option v-for="n in 10" :key="n" :value="n">{{ n }} Agent{{ n > 1 ? 's' : '' }}</option>
-                </select>
-              </div>
-              
-              <div v-if="agentCount > 1" class="bg-white p-3 rounded-lg border">
-                <div class="text-sm space-y-2">
-                  <div class="flex justify-between">
-                    <span>Plan de base :</span>
-                    <span class="font-medium">45€/mois</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>{{ agentCount - 1 }} Agent{{ agentCount > 2 ? 's' : '' }} supplémentaire{{ agentCount > 2 ? 's' : '' }} :</span>
-                    <span class="font-medium">{{ (agentCount - 1) * 10 }}€/mois</span>
-                  </div>
-                  <hr>
-                  <div class="flex justify-between font-bold">
-                    <span>Total :</span>
-                    <span class="text-green-600">{{ 45 + (agentCount - 1) * 10 }}€/mois</span>
-                  </div>
-                </div>
-              </div>
-              
-              <p class="text-xs text-gray-600">
-                <strong>À savoir :</strong> Chaque Agent IA supplémentaire coûte 10€/mois, quel que soit votre plan.
-              </p>
-            </div>
           </div>
 
           <!-- Support Card -->
@@ -648,16 +611,16 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                   </div>
-                  <h4 class="text-lg font-bold text-gray-900">Votre Vendeuse IA est maintenant active !</h4>
+                  <h4 class="text-lg font-bold text-gray-900">{{ agentName }} est maintenant en poste !</h4>
                 </div>
                 <ul class="text-sm text-gray-700 space-y-3 ml-2">
                   <li class="flex items-start">
                     <span class="text-green-500 mr-3 text-lg">✓</span>
-                    <span><strong>Widget ChatSeller</strong> activé sur votre boutique en ligne</span>
+                    <span><strong>Interface de {{ agentName }}</strong> activée sur votre boutique en ligne</span>
                   </li>
                   <li class="flex items-start">
                     <span class="text-green-500 mr-3 text-lg">✓</span>
-                    <span><strong>Conversations IA</strong> disponibles 24h/24 pour vos clientes</span>
+                    <span><strong>Conversations</strong> disponibles 24h/24 pour vos clients</span>
                   </li>
                   <li class="flex items-start">
                     <span class="text-green-500 mr-3 text-lg">✓</span>
@@ -690,7 +653,7 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
-                Configurer ma Vendeuse IA
+                Personnaliser {{ agentName }}
               </button>
               <button
                 @click="closeSuccessModal"
@@ -789,6 +752,8 @@ definePageMeta({
 
 const authStore = useAuthStore()
 const router = useRouter()
+const api = useApi()
+const agentName = ref('Mia')
 const { getSubscriptionStatus, createCheckoutSession, createCustomerPortal, waitForSubscriptionUpdate } = useBilling()
 
 // Types
@@ -810,7 +775,6 @@ const loading = ref({
 
 const selectedPlan = ref<SubscriptionPlan | ''>('')
 const plansSection = ref<HTMLElement>()
-const agentCount = ref(1)
 
 // Nouveaux états pour synchronisation
 const syncing = ref(false)
@@ -839,58 +803,54 @@ const notification = ref({
 })
 
 // Features lists avec nouvelles données
-const starterFeatures = [
-  'Agents IA illimités (+10€/agent)',
-  '1 000 réponses IA/mois',
-  '50 documents base de connaissances',
-  '500 pages web indexables',
-  'Widget adaptatif tous sites',
-  'Analytics de base',
-  'Support email'
-]
+const starterFeatures = computed(() => [
+  `Apprend et maîtrise tous vos produits`,
+  `Répond instantanément, 24h/24, 7j/7`,
+  `Affiche vos produits directement dans la conversation`,
+  `Passe la main à un humain si nécessaire`,
+  `Vous voyez tout ce qu'elle fait et dit`,
+  `Vend sur 1 boutique Shopify ou WooCommerce`,
+  `Support en français`
+])
 
-const growthFeatures = [
-  'Tout du plan Starter inclus',
-  'Agents IA illimités (+10€/agent)',
-  '10 000 réponses IA/mois',
-  '200 documents base de connaissances',
-  '2 000 pages web indexables',
-  'Analytics avancées & ROI',
-  'A/B testing agents',
-  'Intégrations CRM',
-  'Support prioritaire'
-]
+const growthFeatures = computed(() => [
+  `Tout ce qui est inclus dans ${agentName.value} Découverte`,
+  `Propose naturellement des produits complémentaires`,
+  `Ajoute les produits au panier pour le client`,
+  `Vous donne des rapports sur ses ventes et vos clients`,
+  `Parle plusieurs langues (FR, EN, et plus)`,
+  `Vend sur jusqu'à 3 boutiques simultanément`,
+  `Support prioritaire 7j/7`
+])
 
-const performanceFeatures = [
-  'Tout du plan Growth inclus',
-  'Réponses IA illimitées',
-  'Documents illimités',
-  'Pages indexables illimitées',
-  'Agents IA inclus (0€ supplémentaire)',
-  'White-label complet',
-  'API avancée',
-  'Support dédié 24/7',
-  'Onboarding personnalisé'
-]
+const performanceFeatures = computed(() => [
+  `Tout ce qui est inclus dans ${agentName.value} Pro`,
+  `Un expert dédié suit ses performances avec vous`,
+  `Se connecte à vos outils marketing et CRM`,
+  `Personnalisation complète de son interface`,
+  `Accès API & Webhooks`,
+  `Vend sur un nombre illimité de boutiques`,
+  `Support VIP 24/7`
+])
 
 // Computed properties
 const getCurrentPlanFeatures = (): string[] => {
   const plan = subscriptionData.value.plan
   if (isPlanPerformance(plan)) {
-    return performanceFeatures.slice(0, 4)
+    return performanceFeatures.value.slice(0, 4)
   } else if (isPlanGrowth(plan)) {
-    return growthFeatures.slice(0, 4)
+    return growthFeatures.value.slice(0, 4)
   } else {
-    return starterFeatures.slice(0, 3)
+    return starterFeatures.value.slice(0, 3)
   }
 }
 
 const getAdvancedFeatures = (): string[] => {
   const plan = subscriptionData.value.plan
   if (isPlanPerformance(plan)) {
-    return performanceFeatures
+    return performanceFeatures.value
   } else if (isPlanGrowth(plan)) {
-    return growthFeatures
+    return growthFeatures.value
   }
   return []
 }
@@ -898,23 +858,23 @@ const getAdvancedFeatures = (): string[] => {
 // Utility methods
 const getPlanName = (plan: SubscriptionPlan): string => {
   const names: Record<SubscriptionPlan, string> = {
-    starter: 'Starter',
-    growth: 'Growth',
-    performance: 'Performance'
+    starter: `${agentName.value} Découverte`,
+    growth: `${agentName.value} Pro`,
+    performance: `${agentName.value} Premium`
   }
   return names[plan]
 }
 
 const getPlanPrice = (plan: SubscriptionPlan): string => {
   if (plan === 'starter') {
-    return subscriptionData.value.trialDaysLeft > 0 
-      ? `${subscriptionData.value.trialDaysLeft} jours gratuits`
-      : 'Essai expiré'
+    return subscriptionData.value.trialDaysLeft > 0
+      ? `Période d'essai — ${subscriptionData.value.trialDaysLeft} jours restants`
+      : 'Contrat d\'essai terminé'
   }
-  
+
   const prices: Record<Exclude<SubscriptionPlan, 'starter'>, string> = {
     growth: '145€/mois',
-    performance: 'Sur mesure'
+    performance: '299€/mois'
   }
   return prices[plan] || '45€/mois'
 }
@@ -952,7 +912,7 @@ const getPlanIcon = (plan: SubscriptionPlan): string => {
 
 const getStatusLabel = (plan: SubscriptionPlan): string => {
   if (isPlanStarter(plan)) {
-    return subscriptionData.value.trialDaysLeft > 0 ? 'Essai gratuit' : 'Expiré'
+    return subscriptionData.value.trialDaysLeft > 0 ? 'Période d\'essai' : 'Expiré'
   }
   return subscriptionData.value.isActive ? 'Actif' : 'Inactif'
 }
@@ -1083,7 +1043,14 @@ onMounted(async () => {
   console.log('Composant billing monté')
   
   await loadSubscriptionData()
-  
+
+  // Load agent name
+  api.agents.list().then((res: any) => {
+    if (res.success && res.data?.length > 0) {
+      agentName.value = res.data[0].name || 'Mia'
+    }
+  }).catch(() => {})
+
   // Gestion du retour de paiement avec synchronisation intelligente
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.get('success') === 'true') {

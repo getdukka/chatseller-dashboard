@@ -17,7 +17,7 @@
             <span class="text-4xl">🎉</span>
           </div>
           <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
-            {{ agentInfo?.name || 'Votre Vendeuse IA' }} est prête !
+            {{ agentInfo?.name || 'Mia' }} est prête !
           </h2>
           <p class="text-green-100">
             Elle va vendre pour vous 24h/24, même quand vous dormez
@@ -34,7 +34,7 @@
               <div>
                 <p class="font-bold text-rose-800">Ce qui va changer sur votre boutique</p>
                 <p class="text-sm text-rose-700 mt-1">
-                  {{ agentInfo?.name || 'Votre Vendeuse IA' }} accueillera vos visiteurs, répondra à leurs questions,
+                  {{ agentInfo?.name || 'Mia' }} accueillera vos visiteurs, répondra à leurs questions,
                   recommandera les bons produits et les guidera jusqu'à l'achat, 24h/24.
                 </p>
               </div>
@@ -45,7 +45,7 @@
           <div class="mb-6">
             <p class="font-semibold text-gray-800 mb-4 flex items-center">
               <span class="mr-2">📋</span>
-              Récapitulatif des étapes pour activer {{ agentInfo?.name || 'votre Vendeuse IA' }}
+              Récapitulatif des étapes pour activer {{ agentInfo?.name || 'Mia' }}
             </p>
             
             <div class="space-y-3">
@@ -57,8 +57,8 @@
                   </svg>
                 </div>
                 <div class="ml-3 flex-1">
-                  <p class="font-medium text-green-800">Créer votre Vendeuse IA</p>
-                  <p class="text-sm text-green-600">{{ agentInfo?.name || 'Votre Vendeuse IA' }} est configurée et prête</p>
+                  <p class="font-medium text-green-800">Recruter Mia</p>
+                  <p class="text-sm text-green-600">{{ agentInfo?.name || 'Mia' }} a bien rejoint l'équipe</p>
                 </div>
                 <span class="text-green-500 text-sm font-medium">Fait ✓</span>
               </div>
@@ -79,10 +79,10 @@
                 </div>
                 <div class="ml-3 flex-1">
                   <p class="font-medium" :class="setupStatus.productsSynced ? 'text-green-800' : 'text-orange-800'">
-                    Synchroniser vos produits
+                    Se former sur vos produits
                   </p>
                   <p class="text-sm" :class="setupStatus.productsSynced ? 'text-green-600' : 'text-orange-600'">
-                    {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits importés` : `Pour que ${agentInfo?.name || 'votre Vendeuse IA'} puisse les recommander` }}
+                    {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits importés` : `Pour que ${agentInfo?.name || 'Mia'} puisse les maîtriser et les recommander` }}
                   </p>
                 </div>
                 <span 
@@ -93,7 +93,7 @@
                 </span>
               </div>
               
-              <!-- Étape 3: Tester la Vendeuse IA -->
+              <!-- Étape 3: Tester Mia -->
               <div
                 class="flex items-center p-3 rounded-xl cursor-pointer hover:shadow-sm transition-all"
                 :class="'bg-rose-50 border border-rose-200'"
@@ -107,10 +107,10 @@
                 </div>
                 <div class="ml-3 flex-1">
                   <p class="font-medium text-rose-800">
-                    Tester {{ agentInfo?.name || 'votre Vendeuse IA' }} avant l'intégration
+                    Tester les réponses de {{ agentInfo?.name || 'Mia' }} avant l'activation
                   </p>
                   <p class="text-sm text-rose-600">
-                    Vérifiez ses réponses et recommandations dans le Playground
+                    Vérifiez dans l'espace de test que {{ agentInfo?.name || 'Mia' }} répond correctement avant de l'activer sur votre site
                   </p>
                 </div>
                 <svg class="w-5 h-5 text-rose-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,22 +130,22 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              Tester {{ agentInfo?.name || 'ma Vendeuse IA' }} maintenant
+              Tester {{ agentInfo?.name || 'Mia' }} maintenant
             </button>
 
             <button
               @click="closeWelcomeModal"
               class="w-full px-4 py-3 text-gray-600 font-medium hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all"
             >
-              Explorer le Dashboard
+              Explorer mon espace de travail
             </button>
           </div>
 
           <!-- Astuce -->
           <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p class="text-xs text-blue-700 text-center">
-              💡 <strong>Astuce :</strong> Après le test, intégrez le code du widget sur votre site
-              pour activer {{ agentInfo?.name || 'votre Vendeuse IA' }}.
+              💡 <strong>Astuce :</strong> Après le test, suivez les instructions
+              pour activer {{ agentInfo?.name || 'Mia' }} sur votre site.
             </p>
           </div>
         </div>
@@ -153,8 +153,8 @@
     </div>
 
     <!-- ========== BARRE DE RAPPEL DISCRÈTE (si config incomplète) ========== -->
-    <div 
-      v-if="showConfigReminder && !showWelcomeModal" 
+    <div
+      v-if="showConfigReminder && !showWelcomeModal"
       class="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200"
     >
       <div class="px-4 md:px-8 py-3">
@@ -162,8 +162,8 @@
           <div class="flex items-center space-x-3">
             <span class="text-xl">💡</span>
             <p class="text-sm text-amber-800">
-              <span class="font-medium">Il reste {{ 3 - completedSteps }} étape{{ 3 - completedSteps > 1 ? 's' : '' }}</span> 
-              pour activer {{ agentInfo?.name || 'votre Vendeuse IA' }} sur votre site
+              <span class="font-medium">Il reste {{ 3 - completedSteps }} étape{{ 3 - completedSteps > 1 ? 's' : '' }}</span>
+              pour activer {{ agentInfo?.name || 'Mia' }} sur votre site
             </p>
           </div>
           <div class="flex items-center space-x-2">
@@ -203,7 +203,7 @@
               <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
               </svg>
-              Synchroniser les produits
+              Former {{ agentInfo?.name || 'Mia' }} sur vos produits
             </NuxtLink>
             <NuxtLink
               v-if="!setupStatus.widgetIntegrated"
@@ -213,7 +213,7 @@
               <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
               </svg>
-              Intégrer le Widget
+              Activer {{ agentInfo?.name || 'Mia' }} sur votre site
             </NuxtLink>
           </div>
         </div>
@@ -260,8 +260,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
             </svg>
-            <span class="hidden sm:inline">Voir {{ agentInfo.name }}</span>
-            <span class="sm:hidden">Agent</span>
+            <span class="hidden sm:inline">Personnaliser {{ agentInfo.name }}</span>
+            <span class="sm:hidden">Mia</span>
           </button>
         </div>
       </div>
@@ -329,7 +329,7 @@
           </div>
           <div class="mt-3 md:mt-4">
             <span class="text-green-100 text-xs md:text-sm">
-              Via votre Vendeuse IA
+              Réalisées par {{ agentInfo?.name || 'Mia' }}
             </span>
           </div>
         </div>
@@ -352,7 +352,7 @@
           </div>
           <div class="mt-3 md:mt-4">
             <span class="text-orange-100 text-xs md:text-sm">
-              Généré par l'IA
+              Généré par {{ agentInfo?.name || 'Mia' }}
             </span>
           </div>
         </div>
@@ -378,7 +378,7 @@
               to="/products"
               class="text-white text-xs md:text-sm font-medium hover:text-purple-100 transition-colors inline-flex items-center"
             >
-              Voir produits
+              Voir mes produits
               <svg class="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
@@ -401,7 +401,7 @@
           <div class="flex-1">
             <h4 class="font-semibold text-gray-900">Vos statistiques apparaîtront bientôt !</h4>
             <p class="text-sm text-gray-600 mt-1">
-              Dès que des clientes discuteront avec {{ agentInfo?.name || 'votre Vendeuse IA' }}, vous verrez ici vos conversations, ventes et revenus.
+              Dès que des clients discuteront avec {{ agentInfo?.name || 'Mia' }}, vous verrez ici vos conversations, ventes et revenus.
             </p>
           </div>
           <NuxtLink 
@@ -412,7 +412,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Tester ma Vendeuse IA
+            Tester {{ agentInfo?.name || 'Mia' }}
           </NuxtLink>
         </div>
       </div>
@@ -420,16 +420,16 @@
       <!-- ===== MAIN CONTENT GRID ===== -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         
-        <!-- ===== CARD: Votre Vendeuse IA (AMÉLIORÉE) ===== -->
+        <!-- ===== CARD: Mia ===== -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-4 md:mb-6">
-            <h3 class="text-base md:text-lg font-semibold text-gray-900">Votre {{ getAgentTypeName() }}</h3>
+            <h3 class="text-base md:text-lg font-semibold text-gray-900">Votre Vendeuse IA</h3>
             <button
               v-if="agentInfo"
               @click="navigateToAgentDetail"
               class="text-rose-600 hover:text-rose-700 text-xs md:text-sm font-medium transition-colors"
             >
-              Configurer
+              Personnaliser 
             </button>
           </div>
 
@@ -450,7 +450,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <h4 class="font-semibold text-gray-900 truncate">{{ agentInfo.name }}</h4>
-                <p class="text-sm text-gray-500 truncate">{{ getAgentTypeName() }}</p>
+                <p class="text-sm text-gray-500 truncate">{{ agentInfo.title }}</p>
                 <span
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1"
                   :class="agentInfo.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
@@ -476,15 +476,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                   </svg>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-orange-800">Aucun produit synchronisé</p>
-                    <p class="text-xs text-orange-600 mt-0.5">{{ agentInfo.name }} ne peut pas encore recommander vos produits</p>
+                    <p class="text-sm font-medium text-orange-800">Aucun produit importé</p>
+                    <p class="text-xs text-orange-600 mt-0.5">{{ agentInfo?.name || 'Mia' }} ne peut pas encore recommander vos produits</p>
                   </div>
                 </div>
                 <NuxtLink 
                   to="/products"
                   class="mt-2 inline-flex items-center text-xs font-medium text-orange-700 hover:text-orange-900"
                 >
-                  Synchroniser ma boutique
+                  Importer mes produits
                   <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
@@ -501,8 +501,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
                   </svg>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-blue-800">Widget non intégré</p>
-                    <p class="text-xs text-blue-600 mt-0.5">Ajoutez le code sur votre site pour activer {{ agentInfo.name }}</p>
+                    <p class="text-sm font-medium text-blue-800">{{ agentInfo?.name || 'Mia' }} n'est pas activée</p>
+                    <p class="text-xs text-blue-600 mt-0.5">Ajoutez le code sur votre site pour activer {{ agentInfo?.name || 'Mia' }}</p>
                   </div>
                 </div>
                 <div class="mt-2 flex flex-wrap items-center gap-2">
@@ -523,7 +523,7 @@
                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    J'ai intégré le widget
+                    J'ai activé {{ agentInfo?.name || 'Mia' }}
                   </button>
                 </div>
               </div>
@@ -533,11 +533,11 @@
             <div v-if="setupStatus.productsSynced" class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
               <div class="text-center p-2 bg-gray-50 rounded-lg">
                 <p class="text-lg md:text-xl font-bold text-gray-900">{{ dashboardStats.products.total }}</p>
-                <p class="text-xs text-gray-500">Produits</p>
+                <p class="text-xs text-gray-500">Produits importés</p>
               </div>
               <div class="text-center p-2 bg-gray-50 rounded-lg">
                 <p class="text-lg md:text-xl font-bold text-gray-900">{{ agentInfo.knowledgeBaseCount }}</p>
-                <p class="text-xs text-gray-500">Documents</p>
+                <p class="text-xs text-gray-500">Documents mémorisés</p>
               </div>
             </div>
 
@@ -551,7 +551,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                Tester
+                Tester {{ agentInfo?.name || 'Mia' }}
               </NuxtLink>
               <button
                 @click="navigateToAgentDetail"
@@ -561,7 +561,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                Configurer
+                Personnaliser {{ agentInfo?.name || 'Mia' }}
               </button>
             </div>
           </div>
@@ -573,8 +573,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
               </svg>
             </div>
-            <p class="text-gray-600 font-medium">Créez votre Vendeuse IA</p>
-            <p class="text-gray-400 text-sm mt-1 mb-4">Elle vendra pour vous 24h/24</p>
+            <p class="text-gray-600 font-medium">Recrutez {{ agentInfo?.name || 'Mia' }}</p>
+            <p class="text-gray-400 text-sm mt-1 mb-4">Elle vendra en ligne pour vous 24h/24</p>
             <NuxtLink
               to="/agent-ia"
               class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
@@ -582,7 +582,7 @@
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              Créer ma Vendeuse IA
+              Recruter {{ agentInfo?.name || 'Mia' }}
             </NuxtLink>
           </div>
         </div>
@@ -590,12 +590,12 @@
         <!-- ===== CARD: Performances IA ===== -->
         <div class="card-modern">
           <div class="flex items-center justify-between mb-4 md:mb-6">
-            <h3 class="text-base md:text-lg font-semibold text-gray-900">Performances IA</h3>
+            <h3 class="text-base md:text-lg font-semibold text-gray-900">Performances de {{ agentInfo?.name || 'Mia' }}</h3>
             <NuxtLink
               to="/conversations"
               class="text-rose-600 hover:text-rose-700 text-xs md:text-sm font-medium transition-colors"
             >
-              Voir conversations
+              Voir les conversations
             </NuxtLink>
           </div>
 
@@ -626,7 +626,7 @@
                 </div>
                 <div>
                   <p class="text-xs md:text-sm font-medium text-gray-900">Disponibilité</p>
-                  <p class="text-xs text-gray-500 hidden sm:block">Uptime du service</p>
+                  <p class="text-xs text-gray-500 hidden sm:block">sur la boutique en ligne</p>
                 </div>
               </div>
               <span class="text-base md:text-lg font-semibold text-green-600">{{ dashboardStats.performance.uptime }}%</span>
@@ -669,7 +669,7 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-900">Former mon IA</p>
+                  <p class="text-sm font-medium text-gray-900">Former {{ agentInfo?.name || 'Mia' }}</p>
                   <p class="text-xs text-gray-500">Ajouter des connaissances</p>
                 </div>
               </div>
@@ -690,7 +690,7 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-900">Mes produits</p>
+                  <p class="text-sm font-medium text-gray-900">Produits importés</p>
                   <p class="text-xs text-gray-500">{{ dashboardStats.products.total }} produit{{ dashboardStats.products.total !== 1 ? 's' : '' }}</p>
                 </div>
               </div>
@@ -711,8 +711,8 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-900">Intégrer le widget</p>
-                  <p class="text-xs text-gray-500">Code pour votre site</p>
+                  <p class="text-sm font-medium text-gray-900">Activer {{ agentInfo?.name || 'Mia' }}</p>
+                  <p class="text-xs text-gray-500">Code d'intégration</p>
                 </div>
               </div>
               <svg class="w-4 h-4 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -733,7 +733,7 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium text-gray-900">Facturation</p>
-                  <p class="text-xs text-gray-500">Gérer mon abonnement</p>
+                  <p class="text-xs text-gray-500">Gestion du salaire de {{ agentInfo?.name || 'Mia' }}</p>
                 </div>
               </div>
               <svg class="w-4 h-4 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -964,23 +964,19 @@ const dismissReminder = () => {
 // ========== MÉTHODES CONTEXTUELLES ==========
 const getDashboardSubtitle = () => {
   if (!agentInfo.value) {
-    return 'Créez votre Vendeuse IA pour commencer à vendre'
+    return 'Recrutez Mia pour booster vos ventes en ligne'
   }
   
   const subtitles = {
-    'skincare': `${agentInfo.value.name} conseille vos clientes en soins du visage`,
-    'haircare': `${agentInfo.value.name} conseille vos clientes en soins capillaires`,
-    'makeup': `${agentInfo.value.name} conseille vos clientes en maquillage`,
-    'fragrance': `${agentInfo.value.name} conseille vos clientes en parfums`,
-    'bodycare': `${agentInfo.value.name} conseille vos clientes en soins du corps`,
-    'natural': `${agentInfo.value.name} conseille vos clientes en cosmétiques naturels`,
-    'multi': `${agentInfo.value.name} conseille vos clientes en beauté`
+    'skincare': `Voici les performances de ${agentInfo.value.name} aujourd'hui`,
+    'haircare': `Voici les performances de ${agentInfo.value.name} aujourd'hui`,
+    'makeup': `Voici les performances de ${agentInfo.value.name} aujourd'hui`,
+    'fragrance': `Voici les performances de ${agentInfo.value.name} aujourd'hui`,
+    'bodycare': `Voici les performances de ${agentInfo.value.name} aujourd'hui`,
+    'natural': `Voici les performances de ${agentInfo.value.name} aujourd'hui`,
+    'multi': `Voici les performances de ${agentInfo.value.name} aujourd'hui`
   }
   return subtitles[beautyProfile.value.beautyCategory] || subtitles.multi
-}
-
-const getAgentTypeName = () => {
-  return 'Vendeuse IA'
 }
 
 // ========== NAVIGATION ==========
@@ -1060,7 +1056,7 @@ const loadAgent = async () => {
       const knowledgeBase = agent.agent_knowledge_base || []
       agentInfo.value = {
         id: agent.id,
-        name: agent.name || 'Vendeuse IA',
+        name: agent.name || 'Mia',
         title: agent.title || '',
         avatar: agent.avatar || null,
         isActive: agent.is_active ?? true,
@@ -1288,13 +1284,13 @@ onMounted(async () => {
       const diagnostic = JSON.parse(syncDiag)
       console.log('📋 [Index] Diagnostic sync onboarding:', diagnostic)
       if (diagnostic.productsStatus === 'error') {
-        console.error('❌ [Index] Import produits a échoué pendant l\'onboarding:', diagnostic.productsError)
+        console.error('❌ [Index] L\'import des produits a échoué pendant la formation :', diagnostic.productsError)
       }
       if (diagnostic.kbStatus === 'error') {
-        console.error('❌ [Index] Indexation KB a échoué pendant l\'onboarding:', diagnostic.kbError)
+        console.error('❌ [Index] La mémorisation du site a échoué pendant la formation:', diagnostic.kbError)
       }
       if (diagnostic.syncResult === 'no_promises') {
-        console.error('❌ [Index] Aucune opération sync n\'a été créée! Vérifier form.website et form.platform')
+        console.error('❌ [Index] Mia n\'a pas pu être formée car aucune information n\'a été transmise. Vérifiez que votre boutique est correctement configurée et réessayez de former Mia.')
       }
       // Garder le diagnostic pour consultation ultérieure, ne pas le supprimer
     }
@@ -1336,9 +1332,9 @@ onMounted(async () => {
 
 // ========== SEO ==========
 useHead({
-  title: 'Dashboard - ChatSeller',
+  title: 'Espace de travail - ChatSeller',
   meta: [
-    { name: 'description', content: 'Tableau de bord de votre Vendeuse IA beauté - Conversations, ventes et statistiques' }
+    { name: 'description', content: 'Espace de travail et de gestion de Mia - Conversations, Ventes et Performances' }
   ]
 })
 </script>

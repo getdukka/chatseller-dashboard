@@ -10,7 +10,7 @@
               Base de connaissances
             </h1>
             <p class="mt-2 text-gray-600">
-              Formez votre Vendeuse IA avec des informations sur votre marque et vos produits
+              Transmettez à {{ agentName }} tout ce dont elle a besoin pour représenter votre marque
             </p>
           </div>
 
@@ -23,7 +23,7 @@
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
               </svg>
-              Import en masse
+              Importer en masse
             </button>
 
             <button
@@ -49,10 +49,10 @@
           <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-rose-600 mr-3"></div>
           <div class="flex-1">
             <h3 class="text-sm font-medium text-rose-800">
-              {{ uploadProgress > 0 ? 'Upload en cours...' : 'Entraînement en cours...' }}
+              {{ uploadProgress > 0 ? 'Upload en cours...' : `${agentName} apprend...` }}
             </h3>
             <p class="text-sm text-rose-700">
-              {{ uploadProgress > 0 ? 'Téléchargement de vos fichiers beauté' : 'Votre Vendeuse IA apprend de nouvelles données beauté' }}
+              {{ uploadProgress > 0 ? 'Téléchargement de vos fichiers beauté' : `${agentName} est en train de lire et mémoriser vos nouveaux documents` }}
             </p>
             <div v-if="uploadProgress > 0" class="mt-2 bg-rose-200 rounded-full h-2">
               <div 
@@ -145,7 +145,7 @@
           <h3 class="text-lg font-semibold text-gray-900">Site web</h3>
           <p class="text-sm text-gray-600">Pages, Blog, Politiques</p>
           <div class="mt-3 flex items-center text-pink-600 text-sm font-medium">
-            Indexer
+            Analyser
             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
@@ -188,7 +188,7 @@
       <div class="mb-6 bg-gradient-to-r from-rose-50 via-pink-50 to-purple-50 border border-rose-200 rounded-xl p-6">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Limites de votre plan {{ planDetails.name }}</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Mémoire actuelle de {{ agentName }}</h3>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
               <div class="flex items-center">
                 <div class="w-3 h-3 rounded-full mr-2" :class="documentsRemaining > 0 ? 'bg-green-500' : 'bg-orange-500'"></div>
@@ -201,19 +201,19 @@
                 <div class="w-3 h-3 rounded-full mr-2 bg-rose-500"></div>
                 <span class="text-gray-700">
                   <span class="font-semibold">{{ planDetails.quotasStatus.indexablePages.used || 0 }}</span> / 
-                  <span class="font-semibold">{{ planDetails.quotasStatus.indexablePages.limit === -1 ? '∞' : planDetails.quotasStatus.indexablePages.limit }}</span> pages indexées
+                  <span class="font-semibold">{{ planDetails.quotasStatus.indexablePages.limit === -1 ? '∞' : planDetails.quotasStatus.indexablePages.limit }}</span> pages web analysées
                 </span>
               </div>
               <div class="flex items-center">
                 <div class="w-3 h-3 rounded-full mr-2 bg-purple-500"></div>
-                <span class="text-gray-700">Plan <span class="font-semibold">{{ planDetails.name }}</span></span>
+                <span class="text-gray-700"><span class="font-semibold">{{ agentName }} {{ planDetails.name === 'growth' ? 'Pro' : 'Découverte' }}</span></span>
               </div>
             </div>
           </div>
           <div v-if="!canUploadDocument" class="text-right">
             <p class="text-sm text-orange-600 font-medium mb-2">Limite atteinte</p>
             <a href="/billing" class="text-sm text-rose-600 hover:text-rose-700 font-medium underline">
-              Passer au plan supérieur
+              Augmenter les capacités de {{ agentName }}
             </a>
           </div>
         </div>
@@ -260,7 +260,7 @@
       <div class="card-modern">
         <div class="flex items-center justify-between p-6 border-b border-rose-200">
           <h2 class="text-lg font-semibold text-gray-900">
-            Sources de connaissances
+            Connaissances ajoutées
           </h2>
           <div class="flex items-center space-x-4">
             <span class="text-sm text-gray-500">
@@ -401,9 +401,9 @@
             {{ hasActiveFilters ? 'Aucune connaissance trouvée' : 'Créez votre première base de connaissances' }}
           </h3>
           <p class="mt-2 text-gray-500">
-            {{ hasActiveFilters 
+            {{ hasActiveFilters
               ? 'Aucune connaissance ne correspond à vos critères de recherche'
-              : 'Ajoutez vos premières connaissances pour former votre Vendeuse IA afin que ses réponses soient plus précises.'
+              : `Ajoutez vos premières connaissances pour former ${agentName} afin que ses réponses soient plus précises.`
             }}
           </p>
           <div class="mt-6">
@@ -495,7 +495,7 @@
     <div v-if="showQuickAddModal" class="modal-overlay" @click.self="showQuickAddModal = false">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h3 class="modal-title">Ajouter des connaissances rapidement</h3>
+          <h3 class="modal-title">Ajouter des connaissances</h3>
           <button @click="showQuickAddModal = false" class="modal-close">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -634,7 +634,7 @@ Pour un teint parfait, choisissez votre fond de teint selon votre sous-ton :
     <div v-if="showWebsiteModal" class="modal-overlay" @click.self="showWebsiteModal = false">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h3 class="modal-title">Indexer un site web complet</h3>
+          <h3 class="modal-title">Analyser un site web complet</h3>
           <button @click="showWebsiteModal = false" class="modal-close">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -698,7 +698,7 @@ Pour un teint parfait, choisissez votre fond de teint selon votre sous-ton :
                           :disabled="saving"
                         >
                         <span class="text-rose-800">
-                          Indexer toutes les pages découvertes (recommandé)
+                          Analyser toutes les pages découvertes (recommandé)
                         </span>
                       </label>
 
@@ -714,7 +714,7 @@ Pour un teint parfait, choisissez votre fond de teint selon votre sous-ton :
 
               <!-- Plan Limits Info -->
               <div class="bg-gradient-to-r from-purple-50 to-rose-50 border border-purple-200 rounded-lg p-4">
-                <h5 class="text-sm font-medium text-gray-900 mb-2">Limites de votre plan {{ planDetails.name }}</h5>
+                <h5 class="text-sm font-medium text-gray-900 mb-2">Capacités de {{ agentName }} {{ planDetails.name === 'growth' ? 'Pro' : 'Découverte' }}</h5>
                 <div class="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span class="text-gray-600">Documents disponibles:</span>
@@ -768,7 +768,7 @@ Pour un teint parfait, choisissez votre fond de teint selon votre sous-ton :
               Indexation...
             </div>
             <span v-else>
-              Indexer le site web
+              Analyser le site web
             </span>
           </button>
         </div>
@@ -921,7 +921,7 @@ Pour choisir son fond de teint :
                 class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
               >
               <label for="editActive" class="ml-2 text-sm text-gray-700">
-                Document actif (utilisé par la Vendeuse IA)
+                Document actif (utilisé par {{ agentName }})
               </label>
             </div>
           </div>
@@ -1138,6 +1138,9 @@ definePageMeta({
   layout: 'default'
 })
 
+// NOM DYNAMIQUE DE L'AGENT
+const agentName = ref('Mia')
+
 // COMPOSABLE PRINCIPAL
 const {
   documents,
@@ -1283,8 +1286,8 @@ const getFileTypeIcon = (fileName: string): string => {
 const getTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     file: 'Catalogue',
-    website: 'Site beauté',
-    manual: 'Conseils beauté',
+    website: 'Boutique en ligne',
+    manual: 'Conseils',
     url: 'URL',
     faq: 'FAQ'
   }
@@ -1500,9 +1503,9 @@ const handleIndexWebsite = async () => {
       const meta = (result as any).meta
 
       if (documentsCreated.length === 1) {
-        showNotification(`Site beauté indexé avec succès! 1 page traitée.`)
+        showNotification(`Site web analysée avec succès! 1 page traitée.`)
       } else {
-        showNotification(`Site beauté indexé avec succès! ${documentsCreated.length} pages traitées.`)
+        showNotification(`Site web analysée avec succès! ${documentsCreated.length} pages traitées.`)
       }
 
       if (meta?.totalPagesDiscovered && meta.totalPagesDiscovered > 1) {
@@ -1525,10 +1528,10 @@ const handleIndexWebsite = async () => {
     } else {
       console.error('Erreur lors de l\'indexation:', result)
 
-      let errorMsg = result.error || 'Erreur lors de l\'indexation du site beauté'
+      let errorMsg = result.error || 'Erreur lors de l\'analyse du site web. Veuillez réessayer.'
 
       if (errorMsg.includes('Limite de votre plan atteinte')) {
-        errorMsg += '\n\n💡 Conseil: Passez au plan supérieur pour indexer plus de pages simultanément.'
+        errorMsg += '\n\n💡 Conseil: Passez au plan supérieur pour analyser plus de pages simultanément.'
       } else if (errorMsg.includes('Pas assez d\'espace')) {
         errorMsg += '\n\n💡 Conseil: Supprimez quelques documents existants ou passez au plan supérieur.'
       }
@@ -1538,7 +1541,7 @@ const handleIndexWebsite = async () => {
 
   } catch (err: any) {
     console.error('Erreur handleIndexWebsite:', err)
-    error.value = err.message || 'Erreur inattendue lors de l\'indexation'
+    error.value = err.message || 'Erreur inattendue lors de l\'analyse du site web'
   }
 }
 
@@ -1551,7 +1554,7 @@ const handleSaveTextContent = async () => {
   })
 
   if (result.success) {
-    showNotification('Contenu beauté ajouté avec succès!')
+    showNotification('Contenu ajouté avec succès!')
     textForm.value = { title: '', type: 'manual', content: '' }
     showTextModal.value = false
   } else {
@@ -1593,7 +1596,7 @@ const handleSaveEdit = async () => {
   const result = await updateDocument(editForm.value.id, updateData)
 
   if (result.success) {
-    showNotification('Document beauté modifié avec succès!')
+    showNotification('Document modifié avec succès!')
     showEditModal.value = false
   } else {
     console.error('Erreur lors de la modification:', result)
@@ -1615,7 +1618,7 @@ const handleDeleteDocument = async () => {
 
   const result = await deleteDocument(documentToDelete.value.id)
   if (result.success) {
-    showNotification('Document beauté supprimé avec succès!')
+    showNotification('Document supprimé avec succès!')
     showDeleteModal.value = false
     documentToDelete.value = null
   } else {
@@ -1633,11 +1636,19 @@ const clearFilters = () => {
 // LIFECYCLE
 onMounted(async () => {
   await fetchDocuments()
+
+  // Load agent name
+  const api = useApi()
+  api.agents.list().then((res: any) => {
+    if (res.success && res.data?.length > 0) {
+      agentName.value = res.data[0].name || 'Mia'
+    }
+  }).catch(() => {})
 })
 
 // SEO
 useHead({
-  title: 'Base de connaissances beauté - ChatSeller Dashboard'
+  title: 'Base de connaissances - Espace de travail - Chatseller'
 })
 </script>
 

@@ -27,8 +27,8 @@
         </div>
         
         <div v-if="!initializing" class="hidden md:block text-right">
-          <p class="text-rose-600 text-sm font-medium">Configuration de votre Vendeuse IA</p>
-          <p class="text-gray-800 font-semibold">{{ userFirstName }}, créons votre Vendeuse IA !</p>
+          <p class="text-rose-600 text-sm font-medium">Mia rejoint votre boutique</p>
+          <p class="text-gray-800 font-semibold">{{ userFirstName }}, Mia est prête à commencer !</p>
         </div>
       </div>
     </header>
@@ -44,8 +44,8 @@
             </svg>
           </div>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 mb-3">Préparation de votre espace...</h3>
-        <p class="text-gray-600">Configuration de votre espace ChatSeller.</p>
+        <h3 class="text-2xl font-bold text-gray-900 mb-3">Mia prépare son arrivée...</h3>
+        <p class="text-gray-600">Elle se met en route. Ça ne prend que quelques secondes.</p>
       </div>
     </div>
 
@@ -64,11 +64,10 @@
               <span class="text-sm text-rose-600">⏱️ 3 minutes</span>
             </div>
             <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-rose-800 to-purple-900 bg-clip-text text-transparent mb-3">
-              Créons votre Vendeuse IA
+              Mia rejoint votre boutique
             </h1>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-              Ces informations nous permettent de créer la Vendeuse IA
-              <span class="font-semibold text-rose-600">parfaitement adaptée</span> à votre marque, votre domaine d'activité et vos clientes.
+              Avant de commencer à travailler pour vous, Mia a besoin d'en savoir plus sur votre marque et vos clients. Plus elle en sait, <span class="font-semibold text-rose-600">mieux elle les sert</span>.
             </p>
           </div>
           
@@ -104,13 +103,13 @@
                   Votre marque
                 </h1>
                 <p class="text-xl lg:text-2xl text-gray-700 mb-8 leading-relaxed">
-                  Parlez-nous de votre marque
+                  Présentez votre marque à Mia
                 </p>
 
                 <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-5 text-left">
                   <p class="font-bold text-rose-900 mb-2">Pourquoi nous vous le demandons ?</p>
                   <p class="text-rose-800 text-sm leading-relaxed">
-                    Le nom de votre marque personnalise les échanges avec vos clients. L'URL de votre boutique permet à votre Vendeuse IA d'analyser votre catalogue. Votre domaine d'activité et plateforme assurent une intégration parfaite sur votre site.
+                    Ces informations permettent à Mia de se présenter correctement à vos clients et de parcourir votre boutique pour apprendre ce que vous vendez. Plus elle connaît votre marque, mieux elle la représente.
                   </p>
                 </div>
               </div>
@@ -121,7 +120,7 @@
                     <div class="space-y-6">
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Quel est son nom *
+                          Quel est le nom de votre marque ? *
                         </label>
                         <input
                           v-model="form.company"
@@ -130,12 +129,12 @@
                           class="w-full px-6 py-4 bg-white/70 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-gray-900 text-lg placeholder-gray-500"
                           placeholder="Ex: Soso Beauty, Yass Hair, Kari Cosmetics..."
                         />
-                        <p class="text-gray-500 text-sm mt-2">Ce nom apparaîtra dans les conversations avec vos clientes</p>
+                        <p class="text-gray-500 text-sm mt-2">Ce nom apparaîtra dans les conversations avec vos clients</p>
                       </div>
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Quel est son site web *
+                          Quelle est l'adresse de votre boutique en ligne ? *
                         </label>
                         <input
                           v-model="form.website"
@@ -148,13 +147,13 @@
                           <svg class="w-4 h-4 text-green-500 inline mr-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
-                          Votre Vendeuse IA analysera votre site pour se former
+                          Mia va parcourir votre site pour apprendre ce que vous vendez
                         </p>
                       </div>
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Quel est son domaine d'activité ? *
+                          Dans quel domaine travaille-t-elle ? *
                         </label>
                         <select
                           v-model="form.beautyCategory"
@@ -170,12 +169,12 @@
                           <option value="natural" class="bg-white">🌿 Cosmétiques naturels & Bio</option>
                           <option value="multi" class="bg-white">✨ Multi-catégories beauté</option>
                         </select>
-                        <p class="text-gray-500 text-sm mt-2">Votre Vendeuse IA sera spécialisée dans ce domaine</p>
+                        <p class="text-gray-500 text-sm mt-2">Mia sera spécialisée dans ce domaine</p>
                       </div>
 
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Quelle plateforme utilisez-vous ? *
+                          Sur quelle plateforme est votre boutique ? *
                         </label>
                         <select
                           v-model="form.platform"
@@ -187,7 +186,7 @@
                           <option value="woocommerce" class="bg-white">🔗 WooCommerce</option>
                           <option value="custom" class="bg-white">⚙️ Site personnalisé</option>
                         </select>
-                        <p class="text-gray-500 text-sm mt-2">Pour mieux intégrer votre Vendeuse IA sur votre site</p>
+                        <p class="text-gray-500 text-sm mt-2">Pour qu'elle puisse s'intégrer directement à votre boutique</p>
                       </div>
                     </div>
 
@@ -220,7 +219,7 @@
                 Vos clients
               </h1>
               <p class="text-xl lg:text-2xl text-gray-700 max-w-4xl mx-auto mb-8">
-                Votre Vendeuse IA a besoin de savoir qui sont vos clients pour adapter ses réponses et conseils à leurs besoins spécifiques.
+                Pour bien conseiller vos clients, Mia a besoin de savoir qui ils sont. Ces informations lui permettent d'adapter son approche à chaque profil.
               </p>
 
               <!-- Indicateur sync en cours -->
@@ -229,7 +228,7 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Votre IA analyse votre catalogue en arrière-plan...
+                Mia est en train de parcourir votre boutique...
               </div>
               <div v-else-if="syncStore.detectedPriceRange && !form.priceRange" class="mt-4 inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-full text-sm text-green-700">
                 <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -372,15 +371,15 @@
                 </svg>
               </div>
               <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 bg-clip-text text-transparent">
-                Personnalité de votre Vendeuse IA
+                Donnez une personnalité à Mia
               </h1>
               <p class="text-xl lg:text-2xl text-gray-700 max-w-4xl mx-auto mb-8">
-                Comment souhaitez-vous que votre Vendeuse IA s'adresse à vos clients ?
+                Comment souhaitez-vous que Mia s'adresse à vos clients ?
               </p>
               <div class="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-xl p-6 max-w-2xl mx-auto">
                 <p class="text-pink-800 text-sm leading-relaxed">
-                  <strong class="text-pink-900">Personnalité adaptée :</strong><br>
-                  Votre Vendeuse IA adoptera le ton et l'approche qui correspondent à votre marque et vos clients.
+                  <strong class="text-pink-900">Personnalité sur-mesure :</strong><br>
+                  Mia adoptera le ton et l'approche qui correspondent à votre marque et à vos clients. Comme une nouvelle employée qui s'adapte à la culture de la boutique.
                 </p>
               </div>
             </div>
@@ -448,10 +447,10 @@
                   </div>
                 </div>
 
-                <!-- Objectifs de votre Vendeuse IA (multi-select, tous pré-cochés) -->
+                <!-- Objectifs de Mia (multi-select, tous pré-cochés) -->
                 <div class="mb-8">
                   <label class="block text-xl font-semibold text-gray-800 mb-2">
-                    Votre Vendeuse IA pourra
+                    Mia pourra
                   </label>
                   <p class="text-sm text-gray-500 mb-6">Décochez uniquement ce que vous ne souhaitez pas</p>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -520,13 +519,13 @@
 
                 <!-- Titre dynamique selon l'état du sync -->
                 <h1 v-if="syncStore.isSyncComplete && syncStore.hasAnySuccess" class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
-                  {{ form.agentName || getDefaultAgentName() }} est prête !
+                  {{ form.agentName || getDefaultAgentName() }} est là. Elle est prête.
                 </h1>
                 <h1 v-else-if="syncStore.isSyncing" class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
-                  Presque terminé !
+                  {{ form.agentName || getDefaultAgentName() }} apprend encore...
                 </h1>
                 <h1 v-else class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
-                  Dernière étape !
+                  Une dernière chose avant de la lancer.
                 </h1>
 
                 <!-- Message dynamique -->
@@ -534,10 +533,10 @@
                   {{ getSyncAhaMessage() }}
                 </p>
                 <p v-else-if="syncStore.isSyncing" class="text-xl lg:text-2xl text-gray-700 mb-8">
-                  {{ form.agentName || getDefaultAgentName() }} analyse votre catalogue en ce moment...
+                  {{ form.agentName || getDefaultAgentName() }} est en train de parcourir votre boutique. Elle sera prête dans quelques secondes.
                 </p>
                 <p v-else class="text-xl lg:text-2xl text-gray-700 mb-8">
-                  Nommez votre {{ getAgentTypeName() }} et lancez-la.
+                  Donnez-lui un prénom, et elle est prête à accueillir vos clients.
                 </p>
 
                 <!-- Statut sync détaillé -->
@@ -562,13 +561,13 @@
                     <!-- Texte -->
                     <div class="flex-1">
                       <p v-if="syncStore.kbStatus === 'pending'" class="text-sm text-blue-700 font-medium">
-                        Lecture de votre site web en cours...
+                        Mia parcourt votre site...
                       </p>
                       <p v-else-if="syncStore.kbStatus === 'success'" class="text-sm text-green-700 font-medium">
-                        {{ syncStore.kbDocumentsCount }} page{{ syncStore.kbDocumentsCount > 1 ? 's' : '' }} de votre site mémorisée{{ syncStore.kbDocumentsCount > 1 ? 's' : '' }}
+                        {{ syncStore.kbDocumentsCount }} page{{ syncStore.kbDocumentsCount > 1 ? 's' : '' }} de votre site lue{{ syncStore.kbDocumentsCount > 1 ? 's' : '' }} et mémorisée{{ syncStore.kbDocumentsCount > 1 ? 's' : '' }}
                       </p>
                       <p v-else class="text-sm text-orange-600 font-medium">
-                        Indexation du site reportée (sera relancée automatiquement)
+                        Lecture du site reportée — elle reprendra automatiquement
                       </p>
                     </div>
                   </div>
@@ -592,13 +591,13 @@
                     <!-- Texte -->
                     <div class="flex-1">
                       <p v-if="syncStore.productsStatus === 'pending'" class="text-sm text-blue-700 font-medium">
-                        Import de vos produits {{ getPlatformLabel(form.platform) }} en cours...
+                        Mia importe vos produits depuis {{ getPlatformLabel(form.platform) }}...
                       </p>
                       <p v-else-if="syncStore.productsStatus === 'success'" class="text-sm text-green-700 font-medium">
                         {{ syncStore.productsCount }} produit{{ syncStore.productsCount > 1 ? 's' : '' }} importé{{ syncStore.productsCount > 1 ? 's' : '' }} depuis {{ getPlatformLabel(form.platform) }}
                       </p>
                       <p v-else class="text-sm text-orange-600 font-medium">
-                        Import produits reporté (sera relancé automatiquement)
+                        Import reporté — il reprendra automatiquement
                       </p>
                     </div>
                   </div>
@@ -606,7 +605,7 @@
                   <!-- Message plateforme custom -->
                   <div v-if="form.platform === 'custom' && syncStore.kbStatus !== 'idle'" class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 text-left">
                     <p class="text-sm text-purple-700">
-                      <strong>Site personnalisé :</strong> Votre {{ getAgentTypeName() }} se base sur le contenu de votre site web pour conseiller vos clientes. Vous pourrez ajouter vos produits manuellement depuis le dashboard.
+                      <strong>Site personnalisé :</strong> Mia s'appuie sur le contenu de votre site pour conseiller vos clients. Vous pourrez ajouter vos produits depuis votre espace une fois l'essai lancé.
                     </p>
                   </div>
                 </div>
@@ -631,10 +630,10 @@
                   <div class="bg-white/80 backdrop-blur-sm border border-rose-200 rounded-2xl p-8 shadow-xl">
                     <div class="space-y-6">
                       
-                      <!-- Nom de la Vendeuse IA -->
+                      <!-- Nom de Mia -->
                       <div>
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
-                          Nommez votre {{ getAgentTypeName() }}
+                          Quel prénom lui donnez-vous ?
                         </label>
                         <input
                           v-model="form.agentName"
@@ -675,7 +674,7 @@
                           <div>
                             <p class="font-bold text-green-800 mb-2 text-lg">14 jours d'essai gratuit !</p>
                             <p class="text-green-700 text-sm">
-                              Vous bénéficiez de 14 jours gratuits pour tester, sans engagement, toutes les fonctionnalités de ChatSeller. Testez {{ form.agentName || getDefaultAgentName() }} dans votre espace puis activez-la sur votre site pour qu'elle commence à vendre pour vous.
+                              {{ form.agentName || getDefaultAgentName() }} vous rejoint pour 14 jours, sans engagement et sans carte bancaire. Testez-la dans votre espace, puis ajoutez le code d'intégration sur votre site pour qu'elle commence à accueillir vos clients.
                             </p>
                           </div>
                         </div>
@@ -915,7 +914,7 @@ const primaryGoals = [
     value: 'conversions',
     icon: '📈',
     label: 'Maximiser les ventes',
-    description: 'Transformer les visiteuses en acheteuses'
+    description: 'Transformer les visiteurs en acheteurs'
   },
   {
     value: 'upsell',
@@ -1003,29 +1002,19 @@ const getPlatformLabel = (value: string) => {
 
 const getDefaultAgentName = () => {
   const names = {
-    'skincare': 'Anna',
-    'makeup': 'Sophie', 
+    'skincare': 'Mia',
+    'makeup': 'Mia', 
     'fragrance': 'Mia',
-    'haircare': 'Julie',
-    'bodycare': 'Paola',
-    'natural': 'Rita',
-    'multi': 'Sarah'
+    'haircare': 'Mia',
+    'bodycare': 'Mia',
+    'natural': 'Mia',
+    'multi': 'Mia'
   }
-  return names[form.beautyCategory] || 'Adama'
-}
-
-const getAgentTypeName = () => {
-  return 'Vendeuse IA'
+  return names[form.beautyCategory] || 'Mia'
 }
 
 const getSyncAhaMessage = () => {
-  const agentName = form.agentName || getDefaultAgentName()
-
-  if (syncStore.productsStatus === 'success' && syncStore.productsCount > 0) {
-    return `${agentName} a ajouté les ${syncStore.productsCount} produits de votre site à sa base de connaissance. Elle maîtrise votre marque et est prête à vendre pour vous.`
-  }
-
-  return `${agentName} va être créée et commencera à vendre pour vous immédiatement.`
+  return `Elle a parcouru votre site, appris vos produits et retenu tout ce dont elle a besoin. Donnez-lui un prénom — et elle commence à vendre pour vous.`
 }
 
 // ========== NAVIGATION ==========
@@ -1269,7 +1258,7 @@ const completeOnboarding = async () => {
       name: form.agentName || getDefaultAgentName(),
       type: finalAgentType,
       personality: finalPersonality,
-      description: `${getAgentTypeName()} spécialisée pour ${form.company}`,
+      description: `Mia, vendeuse IA spécialisée pour ${form.company}`,
       welcomeMessage: agentConfig.welcomeMessage,
       fallbackMessage: agentConfig.fallbackMessage,
       avatar: agentConfig.avatar,
@@ -1292,7 +1281,7 @@ const completeOnboarding = async () => {
         received: (agentResponse as any).received,
         agentData: agentData
       })
-      throw new Error(`Impossible de créer votre Vendeuse IA: ${agentResponse.error || 'Erreur inconnue'}`)
+      throw new Error(`Mia n'a pas pu démarrer : ${agentResponse.error || 'Erreur inconnue'}`)
     }
 
     console.log('✅ [Onboarding] Vendeuse IA créée avec succès:', agentResponse.data?.id)
@@ -1347,7 +1336,7 @@ const completeOnboarding = async () => {
   } catch (error: any) {
     console.error('❌ [Onboarding] Erreur finalisation:', error)
 
-    let userMessage = 'Une erreur s\'est produite lors de la création de ta Vendeuse IA.'
+    let userMessage = 'Une erreur s\'est produite. Mia n\'a pas pu être lancée.'
 
     if (error.message?.includes('Token') || error.message?.includes('401')) {
       userMessage = 'Session expirée. Reconnexion en cours...'
@@ -1397,9 +1386,9 @@ onMounted(async () => {
 })
 
 useHead({
-  title: 'Créez votre Vendeuse IA - ChatSeller',
+  title: 'Recruter Mia — ChatSeller',
   meta: [
-    { name: 'description', content: 'Configurez votre Vendeuse IA beauté en 3 minutes. Skincare, maquillage, parfums, soins capillaires - votre Vendeuse IA vend pour vous 24h/24.' },
+    { name: 'description', content: 'Accueillez Mia dans votre boutique en ligne en 3 minutes. Spécialisée beauté, elle conseille vos clients et crée leurs commandes 24h/24.' },
     { name: 'keywords', content: 'Vendeuse IA, skincare, maquillage, parfums, capillaire, beauté Afrique, e-commerce' }
   ]
 })

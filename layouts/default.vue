@@ -4,7 +4,7 @@
     
     <!-- DESKTOP SIDEBAR -->
     <div class="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-64 lg:bg-white lg:shadow-xl lg:border-r lg:border-gray-100">
-      <SidebarContent 
+      <SidebarContent
         :unreadCount="unreadConversationsCount"
         :userName="userName"
         :userEmail="userEmail"
@@ -13,6 +13,7 @@
         :userSubscriptionPlan="subscriptionInfo.plan"
         :userSubscriptionActive="subscriptionInfo.isActive"
         :trialDaysLeft="subscriptionInfo.trialDaysLeft"
+        :agentName="agentName"
         @toggle-profile="toggleProfileMenu"
         @close-profile="closeProfileMenu"
         @logout="handleLogout"
@@ -21,14 +22,14 @@
     </div>
 
     <!-- MOBILE OVERLAY -->
-    <div 
-      v-if="mobileMenuOpen" 
+    <div
+      v-if="mobileMenuOpen"
       class="fixed inset-0 z-50 lg:hidden"
       @click.self="closeMobileMenu"
     >
       <!-- Background overlay -->
       <div class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm"></div>
-      
+
       <!-- Mobile sidebar -->
       <Transition
         enter-active-class="transition ease-out duration-300"
@@ -39,7 +40,7 @@
         leave-to-class="transform -translate-x-full"
       >
         <div v-if="mobileMenuOpen" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl">
-          <SidebarContent 
+          <SidebarContent
             :unreadCount="unreadConversationsCount"
             :userName="userName"
             :userEmail="userEmail"
@@ -48,6 +49,7 @@
             :userSubscriptionPlan="subscriptionInfo.plan"
             :userSubscriptionActive="subscriptionInfo.isActive"
             :trialDaysLeft="subscriptionInfo.trialDaysLeft"
+            :agentName="agentName"
             :isMobile="true"
             @toggle-profile="toggleProfileMenu"
             @close-profile="closeProfileMenu"
@@ -183,7 +185,7 @@
                   <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
-                  {{ upgradingToPlan === 'starter' ? 'Redirection...' : 'Réactiver Starter' }}
+                  {{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName} Découverte` }}
                 </button>
 
                 <button
@@ -195,7 +197,7 @@
                   <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                   </svg>
-                  {{ upgradingToPlan === 'growth' ? 'Redirection...' : 'Passer au Growth' }}
+                  {{ upgradingToPlan === 'growth' ? 'Redirection...' : `Passer ${agentName} en Pro` }}
                 </button>
                 
                 <button
@@ -263,6 +265,7 @@ const mobileMenuOpen = ref(false)
 const showProfileMenu = ref(false)
 const showMobileProfileMenu = ref(false)
 const upgradingToPlan = ref<'starter' | 'growth' | null>(null)
+const agentName = ref('Mia')
 
 // État pour les conversations non lues
 const unreadConversationsCount = ref(0)
@@ -339,11 +342,23 @@ const closeMobileProfileMenu = () => {
 // FONCTION UPGRADE SIMPLIFIÉE - CORRIGÉE POUR NOUVEAUX PLANS
 const handleUpgradeToPlan = async (targetPlan: 'starter' | 'growth') => {
   console.log(`[Layout] Initiation upgrade vers ${targetPlan}`)
-  
+
   upgradingToPlan.value = targetPlan
   showMobileProfileMenu.value = false
   showProfileMenu.value = false
-  
+
+  // Vérifier le token avant l'appel API
+  if (!authStore.token) {
+    console.error('[Layout] Token manquant, rafraîchissement...')
+    try {
+      await authStore.refreshToken()
+    } catch {
+      upgradingToPlan.value = null
+      navigateTo('/login')
+      return
+    }
+  }
+
   try {
     const response = await $fetch(`${config.public.apiBaseUrl}/api/v1/billing/create-checkout-session`, {
       method: 'POST',
@@ -357,17 +372,23 @@ const handleUpgradeToPlan = async (targetPlan: 'starter' | 'growth') => {
         cancelUrl: `${window.location.origin}/billing?cancelled=true`
       }
     })
-    
+
     if (response.success && response.checkoutUrl) {
       window.location.href = response.checkoutUrl
     } else {
       throw new Error(response.error || 'Impossible de créer la session de paiement')
     }
-    
+
   } catch (error: any) {
     console.error(`[Layout] Erreur upgrade vers ${targetPlan}:`, error)
     upgradingToPlan.value = null
-    alert(error.message || `Erreur lors de l'upgrade vers ${targetPlan}`)
+
+    const errorMsg = error?.data?.error || error?.message || `Erreur lors de l'upgrade`
+    if (errorMsg.includes('Token') || errorMsg.includes('authentification')) {
+      navigateTo('/login')
+    } else {
+      alert(errorMsg)
+    }
   }
 }
 
@@ -465,6 +486,12 @@ onMounted(async () => {
   if (authStore.isAuthenticated && authStore.token) {
     await loadSubscriptionInfo()
     await loadUnreadConversations()
+    // Charger le nom de l'agent
+    api.agents.list().then((res: any) => {
+      if (res.success && res.data?.length > 0) {
+        agentName.value = res.data[0].name || 'Mia'
+      }
+    }).catch(() => {})
   }
 
   // Polling conversations (toutes les 30 secondes)
