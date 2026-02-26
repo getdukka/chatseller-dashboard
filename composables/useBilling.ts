@@ -7,6 +7,7 @@ type SubscriptionPlan = 'starter' | 'growth' | 'performance'
 
 interface SubscriptionStatus {
   plan: SubscriptionPlan
+  isPaid: boolean
   isActive: boolean
   trialDaysLeft: number
   trialEndDate: string
@@ -41,7 +42,13 @@ export const useBilling = () => {
         console.log(`📋 Plan actuel: ${subscriptionData.plan}`)
         
         // 3. Vérifier si le plan a été mis à jour
-        if (subscriptionData.plan === expectedPlan && subscriptionData.plan !== 'starter') {
+        // Pour starter→starter (essai→payant), on vérifie isPaid au lieu du plan
+        if (expectedPlan === 'starter') {
+          if (subscriptionData.isPaid) {
+            console.log(`✅ Conversion essai→payant confirmée (isPaid=true)`)
+            return true
+          }
+        } else if (subscriptionData.plan === expectedPlan) {
           console.log(`✅ Plan mis à jour avec succès: ${subscriptionData.plan}`)
           return true
         }
@@ -83,6 +90,7 @@ export const useBilling = () => {
 
     return {
       plan: response.subscription.plan as SubscriptionPlan,
+      isPaid: response.subscription.isPaid ?? false,
       isActive: response.subscription.isActive,
       trialDaysLeft: response.subscription.trialDaysLeft || 0,
       trialEndDate: response.subscription.trialEndDate || '',

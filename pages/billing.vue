@@ -65,7 +65,7 @@
       </div>
 
       <!-- Alertes selon l'état -->
-      <div v-if="isPlanStarter(subscriptionData.plan) && subscriptionData.trialDaysLeft > 0" class="mb-8">
+      <div v-if="isPlanStarter(subscriptionData.plan) && !subscriptionData.isPaid && subscriptionData.trialDaysLeft > 0" class="mb-8">
         <div class="bg-gradient-to-r from-rose-600 to-purple-600 rounded-xl shadow-xl overflow-hidden relative">
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-400 animate-pulse"></div>
           <div class="px-8 py-8 text-white relative">
@@ -119,7 +119,7 @@
       </div>
 
       <!-- Alerte essai expiré -->
-      <div v-if="isPlanStarter(subscriptionData.plan) && subscriptionData.trialDaysLeft === 0" class="mb-8">
+      <div v-if="isPlanStarter(subscriptionData.plan) && !subscriptionData.isPaid && subscriptionData.trialDaysLeft === 0" class="mb-8">
         <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-xl shadow-xl overflow-hidden">
           <div class="px-8 py-8 text-white relative">
             <div class="flex items-center justify-between">
@@ -257,8 +257,8 @@
                   Augmenter son salaire
                 </button>
                 
-                <button 
-                  v-if="subscriptionData.isActive && !isPlanStarter(subscriptionData.plan)"
+                <button
+                  v-if="subscriptionData.isActive && (!isPlanStarter(subscriptionData.plan) || subscriptionData.isPaid)"
                   @click="handleManageSubscription"
                   :disabled="loading.subscription"
                   class="btn-secondary"
@@ -271,7 +271,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
-                  {{ loading.subscription ? 'Ouverture...' : 'Gérer le contrat' }}
+                  {{ loading.subscription ? 'Ouverture...' : (subscriptionData.isPaid && isPlanStarter(subscriptionData.plan) ? `Gérer / Licencier ${agentName}` : 'Gérer le contrat') }}
                 </button>
               </div>
             </div>
@@ -764,6 +764,7 @@ type SubscriptionPlan = 'starter' | 'growth' | 'performance'
 
 interface SubscriptionData {
   plan: SubscriptionPlan
+  isPaid: boolean
   isActive: boolean
   trialDaysLeft: number
   trialEndDate: string
@@ -792,6 +793,7 @@ const successModal = ref({
 
 const subscriptionData = ref<SubscriptionData>({
   plan: 'starter',
+  isPaid: false,
   isActive: true,
   trialDaysLeft: 14,
   trialEndDate: '',
@@ -870,6 +872,7 @@ const getPlanName = (plan: SubscriptionPlan): string => {
 
 const getPlanPrice = (plan: SubscriptionPlan): string => {
   if (plan === 'starter') {
+    if (subscriptionData.value.isPaid) return '45€/mois'
     return subscriptionData.value.trialDaysLeft > 0
       ? `Période d'essai — ${subscriptionData.value.trialDaysLeft} jours restants`
       : 'Contrat d\'essai terminé'
@@ -915,6 +918,7 @@ const getPlanIcon = (plan: SubscriptionPlan): string => {
 
 const getStatusLabel = (plan: SubscriptionPlan): string => {
   if (isPlanStarter(plan)) {
+    if (subscriptionData.value.isPaid) return 'Actif'
     return subscriptionData.value.trialDaysLeft > 0 ? 'Période d\'essai' : 'Expiré'
   }
   return subscriptionData.value.isActive ? 'Actif' : 'Inactif'
@@ -922,8 +926,9 @@ const getStatusLabel = (plan: SubscriptionPlan): string => {
 
 const getStatusBadgeClass = (plan: SubscriptionPlan): string => {
   if (isPlanStarter(plan)) {
-    return subscriptionData.value.trialDaysLeft > 0 
-      ? 'bg-blue-100 text-blue-800' 
+    if (subscriptionData.value.isPaid) return 'bg-green-100 text-green-800'
+    return subscriptionData.value.trialDaysLeft > 0
+      ? 'bg-blue-100 text-blue-800'
       : 'bg-red-100 text-red-800'
   }
   return subscriptionData.value.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
