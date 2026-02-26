@@ -130,22 +130,22 @@
         <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName} Découverte` }}</span>
       </button>
 
-      <!-- Plan Starter + Actif : Bouton "Passer {agentName} en Pro" -->
+      <!-- Plan Starter + Actif (en essai) : Bouton "Rémunérer {agentName}" → starter checkout -->
       <button
         v-else-if="userSubscriptionPlan === 'starter' && userSubscriptionActive"
-        @click="handleUpgradeClick('growth')"
-        :disabled="upgradingToPlan === 'growth'"
+        @click="handleUpgradeClick('starter')"
+        :disabled="upgradingToPlan === 'starter'"
         type="button"
-        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+        class="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
       >
-        <svg v-if="upgradingToPlan === 'growth'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
         <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <span>{{ upgradingToPlan === 'growth' ? 'Redirection...' : `Passer ${agentName} en Pro` }}</span>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Rémunérer ${agentName}` }}</span>
       </button>
 
       <!-- Plan Growth + Actif : Badge statique "{agentName} Pro Actif" -->

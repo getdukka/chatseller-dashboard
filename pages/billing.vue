@@ -314,10 +314,11 @@
                 </div>
                 
                 <div class="plan-card-footer">
-                  <button 
+                  <button
                     @click="handleSubscribeToPlan('starter')"
-                    :disabled="loading.subscription || subscriptionData.plan === 'starter'"
+                    :disabled="loading.subscription || (subscriptionData.plan === 'starter' && subscriptionData.trialDaysLeft === 0 && subscriptionData.isActive)"
                     class="btn-plan-secondary"
+                    :class="{ 'btn-plan-primary': subscriptionData.plan === 'starter' && subscriptionData.trialDaysLeft > 0 }"
                   >
                     <span v-if="loading.subscription && selectedPlan === 'starter'">
                       <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -326,15 +327,18 @@
                       </svg>
                       Traitement...
                     </span>
+                    <span v-else-if="subscriptionData.plan === 'starter' && subscriptionData.trialDaysLeft > 0">Rémunérer {{ agentName }}</span>
+                    <span v-else-if="subscriptionData.plan === 'starter' && subscriptionData.trialDaysLeft === 0 && !subscriptionData.isActive">Réembaucher {{ agentName }}</span>
                     <span v-else-if="subscriptionData.plan === 'starter'">Salaire actuel</span>
                     <span v-else>Tester {{ agentName }} pendant 14 jours</span>
                   </button>
-                  
+
                   <div class="plan-guarantee">
                     <svg class="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.065.01l.032.006M12 21a9 9 0 110-18 9 9 0 010 18z"/>
                     </svg>
-                    <span class="text-xs text-gray-600">14 jours d'essai sans engagement • Licenciez-la à tout moment</span>
+                    <span v-if="subscriptionData.plan === 'starter' && subscriptionData.trialDaysLeft > 0" class="text-xs text-gray-600">Résiliable à tout moment • Sans engagement</span>
+                    <span v-else class="text-xs text-gray-600">14 jours d'essai sans engagement • Licenciez-la à tout moment</span>
                   </div>
                 </div>
               </div>
