@@ -201,3 +201,27 @@ export interface PerformanceMetric {
 
 // Make sure this file is treated as a module
 export {}
+
+// =====================================
+// STATIC ASSET MODULES
+// =====================================
+
+declare module '*.svg' {
+  const src: string
+  export default src
+}
+
+declare module '*.png' {
+  const src: string
+  export default src
+}
+
+declare module '*.jpg' {
+  const src: string
+  export default src
+}
+
+declare module '*.webp' {
+  const src: string
+  export default src
+}

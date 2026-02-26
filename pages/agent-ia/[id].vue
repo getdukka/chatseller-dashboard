@@ -766,9 +766,10 @@
                   :src="installVideoUrl"
                   class="absolute inset-0 w-full h-full"
                   frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                  referrerpolicy="strict-origin-when-cross-origin"
                   allowfullscreen
-                  title="Tutoriel installation ChatSeller"
+                  title="Tuto - Activer votre Vendeuse IA sur votre boutique Shopify"
                 ></iframe>
               </div>
             </template>
@@ -1278,8 +1279,8 @@ const showSendDevModal = ref(false)
 const devEmail = ref('')
 const activePlatform = ref('shopify')
 
-// URL du tutoriel vidéo (YouTube embed URL - ex: 'https://www.youtube.com/embed/VIDEO_ID')
-const installVideoUrl = ''
+/// URL du tutoriel vidéo Vimeo
+const installVideoUrl = 'https://player.vimeo.com/video/1168462401?badge=0&autopause=0&player_id=0&app_id=58479'
 
 // Playground state
 const playgroundInput = ref('')
