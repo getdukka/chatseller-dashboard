@@ -148,7 +148,7 @@
 
         <!-- Card: Identité -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">👩‍💼</span>
               L'identité de {{ localConfig.agent.name || 'Mia' }}
@@ -240,7 +240,7 @@
 
         <!-- Card: Message d'accueil -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">💬</span>
               Message d'accueil
@@ -264,7 +264,7 @@
 
         <!-- Card: Base de connaissances -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <div class="flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
                 <span class="mr-2">📚</span>
@@ -338,7 +338,7 @@
 
         <!-- Card: Texte du bouton -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">✏️</span>
               Texte du bouton
@@ -358,7 +358,7 @@
 
         <!-- Card: Couleur principale -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">🎨</span>
               Couleur principale
@@ -395,7 +395,7 @@
 
         <!-- Card: Style des bordures -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">⬜</span>
               Style des bordures du bouton
@@ -429,7 +429,7 @@
 
         <!-- Card: Position -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">📍</span>
               Position du bouton
@@ -475,7 +475,7 @@
 
         <!-- Card: Aperçu -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">👁️</span>
               Aperçu
@@ -747,9 +747,54 @@
           </div>
         </div>
 
+        <!-- Card: Tutoriel vidéo -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+              <span class="mr-2">▶️</span>
+              Tutoriel d'installation
+            </h2>
+          </div>
+          <div class="p-4 sm:p-6">
+            <p class="text-sm text-gray-600 mb-4">
+              Regardez comment installer {{ localConfig.agent.name || 'Mia' }} sur votre boutique en moins de 5 minutes.
+            </p>
+            <!-- Vidéo réelle (quand installVideoUrl est défini) -->
+            <template v-if="installVideoUrl">
+              <div class="relative rounded-xl overflow-hidden bg-gray-900" style="aspect-ratio: 16/9;">
+                <iframe
+                  :src="installVideoUrl"
+                  class="absolute inset-0 w-full h-full"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                  title="Tutoriel installation ChatSeller"
+                ></iframe>
+              </div>
+            </template>
+            <!-- Placeholder (avant publication de la vidéo) -->
+            <template v-else>
+              <div
+                class="relative rounded-xl overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center"
+                style="aspect-ratio: 16/9;"
+              >
+                <div class="text-center px-4">
+                  <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                  <p class="text-white font-medium text-sm">Tutoriel vidéo</p>
+                  <p class="text-white/60 text-xs mt-1">Disponible prochainement</p>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
         <!-- Card: Code d'intégration -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">🔧</span>
               Code d'intégration
@@ -762,7 +807,7 @@
             </p>
 
             <div class="relative">
-              <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto">
+              <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto max-h-44 overflow-y-auto">
                 <pre class="text-green-400 text-xs sm:text-sm font-mono whitespace-pre-wrap break-all">{{ integrationCode }}</pre>
               </div>
 
@@ -793,43 +838,183 @@
           </div>
         </div>
 
-        <!-- Card: Instructions -->
+        <!-- Card: Instructions par plateforme -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">📋</span>
-              Instructions d'activation de {{ localConfig.agent.name || 'Mia' }}
+              Guide d'installation par plateforme
             </h2>
           </div>
 
           <div class="p-4 sm:p-6">
-            <ol class="space-y-4">
+            <!-- Sélecteur de plateforme -->
+            <div class="flex flex-wrap gap-2 mb-6">
+              <button
+                v-for="platform in installPlatforms"
+                :key="platform.value"
+                @click="activePlatform = platform.value"
+                class="flex items-center px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all"
+                :class="activePlatform === platform.value
+                  ? 'border-rose-500 bg-rose-50 text-rose-700'
+                  : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'"
+              >
+                <span class="mr-1.5">{{ platform.icon }}</span>
+                {{ platform.label }}
+              </button>
+            </div>
+
+            <!-- Instructions Shopify -->
+            <ol v-if="activePlatform === 'shopify'" class="space-y-4">
               <li class="flex items-start">
                 <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
                 <div>
-                  <p class="font-medium text-gray-900">Copiez le code ci-dessus</p>
-                  <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier"</p>
+                  <p class="font-medium text-gray-900">Copiez le code d'intégration</p>
+                  <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier" dans le bloc ci-dessus</p>
                 </div>
               </li>
               <li class="flex items-start">
                 <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
                 <div>
-                  <p class="font-medium text-gray-900">Accédez au code de votre site</p>
-                  <p class="text-sm text-gray-500">Shopify, WooCommerce, ou votre éditeur HTML</p>
+                  <p class="font-medium text-gray-900">Accédez à l'éditeur de thème Shopify</p>
+                  <p class="text-sm text-gray-500">Dans votre admin Shopify : <strong>Boutique en ligne → Thèmes → Actions → Modifier le code</strong></p>
                 </div>
               </li>
               <li class="flex items-start">
                 <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
                 <div>
-                  <p class="font-medium text-gray-900">Collez avant &lt;/body&gt;</p>
-                  <p class="text-sm text-gray-500">Juste avant la balise de fermeture body</p>
+                  <p class="font-medium text-gray-900">Ouvrez le fichier <code class="bg-gray-100 px-1 rounded text-xs">theme.liquid</code></p>
+                  <p class="text-sm text-gray-500">Dans la colonne de gauche, sous "Layout", cliquez sur <strong>theme.liquid</strong></p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">4</span>
+                <div>
+                  <p class="font-medium text-gray-900">Collez le code avant <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code></p>
+                  <p class="text-sm text-gray-500">Trouvez la balise <strong>&lt;/body&gt;</strong> en bas du fichier et collez le code juste avant</p>
                 </div>
               </li>
               <li class="flex items-start">
                 <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">✓</span>
                 <div>
-                  <p class="font-medium text-gray-900">C'est terminé !</p>
-                  <p class="text-sm text-gray-500">{{ localConfig.agent.name || 'Mia' }} apparaîtra automatiquement sur votre boutique</p>
+                  <p class="font-medium text-gray-900">Sauvegardez et testez !</p>
+                  <p class="text-sm text-gray-500">Cliquez sur <strong>Sauvegarder</strong> en haut à droite. {{ localConfig.agent.name || 'Mia' }} apparaîtra sur votre boutique.</p>
+                </div>
+              </li>
+            </ol>
+
+            <!-- Instructions WordPress -->
+            <ol v-else-if="activePlatform === 'wordpress'" class="space-y-4">
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+                <div>
+                  <p class="font-medium text-gray-900">Copiez le code d'intégration</p>
+                  <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier" dans le bloc ci-dessus</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+                <div>
+                  <p class="font-medium text-gray-900">Accédez à l'éditeur de thème</p>
+                  <p class="text-sm text-gray-500">Dans votre admin WordPress : <strong>Apparence → Éditeur de thème</strong> (ou Éditeur de fichiers du thème)</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
+                <div>
+                  <p class="font-medium text-gray-900">Ouvrez le fichier <code class="bg-gray-100 px-1 rounded text-xs">footer.php</code></p>
+                  <p class="text-sm text-gray-500">Dans la liste des fichiers à droite, cliquez sur <strong>footer.php</strong></p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">4</span>
+                <div>
+                  <p class="font-medium text-gray-900">Collez le code avant <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code></p>
+                  <p class="text-sm text-gray-500">Trouvez <strong>&lt;/body&gt;</strong> dans le fichier et collez le code juste avant</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">✓</span>
+                <div>
+                  <p class="font-medium text-gray-900">Mettez à jour le fichier</p>
+                  <p class="text-sm text-gray-500">Cliquez sur <strong>Mettre à jour le fichier</strong>. {{ localConfig.agent.name || 'Mia' }} apparaîtra sur votre boutique.</p>
+                </div>
+              </li>
+            </ol>
+
+            <!-- Instructions WooCommerce -->
+            <div v-else-if="activePlatform === 'woocommerce'" class="space-y-5">
+              <p class="text-sm text-gray-600">Deux méthodes disponibles. La première est recommandée pour les non-développeurs.</p>
+
+              <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p class="font-medium text-blue-900 mb-3">Méthode 1 : Plugin recommandé (sans toucher au code)</p>
+                <ol class="space-y-3">
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-5 h-5 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">1</span>
+                    <p class="text-sm text-blue-800">Installez le plugin <strong>"Insert Headers and Footers"</strong> (Extensions → Ajouter)</p>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-5 h-5 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">2</span>
+                    <p class="text-sm text-blue-800">Allez dans <strong>Réglages → Insert Headers and Footers</strong></p>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-5 h-5 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">3</span>
+                    <p class="text-sm text-blue-800">Collez le code dans la zone <strong>Scripts in Footer</strong></p>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-5 h-5 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">4</span>
+                    <p class="text-sm text-blue-800">Cliquez sur <strong>Enregistrer</strong> — c'est terminé !</p>
+                  </li>
+                </ol>
+              </div>
+
+              <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <p class="font-medium text-gray-800 mb-3">Méthode 2 : Via l'éditeur de thème</p>
+                <ol class="space-y-3">
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-5 h-5 bg-gray-200 text-gray-700 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">1</span>
+                    <p class="text-sm text-gray-700">Dans votre admin WordPress : <strong>Apparence → Éditeur de thème → footer.php</strong></p>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-5 h-5 bg-gray-200 text-gray-700 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">2</span>
+                    <p class="text-sm text-gray-700">Trouvez la balise <strong>&lt;/body&gt;</strong> et collez le code juste avant</p>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-5 h-5 bg-gray-200 text-gray-700 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">3</span>
+                    <p class="text-sm text-gray-700">Cliquez sur <strong>Mettre à jour le fichier</strong></p>
+                  </li>
+                </ol>
+              </div>
+            </div>
+
+            <!-- Instructions Site custom -->
+            <ol v-else-if="activePlatform === 'custom'" class="space-y-4">
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+                <div>
+                  <p class="font-medium text-gray-900">Copiez le code d'intégration</p>
+                  <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier" dans le bloc ci-dessus</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+                <div>
+                  <p class="font-medium text-gray-900">Ouvrez votre fichier de template principal</p>
+                  <p class="text-sm text-gray-500">C'est souvent <code class="bg-gray-100 px-1 rounded text-xs">index.html</code>, <code class="bg-gray-100 px-1 rounded text-xs">base.html</code> ou <code class="bg-gray-100 px-1 rounded text-xs">layout.html</code> selon votre framework</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
+                <div>
+                  <p class="font-medium text-gray-900">Collez le code avant <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code></p>
+                  <p class="text-sm text-gray-500">Trouvez la balise <strong>&lt;/body&gt;</strong> et collez le code juste avant — sur toutes les pages de votre site</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">✓</span>
+                <div>
+                  <p class="font-medium text-gray-900">Sauvegardez et déployez</p>
+                  <p class="text-sm text-gray-500">{{ localConfig.agent.name || 'Mia' }} apparaîtra automatiquement sur votre site après déploiement.</p>
                 </div>
               </li>
             </ol>
@@ -1088,6 +1273,10 @@ const showKnowledgeModal = ref(false)
 const savingKnowledge = ref(false)
 const showSendDevModal = ref(false)
 const devEmail = ref('')
+const activePlatform = ref('shopify')
+
+// URL du tutoriel vidéo (YouTube embed URL - ex: 'https://www.youtube.com/embed/VIDEO_ID')
+const installVideoUrl = ''
 
 // Playground state
 const playgroundInput = ref('')
@@ -1284,6 +1473,13 @@ const borderRadiusOptions = [
   { value: 'small', label: 'Léger', preview: '8px' },
   { value: 'medium', label: 'Moyen', preview: '12px' },
   { value: 'full', label: 'Arrondi', preview: '999px' }
+]
+
+const installPlatforms = [
+  { value: 'shopify', label: 'Shopify', icon: '🛍️' },
+  { value: 'wordpress', label: 'WordPress', icon: '🔵' },
+  { value: 'woocommerce', label: 'WooCommerce', icon: '🟣' },
+  { value: 'custom', label: 'Site custom', icon: '💻' }
 ]
 
 const availableVariables = [
