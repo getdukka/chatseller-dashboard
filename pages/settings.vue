@@ -213,10 +213,13 @@
                     <span class="text-sm font-medium text-gray-900">{{ memberSince }}</span>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Plan actuel</span>
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" :class="planBadgeClass">
-                      {{ planDisplayName }}
-                    </span>
+                    <span class="text-sm text-gray-600">Salaire de {{ agentName }}</span>
+                    <div class="flex items-center space-x-1">
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" :class="planBadgeClass">
+                        {{ planDisplayName }}
+                      </span>
+                      <span class="text-xs text-gray-500">· {{ planPrice }}</span>
+                    </div>
                   </div>
                   <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600">Conversations avec vos clients</span>
@@ -459,20 +462,21 @@
 
                 <!-- Plan et usage nouveaux plans -->
                 <div class="border-t pt-6">
-                  <h3 class="font-medium text-gray-900 mb-3">Plan ChatSeller</h3>
+                  <h3 class="font-medium text-gray-900 mb-3">Salaire de {{ agentName }}</h3>
                   <div class="space-y-3">
                     <div class="flex items-center justify-between">
-                      <span class="text-sm text-gray-600">Plan actuel</span>
+                      <span class="text-sm text-gray-600">Salaire actuel de {{ agentName }}</span>
                       <div class="flex items-center space-x-2">
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" :class="planBadgeClass">
                           {{ planDisplayName }}
                         </span>
+                        <span class="text-xs text-gray-500">{{ planPrice }}</span>
                         <NuxtLink to="/billing" class="text-xs text-rose-600 hover:text-rose-700 font-medium">
                           Gérer
                         </NuxtLink>
                       </div>
                     </div>
-                    
+
                   </div>
                 </div>
               </div>
@@ -871,11 +875,22 @@ const memberSince = computed(() => {
 
 const planDisplayName = computed(() => {
   const plan = authStore.currentPlan
+  const name = agentName.value
   switch (plan) {
-    case 'starter': return 'Starter'
-    case 'growth': return 'Growth'
-    case 'performance': return 'Performance'
-    default: return 'Starter'
+    case 'starter': return `${name} Découverte`
+    case 'growth': return `${name} Pro`
+    case 'performance': return `${name} Premium`
+    default: return `${name} Découverte`
+  }
+})
+
+const planPrice = computed(() => {
+  const plan = authStore.currentPlan
+  switch (plan) {
+    case 'starter': return '45€/mois'
+    case 'growth': return '145€/mois'
+    case 'performance': return 'Sur mesure'
+    default: return '45€/mois'
   }
 })
 
@@ -945,7 +960,12 @@ const loadBeautyData = async () => {
       brandForm.defaultCurrency = response.data.default_currency || 'XOF'
       brandForm.priceRange = response.data.price_range || ''
       brandForm.targetAge = response.data.target_age_range || response.data.target_age || ''
-      
+
+      // Load saved notification settings from DB
+      if (response.data.notification_settings && typeof response.data.notification_settings === 'object') {
+        Object.assign(notificationSettings, response.data.notification_settings)
+      }
+
       console.log('✅ Données marque beauté chargées:', response.data)
     }
   } catch (error) {
