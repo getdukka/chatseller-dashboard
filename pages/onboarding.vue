@@ -176,16 +176,38 @@
                         <label class="block text-lg font-semibold text-gray-800 mb-3">
                           Sur quelle plateforme est votre boutique ? *
                         </label>
-                        <select
-                          v-model="form.platform"
-                          required
-                          class="w-full px-6 py-4 bg-white/70 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-gray-900 text-lg"
-                        >
-                          <option value="" class="bg-white">Sélectionnez votre plateforme</option>
-                          <option value="shopify" class="bg-white">🛒 Shopify</option>
-                          <option value="woocommerce" class="bg-white">🔗 WooCommerce</option>
-                          <option value="custom" class="bg-white">⚙️ Site personnalisé</option>
-                        </select>
+                        <div class="grid grid-cols-3 gap-3">
+                          <!-- Shopify -->
+                          <button
+                            type="button"
+                            @click="form.platform = 'shopify'"
+                            class="flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all bg-white/70 hover:border-rose-300"
+                            :class="form.platform === 'shopify' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'"
+                          >
+                            <img :src="shopifyLogo" class="h-10 w-auto object-contain mb-2" alt="Shopify" />
+                            <span class="text-sm font-semibold text-gray-900">Shopify</span>
+                          </button>
+                          <!-- WooCommerce -->
+                          <button
+                            type="button"
+                            @click="form.platform = 'woocommerce'"
+                            class="flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all bg-white/70 hover:border-rose-300"
+                            :class="form.platform === 'woocommerce' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'"
+                          >
+                            <img :src="woocommerceLogo" class="h-8 w-auto object-contain mb-2" alt="WooCommerce" />
+                            <span class="text-sm font-semibold text-gray-900">WooCommerce</span>
+                          </button>
+                          <!-- Site personnalisé -->
+                          <button
+                            type="button"
+                            @click="form.platform = 'custom'"
+                            class="flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all bg-white/70 hover:border-rose-300"
+                            :class="form.platform === 'custom' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'"
+                          >
+                            <span class="text-3xl mb-2">⚙️</span>
+                            <span class="text-sm font-semibold text-gray-900">Site personnalisé</span>
+                          </button>
+                        </div>
                         <p class="text-gray-500 text-sm mt-2">Pour qu'elle puisse s'intégrer directement à votre boutique</p>
                       </div>
                     </div>
@@ -733,6 +755,8 @@
 
 <script setup lang="ts">
 import { useSupabase } from '~~/composables/useSupabase'
+import shopifyLogo from '~/assets/images/logos/shopify.svg'
+import woocommerceLogo from '~/assets/images/logos/woocommerce.svg'
 import { useAuthStore } from '~~/stores/auth'
 import { useSyncStore } from '~~/stores/sync'
 
@@ -1019,6 +1043,9 @@ const getSyncAhaMessage = () => {
 
 // ========== NAVIGATION ==========
 const nextStep = async () => {
+  // Validation étape 1 : plateforme obligatoire (plus de select natif required)
+  if (currentStep.value === 1 && !form.platform) return
+
   // À l'étape 1 : lancer mini shop update + sync background
   if (currentStep.value === 1) {
     await launchStep1Sync()

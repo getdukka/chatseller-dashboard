@@ -859,7 +859,8 @@
                   ? 'border-rose-500 bg-rose-50 text-rose-700'
                   : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'"
               >
-                <span class="mr-1.5">{{ platform.icon }}</span>
+                <img v-if="(platform as any).logo" :src="(platform as any).logo" class="h-4 w-auto object-contain mr-1.5 flex-shrink-0" :alt="platform.label" />
+                <span v-else class="mr-1.5">{{ (platform as any).icon }}</span>
                 {{ platform.label }}
               </button>
             </div>
@@ -1217,6 +1218,8 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
+import shopifyLogo from '~/assets/images/logos/shopify.svg'
+import woocommerceLogo from '~/assets/images/logos/woocommerce.svg'
 
 // Page metadata
 definePageMeta({
@@ -1476,9 +1479,9 @@ const borderRadiusOptions = [
 ]
 
 const installPlatforms = [
-  { value: 'shopify', label: 'Shopify', icon: '🛍️' },
+  { value: 'shopify', label: 'Shopify', logo: shopifyLogo as string },
   { value: 'wordpress', label: 'WordPress', icon: '🔵' },
-  { value: 'woocommerce', label: 'WooCommerce', icon: '🟣' },
+  { value: 'woocommerce', label: 'WooCommerce', logo: woocommerceLogo as string },
   { value: 'custom', label: 'Site custom', icon: '💻' }
 ]
 
