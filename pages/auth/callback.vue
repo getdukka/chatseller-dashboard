@@ -317,7 +317,7 @@ const processSession = async (session: any) => {
     console.log('✅ [Callback] Email confirmé pour:', user.email)
 
     // ✅ ÉTAPE 3: Assurer l'existence du shop beauté AVANT de synchroniser le store
-    currentStep.value = '✨ Préparation de votre espace Mia...'
+    currentStep.value = '✨ Préparation de votre espace de gestion...'
     await new Promise(resolve => setTimeout(resolve, 500))
 
     try {
@@ -466,7 +466,7 @@ const handleError = (err: any) => {
   } else if (err.message?.includes('invalid') || err.message?.includes('token') || err.message?.includes('invalide')) {
     errorMessage.value = 'Lien de confirmation invalide. Vérifiez votre email.'
   } else if (err.message?.includes('shop') || err.message?.includes('Mia')) {
-    errorMessage.value = 'Email confirmé mais la configuration de Mia a échoué. Contactez le support.'
+    errorMessage.value = 'Email confirmé mais le recrutement de Mia a échoué. Contactez le support.'
   } else {
     errorMessage.value = err.message || 'Erreur de confirmation. Contactez le support si cela persiste.'
   }
@@ -497,9 +497,9 @@ const redirectAfterAuth = async () => {
 }
 
 useHead({
-  title: 'Votre Vendeuse IA vous attend | ChatSeller',
+  title: 'Mia vous attend | ChatSeller',
   meta: [
-    { name: 'description', content: 'Confirmez votre email et recrutez Mia, votre Vendeuse IA pour boutique en ligne.' },
+    { name: 'description', content: 'Confirmez votre email et Finalisez le recrutement de Mia' },
     { name: 'robots', content: 'noindex' }
   ]
 })
