@@ -8,7 +8,7 @@
           <div>
             <h1 class="text-3xl font-bold text-gray-900">Commandes</h1>
             <p class="mt-2 text-gray-600">
-              Gérez toutes les commandes générées par votre agent IA
+              Gérez toutes les commandes générées par {{ agentName }}
             </p>
           </div>
 
@@ -28,7 +28,7 @@
             <button
               @click="refreshOrders"
               :disabled="loading"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 disabled:opacity-50 transition-all"
             >
               <svg
                 class="w-4 h-4 mr-2"
@@ -73,7 +73,7 @@
           <div class="flex items-center justify-between text-white">
             <div>
               <p class="text-green-100 text-sm font-medium">Revenus totaux</p>
-              <p class="text-3xl font-bold">{{ formatCurrency(stats.totalRevenue, 'XOF') }}</p>
+              <p class="text-3xl font-bold">{{ formatCurrency(stats.totalRevenue, shopCurrency) }}</p>
               <p class="text-green-100 text-sm mt-1">
                 +{{ stats.revenueGrowth }}% vs mois dernier
               </p>
@@ -91,7 +91,7 @@
           <div class="flex items-center justify-between text-white">
             <div>
               <p class="text-orange-100 text-sm font-medium">Panier moyen</p>
-              <p class="text-3xl font-bold">{{ formatCurrency(stats.averageOrderValue, 'XOF') }}</p>
+              <p class="text-3xl font-bold">{{ formatCurrency(stats.averageOrderValue, shopCurrency) }}</p>
               <p class="text-orange-100 text-sm mt-1">
                 Par commande
               </p>
@@ -249,17 +249,15 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr
-                v-for="order in filteredOrders"
+                v-for="(order, index) in filteredOrders"
                 :key="order.id"
-                class="hover:bg-gray-50 transition-colors"
+                class="hover:bg-gray-50 transition-colors cursor-pointer"
+                @click="viewOrder(order)"
               >
                 <!-- Commande -->
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-medium text-gray-900">
-                    #{{ order.id.slice(-8).toUpperCase() }}
-                  </div>
-                  <div v-if="order.external_order_id" class="text-xs text-gray-500">
-                    Ext: {{ order.external_order_id }}
+                    #{{ getOrderNumber(order, index) }}
                   </div>
                 </td>
 
@@ -269,7 +267,7 @@
                     {{ order.customer_name || 'N/A' }}
                   </div>
                   <div class="text-xs text-gray-500">
-                    {{ order.customer_email || 'N/A' }}
+                    {{ order.customer_phone || order.customer_email || 'N/A' }}
                   </div>
                 </td>
 
@@ -283,7 +281,7 @@
                 <!-- Montant -->
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-medium text-gray-900">
-                    {{ formatCurrency(order.amount, order.currency) }}
+                    {{ formatCurrency(order.total_amount || 0, order.currency || shopCurrency) }}
                   </div>
                 </td>
 
@@ -308,18 +306,101 @@
 
                 <!-- Actions -->
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    @click.stop="viewOrder(order)"
-                    class="text-rose-600 hover:text-rose-900 transition-colors"
-                  >
-                    Voir
-                  </button>
+                  <span class="text-rose-600">
+                    Voir →
+                  </span>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div
+      v-if="selectedOrder"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click.self="closeOrderDetail"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-lg font-bold text-gray-900">
+            Commande #{{ getOrderNumberById(selectedOrder.id) }}
+          </h3>
+          <button @click="closeOrderDetail" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-6 py-4 space-y-5">
+          <!-- Statut -->
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-500">Statut</span>
+            <span :class="getStatusBadgeClass(selectedOrder.status)" class="px-3 py-1 text-xs font-semibold rounded-full">
+              {{ getStatusLabel(selectedOrder.status) }}
+            </span>
+          </div>
+
+          <!-- Client -->
+          <div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Client</h4>
+            <div class="bg-gray-50 rounded-lg p-3 space-y-1">
+              <p class="text-sm text-gray-900 font-medium">{{ selectedOrder.customer_name || 'N/A' }}</p>
+              <p v-if="selectedOrder.customer_phone" class="text-sm text-gray-600">{{ selectedOrder.customer_phone }}</p>
+              <p v-if="selectedOrder.customer_email" class="text-sm text-gray-600">{{ selectedOrder.customer_email }}</p>
+              <p v-if="selectedOrder.customer_address" class="text-sm text-gray-600">{{ selectedOrder.customer_address }}</p>
+            </div>
+          </div>
+
+          <!-- Produits -->
+          <div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Produits</h4>
+            <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+              <div
+                v-for="(item, i) in (selectedOrder.product_items || [])"
+                :key="i"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-900">{{ item.name || item.productName || 'Produit' }} × {{ item.quantity || 1 }}</span>
+                <span class="text-gray-700 font-medium">{{ formatCurrency((item.price || 0) * (item.quantity || 1), selectedOrder.currency || shopCurrency) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total -->
+          <div class="flex items-center justify-between pt-2 border-t border-gray-200">
+            <span class="text-base font-semibold text-gray-900">Total</span>
+            <span class="text-lg font-bold text-gray-900">{{ formatCurrency(selectedOrder.total_amount || 0, selectedOrder.currency || shopCurrency) }}</span>
+          </div>
+
+          <!-- Paiement -->
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-500">Paiement</span>
+            <span class="text-sm text-gray-900 capitalize">{{ selectedOrder.payment_method || 'Non spécifié' }}</span>
+          </div>
+
+          <!-- Date -->
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-500">Date</span>
+            <span class="text-sm text-gray-900">{{ formatDate(selectedOrder.created_at) }}</span>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-gray-200">
+          <button
+            @click="closeOrderDetail"
+            class="w-full px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
+          >
+            Fermer
+          </button>
+        </div>
       </div>
     </div>
 
@@ -355,6 +436,8 @@ const loading = ref(true)
 const exporting = ref(false)
 const searchQuery = ref('')
 const error = ref<string | null>(null)
+const agentName = ref('Mia')
+const shopCurrency = ref('XOF')
 
 const filters = ref({
   status: ''
@@ -417,6 +500,13 @@ const getUpsellCount = (order: any): number => {
 
 const hasUpsellItems = (order: any): boolean => {
   return order.upsell_items && Array.isArray(order.upsell_items) && order.upsell_items.length > 0
+}
+
+const getOrderNumber = (order: any, displayIndex: number): string => {
+  // Compute sequential number based on position in all orders (sorted by created_at asc)
+  const allSorted = [...orders.value].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  const posInAll = allSorted.findIndex(o => o.id === order.id)
+  return String(1001 + (posInAll >= 0 ? posInAll : displayIndex))
 }
 
 const getProductSummary = (order: any): string => {
@@ -546,6 +636,11 @@ const loadOrders = async () => {
       orders.value = commandesArray
       console.log('📦 Commandes chargées avec succès:', orders.value.length)
 
+      // Detect currency from first order if not set from shop
+      if (commandesArray.length > 0 && commandesArray[0].currency) {
+        shopCurrency.value = commandesArray[0].currency
+      }
+
       await loadStats()
     } else {
       const errorMsg = response?.error || 'Erreur lors du chargement des commandes'
@@ -616,8 +711,11 @@ const handleExportOrders = async () => {
     ]
 
     // Préparer les données
-    const csvData = filteredOrders.value.map((order: any) => [
-      `#${order.id.slice(-8).toUpperCase()}`,
+    const allSorted = [...orders.value].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    const csvData = filteredOrders.value.map((order: any) => {
+      const pos = allSorted.findIndex(o => o.id === order.id)
+      return [
+      `#${1001 + (pos >= 0 ? pos : 0)}`,
       order.external_order_id || '',
       order.customer_name || '',
       order.customer_email || '',
@@ -633,7 +731,7 @@ const handleExportOrders = async () => {
       formatDate(order.created_at),
       order.exported_at ? formatDate(order.exported_at) : '',
       order.notes || ''
-    ])
+    ]})
 
     // Créer le contenu CSV
     const csvContent = [
@@ -663,21 +761,21 @@ const handleExportOrders = async () => {
   }
 }
 
-// ✅ ACTION METHODS
-const viewOrder = async (order: any) => {
-  try {
-    const response = await api.orders.get(order.id)
+// ✅ ORDER DETAIL MODAL
+const selectedOrder = ref<any>(null)
 
-    if (response.success) {
-      console.log('Commande détaillée:', response.data)
-      // TODO: Ouvrir modal ou page de détail
-    } else {
-      showNotification('Erreur lors du chargement des détails', 'error')
-    }
-  } catch (err) {
-    console.error('Erreur vue commande:', err)
-    showNotification('Erreur lors du chargement des détails', 'error')
-  }
+const viewOrder = (order: any) => {
+  selectedOrder.value = order
+}
+
+const closeOrderDetail = () => {
+  selectedOrder.value = null
+}
+
+const getOrderNumberById = (orderId: string): string => {
+  const allSorted = [...orders.value].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  const pos = allSorted.findIndex(o => o.id === orderId)
+  return String(1001 + (pos >= 0 ? pos : 0))
 }
 
 const clearFilters = () => {
@@ -688,6 +786,23 @@ const clearFilters = () => {
 // ✅ LIFECYCLE
 onMounted(() => {
   loadOrders()
+
+  // Load agent name
+  api.agents.list().then((res: any) => {
+    if (res.success && res.data?.length > 0) {
+      agentName.value = res.data[0].name || 'Mia'
+    }
+  })
+
+  // Load shop currency (from shop config or first order)
+  api.shops.get().then((res: any) => {
+    if (res.success && res.data) {
+      const shop = Array.isArray(res.data) ? res.data[0] : res.data
+      if (shop?.currency) {
+        shopCurrency.value = shop.currency
+      }
+    }
+  }).catch(() => {})
 })
 
 // ✅ SEO
