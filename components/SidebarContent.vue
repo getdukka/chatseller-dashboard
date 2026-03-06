@@ -59,6 +59,14 @@
       />
 
       <SidebarLink
+        to="/orders"
+        :isActive="$route.path.startsWith('/orders')"
+        icon="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+        label="Commandes"
+        @click="handleNavClick"
+      />
+
+      <SidebarLink
         to="/products"
         :isActive="$route.path.startsWith('/products')"
         icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"

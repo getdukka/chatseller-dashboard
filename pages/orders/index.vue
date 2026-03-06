@@ -73,7 +73,7 @@
           <div class="flex items-center justify-between text-white">
             <div>
               <p class="text-green-100 text-sm font-medium">Revenus totaux</p>
-              <p class="text-3xl font-bold">{{ formatCurrency(stats.totalRevenue) }}</p>
+              <p class="text-3xl font-bold">{{ formatCurrency(stats.totalRevenue, 'XOF') }}</p>
               <p class="text-green-100 text-sm mt-1">
                 +{{ stats.revenueGrowth }}% vs mois dernier
               </p>
@@ -91,7 +91,7 @@
           <div class="flex items-center justify-between text-white">
             <div>
               <p class="text-orange-100 text-sm font-medium">Panier moyen</p>
-              <p class="text-3xl font-bold">{{ formatCurrency(stats.averageOrderValue) }}</p>
+              <p class="text-3xl font-bold">{{ formatCurrency(stats.averageOrderValue, 'XOF') }}</p>
               <p class="text-orange-100 text-sm mt-1">
                 Par commande
               </p>
