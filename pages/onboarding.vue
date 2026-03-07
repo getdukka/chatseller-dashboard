@@ -37,10 +37,10 @@
     </div>
 
     <!-- Main content area -->
-    <div v-else class="flex-1 flex flex-col">
+    <div v-else class="flex-1 overflow-y-auto">
 
       <!-- Scrollable content centered -->
-      <div class="flex-1 flex items-center justify-center px-6 py-8">
+      <div class="min-h-[calc(100vh-65px)] flex items-center justify-center px-6 py-8">
         <div class="w-full max-w-lg">
 
           <!-- ===== SUB-STEP 1: Brand name + website ===== -->
@@ -74,6 +74,13 @@
                   <p class="text-xs text-gray-400 mt-1.5">Mia parcourra votre site pour apprendre vos produits</p>
                 </div>
               </div>
+
+              <!-- Buttons inline -->
+              <div class="flex justify-end pt-2">
+                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                  Continuer
+                </button>
+              </div>
             </div>
           </Transition>
 
@@ -100,6 +107,11 @@
                     <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                   </div>
                 </button>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
+                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
               </div>
             </div>
           </Transition>
@@ -132,6 +144,11 @@
                   </div>
                 </button>
               </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
+                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
+              </div>
             </div>
           </Transition>
 
@@ -158,6 +175,11 @@
                     <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                   </div>
                 </button>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
+                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
               </div>
             </div>
           </Transition>
@@ -187,6 +209,14 @@
                   </div>
                 </button>
               </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
+                <div class="flex items-center space-x-3">
+                  <button @click="skipSubStep" class="px-5 py-2.5 text-gray-400 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-600 transition-all">Passer</button>
+                  <button @click="nextSubStep" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all">Continuer</button>
+                </div>
+              </div>
             </div>
           </Transition>
 
@@ -215,6 +245,11 @@
                     <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                   </div>
                 </button>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
+                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
               </div>
             </div>
           </Transition>
@@ -252,6 +287,11 @@
                   </div>
                 </button>
               </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
+                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
+              </div>
             </div>
           </Transition>
 
@@ -287,6 +327,11 @@
                     <p class="text-sm italic text-gray-600">"{{ tone.example }}"</p>
                   </div>
                 </button>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
+                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
               </div>
             </div>
           </Transition>
@@ -378,60 +423,29 @@
                 <div v-if="submitError" class="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
                   {{ submitError }}
                 </div>
+
+                <!-- Buttons inline -->
+                <div class="flex items-center justify-between pt-2">
+                  <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
+                  <button
+                    @click="completeOnboarding"
+                    :disabled="loading"
+                    class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40"
+                  >
+                    <span v-if="loading" class="flex items-center">
+                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creation...
+                    </span>
+                    <span v-else>Lancer {{ form.agentName || getDefaultAgentName() }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </Transition>
 
-        </div>
-      </div>
-
-      <!-- Footer buttons -->
-      <div class="border-t border-gray-100 px-6 py-4">
-        <div class="max-w-lg mx-auto flex items-center justify-between">
-          <button
-            v-if="subStep > 1"
-            @click="prevSubStep"
-            class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all"
-          >
-            Retour
-          </button>
-          <div v-else></div>
-
-          <!-- Skip button for optional steps -->
-          <div class="flex items-center space-x-3">
-            <button
-              v-if="isSkippable"
-              @click="skipSubStep"
-              class="px-5 py-2.5 text-gray-400 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-600 transition-all"
-            >
-              Passer
-            </button>
-
-            <button
-              v-if="subStep < totalSubSteps"
-              @click="nextSubStep"
-              :disabled="!canProceed"
-              class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Continuer
-            </button>
-
-            <button
-              v-else
-              @click="completeOnboarding"
-              :disabled="loading"
-              class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40"
-            >
-              <span v-if="loading" class="flex items-center">
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Creation...
-              </span>
-              <span v-else>Lancer {{ form.agentName || getDefaultAgentName() }}</span>
-            </button>
-          </div>
         </div>
       </div>
 
@@ -633,10 +647,6 @@ const canProceed = computed(() => {
     case 9: return true
     default: return true
   }
-})
-
-const isSkippable = computed(() => {
-  return subStep.value === 5 // specialized targets is optional
 })
 
 // ========== HELPERS ==========
