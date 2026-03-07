@@ -305,10 +305,47 @@
                 </td>
 
                 <!-- Actions -->
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <span class="text-rose-600">
-                    Voir →
-                  </span>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @click.stop>
+                  <div class="flex items-center gap-2">
+                    <button
+                      v-if="order.status === 'pending'"
+                      @click="updateOrderStatus(order, 'confirmed')"
+                      :disabled="updatingOrderId === order.id"
+                      class="px-3 py-1 text-xs font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors disabled:opacity-50"
+                    >
+                      Confirmer
+                    </button>
+                    <button
+                      v-if="order.status === 'confirmed'"
+                      @click="updateOrderStatus(order, 'shipped')"
+                      :disabled="updatingOrderId === order.id"
+                      class="px-3 py-1 text-xs font-medium rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors disabled:opacity-50"
+                    >
+                      Expédier
+                    </button>
+                    <button
+                      v-if="order.status === 'shipped'"
+                      @click="updateOrderStatus(order, 'delivered')"
+                      :disabled="updatingOrderId === order.id"
+                      class="px-3 py-1 text-xs font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors disabled:opacity-50"
+                    >
+                      Livrée
+                    </button>
+                    <button
+                      v-if="order.status !== 'cancelled' && order.status !== 'delivered'"
+                      @click="updateOrderStatus(order, 'cancelled')"
+                      :disabled="updatingOrderId === order.id"
+                      class="px-3 py-1 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
+                    >
+                      Annuler
+                    </button>
+                    <span v-if="order.status === 'delivered'" class="text-xs text-green-600 font-medium">
+                      ✓ Terminée
+                    </span>
+                    <span v-if="order.status === 'cancelled'" class="text-xs text-red-500 font-medium">
+                      ✗ Annulée
+                    </span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -393,10 +430,41 @@
         </div>
 
         <!-- Modal Footer -->
-        <div class="px-6 py-4 border-t border-gray-200">
+        <div class="px-6 py-4 border-t border-gray-200 space-y-3">
+          <!-- Action buttons based on status -->
+          <div class="flex gap-2">
+            <button
+              v-if="selectedOrder.status === 'pending'"
+              @click="updateOrderStatus(selectedOrder, 'confirmed'); closeOrderDetail()"
+              class="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Confirmer la commande
+            </button>
+            <button
+              v-if="selectedOrder.status === 'confirmed'"
+              @click="updateOrderStatus(selectedOrder, 'shipped'); closeOrderDetail()"
+              class="flex-1 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Marquer comme expédiée
+            </button>
+            <button
+              v-if="selectedOrder.status === 'shipped'"
+              @click="updateOrderStatus(selectedOrder, 'delivered'); closeOrderDetail()"
+              class="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Marquer comme livrée
+            </button>
+            <button
+              v-if="selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered'"
+              @click="updateOrderStatus(selectedOrder, 'cancelled'); closeOrderDetail()"
+              class="px-4 py-2 bg-red-50 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 border border-red-200 transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
           <button
             @click="closeOrderDetail"
-            class="w-full px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
+            class="w-full px-4 py-2 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
           >
             Fermer
           </button>
@@ -758,6 +826,30 @@ const handleExportOrders = async () => {
     showNotification('Erreur lors de l\'export CSV', 'error')
   } finally {
     exporting.value = false
+  }
+}
+
+// ✅ ORDER STATUS UPDATE
+const updatingOrderId = ref<string | null>(null)
+
+const updateOrderStatus = async (order: any, newStatus: string) => {
+  updatingOrderId.value = order.id
+  try {
+    const response = await api.orders.update(order.id, { status: newStatus })
+    if (response.success) {
+      // Update local state
+      order.status = newStatus
+      showNotification(`Commande #${getOrderNumberById(order.id)} → ${getStatusLabel(newStatus)}`)
+      // Refresh stats
+      await loadStats()
+    } else {
+      showNotification('Erreur lors de la mise à jour du statut', 'error')
+    }
+  } catch (err) {
+    console.error('Erreur mise à jour statut:', err)
+    showNotification('Erreur lors de la mise à jour du statut', 'error')
+  } finally {
+    updatingOrderId.value = null
   }
 }
 
