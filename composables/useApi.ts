@@ -33,42 +33,56 @@ export const useApi = () => {
   // Ne pas hardcoder localhost - laisser .env.local gérer ça
   const baseURL = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
-  // ✅ FONCTION CORRIGÉE : TOUJOURS RÉCUPÉRER LE TOKEN FRAIS DEPUIS SUPABASE
-  // (Le store peut contenir un token périmé après inactivité)
+  // ✅ TOKEN CACHE : Évite d'appeler Supabase getSession() à chaque requête API
+  // Le token JWT Supabase dure 1h, on le cache 30s pour batching
+  let cachedToken: string | null = null
+  let tokenCacheTime = 0
+  const TOKEN_CACHE_TTL = 30_000 // 30 secondes
+
   const getAuthToken = async (): Promise<string | null> => {
     if (!process.client) return null
+
+    // Retourner le token caché s'il est encore frais
+    const now = Date.now()
+    if (cachedToken && (now - tokenCacheTime) < TOKEN_CACHE_TTL) {
+      return cachedToken
+    }
 
     try {
       const supabase = useSupabase()
       const authStore = useAuthStore()
 
-      // ✅ TOUJOURS demander la session à Supabase (gère le refresh auto)
+      // getSession() lit depuis le cache mémoire de Supabase (pas de requête réseau)
       const { data: { session }, error } = await supabase.auth.getSession()
 
       if (error || !session?.access_token) {
-        // Session expirée et non-rafraîchissable → tenter un refresh explicite
-        console.warn('⚠️ [API] Session Supabase invalide, tentative de refresh...')
+        // Session expirée → tenter un refresh explicite
+        console.warn('⚠️ [API] Session invalide, tentative de refresh...')
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
 
         if (refreshError || !refreshData.session?.access_token) {
-          console.warn('❌ [API] Impossible de récupérer/rafraîchir le token')
+          console.warn('❌ [API] Impossible de rafraîchir le token')
+          cachedToken = null
           return null
         }
 
-        // Refresh réussi → synchroniser le store
         authStore.token = refreshData.session.access_token
-        return refreshData.session.access_token
+        cachedToken = refreshData.session.access_token
+        tokenCacheTime = now
+        return cachedToken
       }
 
-      // ✅ Synchroniser le store si le token a changé (refresh auto en arrière-plan)
       if (session.access_token !== authStore.token) {
         authStore.token = session.access_token
       }
 
-      return session.access_token
+      cachedToken = session.access_token
+      tokenCacheTime = now
+      return cachedToken
 
     } catch (error) {
       console.error('❌ [API] Erreur récupération token:', error)
+      cachedToken = null
       return null
     }
   }

@@ -449,8 +449,10 @@ watch(mobileMenuOpen, (newValue) => {
 
 watch(() => authStore.isAuthenticated, async (isAuth) => {
   if (isAuth && authStore.token) {
-    await loadSubscriptionInfo()
-    await loadUnreadConversations()
+    await Promise.all([
+      loadSubscriptionInfo().catch(() => {}),
+      loadUnreadConversations().catch(() => {})
+    ])
   }
 }, { immediate: false })
 
@@ -481,17 +483,18 @@ watch(() => route.path, () => {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
-  
-  // Charger les données initiales si authentifié
+
+  // Charger les données initiales si authentifié — EN PARALLÈLE
   if (authStore.isAuthenticated && authStore.token) {
-    await loadSubscriptionInfo()
-    await loadUnreadConversations()
-    // Charger le nom de l'agent
-    api.agents.list().then((res: any) => {
-      if (res.success && res.data?.length > 0) {
-        agentName.value = res.data[0].name || 'Mia'
-      }
-    }).catch(() => {})
+    await Promise.all([
+      loadSubscriptionInfo().catch(() => {}),
+      loadUnreadConversations().catch(() => {}),
+      api.agents.list().then((res: any) => {
+        if (res.success && res.data?.length > 0) {
+          agentName.value = res.data[0].name || 'Mia'
+        }
+      }).catch(() => {})
+    ])
   }
 
   // Polling conversations (toutes les 30 secondes)

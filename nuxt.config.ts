@@ -53,67 +53,19 @@ export default defineNuxtConfig({
     }
   },
 
-  // ✅ RÈGLES DE ROUTAGE OPTIMISÉES
+  // Règles de routage (SSR désactivé globalement, règles simplifiées)
   routeRules: {
-    '/': { 
-      prerender: false, 
-      ssr: true 
-    },
-    '/login': { 
-      prerender: process.env.NODE_ENV === 'production',
-      ssr: true
-    },
-    '/register': { 
-      prerender: process.env.NODE_ENV === 'production',
-      ssr: true
-    },
-    '/auth/callback': { 
-      prerender: false, 
-      ssr: false,
+    '/auth/callback': {
       headers: { 'X-Robots-Tag': 'noindex' }
     },
-    '/onboarding': { 
-      prerender: false, 
-      ssr: false,
+    '/onboarding': {
       headers: { 'X-Robots-Tag': 'noindex' }
     },
-    '/agent-ia/**': { 
-      prerender: false, 
-      ssr: process.env.NODE_ENV === 'production'
-    },
-    '/conversations/**': { 
-      prerender: false, 
-      ssr: false 
-    },
-    '/orders/**': { 
-      prerender: false, 
-      ssr: false 
-    },
-    '/settings/**': { 
-      prerender: false, 
-      ssr: process.env.NODE_ENV === 'production'
-    },
-    '/billing': { 
-      prerender: false, 
-      ssr: process.env.NODE_ENV === 'production'
-    },
-    '/analytics': { 
-      prerender: false, 
-      ssr: false 
-    },
-    '/knowledge-base/**': { 
-      prerender: false, 
-      ssr: false 
-    },
-    '/products/**': { 
-      prerender: false, 
-      ssr: false 
-    },
-    '/api/**': { 
+    '/api/**': {
       cors: true,
-      headers: { 
-        'Cache-Control': process.env.NODE_ENV === 'production' 
-          ? 'public, max-age=300' 
+      headers: {
+        'Cache-Control': process.env.NODE_ENV === 'production'
+          ? 'public, max-age=300'
           : 'no-cache, no-store, must-revalidate'
       }
     }
@@ -139,7 +91,8 @@ export default defineNuxtConfig({
     }
   ],
 
-  ssr: true,
+  // Dashboard est une SPA interactive derrière auth — SSR n'apporte rien et ralentit
+  ssr: false,
 
   // ✅ CONFIGURATION NITRO FIXÉE POUR VERCEL
   nitro: {

@@ -1,122 +1,67 @@
-// middleware/auth.ts 
+// middleware/auth.ts
+// OPTIMIZED: Uses getSession() (local cache) instead of getUser() (network call)
+// Caches onboarding check in sessionStorage to avoid redundant API calls
 
 import { useSupabase } from "~~/composables/useSupabase"
 import { useAuthStore } from "~~/stores/auth"
 
+const ONBOARDING_CACHE_KEY = 'cs_onboarding_checked'
+
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  console.log('🔒 [AUTH] Middleware auth: Vérification pour route:', to.path)
-  
-  // ✅ NE PAS EXÉCUTER CÔTÉ SERVEUR
-  if (process.server) {
-    console.log('⏭️ [AUTH] Côté serveur, passage...')
-    return
-  }
+  // NE PAS EXÉCUTER CÔTÉ SERVEUR
+  if (process.server) return
 
-  // ✅ ROUTES PUBLIQUES - ACCÈS LIBRE SANS AUTHENTIFICATION
-  const publicRoutes = [
-    '/login', 
-    '/register', 
-    '/auth/callback',
-    '/auth/reset-password',
-    '/reset-password',
-    '/auth/confirm'
-  ]
-  
-  // ✅ ROUTES SEMI-PUBLIQUES - AVEC AUTHENTIFICATION MAIS ACCÈS SPÉCIAL
-  const semiPublicRoutes = [
-    '/onboarding' 
-  ]
-  
-  const isPublicRoute = publicRoutes.some(route => to.path.startsWith(route))
-  const isSemiPublicRoute = semiPublicRoutes.some(route => to.path.startsWith(route))
-  
-  // ✅ LAISSER PASSER LES ROUTES CALLBACK COMPLÈTEMENT
-  if (to.path.startsWith('/auth/')) {
-    console.log('🔗 [AUTH] Route auth - Passage libre total')
-    return
-  }
-  
-  // ✅ LAISSER PASSER LES ROUTES PUBLIQUES
-  if (isPublicRoute) {
-    console.log('✅ [AUTH] Route publique, accès libre:', to.path)
-    return
-  }
+  // ROUTES PUBLIQUES - ACCÈS LIBRE
+  const publicRoutes = ['/login', '/register', '/auth/', '/reset-password']
+  if (publicRoutes.some(route => to.path.startsWith(route))) return
 
-  // 🔐 POUR TOUTES LES AUTRES ROUTES - VÉRIFICATION AUTHENTIFICATION
-  console.log('🔐 [AUTH] Route protégée détectée:', to.path)
-  
+  // ROUTES SEMI-PUBLIQUES
+  const isSemiPublicRoute = to.path.startsWith('/onboarding')
+
   try {
     const authStore = useAuthStore()
     const supabase = useSupabase()
-    
-    // ✅ ÉTAPE 1 : VÉRIFICATION SESSION SUPABASE AVEC RETRY
-    let user = null
-    let sessionError = null
-    
-    try {
-      const { data: { user: currentUser }, error } = await supabase.auth.getUser()
-      user = currentUser
-      sessionError = error
-    } catch (supabaseError) {
-      console.warn('⚠️ [AUTH] Erreur première tentative Supabase, retry...')
-      
-      // Retry une seule fois
-      try {
-        await new Promise(resolve => setTimeout(resolve, 500)) // Attendre 500ms
-        const { data: { user: retryUser }, error: retryError } = await supabase.auth.getUser()
-        user = retryUser
-        sessionError = retryError
-      } catch (retryError) {
-        console.error('❌ [AUTH] Échec après retry Supabase:', retryError)
-        sessionError = retryError
-      }
-    }
-    
-    if (sessionError || !user) {
-      console.log('❌ [AUTH] Pas de session Supabase valide')
+
+    // ÉTAPE 1 : Vérifier session depuis le cache local Supabase (PAS de requête réseau)
+    // getSession() lit depuis le cache mémoire, getUser() fait un appel réseau
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError || !session?.user) {
       authStore.clearAuth()
       return navigateTo('/login')
     }
 
-    console.log('✅ [AUTH] Session Supabase valide pour:', user.email)
-    
-    // ✅ ÉTAPE 2 : SYNCHRONISER STORE SI NÉCESSAIRE (SANS BLOQUER)
+    const user = session.user
+
+    // ÉTAPE 2 : Synchroniser store si nécessaire (non bloquant)
     if (!authStore.isAuthenticated || authStore.user?.id !== user.id) {
-      console.log('🔄 [AUTH] Synchronisation store depuis session Supabase (non bloquante)')
-      
-      // ✅ SYNCHRONISATION NON BLOQUANTE
-      authStore.restoreSession().catch(storeError => {
-        console.warn('⚠️ [AUTH] Erreur synchronisation store (ignorée):', storeError)
-        // Continuer même si le store a des problèmes
-      })
+      authStore.restoreSession().catch(() => {})
     }
 
-    // ✅ ÉTAPE 3 : GESTION ONBOARDING POUR LES ROUTES SEMI-PUBLIQUES
-    if (isSemiPublicRoute) {
-      console.log('✅ [AUTH] Route onboarding, accès autorisé')
-      return
-    }
+    // Routes semi-publiques : accès autorisé
+    if (isSemiPublicRoute) return
 
-    // ✅ VÉRIFICATION EMAIL CONFIRMÉ (SIMPLE)
+    // Vérification email confirmé
     if (!user.email_confirmed_at) {
-      console.log('📧 [AUTH] Email non confirmé, redirection onboarding')
       return navigateTo('/onboarding')
     }
 
-    // ✅ VÉRIFICATION ONBOARDING COMPLÉTÉ VIA API BACKEND
-    // Le client Supabase frontend ne peut pas accéder aux tables (RLS)
-    // On utilise l'API backend qui a le service_key
+    // ÉTAPE 3 : Vérification onboarding AVEC CACHE
+    // Si déjà vérifié dans cette session, ne pas refaire l'appel réseau
+    const onboardingCached = sessionStorage.getItem(ONBOARDING_CACHE_KEY)
+    if (onboardingCached === user.id) {
+      // Déjà vérifié pour cet utilisateur dans cette session
+      return
+    }
+
+    // Première vérification de la session → appel API
+    const token = session.access_token
+    if (!token) {
+      return navigateTo('/login')
+    }
+
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData?.session?.access_token
-
-      if (!token) {
-        console.log('❌ [AUTH] Pas de token pour vérifier onboarding')
-        return navigateTo('/login')
-      }
-
       const config = useRuntimeConfig()
-      // ✅ Utiliser apiBaseUrl (pas apiUrl) et fallback production
       const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
       const response = await fetch(`${apiUrl}/api/v1/shops/${user.id}`, {
@@ -126,9 +71,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         }
       })
 
-      // Si le shop n'existe pas (404) ou erreur (nouvel utilisateur)
       if (!response.ok) {
-        console.log('📋 [AUTH] Shop non trouvé via API (status:', response.status, '), redirection onboarding...')
         return navigateTo('/onboarding')
       }
 
@@ -136,25 +79,17 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       const shopData = shopResponse.data || shopResponse
 
       if (!shopData?.onboarding_completed) {
-        console.log('📋 [AUTH] Onboarding non complété, redirection...')
         return navigateTo('/onboarding')
       }
 
-      console.log('✅ [AUTH] Onboarding complété, accès autorisé')
+      // Cache le résultat pour le reste de la session
+      sessionStorage.setItem(ONBOARDING_CACHE_KEY, user.id)
     } catch (error) {
-      console.warn('⚠️ [AUTH] Erreur vérification onboarding via API:', error)
-      // En cas d'erreur réseau, laisser passer pour éviter de bloquer
-      // L'API backend vérifiera de toute façon
-      console.log('⚠️ [AUTH] Erreur réseau, passage autorisé (backend vérifiera)')
+      console.warn('⚠️ [AUTH] Erreur vérification onboarding, passage autorisé')
     }
-
-    console.log('✅ [AUTH] Accès autorisé à:', to.path)
 
   } catch (error) {
     console.error('❌ [AUTH] Erreur critique middleware:', error)
-    
-    // ✅ EN CAS D'ERREUR CRITIQUE, REDIRIGER VERS LOGIN PAR SÉCURITÉ
-    console.log('🚨 [AUTH] Erreur critique, redirection login par sécurité')
     return navigateTo('/login')
   }
 })
