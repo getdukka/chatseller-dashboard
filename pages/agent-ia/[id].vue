@@ -860,8 +860,7 @@
                   ? 'border-rose-500 bg-rose-50 text-rose-700'
                   : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'"
               >
-                <img v-if="(platform as any).logo" :src="(platform as any).logo" class="h-4 w-auto object-contain mr-1.5 flex-shrink-0" :alt="platform.label" />
-                <span v-else class="mr-1.5">{{ (platform as any).icon }}</span>
+                <span class="mr-1.5">{{ (platform as any).icon }}</span>
                 {{ platform.label }}
               </button>
             </div>
@@ -1480,9 +1479,9 @@ const borderRadiusOptions = [
 ]
 
 const installPlatforms = [
-  { value: 'shopify', label: 'Shopify', logo: shopifyLogo as string },
+  { value: 'shopify', label: 'Shopify', icon: '🛒' },
   { value: 'wordpress', label: 'WordPress', icon: '🔵' },
-  { value: 'woocommerce', label: 'WooCommerce', logo: woocommerceLogo as string },
+  { value: 'woocommerce', label: 'WooCommerce', icon: '📦' },
   { value: 'custom', label: 'Site custom', icon: '💻' }
 ]
 

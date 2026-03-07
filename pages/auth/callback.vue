@@ -17,7 +17,7 @@
           Votre Vendeuse IA vous attend...
         </h2>
         <p class="text-gray-600 mb-4">
-          Nous préparons votre espace Mia
+          Nous préparons votre espace de gestion
         </p>
         <div class="text-sm text-gray-500">
           {{ currentStep }}
@@ -42,7 +42,7 @@
         <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6">
           <p class="text-rose-800 text-sm">
             <strong>{{ isReturningUser ? 'Redirection :' : 'Prochaine étape :' }}</strong>
-            {{ isReturningUser ? 'Vous allez retrouver Mia dans votre espace de gestion' : 'Finalisons ensemble le recrutement de Mia pour votre boutique' }}
+            {{ isReturningUser ? 'Vous allez accéder à votre espace de gestion' : 'Finalisons ensemble le recrutement de Mia pour votre boutique' }}
           </p>
         </div>
         
@@ -121,7 +121,7 @@ const loading = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
-const countdown = ref(3) // ✅ 3 SECONDES
+const countdown = ref(1) // Fast redirect
 const countdownProgress = ref(0)
 const currentStep = ref('Analyse du lien de confirmation...')
 const isReturningUser = ref(false) // ✅ NOUVEAU: Distinguer login vs register
@@ -318,7 +318,6 @@ const processSession = async (session: any) => {
 
     // ✅ ÉTAPE 3: Assurer l'existence du shop beauté AVANT de synchroniser le store
     currentStep.value = '✨ Préparation de votre espace de gestion...'
-    await new Promise(resolve => setTimeout(resolve, 500))
 
     try {
       const shopData = await ensureShopExists(user)
@@ -336,7 +335,6 @@ const processSession = async (session: any) => {
 
     // ✅ ÉTAPE 4: Synchroniser store (maintenant que le shop existe)
     currentStep.value = '💾 Chargement de vos données...'
-    await new Promise(resolve => setTimeout(resolve, 500))
 
     try {
       // ✅ UTILISER fetchCompleteUserData du composable auth
@@ -347,17 +345,18 @@ const processSession = async (session: any) => {
       console.warn('⚠️ [Callback] Erreur store (non critique):', storeError)
     }
 
-    // ✅ FINALISATION
-    currentStep.value = '🚀 Mia est presque prête...'
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    // Nettoyer l'URL
+    // ✅ FINALISATION - Redirect immediately for returning users
     window.history.replaceState({}, '', window.location.pathname)
+    console.log('✅ [Callback] Confirmation terminée')
 
+    // Returning users: skip success screen, redirect immediately
+    if (isReturningUser.value) {
+      return navigateTo('/')
+    }
+
+    // New users: brief success then redirect to onboarding
     loading.value = false
     success.value = true
-
-    console.log('✅ [Callback] Confirmation beauté terminée avec succès')
     startCountdown()
 
   } catch (err: any) {
@@ -401,8 +400,8 @@ onMounted(async () => {
   // ✅ APPROCHE 2: Vérifier si une session existe déjà (fallback)
   currentStep.value = '🔍 Analyse du lien de confirmation...'
 
-  // Attendre un peu pour laisser Supabase traiter l'URL
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  // Brief wait for Supabase to process the URL
+  await new Promise(resolve => setTimeout(resolve, 300))
 
   // Vérifier si la session n'a pas déjà été traitée
   if (!sessionProcessed) {
@@ -476,7 +475,7 @@ const handleError = (err: any) => {
 const startCountdown = () => {
   const interval = setInterval(() => {
     countdown.value--
-    countdownProgress.value = ((3 - countdown.value) / 3) * 100
+    countdownProgress.value = ((1 - countdown.value) / 1) * 100
     
     if (countdown.value <= 0) {
       clearInterval(interval)
