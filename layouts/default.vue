@@ -89,10 +89,8 @@
         </button>
 
         <!-- Mobile logo -->
-        <div class="flex items-center space-x-3">
-          <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-rose-600 to-rose-700 shadow-lg">
-            <span class="text-xs font-bold text-white">CS</span>
-          </div>
+        <div class="flex items-center space-x-2">
+          <img src="/images/logos/fav.svg" alt="ChatSeller" class="h-8 w-8" style="display:block;" />
           <span class="text-lg font-bold text-gray-900">ChatSeller</span>
         </div>
 

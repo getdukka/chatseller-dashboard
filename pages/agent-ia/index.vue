@@ -5,12 +5,11 @@
   créée lors de l'onboarding. Cette page redirige vers sa page de gestion.
 -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 flex items-center justify-center">
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center">
     <!-- État de chargement -->
     <div v-if="loading" class="text-center">
-      <div class="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-rose-200 border-t-rose-500 animate-spin"></div>
-      <p class="text-gray-600 font-medium">Chargement de la page...</p>
-      <p class="text-sm text-gray-500 mt-2">Un instant s'il vous plaît</p>
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full border-4 border-gray-200 border-t-gray-900 animate-spin"></div>
+      <p class="text-gray-500 text-sm">Chargement...</p>
     </div>
 
     <!-- État d'erreur : pas d'agent trouvé -->
