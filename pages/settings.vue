@@ -3,7 +3,7 @@
   <div class="min-h-screen bg-gray-50/50">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200">
-      <div class="px-6 lg:px-8 py-5">
+      <div class="px-4 sm:px-6 lg:px-8 py-5">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-xl font-semibold text-gray-900">Paramètres</h1>
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Content -->
-    <div class="px-6 lg:px-8 py-6">
+    <div class="px-4 sm:px-6 lg:px-8 py-6">
       <!-- Tabs Navigation -->
       <div class="border-b border-gray-200 mb-8">
         <nav class="-mb-px flex space-x-8">

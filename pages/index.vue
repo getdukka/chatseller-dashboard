@@ -339,7 +339,7 @@
                       @click="navigateToTestAgent"
                       class="px-4 py-2 text-sm font-medium rounded-lg btn-brand-primary"
                     >
-                      Tester
+                      Tester {{ agentInfo?.name || 'Mia' }}
                     </button>
                     <button
                       @click="navigateToAgentDetail"
@@ -357,7 +357,7 @@
                   @click="navigateToTestAgent"
                   class="flex-1 py-2 text-sm font-medium rounded-lg btn-brand-primary text-center"
                 >
-                  Tester
+                  Tester {{ agentInfo?.name || 'Mia' }}
                 </button>
                 <button
                   @click="navigateToAgentDetail"
@@ -948,6 +948,10 @@ const loadConversations = async () => {
 
 const loadOrders = async () => {
   try {
+    const response = await api.orders.list()
+    if (response.success && response.data) {
+      return response.data
+    }
     return []
   } catch (error) {
     console.error('[Dashboard] Erreur chargement commandes:', error)

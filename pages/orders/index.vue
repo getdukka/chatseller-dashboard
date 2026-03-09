@@ -3,7 +3,7 @@
   <div class="min-h-screen bg-gray-50/50">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200">
-      <div class="px-6 lg:px-8 py-5">
+      <div class="px-4 sm:px-6 lg:px-8 py-5">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-xl font-semibold text-gray-900">Commandes</h1>
@@ -13,7 +13,7 @@
           </div>
 
           <!-- Actions Header -->
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center flex-wrap gap-2">
             <button
               @click="handleExportOrders"
               :disabled="exporting"
@@ -47,9 +47,9 @@
     </div>
 
     <!-- Content -->
-    <div class="px-6 lg:px-8 py-6">
+    <div class="px-4 sm:px-6 lg:px-8 py-6">
       <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- Total Commandes -->
         <div class="bg-white rounded-xl border border-gray-200 p-5">
           <div class="flex items-center justify-between">

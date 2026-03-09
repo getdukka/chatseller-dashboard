@@ -12,7 +12,7 @@
             <p class="mt-1 text-sm text-gray-600">
               Performances de {{ getAnalyticsTitle() }}
               <span v-if="planDetails.code === 'starter'" class="ml-2 text-xs bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full border border-gray-200">
-                {{ agentName }} Découverte
+                {{ agentName }} Découverte · Plan actuel
               </span>
             </p>
           </div>
@@ -351,7 +351,7 @@
               Débloquez les Analytics Avancées
             </h3>
             <p class="text-gray-600 mb-4 text-sm">
-              Passez au Plan Growth pour accéder aux insights détaillés, analyses de tendances, profils clients et métriques avancées.
+              Passez {{ agentName }} en Pro pour accéder aux insights détaillés, analyses de tendances, profils clients et métriques avancées.
             </p>
             <div class="flex flex-wrap gap-2 mb-6">
               <span class="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-700">Tendances saisonnières</span>

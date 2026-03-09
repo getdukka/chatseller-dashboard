@@ -3,7 +3,7 @@
   <div class="min-h-screen bg-gray-50/50">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200">
-      <div class="px-6 lg:px-8 py-5">
+      <div class="px-4 sm:px-6 lg:px-8 py-5">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-xl font-semibold text-gray-900">Produits</h1>
@@ -12,7 +12,7 @@
             </p>
           </div>
 
-          <div class="flex items-center space-x-2">
+          <div class="flex items-center flex-wrap gap-2">
             <button
               v-if="hasProducts"
               @click="handleExport"
@@ -39,7 +39,7 @@
     </div>
 
     <!-- Content -->
-    <div class="px-6 lg:px-8 py-6">
+    <div class="px-4 sm:px-6 lg:px-8 py-6">
 
       <!-- Sync Status Banner -->
       <div v-if="syncing" class="mb-6 bg-white border border-blue-200 rounded-xl p-5">

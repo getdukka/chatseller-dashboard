@@ -14,6 +14,7 @@
         :userSubscriptionActive="subscriptionInfo.isActive"
         :trialDaysLeft="subscriptionInfo.trialDaysLeft"
         :agentName="agentName"
+        :agentId="agentId"
         @toggle-profile="toggleProfileMenu"
         @close-profile="closeProfileMenu"
         @logout="handleLogout"
@@ -50,6 +51,7 @@
             :userSubscriptionActive="subscriptionInfo.isActive"
             :trialDaysLeft="subscriptionInfo.trialDaysLeft"
             :agentName="agentName"
+            :agentId="agentId"
             :isMobile="true"
             @toggle-profile="toggleProfileMenu"
             @close-profile="closeProfileMenu"
@@ -189,7 +191,7 @@
                   <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
-                  {{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName} Découverte` }}
+                  {{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réembaucher ${agentName}` }}
                 </button>
 
                 <button
@@ -270,6 +272,7 @@ const showProfileMenu = ref(false)
 const showMobileProfileMenu = ref(false)
 const upgradingToPlan = ref<'starter' | 'growth' | null>(null)
 const agentName = ref('Mia')
+const agentId = ref<string | null>(null)
 
 // État pour les conversations non lues
 const unreadConversationsCount = ref(0)
@@ -496,6 +499,7 @@ onMounted(async () => {
       api.agents.list().then((res: any) => {
         if (res.success && res.data?.length > 0) {
           agentName.value = res.data[0].name || 'Mia'
+          agentId.value = res.data[0].id || null
         }
       }).catch(() => {})
     ])

@@ -3,7 +3,7 @@
   <div class="min-h-screen bg-gray-50/50">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200">
-      <div class="px-6 lg:px-8 py-5">
+      <div class="px-4 sm:px-6 lg:px-8 py-5">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-xl font-semibold text-gray-900">
@@ -14,7 +14,7 @@
             </p>
           </div>
 
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center flex-wrap gap-2">
             <button
               @click="handleBulkImport"
               :disabled="loading || saving"
@@ -42,7 +42,7 @@
     </div>
 
     <!-- Content -->
-    <div class="px-6 lg:px-8 py-6">
+    <div class="px-4 sm:px-6 lg:px-8 py-6">
       <!-- Training Status Banner -->
       <div v-if="saving || uploadProgress > 0" class="mb-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
         <div class="flex items-center">
@@ -65,7 +65,7 @@
       </div>
 
       <!-- Statistics Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="stats-card">
           <div class="stats-icon bg-blue-50 text-blue-600">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
