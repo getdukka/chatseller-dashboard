@@ -1,32 +1,31 @@
-<!-- components/SidebarLink.vue - VERSION ULTRA SIMPLIFIÉE -->
+<!-- components/SidebarLink.vue -->
 <template>
   <NuxtLink
     :to="to"
-    class="sidebar-link group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200"
+    class="sidebar-link group flex items-center rounded-lg px-3 py-2.5 text-sm transition-all duration-150"
     :class="linkClasses"
     :aria-current="isActive ? 'page' : undefined"
     @click="handleLinkClick"
   >
     <!-- Icon -->
     <svg
-      class="mr-3 h-5 w-5 transition-colors duration-200"
+      class="mr-3 h-[18px] w-[18px] transition-colors duration-150 flex-shrink-0"
       :class="iconClasses"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
-      stroke-width="2"
+      stroke-width="1.75"
     >
       <path stroke-linecap="round" stroke-linejoin="round" :d="icon" />
     </svg>
 
     <!-- Label -->
-    <span class="flex-1 font-medium">{{ label }}</span>
+    <span class="flex-1 truncate">{{ label }}</span>
 
     <!-- Badge (notifications) -->
     <span
       v-if="badge && badge > 0"
-      class="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full min-w-[20px] h-5 animate-pulse"
-      :aria-label="`${badge} notification${badge > 1 ? 's' : ''}`"
+      class="ml-auto inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold leading-none text-white bg-rose-500 rounded-full"
     >
       {{ badge > 99 ? '99+' : badge }}
     </span>
@@ -36,7 +35,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// ✅ INTERFACE PROPS SIMPLIFIÉE
 interface Props {
   to: string
   icon: string
@@ -47,70 +45,49 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// ✅ ÉMIT SIMPLIFIÉ
 const emit = defineEmits<{
   click: [event: Event]
 }>()
 
-// ✅ COMPUTED CLASSES OPTIMISÉES - VERSION SIMPLIFIÉE
 const linkClasses = computed(() => {
-  const baseClasses = 'w-full min-h-[44px] hover:scale-[1.02] active:scale-[0.98]'
-
   if (props.isActive) {
-    // Style simplifié pour lien actif: fond rose léger + texte rose, sans bordure
-    return `${baseClasses} bg-rose-50 text-rose-700`
+    return 'sidebar-link-active font-medium'
   }
-
-  return `${baseClasses} text-gray-600 hover:bg-gray-50 hover:text-gray-900`
+  return 'text-gray-600 hover:text-[var(--color-brand-rose)] hover:bg-[var(--color-primary-light)]'
 })
 
 const iconClasses = computed(() => {
   if (props.isActive) {
-    return 'text-rose-600'
+    return 'text-[var(--color-brand-rose)]'
   }
-
-  return 'text-gray-400 group-hover:text-gray-600'
+  return 'text-gray-400 group-hover:text-[var(--color-brand-rose)]'
 })
 
-// ✅ GESTIONNAIRE CLICK ULTRA SIMPLIFIÉ
 const handleLinkClick = () => {
-  // Simplement émettre l'événement pour fermer les menus
-  // NuxtLink gère automatiquement la navigation
   emit('click', new Event('click'))
 }
 </script>
 
 <style scoped>
-/* STYLES ULTRA SIMPLIFIÉS - FOCUS SUR LA NAVIGATION */
 .sidebar-link {
   text-decoration: none;
   cursor: pointer;
 }
 
-.sidebar-link:hover {
-  text-decoration: none;
+.sidebar-link-active {
+  background-color: var(--color-primary-light);
+  color: var(--color-brand-rose);
+  border-left: 3px solid var(--color-brand-rose);
 }
 
-.sidebar-link:focus {
-  outline: 2px solid rgb(244 63 94);
+.sidebar-link:focus-visible {
+  outline: 2px solid var(--color-brand-rose);
   outline-offset: 2px;
 }
 
-/* MOBILE OPTIMISATION */
 @media (max-width: 1023px) {
   .sidebar-link {
-    min-height: 48px;
-    padding: 0.875rem 1rem;
+    min-height: 44px;
   }
-}
-
-/* BADGE ANIMATION */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

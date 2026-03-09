@@ -1,19 +1,19 @@
 <!-- pages/orders/index.vue -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
-    <!-- Header Modern -->
-    <div class="bg-white shadow-sm border-b border-gray-200">
-      <div class="px-8 py-6">
+  <div class="min-h-screen bg-gray-50/50">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200">
+      <div class="px-6 lg:px-8 py-5">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900">Commandes</h1>
-            <p class="mt-2 text-gray-600">
-              Gérez toutes les commandes générées par {{ agentName }}
+            <h1 class="text-xl font-semibold text-gray-900">Commandes</h1>
+            <p class="mt-1 text-sm text-gray-500">
+              Commandes générées par {{ agentName }}
             </p>
           </div>
 
           <!-- Actions Header -->
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
             <button
               @click="handleExportOrders"
               :disabled="exporting"
@@ -28,7 +28,7 @@
             <button
               @click="refreshOrders"
               :disabled="loading"
-              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-rose-700 hover:to-pink-700 disabled:opacity-50 transition-all"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg btn-brand-primary disabled:opacity-50"
             >
               <svg
                 class="w-4 h-4 mr-2"
@@ -47,21 +47,19 @@
     </div>
 
     <!-- Content -->
-    <div class="p-8">
+    <div class="px-6 lg:px-8 py-6">
       <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <!-- Total Commandes -->
-        <div class="card-beauty-gradient from-blue-500 to-blue-600">
-          <div class="flex items-center justify-between text-white">
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center justify-between">
             <div>
-              <p class="text-blue-100 text-sm font-medium">Total commandes</p>
-              <p class="text-3xl font-bold">{{ stats.totalOrders }}</p>
-              <p class="text-blue-100 text-sm mt-1">
-                Ce mois-ci
-              </p>
+              <p class="text-sm font-medium text-gray-500">Total commandes</p>
+              <p class="text-2xl font-semibold text-gray-900 mt-1">{{ stats.totalOrders }}</p>
+              <p class="text-xs text-gray-400 mt-1">Ce mois-ci</p>
             </div>
-            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
             </div>
@@ -69,17 +67,15 @@
         </div>
 
         <!-- Revenus Totaux -->
-        <div class="card-beauty-gradient from-green-500 to-green-600">
-          <div class="flex items-center justify-between text-white">
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center justify-between">
             <div>
-              <p class="text-green-100 text-sm font-medium">Revenus totaux</p>
-              <p class="text-3xl font-bold">{{ formatCurrency(stats.totalRevenue, shopCurrency) }}</p>
-              <p class="text-green-100 text-sm mt-1">
-                +{{ stats.revenueGrowth }}% vs mois dernier
-              </p>
+              <p class="text-sm font-medium text-gray-500">Revenus totaux</p>
+              <p class="text-2xl font-semibold text-gray-900 mt-1">{{ formatCurrency(stats.totalRevenue, shopCurrency) }}</p>
+              <p class="text-xs text-gray-400 mt-1">+{{ stats.revenueGrowth }}% vs mois dernier</p>
             </div>
-            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
               </svg>
             </div>
@@ -87,17 +83,15 @@
         </div>
 
         <!-- Panier Moyen -->
-        <div class="card-beauty-gradient from-amber-500 to-orange-500">
-          <div class="flex items-center justify-between text-white">
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center justify-between">
             <div>
-              <p class="text-orange-100 text-sm font-medium">Panier moyen</p>
-              <p class="text-3xl font-bold">{{ formatCurrency(stats.averageOrderValue, shopCurrency) }}</p>
-              <p class="text-orange-100 text-sm mt-1">
-                Par commande
-              </p>
+              <p class="text-sm font-medium text-gray-500">Panier moyen</p>
+              <p class="text-2xl font-semibold text-gray-900 mt-1">{{ formatCurrency(stats.averageOrderValue, shopCurrency) }}</p>
+              <p class="text-xs text-gray-400 mt-1">Par commande</p>
             </div>
-            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
               </svg>
             </div>
@@ -105,17 +99,15 @@
         </div>
 
         <!-- En Attente -->
-        <div class="card-beauty-gradient from-purple-500 to-purple-600">
-          <div class="flex items-center justify-between text-white">
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center justify-between">
             <div>
-              <p class="text-purple-100 text-sm font-medium">En attente</p>
-              <p class="text-3xl font-bold">{{ stats.pendingOrders }}</p>
-              <p class="text-purple-100 text-sm mt-1">
-                Nécessitent une action
-              </p>
+              <p class="text-sm font-medium text-gray-500">En attente</p>
+              <p class="text-2xl font-semibold text-gray-900 mt-1">{{ stats.pendingOrders }}</p>
+              <p class="text-xs text-gray-400 mt-1">Nécessitent une action</p>
             </div>
-            <div class="p-3 bg-white bg-opacity-20 rounded-xl">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
@@ -124,7 +116,7 @@
       </div>
 
       <!-- Search & Filters -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -135,7 +127,7 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="ID commande, nom client, email..."
-                class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
               />
               <svg
                 class="absolute left-3 top-3 w-4 h-4 text-gray-400"
@@ -154,7 +146,7 @@
             </label>
             <select
               v-model="filters.status"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
             >
               <option value="">Tous les statuts</option>
               <option value="pending">En attente</option>
@@ -168,10 +160,10 @@
       </div>
 
       <!-- Orders Table -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div class="bg-white rounded-xl border border-gray-200">
         <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">
+            <h3 class="text-sm font-semibold text-gray-900">
               Liste des commandes
             </h3>
             <span class="text-sm text-gray-500">
@@ -183,7 +175,7 @@
         <!-- Loading State -->
         <div v-if="loading" class="p-12">
           <div class="flex items-center justify-center">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             <span class="ml-3 text-gray-600">Chargement des commandes...</span>
           </div>
         </div>
@@ -199,7 +191,7 @@
           <p class="text-gray-600 mb-4">{{ error }}</p>
           <button
             @click="refreshOrders"
-            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-lg hover:from-rose-700 hover:to-pink-700 transition-all"
+            class="inline-flex items-center px-4 py-2 rounded-lg btn-brand-primary"
           >
             Réessayer
           </button>
@@ -207,13 +199,23 @@
 
         <!-- Empty State -->
         <div v-else-if="filteredOrders.length === 0" class="p-12 text-center">
-          <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-          </svg>
-          <h3 class="mt-4 text-lg font-medium text-gray-900">Aucune commande</h3>
-          <p class="mt-2 text-gray-600">
+          <div class="mx-auto w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+            <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900">Aucune commande</h3>
+          <p class="mt-2 text-gray-500 text-sm max-w-sm mx-auto">
             {{ orders.length === 0 ? 'Les nouvelles commandes apparaîtront ici' : 'Aucune commande ne correspond à vos filtres' }}
           </p>
+
+          <!-- Guidance card -->
+          <div v-if="orders.length === 0" class="mt-6 bg-gray-900 rounded-xl p-5 max-w-md mx-auto text-left">
+            <h4 class="text-white text-sm font-semibold mb-2">Comment les commandes arrivent-elles ?</h4>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Lorsqu'un visiteur passe commande via le chat avec {{ agentName }}, elle apparaît automatiquement ici. Vous pouvez ensuite confirmer, expédier et suivre chaque commande.
+            </p>
+          </div>
         </div>
 
         <!-- Table -->
@@ -404,7 +406,7 @@
                 :key="i"
                 class="flex items-center justify-between text-sm"
               >
-                <span class="text-gray-900">{{ item.name || item.productName || 'Produit' }} × {{ item.quantity || 1 }}</span>
+                <span class="text-gray-900">{{ item.name || item.productName || 'Produit' }} x {{ item.quantity || 1 }}</span>
                 <span class="text-gray-700 font-medium">{{ formatCurrency((item.price || 0) * (item.quantity || 1), selectedOrder.currency || shopCurrency) }}</span>
               </div>
             </div>
@@ -443,7 +445,7 @@
             <button
               v-if="selectedOrder.status === 'confirmed'"
               @click="updateOrderStatus(selectedOrder, 'shipped'); closeOrderDetail()"
-              class="flex-1 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+              class="flex-1 px-4 py-2 text-sm font-medium rounded-lg btn-brand-primary"
             >
               Marquer comme expédiée
             </button>
@@ -464,7 +466,7 @@
           </div>
           <button
             @click="closeOrderDetail"
-            class="w-full px-4 py-2 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
+            class="w-full px-4 py-2 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
           >
             Fermer
           </button>
@@ -904,8 +906,14 @@ useHead({
 </script>
 
 <style scoped>
-.card-beauty-gradient {
-  @apply bg-gradient-to-br rounded-xl shadow-lg p-6 text-white;
+.btn-brand-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-brand-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(234, 66, 66, 0.25);
 }
 
 @keyframes spin {

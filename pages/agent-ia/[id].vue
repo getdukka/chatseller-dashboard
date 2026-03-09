@@ -1,9 +1,9 @@
 <!-- pages/agent-ia/[id].vue - VERSION MVP REFONTE -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
+  <div class="min-h-screen bg-gray-50/50">
 
     <!-- ========== HEADER MOBILE-FRIENDLY ========== -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-rose-100 shadow-sm">
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-200">
       <div class="px-4 py-3 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between">
           <!-- Retour + Avatar + Nom -->
@@ -19,7 +19,7 @@
             </button>
 
             <div class="relative flex-shrink-0">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-rose-200 bg-gradient-to-br from-rose-400 to-pink-500">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-900">
                 <img
                   v-if="localConfig.agent.avatar"
                   :src="localConfig.agent.avatar"
@@ -50,7 +50,7 @@
           <button
             @click="saveConfiguration"
             :disabled="saving || !hasChanges"
-            class="flex items-center px-3 py-2 sm:px-4 text-sm font-medium text-white bg-gradient-to-r from-rose-500 to-pink-500 rounded-lg hover:from-rose-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+            class="flex items-center px-3 py-2 sm:px-4 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <svg v-if="saving" class="w-4 h-4 mr-1.5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -99,7 +99,7 @@
     <!-- ========== LOADING STATE ========== -->
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
-        <div class="w-12 h-12 mx-auto mb-4 rounded-full border-4 border-rose-200 border-t-rose-500 animate-spin"></div>
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full border-4 border-gray-200 border-t-gray-900 animate-spin"></div>
         <p class="text-gray-600">Préparation de {{ localConfig.agent.name || 'Mia' }}...</p>
       </div>
     </div>
@@ -109,14 +109,14 @@
 
       <!-- Navigation Tabs - Mobile: Fixed bottom, Desktop: Top -->
       <nav class="hidden sm:block px-4 sm:px-6 lg:px-8 py-4">
-        <div class="flex space-x-1 bg-white/80 backdrop-blur-sm rounded-xl p-1 shadow-sm border border-rose-100 max-w-2xl mx-auto">
+        <div class="flex space-x-1 bg-white rounded-xl p-1 shadow-sm border border-gray-200 max-w-2xl mx-auto">
           <button
             v-for="tab in tabs"
             :key="tab.id"
             @click="activeTab = tab.id"
             class="flex-1 flex items-center justify-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all"
             :class="activeTab === tab.id
-              ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-sm'
+              ? 'tab-active text-white shadow-sm'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'"
           >
             <span class="mr-2">{{ tab.icon }}</span>
@@ -134,7 +134,7 @@
             @click="activeTab = tab.id"
             class="flex flex-col items-center px-3 py-1.5 rounded-lg transition-colors min-w-[70px]"
             :class="activeTab === tab.id
-              ? 'text-rose-600 bg-rose-50'
+              ? 'text-gray-900 bg-gray-100'
               : 'text-gray-500'"
           >
             <span class="text-lg mb-0.5">{{ tab.icon }}</span>
@@ -148,7 +148,7 @@
 
         <!-- Card: Identité -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">👩‍💼</span>
               L'identité de {{ localConfig.agent.name || 'Mia' }}
@@ -160,7 +160,7 @@
             <div class="flex items-center space-x-4">
               <div
                 @click="triggerAvatarUpload"
-                class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden cursor-pointer group border-3 border-rose-200 shadow-md flex-shrink-0"
+                class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden cursor-pointer group border-2 border-gray-200 shadow-sm flex-shrink-0"
               >
                 <img
                   v-if="localConfig.agent.avatar"
@@ -168,7 +168,7 @@
                   :alt="localConfig.agent.name"
                   class="w-full h-full object-cover"
                 />
-                <div v-else class="w-full h-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold text-2xl">
+                <div v-else class="w-full h-full bg-gray-900 flex items-center justify-center text-white font-bold text-2xl">
                   {{ (localConfig.agent.name || 'C').charAt(0).toUpperCase() }}
                 </div>
                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -195,7 +195,7 @@
                   @input="markAsChanged"
                   type="text"
                   placeholder="Ex: Sophie, Amara, Fatou..."
-                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
+                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
                 />
               </div>
             </div>
@@ -210,7 +210,7 @@
                 @input="markAsChanged"
                 type="text"
                 placeholder="Ex: Experte skincare, Vendeuse maquillage..."
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
               />
             </div>
 
@@ -226,7 +226,7 @@
                   @click="selectPersonality(personality.value)"
                   class="p-3 sm:p-4 border-2 rounded-xl text-left transition-all"
                   :class="localConfig.agent.personality === personality.value
-                    ? 'border-rose-500 bg-rose-50'
+                    ? 'border-gray-900 bg-gray-50'
                     : 'border-gray-200 hover:border-gray-300 bg-white'"
                 >
                   <span class="text-xl sm:text-2xl block mb-1">{{ personality.icon }}</span>
@@ -240,7 +240,7 @@
 
         <!-- Card: Message d'accueil -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">💬</span>
               Message d'accueil
@@ -257,14 +257,14 @@
               @input="markAsChanged"
               rows="3"
               :placeholder="getWelcomePlaceholder()"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 resize-none transition-colors"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 resize-none transition-colors"
             ></textarea>
           </div>
         </div>
 
         <!-- Card: Base de connaissances -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <div class="flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
                 <span class="mr-2">📚</span>
@@ -283,7 +283,7 @@
 
             <button
               @click="showKnowledgeModal = true"
-              class="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all flex items-center justify-center"
+              class="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -298,8 +298,8 @@
                 :key="doc.id"
                 class="flex items-center p-2 bg-gray-50 rounded-lg"
               >
-                <div class="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                  <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
                 </div>
@@ -321,8 +321,8 @@
             </div>
             <button
               @click="toggleActive"
-              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
-              :class="localConfig.agent.isActive ? 'bg-rose-500' : 'bg-gray-200'"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+              :class="localConfig.agent.isActive ? 'bg-gray-900' : 'bg-gray-200'"
             >
               <span
                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
@@ -338,7 +338,7 @@
 
         <!-- Card: Texte du bouton -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">✏️</span>
               Texte du bouton
@@ -351,14 +351,14 @@
               @input="markAsChanged"
               type="text"
               placeholder="Parler à la conseillère"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
             />
           </div>
         </div>
 
         <!-- Card: Couleur principale -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">🎨</span>
               Couleur principale
@@ -395,7 +395,7 @@
 
         <!-- Card: Style des bordures -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">⬜</span>
               Style des bordures du bouton
@@ -411,7 +411,7 @@
                 @click="selectBorderRadius(radius.value)"
                 class="p-3 border-2 rounded-xl text-center transition-all"
                 :class="localConfig.widget.borderRadius === radius.value
-                  ? 'border-rose-500 bg-rose-50'
+                  ? 'border-gray-900 bg-gray-50'
                   : 'border-gray-200 hover:border-gray-300'"
               >
                 <div
@@ -429,7 +429,7 @@
 
         <!-- Card: Position -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">📍</span>
               Position du bouton
@@ -446,7 +446,7 @@
                   @click="selectPosition(pos.value)"
                   class="p-3 border-2 rounded-xl text-center transition-all"
                   :class="localConfig.widget.position === pos.value
-                    ? 'border-rose-500 bg-rose-50'
+                    ? 'border-gray-900 bg-gray-50'
                     : 'border-gray-200 hover:border-gray-300'"
                 >
                   <span class="text-sm font-medium text-gray-900">{{ pos.label }}</span>
@@ -463,7 +463,7 @@
                   @click="selectFloatingPosition(pos.value)"
                   class="p-3 border-2 rounded-xl text-center transition-all"
                   :class="localConfig.widget.floatingPosition === pos.value
-                    ? 'border-rose-500 bg-rose-50'
+                    ? 'border-gray-900 bg-gray-50'
                     : 'border-gray-200 hover:border-gray-300'"
                 >
                   <span class="text-sm font-medium text-gray-900">{{ pos.label }}</span>
@@ -475,7 +475,7 @@
 
         <!-- Card: Aperçu -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">👁️</span>
               Aperçu
@@ -499,7 +499,7 @@
                   {{ localConfig.widget.buttonText || 'Parler à une vendeuse' }}
                 </button>
 
-                <button class="w-full py-2.5 px-4 bg-gray-900 text-white font-medium rounded-lg text-sm">
+                <button class="w-full py-2.5 px-4 text-white font-medium rounded-lg text-sm btn-brand-primary">
                   Ajouter au panier
                 </button>
 
@@ -531,10 +531,12 @@
       <section v-show="activeTab === 'test'" class="px-4 sm:px-6 lg:px-8 py-4 space-y-4 sm:space-y-6 max-w-4xl mx-auto">
 
         <!-- Info -->
-        <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-4 sm:p-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-6">
           <div class="flex items-start space-x-3">
-            <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <span class="text-xl">🧪</span>
+            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+              </svg>
             </div>
             <div>
               <h3 class="font-semibold text-gray-900">Testez {{ localConfig.agent.name || 'Mia' }}</h3>
@@ -749,7 +751,7 @@
 
         <!-- Card: Tutoriel vidéo -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">▶️</span>
               Tutoriel d'installation
@@ -795,7 +797,7 @@
 
         <!-- Card: Code d'intégration -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">🔧</span>
               Code d'intégration
@@ -829,7 +831,7 @@
             <!-- Bouton envoyer au développeur -->
             <button
               @click="showSendDevModal = true"
-              class="mt-4 w-full flex items-center justify-center px-4 py-2.5 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-sm font-medium transition-colors"
+              class="mt-4 w-full flex items-center justify-center px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm font-medium transition-colors"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -841,7 +843,7 @@
 
         <!-- Card: Instructions par plateforme -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-rose-100 to-pink-100">
+          <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 bg-gray-50">
             <h2 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <span class="mr-2">📋</span>
               Guide d'installation par plateforme
@@ -857,7 +859,7 @@
                 @click="activePlatform = platform.value"
                 class="flex items-center px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all"
                 :class="activePlatform === platform.value
-                  ? 'border-rose-500 bg-rose-50 text-rose-700'
+                  ? 'border-gray-900 bg-gray-50 text-gray-900'
                   : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'"
               >
                 <span class="mr-1.5">{{ (platform as any).icon }}</span>
@@ -868,28 +870,28 @@
             <!-- Instructions Shopify -->
             <ol v-if="activePlatform === 'shopify'" class="space-y-4">
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
                 <div>
                   <p class="font-medium text-gray-900">Copiez le code d'intégration</p>
                   <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier" dans le bloc ci-dessus</p>
                 </div>
               </li>
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
                 <div>
                   <p class="font-medium text-gray-900">Accédez à l'éditeur de thème Shopify</p>
                   <p class="text-sm text-gray-500">Dans votre admin Shopify : <strong>Boutique en ligne → Thèmes → Actions → Modifier le code</strong></p>
                 </div>
               </li>
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
                 <div>
                   <p class="font-medium text-gray-900">Ouvrez le fichier <code class="bg-gray-100 px-1 rounded text-xs">theme.liquid</code></p>
                   <p class="text-sm text-gray-500">Dans la colonne de gauche, sous "Layout", cliquez sur <strong>theme.liquid</strong></p>
                 </div>
               </li>
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">4</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">4</span>
                 <div>
                   <p class="font-medium text-gray-900">Collez le code avant <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code></p>
                   <p class="text-sm text-gray-500">Trouvez la balise <strong>&lt;/body&gt;</strong> en bas du fichier et collez le code juste avant</p>
@@ -907,28 +909,28 @@
             <!-- Instructions WordPress -->
             <ol v-else-if="activePlatform === 'wordpress'" class="space-y-4">
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
                 <div>
                   <p class="font-medium text-gray-900">Copiez le code d'intégration</p>
                   <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier" dans le bloc ci-dessus</p>
                 </div>
               </li>
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
                 <div>
                   <p class="font-medium text-gray-900">Accédez à l'éditeur de thème</p>
                   <p class="text-sm text-gray-500">Dans votre admin WordPress : <strong>Apparence → Éditeur de thème</strong> (ou Éditeur de fichiers du thème)</p>
                 </div>
               </li>
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
                 <div>
                   <p class="font-medium text-gray-900">Ouvrez le fichier <code class="bg-gray-100 px-1 rounded text-xs">footer.php</code></p>
                   <p class="text-sm text-gray-500">Dans la liste des fichiers à droite, cliquez sur <strong>footer.php</strong></p>
                 </div>
               </li>
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">4</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">4</span>
                 <div>
                   <p class="font-medium text-gray-900">Collez le code avant <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code></p>
                   <p class="text-sm text-gray-500">Trouvez <strong>&lt;/body&gt;</strong> dans le fichier et collez le code juste avant</p>
@@ -991,21 +993,21 @@
             <!-- Instructions Site custom -->
             <ol v-else-if="activePlatform === 'custom'" class="space-y-4">
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
                 <div>
                   <p class="font-medium text-gray-900">Copiez le code d'intégration</p>
                   <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier" dans le bloc ci-dessus</p>
                 </div>
               </li>
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
                 <div>
                   <p class="font-medium text-gray-900">Ouvrez votre fichier de template principal</p>
                   <p class="text-sm text-gray-500">C'est souvent <code class="bg-gray-100 px-1 rounded text-xs">index.html</code>, <code class="bg-gray-100 px-1 rounded text-xs">base.html</code> ou <code class="bg-gray-100 px-1 rounded text-xs">layout.html</code> selon votre framework</p>
                 </div>
               </li>
               <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
+                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
                 <div>
                   <p class="font-medium text-gray-900">Collez le code avant <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code></p>
                   <p class="text-sm text-gray-500">Trouvez la balise <strong>&lt;/body&gt;</strong> et collez le code juste avant — sur toutes les pages de votre site</p>
@@ -1092,7 +1094,7 @@
                   <p class="text-sm text-gray-500 mt-1">Créez des documents dans votre base de connaissances</p>
                   <NuxtLink
                     to="/knowledge-base"
-                    class="inline-flex items-center mt-4 px-4 py-2 bg-rose-500 text-white text-sm font-medium rounded-lg hover:bg-rose-600"
+                    class="inline-flex items-center mt-4 px-4 py-2 text-sm font-medium rounded-lg btn-brand-primary"
                   >
                     Créer un document
                   </NuxtLink>
@@ -1103,14 +1105,14 @@
                     v-for="doc in availableDocuments"
                     :key="doc.id"
                     class="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
-                    :class="{ 'border-rose-500 bg-rose-50': selectedDocuments.includes(doc.id) }"
+                    :class="{ 'border-gray-900 bg-gray-50': selectedDocuments.includes(doc.id) }"
                   >
                     <input
                       type="checkbox"
                       :value="doc.id"
                       v-model="selectedDocuments"
                       @change="markAsChanged"
-                      class="w-4 h-4 text-rose-500 border-gray-300 rounded focus:ring-rose-500"
+                      class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
                     />
                     <div class="ml-3 flex-1 min-w-0">
                       <p class="text-sm font-medium text-gray-900 truncate">{{ doc.title }}</p>
@@ -1130,7 +1132,7 @@
                 <button
                   @click="saveKnowledgeSelection"
                   :disabled="savingKnowledge"
-                  class="px-4 py-2 text-sm font-medium text-white bg-rose-500 rounded-lg hover:bg-rose-600 disabled:opacity-50"
+                  class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50"
                 >
                   {{ savingKnowledge ? 'Sauvegarde...' : 'Appliquer' }}
                 </button>
@@ -1180,7 +1182,7 @@
                   v-model="devEmail"
                   type="email"
                   placeholder="dev@exemple.com"
-                  class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-500"
                   @keyup.enter="sendToDeveloper"
                 />
                 <p class="text-xs text-gray-400 mt-2">
@@ -1198,7 +1200,7 @@
                 <button
                   @click="sendToDeveloper"
                   :disabled="!devEmail.trim()"
-                  class="px-4 py-2 text-sm font-medium text-white bg-rose-500 rounded-lg hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center"
+                  class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center"
                 >
                   <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -1218,8 +1220,6 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
-import shopifyLogo from '~/assets/images/logos/shopify.svg'
-import woocommerceLogo from '~/assets/images/logos/woocommerce.svg'
 
 // Page metadata
 definePageMeta({
@@ -1485,10 +1485,6 @@ const installPlatforms = [
   { value: 'custom', label: 'Site custom', icon: '💻' }
 ]
 
-const availableVariables = [
-  { name: '{nomConseillere}', display: 'Prénom' },
-  { name: '{nomMarque}', display: 'Nom marque' }
-]
 
 // Methods
 const goBack = () => {
@@ -1551,11 +1547,6 @@ const selectBorderRadius = (radius: string) => {
 
 const toggleActive = () => {
   localConfig.value.agent.isActive = !localConfig.value.agent.isActive
-  markAsChanged()
-}
-
-const insertVariable = (variable: string) => {
-  localConfig.value.agent.welcomeMessage += ` ${variable}`
   markAsChanged()
 }
 
@@ -1878,6 +1869,20 @@ useHead({
 </script>
 
 <style scoped>
+/* Brand classes */
+.btn-brand-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-brand-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(234, 66, 66, 0.25);
+}
+.tab-active {
+  background-color: var(--color-primary);
+}
+
 /* Transitions */
 .slide-down-enter-active,
 .slide-down-leave-active {
@@ -1905,7 +1910,7 @@ useHead({
 
 /* Custom checkbox */
 input[type="checkbox"] {
-  @apply rounded border-gray-300 text-rose-500 focus:ring-rose-500;
+  @apply rounded border-gray-300 text-gray-900 focus:ring-gray-900;
 }
 
 /* Smooth scrolling for mobile */

@@ -24,11 +24,22 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     // ÉTAPE 1 : Vérifier session depuis le cache local Supabase (PAS de requête réseau)
     // getSession() lit depuis le cache mémoire, getUser() fait un appel réseau
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    let { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
+    // Si la session est expirée ou invalide, tenter un refresh avant d'abandonner
     if (sessionError || !session?.user) {
-      authStore.clearAuth()
-      return navigateTo('/login')
+      console.log('[AUTH] Session invalide/expirée, tentative de refresh...')
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+
+      if (refreshError || !refreshData.session?.user) {
+        authStore.clearAuth()
+        return navigateTo('/login')
+      }
+
+      // Session rafraîchie avec succès
+      session = refreshData.session
+      authStore.token = session.access_token
+      console.log('[AUTH] Session rafraîchie avec succès')
     }
 
     const user = session.user

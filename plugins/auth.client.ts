@@ -54,8 +54,36 @@ export default defineNuxtPlugin(async () => {
       }
     }
     
-    // ✅ ÉCOUTER LES CHANGEMENTS D'AUTHENTIFICATION SUPABASE
+    // ✅ REFRESH PROACTIF AU RETOUR SUR L'ONGLET
+    // Quand l'utilisateur revient après une période d'inactivité,
+    // on rafraîchit la session pour éviter que les clics ne fonctionnent plus
     const supabase = useSupabase()
+
+    let lastRefreshTime = 0
+    const MIN_REFRESH_INTERVAL = 60_000 // 1 minute minimum entre refreshes
+
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState !== 'visible') return
+
+      const now = Date.now()
+      if (now - lastRefreshTime < MIN_REFRESH_INTERVAL) return
+      lastRefreshTime = now
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          const { data, error } = await supabase.auth.refreshSession()
+          if (!error && data.session) {
+            const authStoreNow = useAuthStore()
+            authStoreNow.token = data.session.access_token
+          }
+        }
+      } catch (e) {
+        // Silencieux - le middleware gérera les cas d'erreur
+      }
+    })
+
+    // ✅ ÉCOUTER LES CHANGEMENTS D'AUTHENTIFICATION SUPABASE
 
     supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       console.log('🔄 [Plugin Auth] Changement état auth Supabase:', event)

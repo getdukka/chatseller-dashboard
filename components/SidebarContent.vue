@@ -1,22 +1,22 @@
 <!-- components/SidebarContent.vue -->
 <template>
   <div class="flex flex-col h-full bg-white">
-    
+
     <!-- Header sidebar -->
-    <div class="flex h-16 items-center justify-between px-6 border-b border-gray-100">
-      <div class="flex items-center space-x-3">
-        <div class="flex h-12 w-12 items-center justify-center bg-transparent">
-              <img 
-                src="/assets/images/logos/fav.svg" 
-                alt="ChatSeller" 
-                class="w-10 h-10"
-              />
-            </div>
-        <span class="text-xl font-bold text-gray-900">ChatSeller</span>
+    <div class="flex h-16 items-center justify-between px-5 border-b border-gray-100">
+      <div class="flex items-center space-x-2.5">
+        <div class="flex h-9 w-9 items-center justify-center">
+          <img
+            src="/assets/images/logos/fav.svg"
+            alt="ChatSeller"
+            class="w-8 h-8"
+          />
+        </div>
+        <span class="text-lg font-bold text-gray-900 tracking-tight">ChatSeller</span>
       </div>
-      
+
       <!-- Close button for mobile -->
-      <button 
+      <button
         v-if="isMobile"
         @click="handleCloseMobile"
         class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors lg:hidden"
@@ -28,15 +28,15 @@
       </button>
     </div>
 
-    <!-- Navigation principale -->
-    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto sidebar-navigation">
-      
-      <!-- LIENS DE NAVIGATION CORRIGÉS -->
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 py-4 overflow-y-auto sidebar-navigation">
+
+      <!-- Principal -->
       <SidebarLink
         to="/"
         :isActive="$route.path === '/'"
-        icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2V7a2 2 0 012-2h2a2 2 0 002 2v2a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 00-2 2h-2a2 2 0 00-2 2v6a2 2 0 01-2 2H9z"
-        label="Dashboard"
+        icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+        label="Accueil"
         @click="handleNavClick"
       />
 
@@ -48,7 +48,11 @@
         @click="handleNavClick"
       />
 
-      <!-- Lien Conversations avec badge -->
+      <!-- Section : Activité -->
+      <div class="mt-6 mb-2 px-3">
+        <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Activité</span>
+      </div>
+
       <SidebarLink
         to="/conversations"
         :isActive="$route.path.startsWith('/conversations')"
@@ -67,6 +71,19 @@
       />
 
       <SidebarLink
+        to="/analytics"
+        :isActive="$route.path.startsWith('/analytics')"
+        icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+        label="Analytics"
+        @click="handleNavClick"
+      />
+
+      <!-- Section : Configuration -->
+      <div class="mt-6 mb-2 px-3">
+        <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Configuration</span>
+      </div>
+
+      <SidebarLink
         to="/products"
         :isActive="$route.path.startsWith('/products')"
         icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
@@ -78,7 +95,7 @@
         to="/knowledge-base"
         :isActive="$route.path.startsWith('/knowledge-base')"
         icon="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-        label="Base de connaissances"
+        label="Connaissances"
         @click="handleNavClick"
       />
 
@@ -99,190 +116,161 @@
       />
     </nav>
 
-    <!-- Boutons d'abonnement -->
-    <div class="px-4 pb-4 border-t border-gray-100 pt-4">
-      
-      <!-- Plan Free + Essai actif : Bouton "Passer à Starter" -->
+    <!-- Subscription / Trial indicator -->
+    <div class="px-3 pb-3 border-t border-gray-100 pt-3">
+
+      <!-- Trial active -->
       <button
         v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0"
         @click="handleUpgradeClick('starter')"
         :disabled="upgradingToPlan === 'starter'"
         type="button"
-        class="w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+        class="w-full text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'"
       >
-        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `${agentName} Découverte` }}</span>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Activer ${agentName}` }}</span>
       </button>
 
-      <!-- Plan Free + Essai expiré : Bouton rouge "Réactiver" -->
+      <!-- Trial expired -->
       <button
         v-else-if="userSubscriptionPlan === 'free' && (!userSubscriptionActive || trialDaysLeft === 0)"
         @click="handleUpgradeClick('starter')"
         :disabled="upgradingToPlan === 'starter'"
         type="button"
-        class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+        class="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
       >
-        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName} Découverte` }}</span>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName}` }}</span>
       </button>
 
-      <!-- Plan Starter + Actif (en essai) : Bouton "Rémunérer {agentName}" → starter checkout -->
+      <!-- Starter active (trial) -->
       <button
         v-else-if="userSubscriptionPlan === 'starter' && userSubscriptionActive"
         @click="handleUpgradeClick('starter')"
         :disabled="upgradingToPlan === 'starter'"
         type="button"
-        class="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+        class="w-full text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'"
       >
-        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
         <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Rémunérer ${agentName}` }}</span>
       </button>
 
-      <!-- Plan Growth + Actif : Badge statique "{agentName} Pro Actif" -->
+      <!-- Growth active -->
       <div
         v-else-if="userSubscriptionPlan === 'growth' && userSubscriptionActive"
-        class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 mb-3"
+        class="w-full bg-emerald-50 text-emerald-700 text-sm font-medium py-2.5 px-4 rounded-lg flex items-center justify-center space-x-2"
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
-        <span>{{ agentName }} Pro Actif</span>
+        <span>{{ agentName }} Pro</span>
       </div>
 
-      <!-- Plan Starter + Inactif : Bouton "Réactiver {agentName} Découverte" -->
+      <!-- Starter inactive -->
       <button
         v-else-if="userSubscriptionPlan === 'starter' && !userSubscriptionActive"
         @click="handleUpgradeClick('starter')"
         :disabled="upgradingToPlan === 'starter'"
         type="button"
-        class="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+        class="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
       >
-        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <svg v-if="upgradingToPlan === 'starter'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName} Découverte` }}</span>
+        <span>{{ upgradingToPlan === 'starter' ? 'Redirection...' : `Réactiver ${agentName}` }}</span>
       </button>
 
-      <!-- Plan Growth + Inactif : Bouton "Réactiver Growth" -->
+      <!-- Growth inactive -->
       <button
         v-else-if="userSubscriptionPlan === 'growth' && !userSubscriptionActive"
         @click="handleUpgradeClick('growth')"
         :disabled="upgradingToPlan === 'growth'"
         type="button"
-        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed group mb-3"
+        class="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
       >
-        <svg v-if="upgradingToPlan === 'growth'" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <svg v-if="upgradingToPlan === 'growth'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <svg v-else class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
         <span>{{ upgradingToPlan === 'growth' ? 'Redirection...' : `Réactiver ${agentName} Pro` }}</span>
       </button>
 
-      <!-- Affichage des jours d'essai restants -->
-      <div 
-        v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0" 
-        class="text-center text-xs text-gray-500 bg-rose-50 border border-rose-200 rounded-lg py-2 px-3"
+      <!-- Trial days indicator -->
+      <div
+        v-if="userSubscriptionPlan === 'free' && userSubscriptionActive && trialDaysLeft > 0"
+        class="mt-2 text-center text-xs text-gray-500"
       >
-        <div class="flex items-center justify-center space-x-1">
-          <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <span class="font-medium text-rose-700">{{ trialDaysLeft }} jour(s) d'essai</span>
-        </div>
+        {{ trialDaysLeft }} jour(s) d'essai restant(s)
       </div>
 
-      <!-- Message d'expiration -->
-      <div 
-        v-else-if="userSubscriptionPlan === 'free' && (!userSubscriptionActive || trialDaysLeft === 0)" 
-        class="text-center text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg py-2 px-3"
+      <!-- Expired indicator -->
+      <div
+        v-else-if="userSubscriptionPlan === 'free' && (!userSubscriptionActive || trialDaysLeft === 0)"
+        class="mt-2 text-center text-xs text-red-500 font-medium"
       >
-        <div class="flex items-center justify-center space-x-1">
-          <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <span class="font-medium">Essai expiré</span>
-        </div>
+        Essai expiré
       </div>
     </div>
 
-    <!-- Profil utilisateur en bas -->
-    <div class="border-t border-gray-100 p-4 bg-white">
+    <!-- User profile -->
+    <div class="border-t border-gray-100 p-3 bg-white">
       <div class="relative" ref="profileDropdown">
-        <button 
+        <button
           @click="handleToggleProfile"
           type="button"
-          class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-rose-500"
+          class="w-full flex items-center space-x-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors group focus:outline-none"
         >
-          <!-- Avatar dynamique -->
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-rose-600 shadow-md">
-            <span class="text-sm font-semibold text-white">
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 flex-shrink-0">
+            <span class="text-xs font-semibold text-white">
               {{ userInitials }}
             </span>
           </div>
-          
+
           <div class="flex-1 min-w-0 text-left">
-            <!-- Nom utilisateur dynamique -->
-            <p class="text-sm font-semibold text-gray-900 truncate">
+            <p class="text-sm font-medium text-gray-900 truncate">
               {{ userName || 'Utilisateur' }}
             </p>
-            <!-- Email utilisateur dynamique -->
-            <p class="text-xs text-gray-500 truncate">
+            <p class="text-xs text-gray-400 truncate">
               {{ userEmail || 'email@exemple.com' }}
             </p>
           </div>
-          
-          <!-- Icône dropdown -->
-          <svg 
-            class="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-transform duration-200"
+
+          <svg
+            class="h-4 w-4 text-gray-300 transition-transform duration-200 flex-shrink-0"
             :class="{ 'rotate-180': showProfileMenu }"
-            fill="none" 
-            viewBox="0 0 24 24" 
+            fill="none"
+            viewBox="0 0 24 24"
             stroke="currentColor"
           >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
-        <!-- Menu dropdown -->
+        <!-- Dropdown menu -->
         <Transition
-          enter-active-class="transition ease-out duration-200"
-          enter-from-class="transform opacity-0 scale-95"
-          enter-to-class="transform opacity-100 scale-100"
-          leave-active-class="transition ease-in duration-75"
-          leave-from-class="transform opacity-100 scale-100"
-          leave-to-class="transform opacity-0 scale-95"
+          enter-active-class="transition ease-out duration-150"
+          enter-from-class="transform opacity-0 translate-y-1"
+          enter-to-class="transform opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-100"
+          leave-from-class="transform opacity-100 translate-y-0"
+          leave-to-class="transform opacity-0 translate-y-1"
         >
-          <div 
+          <div
             v-if="showProfileMenu"
-            class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+            class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
           >
-            <NuxtLink 
-              to="/settings?tab=compte" 
+            <NuxtLink
+              to="/settings?tab=compte"
               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               @click="handleCloseProfile"
             >
@@ -291,9 +279,9 @@
               </svg>
               Mon profil
             </NuxtLink>
-            
+
             <hr class="my-1 border-gray-100">
-            
+
             <button
               @click="handleLogout"
               type="button"
@@ -312,10 +300,9 @@
 </template>
 
 <script setup lang="ts">
-// components/SidebarContent.vue - SECTION <script setup> SIMPLIFIÉE
+// components/SidebarContent.vue
 import { ref } from 'vue'
 
-// ✅ TYPES SIMPLIFIÉS
 type SubscriptionPlan = 'free' | 'starter' | 'growth' | 'pro' | 'performance'
 
 interface Props {
@@ -331,7 +318,6 @@ interface Props {
   agentName?: string
 }
 
-// ✅ PROPS ET EMITS SIMPLIFIÉS
 const props = withDefaults(defineProps<Props>(), {
   isMobile: false,
   userSubscriptionPlan: 'free',
@@ -348,12 +334,9 @@ const emit = defineEmits<{
   'upgrade-to-plan': [plan: 'starter' | 'growth']
 }>()
 
-// ✅ STATE MINIMAL
 const upgradingToPlan = ref<'starter' | 'growth' | null>(null)
 
-// ✅ GESTIONNAIRES SIMPLIFIÉS - PAS DE LOGS EXCESSIFS
 const handleNavClick = () => {
-  // Fermer menus immédiatement lors navigation
   if (props.isMobile) {
     emit('close-mobile')
   }
@@ -378,7 +361,6 @@ const handleLogout = () => {
   emit('logout')
 }
 
-// ✅ UPGRADE SIMPLIFIÉ SANS TRY/CATCH COMPLEXE
 const handleUpgradeClick = (targetPlan: 'starter' | 'growth') => {
   upgradingToPlan.value = targetPlan
   emit('upgrade-to-plan', targetPlan)
@@ -386,36 +368,6 @@ const handleUpgradeClick = (targetPlan: 'starter' | 'growth') => {
 </script>
 
 <style scoped>
-/* STYLES OPTIMISÉS POUR LA NAVIGATION */
-.sidebar-navigation {
-  pointer-events: auto;
-}
-
-.sidebar-navigation * {
-  pointer-events: auto;
-}
-
-/* ÉVITER LES OVERLAPS */
-button, a {
-  position: relative;
-  z-index: 1;
-}
-
-/* TRANSITIONS FLUIDES */
-.transition-all {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* HOVER EFFECTS */
-.group:hover .group-hover\:text-gray-600 {
-  color: rgb(75 85 99);
-}
-
-.group:hover .group-hover\:scale-110 {
-  transform: scale(1.1);
-}
-
-/* SCROLL STYLING */
 nav {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -423,31 +375,5 @@ nav {
 
 nav::-webkit-scrollbar {
   display: none;
-}
-
-/* ANIMATIONS */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* FOCUS STATES */
-button:focus, a:focus {
-  outline: 2px solid rgb(59 130 246);
-  outline-offset: 2px;
-}
-
-/* DROPDOWN Z-INDEX */
-.z-50 {
-  z-index: 50;
-}
-
-/* BACKGROUND FIXE */
-.bg-white {
-  background-color: white !important;
 }
 </style>

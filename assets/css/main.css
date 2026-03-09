@@ -6,6 +6,33 @@
 @tailwind utilities;
 
 /* ===========================================
+   DESIGN TOKENS — ChatSeller Brand
+   =========================================== */
+
+:root {
+  /* Brand colors (extracted from logo) */
+  --color-brand-rose:     #ea4242;
+  --color-brand-violet:   #8c3dda;
+
+  /* Primary CTA */
+  --color-primary:        #ea4242;
+  --color-primary-hover:  #d03535;
+  --color-primary-light:  #fdf0f0;
+  --color-secondary:      #8c3dda;
+
+  /* Neutrals */
+  --color-text-primary:   #111111;
+  --color-text-secondary: #555555;
+  --color-text-muted:     #999999;
+  --color-border:         #e8e8e8;
+  --color-bg-page:        #f9f9f9;
+  --color-bg-card:        #ffffff;
+
+  /* Brand gradient */
+  --gradient-brand: linear-gradient(135deg, #ea4242 0%, #8c3dda 100%);
+}
+
+/* ===========================================
    BASE STYLES
    =========================================== */
 
@@ -16,7 +43,9 @@
   }
 
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply antialiased;
+    background-color: var(--color-bg-page);
+    color: var(--color-text-primary);
     font-feature-settings: 'cv11', 'ss01';
     font-variation-settings: 'opsz' 32;
   }
@@ -47,7 +76,8 @@
 
   /* Selection */
   ::selection {
-    @apply bg-blue-100 text-blue-900;
+    background-color: var(--color-primary-light);
+    color: var(--color-brand-rose);
   }
 }
 
@@ -334,6 +364,17 @@
   }
 
   /* Gradients */
+  .gradient-brand {
+    background: var(--gradient-brand);
+  }
+
+  .gradient-brand-text {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
