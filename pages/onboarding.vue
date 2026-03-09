@@ -1,5 +1,7 @@
 <!-- pages/onboarding.vue -->
 <!-- Progressive onboarding: one question per screen, ElevenLabs-style -->
+<!-- Refactored: 7 steps (was 9) — removed gender, specializedTarget, ageRange, priceRange -->
+<!-- Added: step 6 (test immédiat) + step 7 (activation guidée) -->
 <template>
   <div class="min-h-screen bg-white flex flex-col">
 
@@ -48,7 +50,7 @@
             <div v-if="subStep === 1" key="s1" class="space-y-8">
               <div class="text-center">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Parlez-nous de votre marque</h1>
-                <p class="text-gray-500">Mia a besoin de connaitre votre marque pour bien la representer.</p>
+                <p class="text-gray-500">Mia a besoin de connaître votre marque pour bien la représenter.</p>
               </div>
 
               <div class="space-y-5">
@@ -152,155 +154,12 @@
             </div>
           </Transition>
 
-          <!-- ===== SUB-STEP 4: Client gender ===== -->
+          <!-- ===== SUB-STEP 4: Communication tone (was step 8) ===== -->
           <Transition name="slide" mode="out-in">
             <div v-if="subStep === 4" key="s4" class="space-y-8">
               <div class="text-center">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">A qui vendez-vous ?</h1>
-                <p class="text-gray-500">Mia adaptera son approche en fonction de votre clientele.</p>
-              </div>
-
-              <div class="space-y-3">
-                <button
-                  v-for="gender in genderOptions"
-                  :key="gender.value"
-                  type="button"
-                  @click="form.targetGender = gender.value"
-                  class="w-full flex items-center p-5 border-2 rounded-xl transition-all hover:border-rose-300"
-                  :class="form.targetGender === gender.value ? 'border-rose-500 bg-rose-50' : 'border-gray-200 bg-white'"
-                >
-                  <span class="text-3xl mr-4">{{ gender.icon }}</span>
-                  <span class="font-semibold text-gray-900 text-lg">{{ gender.label }}</span>
-                  <div v-if="form.targetGender === gender.value" class="ml-auto w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                  </div>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between pt-2">
-                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
-                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
-              </div>
-            </div>
-          </Transition>
-
-          <!-- ===== SUB-STEP 5: Specialized targets ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 5" key="s5" class="space-y-8">
-              <div class="text-center">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{{ getSpecializedQuestion() }}</h1>
-                <p class="text-gray-500">Selectionnez un ou plusieurs choix.</p>
-              </div>
-
-              <div class="grid grid-cols-2 gap-3">
-                <button
-                  v-for="option in getSpecializedOptions()"
-                  :key="option.value"
-                  type="button"
-                  @click="toggleSpecializedTarget(option.value)"
-                  class="relative p-4 border-2 rounded-xl text-left transition-all hover:border-rose-300 hover:bg-rose-50/50"
-                  :class="form.specializedTarget.includes(option.value) ? 'border-rose-500 bg-rose-50 shadow-sm' : 'border-gray-200 bg-white'"
-                >
-                  <div class="text-xl mb-1">{{ option.icon }}</div>
-                  <div class="font-semibold text-gray-900 text-sm">{{ option.label }}</div>
-                  <div class="text-xs text-gray-500 mt-0.5">{{ option.description }}</div>
-                  <div v-if="form.specializedTarget.includes(option.value)" class="absolute top-2.5 right-2.5 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
-                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                  </div>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between pt-2">
-                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
-                <div class="flex items-center space-x-3">
-                  <button @click="skipSubStep" class="px-5 py-2.5 text-gray-400 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-600 transition-all">Passer</button>
-                  <button @click="nextSubStep" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all">Continuer</button>
-                </div>
-              </div>
-            </div>
-          </Transition>
-
-          <!-- ===== SUB-STEP 6: Age range ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 6" key="s6" class="space-y-8">
-              <div class="text-center">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Quel age ont vos clients ?</h1>
-                <p class="text-gray-500">Mia adaptera son vocabulaire et ses recommandations.</p>
-              </div>
-
-              <div class="space-y-3">
-                <button
-                  v-for="age in ageRanges"
-                  :key="age.value"
-                  type="button"
-                  @click="form.targetAgeRange = age.value"
-                  class="w-full flex items-center justify-between p-4 border-2 rounded-xl transition-all hover:border-rose-300"
-                  :class="form.targetAgeRange === age.value ? 'border-rose-500 bg-rose-50' : 'border-gray-200 bg-white'"
-                >
-                  <div>
-                    <div class="font-semibold text-gray-900">{{ age.label }}</div>
-                    <div class="text-sm text-gray-500">{{ age.description }}</div>
-                  </div>
-                  <div v-if="form.targetAgeRange === age.value" class="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                  </div>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between pt-2">
-                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
-                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
-              </div>
-            </div>
-          </Transition>
-
-          <!-- ===== SUB-STEP 7: Price range ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 7" key="s7" class="space-y-8">
-              <div class="text-center">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Quelle est votre gamme de prix ?</h1>
-                <p class="text-gray-500">Mia saura comment positionner vos produits.</p>
-              </div>
-
-              <!-- Sync indicator -->
-              <div v-if="syncStore.detectedPriceRange && !form.priceRange" class="flex items-center justify-center px-4 py-2 bg-green-50 border border-green-200 rounded-full text-sm text-green-700">
-                <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Gamme detectee depuis votre catalogue
-              </div>
-
-              <div class="space-y-3">
-                <button
-                  v-for="price in priceRanges"
-                  :key="price.value"
-                  type="button"
-                  @click="form.priceRange = price.value"
-                  class="w-full flex items-center p-5 border-2 rounded-xl transition-all hover:border-rose-300"
-                  :class="form.priceRange === price.value ? 'border-rose-500 bg-rose-50' : 'border-gray-200 bg-white'"
-                >
-                  <span class="text-2xl mr-4">{{ price.icon }}</span>
-                  <div class="text-left">
-                    <div class="font-semibold text-gray-900">{{ price.label }}</div>
-                    <div class="text-sm text-gray-500">{{ price.description }}</div>
-                  </div>
-                  <div v-if="form.priceRange === price.value" class="ml-auto w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                  </div>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between pt-2">
-                <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
-                <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
-              </div>
-            </div>
-          </Transition>
-
-          <!-- ===== SUB-STEP 8: Communication tone ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 8" key="s8" class="space-y-8">
-              <div class="text-center">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Comment Mia doit-elle parler ?</h1>
-                <p class="text-gray-500">Son ton s'adaptera a votre marque.</p>
+                <p class="text-gray-500">Son ton s'adaptera à votre marque.</p>
               </div>
 
               <div class="space-y-3">
@@ -336,9 +195,9 @@
             </div>
           </Transition>
 
-          <!-- ===== SUB-STEP 9: Agent name + finalization ===== -->
+          <!-- ===== SUB-STEP 5: Agent name + launch (was step 9, simplified) ===== -->
           <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 9" key="s9" class="space-y-8">
+            <div v-if="subStep === 5" key="s5" class="space-y-8">
               <div class="text-center">
                 <!-- Dynamic title based on sync status -->
                 <div v-if="syncStore.isSyncComplete && syncStore.hasAnySuccess" class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -352,11 +211,11 @@
                 </div>
 
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                  <template v-if="syncStore.isSyncComplete && syncStore.hasAnySuccess">Votre vendeuse est prete !</template>
+                  <template v-if="syncStore.isSyncComplete && syncStore.hasAnySuccess">Votre vendeuse est prête !</template>
                   <template v-else-if="syncStore.isSyncing">Encore quelques secondes...</template>
-                  <template v-else>Derniere etape</template>
+                  <template v-else>Dernière étape</template>
                 </h1>
-                <p class="text-gray-500">Donnez un prenom a votre vendeuse IA.</p>
+                <p class="text-gray-500">Donnez un prénom à votre vendeuse IA.</p>
               </div>
 
               <div class="space-y-5">
@@ -391,34 +250,6 @@
                   </div>
                 </div>
 
-                <!-- Acquisition source -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1.5">Comment avez-vous connu ChatSeller ? <span class="text-gray-400 font-normal">(optionnel)</span></label>
-                  <select
-                    v-model="form.acquisitionSource"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-gray-900 transition-all"
-                  >
-                    <option value="">Selectionnez</option>
-                    <option value="search_google">Recherche Google</option>
-                    <option value="social_media">Reseaux sociaux</option>
-                    <option value="recommendation">Recommandation</option>
-                    <option value="whatsapp_group">Groupe WhatsApp / Telegram</option>
-                    <option value="youtube">YouTube</option>
-                    <option value="beauty_event">Salon beaute / evenement</option>
-                    <option value="dukka">Deja client(e) Dukka</option>
-                    <option value="other">Autre</option>
-                  </select>
-                </div>
-
-                <!-- Trial reminder -->
-                <div class="flex items-start space-x-3 bg-green-50 border border-green-200 rounded-xl p-4">
-                  <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                  <div>
-                    <p class="font-semibold text-green-800 text-sm">14 jours d'essai gratuit</p>
-                    <p class="text-green-700 text-xs mt-0.5">Sans engagement, sans carte bancaire.</p>
-                  </div>
-                </div>
-
                 <!-- Error -->
                 <div v-if="submitError" class="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
                   {{ submitError }}
@@ -437,12 +268,237 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Creation...
+                      Creation en cours...
                     </span>
-                    <span v-else>Lancer {{ form.agentName || getDefaultAgentName() }}</span>
+                    <span v-else>Lancer {{ form.agentName || getDefaultAgentName() }} →</span>
                   </button>
                 </div>
               </div>
+            </div>
+          </Transition>
+
+          <!-- ===== SUB-STEP 6: Test immédiat ===== -->
+          <Transition name="slide" mode="out-in">
+            <div v-if="subStep === 6" key="s6" class="space-y-6">
+
+              <!-- En-tête -->
+              <div class="text-center">
+                <div class="w-14 h-14 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span class="text-2xl">🎉</span>
+                </div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                  {{ form.agentName || getDefaultAgentName() }} est prête !
+                </h1>
+                <p class="text-gray-500">
+                  Posez-lui les vraies questions de vos clientes.
+                </p>
+              </div>
+
+              <!-- Zone de chat -->
+              <div class="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+
+                <!-- Header du chat -->
+                <div class="flex items-center space-x-3 px-4 py-3 border-b border-gray-100 bg-gray-50">
+                  <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    {{ (form.agentName || getDefaultAgentName()).charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900">{{ form.agentName || getDefaultAgentName() }}</p>
+                    <p class="text-xs text-green-600 flex items-center">
+                      <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
+                      En ligne · Experte {{ getBeautyCategoryLabel(form.beautyCategory) }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="h-56 overflow-y-auto p-4 space-y-3 bg-white" ref="chatScrollRef">
+                  <!-- Message de bienvenue automatique -->
+                  <div class="flex items-start space-x-2">
+                    <div class="w-7 h-7 rounded-full bg-rose-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">
+                      {{ (form.agentName || getDefaultAgentName()).charAt(0) }}
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2 max-w-xs">
+                      <p class="text-sm text-gray-800">{{ getWelcomeMessage() }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Messages de la conversation -->
+                  <template v-for="msg in testMessages" :key="msg.id">
+                    <!-- Message utilisateur -->
+                    <div v-if="msg.role === 'user'" class="flex justify-end">
+                      <div class="bg-rose-500 rounded-2xl rounded-tr-sm px-3 py-2 max-w-xs">
+                        <p class="text-sm text-white">{{ msg.content }}</p>
+                      </div>
+                    </div>
+                    <!-- Réponse de la Vendeuse -->
+                    <div v-else class="flex items-start space-x-2">
+                      <div class="w-7 h-7 rounded-full bg-rose-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">
+                        {{ (form.agentName || getDefaultAgentName()).charAt(0) }}
+                      </div>
+                      <div class="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2 max-w-xs">
+                        <p class="text-sm text-gray-800">{{ msg.content }}</p>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- Indicateur de frappe -->
+                  <div v-if="testLoading" class="flex items-start space-x-2">
+                    <div class="w-7 h-7 rounded-full bg-rose-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {{ (form.agentName || getDefaultAgentName()).charAt(0) }}
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2">
+                      <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0ms"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:150ms"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:300ms"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Suggestions de questions -->
+                <div v-if="testMessages.length === 0" class="px-4 py-2 border-t border-gray-100 flex flex-wrap gap-2">
+                  <button
+                    v-for="suggestion in getTestSuggestions()"
+                    :key="suggestion"
+                    @click="sendTestMessage(suggestion)"
+                    class="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full border border-rose-200 hover:bg-rose-100 transition-all"
+                  >
+                    {{ suggestion }}
+                  </button>
+                </div>
+
+                <!-- Input -->
+                <div class="flex items-center space-x-2 px-3 py-3 border-t border-gray-100">
+                  <input
+                    v-model="testInput"
+                    type="text"
+                    placeholder="Posez une question à votre Vendeuse..."
+                    class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none"
+                    @keyup.enter="sendTestMessage()"
+                    :disabled="testLoading"
+                  />
+                  <button
+                    @click="sendTestMessage()"
+                    :disabled="!testInput.trim() || testLoading"
+                    class="w-9 h-9 bg-rose-500 rounded-xl flex items-center justify-center text-white hover:bg-rose-600 disabled:opacity-40 transition-all flex-shrink-0"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Navigation -->
+              <div class="flex items-center justify-between pt-2">
+                <p class="text-sm text-gray-400 italic">Elle apprendra encore mieux dans les prochains jours.</p>
+                <button @click="nextSubStep" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all">
+                  Installer sur ma boutique →
+                </button>
+              </div>
+
+            </div>
+          </Transition>
+
+          <!-- ===== SUB-STEP 7: Activation guidée ===== -->
+          <Transition name="slide" mode="out-in">
+            <div v-if="subStep === 7" key="s7" class="space-y-8">
+
+              <div class="text-center">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                  Une dernière étape.
+                </h1>
+                <p class="text-gray-500">
+                  Installez {{ form.agentName || getDefaultAgentName() }} sur votre boutique pour qu'elle commence à vendre.
+                </p>
+              </div>
+
+              <!-- CAS SHOPIFY -->
+              <div v-if="form.platform === 'shopify'" class="space-y-5">
+                <div class="border border-gray-200 rounded-2xl p-6 space-y-4">
+                  <div class="flex items-center space-x-3">
+                    <img :src="shopifyLogo" alt="Shopify" class="h-7 w-auto" />
+                    <span class="font-semibold text-gray-900">Installation Shopify</span>
+                  </div>
+                  <p class="text-sm text-gray-500">
+                    Copiez ce code et collez-le dans votre thème Shopify
+                    (<strong>Online Store → Themes → Edit code → theme.liquid</strong>)
+                    juste avant la balise <code class="bg-gray-100 px-1 rounded">&lt;/body&gt;</code>.
+                  </p>
+                  <div class="relative">
+                    <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto">
+                      <pre class="text-xs text-green-400 font-mono whitespace-pre-wrap">{{ getWidgetSnippet() }}</pre>
+                    </div>
+                    <button
+                      @click="copyWidgetSnippet"
+                      class="absolute top-2 right-2 px-3 py-1 text-xs bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all"
+                    >
+                      {{ snippetCopied ? '✓ Copié !' : 'Copier' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CAS WOOCOMMERCE -->
+              <div v-else-if="form.platform === 'woocommerce'" class="space-y-5">
+                <div class="border border-gray-200 rounded-2xl p-6 space-y-4">
+                  <div class="flex items-center space-x-3">
+                    <img :src="woocommerceLogo" alt="WooCommerce" class="h-7 w-auto" />
+                    <span class="font-semibold text-gray-900">Installation WooCommerce</span>
+                  </div>
+                  <p class="text-sm text-gray-500">
+                    Copiez ce code et collez-le avant la balise <code class="bg-gray-100 px-1 rounded">&lt;/body&gt;</code>
+                    de votre site, ou utilisez un plugin d'injection de scripts.
+                  </p>
+                  <div class="relative">
+                    <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto">
+                      <pre class="text-xs text-green-400 font-mono whitespace-pre-wrap">{{ getWidgetSnippet() }}</pre>
+                    </div>
+                    <button
+                      @click="copyWidgetSnippet"
+                      class="absolute top-2 right-2 px-3 py-1 text-xs bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all"
+                    >
+                      {{ snippetCopied ? '✓ Copié !' : 'Copier' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CAS AUTRE PLATEFORME -->
+              <div v-else class="space-y-5">
+                <div class="border border-gray-200 rounded-2xl p-6 space-y-4">
+                  <p class="font-semibold text-gray-900">Code à intégrer sur votre site</p>
+                  <p class="text-sm text-gray-500">
+                    Copiez ce code et collez-le avant la balise <code class="bg-gray-100 px-1 rounded">&lt;/body&gt;</code> de votre site.
+                  </p>
+                  <div class="relative">
+                    <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto">
+                      <pre class="text-xs text-green-400 font-mono whitespace-pre-wrap">{{ getWidgetSnippet() }}</pre>
+                    </div>
+                    <button
+                      @click="copyWidgetSnippet"
+                      class="absolute top-2 right-2 px-3 py-1 text-xs bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all"
+                    >
+                      {{ snippetCopied ? '✓ Copié !' : 'Copier' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Lien "Plus tard" -->
+              <div class="text-center">
+                <button @click="goToDashboard" class="text-sm text-gray-400 hover:text-gray-600 transition-all underline">
+                  Je le ferai plus tard → Aller au dashboard
+                </button>
+              </div>
+
+              <!-- Bouton principal vers le dashboard -->
+              <button @click="goToDashboard" class="w-full px-8 py-3 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all">
+                Terminer et aller au dashboard
+              </button>
+
             </div>
           </Transition>
 
@@ -464,6 +520,7 @@ const auth = useAuth()
 const authStore = useAuthStore()
 const syncStore = useSyncStore()
 const api = useApi()
+const runtimeConfig = useRuntimeConfig()
 
 definePageMeta({
   layout: false
@@ -471,10 +528,21 @@ definePageMeta({
 
 // ========== STATE ==========
 const subStep = ref(1)
-const totalSubSteps = 9
+const totalSubSteps = 7
 const loading = ref(false)
 const initializing = ref(true)
 const submitError = ref('')
+
+// Refs for step 6 (test immédiat)
+const createdAgentId = ref(null as string | null)
+const testMessages = ref([] as Array<{id: string, role: string, content: string}>)
+const testInput = ref('')
+const testLoading = ref(false)
+const chatScrollRef = ref(null as HTMLElement | null)
+const testConversationId = ref(null as string | null)
+
+// Refs for step 7 (activation guidée)
+const snippetCopied = ref(false)
 
 // ========== FORM ==========
 const form = reactive({
@@ -482,16 +550,17 @@ const form = reactive({
   website: '',
   beautyCategory: '',
   platform: '',
-  targetGender: '',
+  communicationTone: '',
+  agentName: '',
+  newsletter: true,
+  // Champs auto-déterminés (non demandés à l'utilisatrice)
+  targetGender: 'both',
   specializedTarget: [] as string[],
-  targetAgeRange: '',
+  targetAgeRange: '26-35',
   priceRange: '',
   expertiseLevel: '',
-  communicationTone: '',
   primaryGoals: ['conversions', 'upsell', 'support', 'education'] as string[],
-  agentName: '',
-  acquisitionSource: '',
-  newsletter: true
+  acquisitionSource: ''
 })
 
 // ========== OPTIONS ==========
@@ -501,39 +570,14 @@ const beautyCategories = [
   { value: 'makeup', icon: '💄', label: 'Maquillage' },
   { value: 'fragrance', icon: '🌸', label: 'Parfums & Fragrances' },
   { value: 'bodycare', icon: '🧴', label: 'Soins du corps' },
-  { value: 'natural', icon: '🌿', label: 'Cosmetiques naturels' },
+  { value: 'natural', icon: '🌿', label: 'Cosmétiques naturels' },
   { value: 'multi', icon: '✨', label: 'Multi-categories' }
 ]
 
 const platforms = [
   { value: 'shopify', label: 'Shopify', description: 'Import automatique de vos produits', logo: shopifyLogo, icon: '' },
   { value: 'woocommerce', label: 'WooCommerce', description: 'Import automatique de vos produits', logo: woocommerceLogo, icon: '' },
-  { value: 'custom', label: 'Site personnalise', description: 'Mia lira votre site pour apprendre', logo: null, icon: '⚙️' }
-]
-
-const genderOptions = [
-  { value: 'women', icon: '👩', label: 'Des Femmes' },
-  { value: 'men', icon: '👨', label: 'Des Hommes' },
-  { value: 'both', icon: '👥', label: 'Hommes & Femmes' }
-]
-
-const ageRanges = [
-  { value: '18-25', label: '18-25 ans', description: 'Jeunes adultes' },
-  { value: '26-35', label: '26-35 ans', description: 'Adultes actives' },
-  { value: '36-45', label: '36-45 ans', description: 'Adultes etablies' },
-  { value: '46+', label: '46+ ans', description: 'Adultes matures' }
-]
-
-const priceRanges = [
-  { value: 'budget', icon: '💝', label: 'Accessible', description: '5-25 EUR par produit' },
-  { value: 'mid', icon: '💎', label: 'Milieu de gamme', description: '25-80 EUR par produit' },
-  { value: 'luxury', icon: '👑', label: 'Premium', description: '80 EUR+ par produit' }
-]
-
-const expertiseLevels = [
-  { value: 'beginner', icon: '🌱', label: 'Accessible', description: 'Conseils simples et bienveillants' },
-  { value: 'expert', icon: '🎓', label: 'Experte', description: 'Conseils techniques personnalises' },
-  { value: 'luxury', icon: '💎', label: 'Premium', description: 'Service haut de gamme' }
+  { value: 'custom', label: 'Site personnalisé', description: 'Mia lira votre site pour apprendre', logo: null, icon: '⚙️' }
 ]
 
 const communicationTones = [
@@ -548,90 +592,24 @@ const communicationTones = [
     value: 'professional',
     icon: '👩‍💼',
     label: 'Professionnelle & Experte',
-    description: 'Approche experte beaute en institut',
-    example: 'Bonjour Madame, je suis votre experte beaute. Comment puis-je vous accompagner aujourd\'hui ?'
+    description: 'Approche experte beauté en institut',
+    example: 'Bonjour Madame, je suis votre experte beauté. Comment puis-je vous accompagner aujourd\'hui ?'
   },
   {
     value: 'luxury',
     icon: '✨',
     label: 'Premium & Raffinee',
-    description: 'Service VIP personnalise, attention particuliere',
-    example: 'Bienvenue dans notre espace beaute. Je suis a votre entiere disposition pour vous conseiller.'
+    description: 'Service VIP personnalisé, attention particulière',
+    example: 'Bienvenue dans notre espace beauté. Je suis à votre entière disposition pour vous conseiller.'
   },
   {
     value: 'trendy',
     icon: '🌟',
     label: 'Moderne & Dynamique',
-    description: 'Langage actuel, references aux tendances beaute',
+    description: 'Langage actuel, références aux tendances beauté',
     example: 'Hey ! Tu as vu ce serum dont tout le monde parle ? Je te dis tout sur ses bienfaits !'
   }
 ]
-
-const primaryGoals = [
-  { value: 'conversions', icon: '📈', label: 'Maximiser les ventes', description: 'Transformer les visiteurs en acheteurs' },
-  { value: 'upsell', icon: '🛍️', label: 'Augmenter le panier moyen', description: 'Proposer des routines completes' },
-  { value: 'support', icon: '💬', label: 'Reduire les questions repetitives', description: 'Repondre automatiquement aux FAQ' },
-  { value: 'education', icon: '🎓', label: 'Eduquer et fideliser', description: 'Construire la confiance' }
-]
-
-const specializedTargetOptions: Record<string, Array<{value: string, icon: string, label: string, description: string}>> = {
-  skincare: [
-    { value: 'normal', icon: '😊', label: 'Peau normale', description: 'Equilibree' },
-    { value: 'dry', icon: '💧', label: 'Peau seche', description: 'Manque d\'hydratation' },
-    { value: 'oily', icon: '✨', label: 'Peau grasse', description: 'Exces de sebum' },
-    { value: 'combination', icon: '🤔', label: 'Peau mixte', description: 'Zone T grasse' },
-    { value: 'sensitive', icon: '🌸', label: 'Peau sensible', description: 'Reactive' },
-    { value: 'hyperpigmentation', icon: '🎯', label: 'Teint irregulier', description: 'Taches' }
-  ],
-  haircare: [
-    { value: 'natural_4c', icon: '🔄', label: 'Cheveux crepus 4C', description: 'Texture serree' },
-    { value: 'natural_4b', icon: '🌀', label: 'Cheveux crepus 4A/4B', description: 'Boucles en Z' },
-    { value: 'curly', icon: '➰', label: 'Cheveux boucles 3A-3C', description: 'Boucles definies' },
-    { value: 'relaxed', icon: '📏', label: 'Cheveux defrises', description: 'Traites chimiquement' },
-    { value: 'transitioning', icon: '🔀', label: 'En transition', description: 'Retour au naturel' },
-    { value: 'protective', icon: '🛡️', label: 'Coiffures protectrices', description: 'Tresses, locks' }
-  ],
-  makeup: [
-    { value: 'natural', icon: '🌱', label: 'Look naturel', description: 'Maquillage discret' },
-    { value: 'professional', icon: '👔', label: 'Look professionnel', description: 'Bureau, reunions' },
-    { value: 'evening', icon: '🌙', label: 'Look soiree', description: 'Evenements' },
-    { value: 'bridal', icon: '👰', label: 'Look mariage', description: 'Ceremonies' },
-    { value: 'deep_skin', icon: '👑', label: 'Peaux foncees', description: 'Teintes profondes' },
-    { value: 'editorial', icon: '📸', label: 'Look creatif', description: 'Artistique' }
-  ],
-  fragrance: [
-    { value: 'floral', icon: '🌸', label: 'Floral', description: 'Rose, jasmin, pivoine' },
-    { value: 'woody', icon: '🌲', label: 'Boise', description: 'Santal, cedre, oud' },
-    { value: 'oriental', icon: '🏺', label: 'Oriental', description: 'Vanille, ambre' },
-    { value: 'fresh', icon: '🍃', label: 'Frais', description: 'Agrumes, aquatique' },
-    { value: 'musk', icon: '💫', label: 'Musc', description: 'Encens, musc blanc' },
-    { value: 'gourmand', icon: '🍰', label: 'Gourmand', description: 'Chocolat, caramel' }
-  ],
-  bodycare: [
-    { value: 'hydrating', icon: '💧', label: 'Hydratation intense', description: 'Peaux seches' },
-    { value: 'shea_butter', icon: '🧈', label: 'Karite & beurres', description: 'Soins traditionnels' },
-    { value: 'brightening', icon: '✨', label: 'Teint unifie', description: 'Eclat, anti-taches' },
-    { value: 'exfoliating', icon: '🧽', label: 'Exfoliation', description: 'Gommages' },
-    { value: 'stretch_marks', icon: '🎯', label: 'Vergetures', description: 'Prevention' },
-    { value: 'sun', icon: '☀️', label: 'Protection solaire', description: 'SPF peaux foncees' }
-  ],
-  natural: [
-    { value: 'shea', icon: '🧈', label: 'Karite pur', description: 'Beurre brut' },
-    { value: 'baobab', icon: '🌳', label: 'Baobab', description: 'Huile et poudre' },
-    { value: 'moringa', icon: '🌿', label: 'Moringa', description: 'Huile et extraits' },
-    { value: 'black_soap', icon: '🧼', label: 'Savon noir', description: 'Savon africain' },
-    { value: 'argan', icon: '🫒', label: 'Argan', description: 'Huile d\'argan' },
-    { value: 'neem', icon: '🌱', label: 'Neem', description: 'Soins purifiants' }
-  ],
-  multi: [
-    { value: 'skincare', icon: '🧴', label: 'Soins visage', description: 'Routine skincare' },
-    { value: 'makeup', icon: '💄', label: 'Maquillage', description: 'Cosmetiques couleur' },
-    { value: 'haircare', icon: '💇‍♀️', label: 'Soins cheveux', description: 'Capillaires' },
-    { value: 'fragrance', icon: '🌸', label: 'Parfums', description: 'Fragrances' },
-    { value: 'bodycare', icon: '🧴', label: 'Soins corps', description: 'Hydratation' },
-    { value: 'natural', icon: '🌿', label: 'Cosmetiques naturels', description: 'Bio & naturels' }
-  ]
-}
 
 // ========== COMPUTED ==========
 const canProceed = computed(() => {
@@ -639,43 +617,15 @@ const canProceed = computed(() => {
     case 1: return form.company.trim() !== '' && form.website.trim() !== ''
     case 2: return form.beautyCategory !== ''
     case 3: return form.platform !== ''
-    case 4: return form.targetGender !== ''
-    case 5: return true // optional multi-select
-    case 6: return form.targetAgeRange !== ''
-    case 7: return form.priceRange !== ''
-    case 8: return form.communicationTone !== ''
-    case 9: return true
+    case 4: return form.communicationTone !== ''
+    case 5: return true // agentName est optionnel
+    case 6: return true // test immédiat — non bloquant
+    case 7: return true // activation guidée — non bloquant
     default: return true
   }
 })
 
 // ========== HELPERS ==========
-const getSpecializedQuestion = () => {
-  const questions: Record<string, string> = {
-    skincare: 'Quels types de peau traitez-vous ?',
-    haircare: 'Quels types de cheveux traitez-vous ?',
-    makeup: 'Quels styles de maquillage proposez-vous ?',
-    fragrance: 'Quelles familles olfactives proposez-vous ?',
-    bodycare: 'Quels types de soins corporels proposez-vous ?',
-    natural: 'Quels ingredients naturels proposez-vous ?',
-    multi: 'Quels domaines beaute couvrez-vous ?'
-  }
-  return questions[form.beautyCategory] || questions.multi
-}
-
-const getSpecializedOptions = () => {
-  return specializedTargetOptions[form.beautyCategory] || specializedTargetOptions.multi
-}
-
-const toggleSpecializedTarget = (value: string) => {
-  const idx = form.specializedTarget.indexOf(value)
-  if (idx >= 0) {
-    form.specializedTarget.splice(idx, 1)
-  } else {
-    form.specializedTarget.push(value)
-  }
-}
-
 const selectTone = (value: string) => {
   form.communicationTone = value
   // Auto-set expertise based on tone for simplicity
@@ -694,14 +644,6 @@ const getBeautyCategoryLabel = (value: string) => {
   return beautyCategories.find(c => c.value === value)?.label || value
 }
 
-const getCommunicationToneLabel = (value: string) => {
-  return communicationTones.find(t => t.value === value)?.label || value
-}
-
-const getPlatformLabel = (value: string) => {
-  return platforms.find(p => p.value === value)?.label || value
-}
-
 // ========== NAVIGATION ==========
 const nextSubStep = async () => {
   if (!canProceed.value) return
@@ -709,11 +651,6 @@ const nextSubStep = async () => {
   // After step 3 (platform selected) -> launch sync
   if (subStep.value === 3) {
     await launchStep1Sync()
-  }
-
-  // Pre-fill price range when arriving at step 7
-  if (subStep.value === 6) {
-    prefillPriceRange()
   }
 
   if (subStep.value < totalSubSteps) {
@@ -724,12 +661,6 @@ const nextSubStep = async () => {
 const prevSubStep = () => {
   if (subStep.value > 1) {
     subStep.value--
-  }
-}
-
-const skipSubStep = () => {
-  if (subStep.value < totalSubSteps) {
-    subStep.value++
   }
 }
 
@@ -765,18 +696,6 @@ const launchStep1Sync = async () => {
   })
 }
 
-const prefillPriceRange = () => {
-  if (syncStore.detectedPriceRange && !form.priceRange) {
-    form.priceRange = syncStore.detectedPriceRange
-  }
-}
-
-watch(() => syncStore.detectedPriceRange, (newRange) => {
-  if (newRange && subStep.value <= 7 && !form.priceRange) {
-    form.priceRange = newRange
-  }
-})
-
 // ========== UTILITIES ==========
 const extractDomain = (url: string): string | null => {
   if (!url) return null
@@ -792,20 +711,20 @@ const extractDomain = (url: string): string | null => {
 const getOptimizedAgentConfig = () => {
   const agentName = form.agentName || getDefaultAgentName()
   const specialties: Record<string, string> = {
-    skincare: 'votre conseillere skincare',
-    makeup: 'votre conseillere maquillage',
-    fragrance: 'votre conseillere parfums',
-    haircare: 'votre conseillere capillaire',
-    bodycare: 'votre conseillere soins du corps',
-    natural: 'votre conseillere cosmetiques naturels',
-    multi: 'votre conseillere beaute'
+    skincare: 'votre conseillère skincare',
+    makeup: 'votre conseillère maquillage',
+    fragrance: 'votre conseillère parfums',
+    haircare: 'votre conseillère capillaire',
+    bodycare: 'votre conseillère soins du corps',
+    natural: 'votre conseillère cosmétiques naturels',
+    multi: 'votre conseillère beauté'
   }
   const brandName = form.company || 'notre boutique'
   const specialty = specialties[form.beautyCategory] || specialties.multi
   const welcomeMessage = `Bonjour ! Je suis ${agentName}, ${specialty} chez ${brandName}. Comment puis-je vous aider ?`
 
   const fallbackMessages: Record<string, string> = {
-    beginner: 'Je transmets votre question a notre equipe pour un conseil personnalise.',
+    beginner: 'Je transmets votre question à notre équipe pour un conseil personnalisé.',
     expert: 'Je contacte notre experte senior pour une analyse approfondie de votre demande.',
     luxury: 'Je vous mets en relation avec notre consultante premium pour un accompagnement sur mesure.'
   }
@@ -824,7 +743,7 @@ const getOptimizedAgentConfig = () => {
       communicationTone: form.communicationTone,
       specializedTarget: form.specializedTarget,
       targetAgeRange: form.targetAgeRange,
-      priceRange: form.priceRange,
+      priceRange: form.priceRange || syncStore.detectedPriceRange || 'mid',
       primaryGoals: form.primaryGoals
     }
   }
@@ -847,7 +766,7 @@ const getOptimizedWidgetConfig = () => {
     haircare: '💇‍♀️ Conseil capillaire',
     bodycare: '🧴 Conseil soins corps',
     natural: '🌿 Conseil naturel',
-    multi: '💝 Parler a ma vendeuse'
+    multi: '💝 Parler à ma vendeuse'
   }
   return {
     theme: 'modern',
@@ -886,7 +805,7 @@ const completeOnboarding = async () => {
       target_gender: form.targetGender,
       specialized_target: form.specializedTarget,
       target_age_range: form.targetAgeRange,
-      price_range: form.priceRange,
+      price_range: form.priceRange || syncStore.detectedPriceRange || 'mid',
       expertise_level: form.expertiseLevel,
       communication_tone: form.communicationTone,
       primary_goals: form.primaryGoals,
@@ -898,8 +817,8 @@ const completeOnboarding = async () => {
     }
 
     const shopResponse = await api.shops.update(user.id, shopData)
-    if (!shopResponse.success) throw new Error(shopResponse.error || 'Erreur mise a jour shop')
-    console.log('✅ [Onboarding] Shop mis a jour')
+    if (!shopResponse.success) throw new Error(shopResponse.error || 'Erreur mise à jour shop')
+    console.log('✅ [Onboarding] Shop mis à jour')
 
     // Step 2: Create agent
     const beautyCategory = form.beautyCategory || 'multi'
@@ -931,7 +850,7 @@ const completeOnboarding = async () => {
     const agentResponse = await api.agents.create(agentData)
     if (!agentResponse.success) {
       console.error('❌ [Onboarding] Agent creation error:', agentResponse)
-      throw new Error(`Mia n'a pas pu demarrer : ${agentResponse.error || 'Erreur inconnue'}`)
+      throw new Error(`Mia n'a pas pu démarrer : ${agentResponse.error || 'Erreur inconnue'}`)
     }
     console.log('✅ [Onboarding] Agent cree:', agentResponse.data?.id)
 
@@ -966,9 +885,11 @@ const completeOnboarding = async () => {
     }
 
     console.log('🎉 [Onboarding] Complete!')
-    sessionStorage.setItem('chatseller_onboarding_just_completed', 'true')
 
-    return navigateTo(`/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`, { replace: true })
+    // Store agentId and advance to step 6 (test immédiat)
+    createdAgentId.value = agentResponse.data?.id || null
+    sessionStorage.setItem('chatseller_onboarding_just_completed', 'true')
+    subStep.value = 6
 
   } catch (error: any) {
     console.error('❌ [Onboarding] Error:', error)
@@ -980,6 +901,172 @@ const completeOnboarding = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// ========== STEP 6: TEST IMMÉDIAT ==========
+
+// Scroll automatique vers le bas du chat
+const scrollChatToBottom = () => {
+  nextTick(() => {
+    if (chatScrollRef.value) {
+      chatScrollRef.value.scrollTop = chatScrollRef.value.scrollHeight
+    }
+  })
+}
+
+// Message de bienvenue affiché dans le chat de test
+const getWelcomeMessage = () => {
+  const name = form.agentName || getDefaultAgentName()
+  const specialties: Record<string, string> = {
+    skincare: 'experte skincare',
+    makeup: 'experte maquillage',
+    fragrance: 'experte parfums',
+    haircare: 'experte capillaire',
+    bodycare: 'experte soins du corps',
+    natural: 'experte cosmétiques naturels',
+    multi: 'conseillère beauté'
+  }
+  const specialty = specialties[form.beautyCategory] || specialties.multi
+  return `Bonjour ! Je suis ${name}, votre ${specialty} chez ${form.company || 'votre boutique'}. Comment puis-je vous aider ?`
+}
+
+// Suggestions de questions selon la catégorie
+const getTestSuggestions = (): string[] => {
+  const suggestions: Record<string, string[]> = {
+    skincare: ["C'est pour quel type de peau ?", "Pour les taches, vous avez quoi ?", "Quel est le prix ?"],
+    haircare: ["Vous avez quoi pour cheveux 4C ?", "Comment l'utiliser ?", "C'est naturel ?"],
+    makeup: ["Vous avez du fond de teint pour peaux foncées ?", "Ça tient combien de temps ?", "C'est waterproof ?"],
+    fragrance: ["C'est quoi les notes ?", "Ça sent fort ?", "Combien ça coûte ?"],
+    bodycare: ["C'est hydratant ?", "Pour les vergetures vous avez quoi ?", "C'est à base de karité ?"],
+    natural: ["C'est 100% naturel ?", "Vous avez du karité pur ?", "Livraison en combien de temps ?"],
+    multi: ["Vous avez quoi pour le visage ?", "Quel est votre best-seller ?", "Vous livrez où ?"]
+  }
+  return suggestions[form.beautyCategory] || suggestions.multi
+}
+
+// Envoyer un message de test à la Vendeuse IA
+const sendTestMessage = async (message?: string) => {
+  const text = message || testInput.value
+  if (!text.trim() || testLoading.value) return
+
+  // Ajouter le message utilisateur
+  testMessages.value.push({ id: Date.now().toString(), role: 'user', content: text })
+  testInput.value = ''
+  testLoading.value = true
+  scrollChatToBottom()
+
+  try {
+    const baseURL = runtimeConfig.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
+    const shopId = authStore.user?.id
+
+    // Si pas encore de conversationId, init d'abord
+    if (!testConversationId.value) {
+      console.log('🔍 [Test Chat] Initialisation conversation...')
+      const initResponse = await $fetch('/api/v1/public/chat', {
+        method: 'POST',
+        baseURL,
+        body: {
+          shopId,
+          message: 'init',
+          isFirstMessage: true
+        }
+      }) as any
+
+      if (initResponse?.success && initResponse?.data?.conversationId) {
+        testConversationId.value = initResponse.data.conversationId
+        console.log('✅ [Test Chat] Conversation créée:', testConversationId.value)
+      }
+    }
+
+    // Envoyer le message
+    const response = await $fetch('/api/v1/public/chat', {
+      method: 'POST',
+      baseURL,
+      body: {
+        shopId,
+        message: text,
+        conversationId: testConversationId.value,
+        isFirstMessage: false
+      }
+    }) as any
+
+    if (response?.success && response?.data) {
+      // Sauvegarder le conversationId si retourné
+      if (response.data.conversationId && !testConversationId.value) {
+        testConversationId.value = response.data.conversationId
+      }
+
+      testMessages.value.push({
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response.data.message || response.data.content || 'Je suis prête à vous aider !'
+      })
+    } else {
+      testMessages.value.push({
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "Je suis en train de finir de me préparer. Revenez dans quelques instants !"
+      })
+    }
+  } catch (err) {
+    console.warn('[Test chat] Erreur:', err)
+    testMessages.value.push({
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: "Je finalise ma formation. Vous pourrez me tester dans le Playground du dashboard !"
+    })
+  } finally {
+    testLoading.value = false
+    scrollChatToBottom()
+  }
+}
+
+// ========== STEP 7: ACTIVATION GUIDÉE ==========
+
+// Snippet d'intégration du widget
+const getWidgetSnippet = (): string => {
+  const shopId = authStore.user?.id || 'YOUR_SHOP_ID'
+  const baseURL = runtimeConfig.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
+  return `<!-- ChatSeller Widget -->
+<script>
+(function() {
+  window.ChatSellerConfig = {
+    shopId: '${shopId}',
+    apiUrl: '${baseURL}'
+  };
+  var s = document.createElement('script');
+  s.src = 'https://widget.chatseller.app/embed.js';
+  s.async = true;
+  document.body.appendChild(s);
+})();
+<\/script>`
+}
+
+// Copier le snippet dans le presse-papier
+const copyWidgetSnippet = async () => {
+  try {
+    await navigator.clipboard.writeText(getWidgetSnippet())
+    snippetCopied.value = true
+    setTimeout(() => { snippetCopied.value = false }, 2000)
+  } catch {
+    // Fallback pour navigateurs sans clipboard API
+    const el = document.createElement('textarea')
+    el.value = getWidgetSnippet()
+    document.body.appendChild(el)
+    el.select()
+    document.execCommand('copy')
+    document.body.removeChild(el)
+    snippetCopied.value = true
+    setTimeout(() => { snippetCopied.value = false }, 2000)
+  }
+}
+
+// Redirection finale vers le dashboard
+const goToDashboard = () => {
+  return navigateTo(
+    `/?onboarding=completed&beauty=true&agent_created=true&category=${form.beautyCategory}&welcome=true`,
+    { replace: true }
+  )
 }
 
 // ========== INIT ==========
