@@ -726,6 +726,7 @@ const beautyProfile = ref<BeautyProfile>({
 
 const agentId = ref<string | null>(null)
 const agentInfo = ref<AgentInfo | null>(null)
+const shopCurrency = ref('XOF')
 
 // ========== COMPUTED ==========
 const greeting = computed(() => {
@@ -773,17 +774,26 @@ const hasNoData = computed(() => {
 })
 
 // ========== UTILITY METHODS ==========
-const formatCurrency = (amount: number): string => {
+const formatCurrency = (amount: number, currency?: string): string => {
+  const cur = currency || shopCurrency.value || 'XOF'
+  if (cur === 'XOF') {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: 'EUR',
+    currency: cur,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(amount)
 }
 
 const formatConversionRate = (rate: any): string => {
-  if (typeof rate === 'number') {
+  if (typeof rate === 'number' && !isNaN(rate)) {
     if (rate === 0) return '0%'
     return `${rate.toFixed(1)}%`
   }
@@ -912,6 +922,7 @@ const loadBeautyProfile = async () => {
       }
 
       setupStatus.value.widgetIntegrated = shop.widget_integrated === true
+      shopCurrency.value = shop.default_currency || 'XOF'
     }
   } catch (error) {
     console.error('[Dashboard] Erreur chargement beauty profile:', error)
@@ -950,7 +961,8 @@ const loadOrders = async () => {
   try {
     const response = await api.orders.list()
     if (response.success && response.data) {
-      return response.data
+      // L'API retourne { orders: [...], pagination: {...}, analytics: {...} }
+      return response.data.orders || response.data
     }
     return []
   } catch (error) {
@@ -978,17 +990,20 @@ const loadDashboardData = async () => {
     if (ordersData.status === 'fulfilled') {
       const orders = ordersData.value
       const totalConversations = dashboardStats.value.conversations.total
+      const orderCount = Array.isArray(orders) ? orders.length : 0
 
       dashboardStats.value.orders = {
-        total: orders.length,
-        conversionRate: totalConversations > 0 ? Math.round((orders.length / totalConversations) * 100) : 0
+        total: orderCount,
+        conversionRate: totalConversations > 0 ? Math.round((orderCount / totalConversations) * 100) : 0
       }
 
-      if (orders.length > 0) {
+      if (orderCount > 0) {
+        // Détecter la devise depuis la première commande
+        if (orders[0]?.currency) shopCurrency.value = orders[0].currency
         const totalRevenue = orders.reduce((sum: number, order: any) => sum + (parseFloat(order.total_amount) || order.amount || 0), 0)
         dashboardStats.value.revenue = {
           total: totalRevenue,
-          average: Math.round(totalRevenue / orders.length)
+          average: Math.round(totalRevenue / orderCount)
         }
       }
     }
