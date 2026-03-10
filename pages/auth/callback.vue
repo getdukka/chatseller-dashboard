@@ -369,21 +369,28 @@ const processSession = async (session: any) => {
 onMounted(async () => {
   console.log('🔗 [Callback] Début traitement confirmation email')
 
-  // ✅ APPROCHE 1: Écouter l'événement SIGNED_IN de Supabase
-  // Supabase avec detectSessionInUrl: true traite automatiquement l'URL
   let sessionProcessed = false
-  let timeoutId: NodeJS.Timeout
+  let timeoutId: ReturnType<typeof setTimeout>
 
+  // ✅ TIMEOUT EN PREMIER — avant tout await, pour garantir qu'il se déclenche
+  // même si une des opérations async ci-dessous hang indéfiniment
+  timeoutId = setTimeout(() => {
+    if (!sessionProcessed) {
+      console.error('❌ [Callback] Timeout 12s - aucune session établie')
+      handleError(new Error('Le lien de confirmation a peut-être expiré ou est invalide.'))
+    }
+  }, 12000)
+
+  // ✅ APPROCHE 1: Écouter l'événement SIGNED_IN / INITIAL_SESSION de Supabase
   const authListener = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
     console.log('🔄 [Callback] Auth event reçu:', event)
 
-    if (sessionProcessed) return // Éviter les doubles traitements
+    if (sessionProcessed) return
 
-    if (event === 'SIGNED_IN' && session?.user) {
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
       sessionProcessed = true
       clearTimeout(timeoutId)
-
-      console.log('✅ [Callback] Session établie via événement SIGNED_IN')
+      console.log('✅ [Callback] Session établie via événement', event)
       currentStep.value = '🔑 Session établie...'
 
       try {
@@ -392,23 +399,20 @@ onMounted(async () => {
         handleError(err)
       }
 
-      // Nettoyer le listener
       authListener.data.subscription.unsubscribe()
     }
   })
 
-  // ✅ APPROCHE 2: Vérifier si une session existe déjà (fallback)
+  // ✅ APPROCHE 2: Vérifier si une session existe déjà (fallback rapide)
   currentStep.value = '🔍 Analyse du lien de confirmation...'
+  await new Promise(resolve => setTimeout(resolve, 500))
 
-  // Brief wait for Supabase to process the URL
-  await new Promise(resolve => setTimeout(resolve, 300))
-
-  // Vérifier si la session n'a pas déjà été traitée
   if (!sessionProcessed) {
     const { data: sessionData } = await supabase.auth.getSession()
 
     if (sessionData?.session?.user) {
       sessionProcessed = true
+      clearTimeout(timeoutId)
       console.log('✅ [Callback] Session trouvée via getSession')
       currentStep.value = '🔑 Session établie...'
 
@@ -424,32 +428,31 @@ onMounted(async () => {
   }
 
   // ✅ APPROCHE 3: Parser l'URL manuellement et établir la session
+  // (quand Supabase SPA singleton ne re-détecte pas le hash)
   if (!sessionProcessed) {
     currentStep.value = '🔑 Récupération des informations...'
     const tokens = parseCallbackUrl()
 
     try {
-      const sessionData = await establishSupabaseSession(tokens)
+      // Wrapper avec timeout pour éviter que setSession hang indéfiniment
+      const sessionData = await Promise.race([
+        establishSupabaseSession(tokens),
+        new Promise<null>((_, reject) =>
+          setTimeout(() => reject(new Error('setSession timeout (8s)')), 8000)
+        )
+      ])
 
-      if (sessionData?.session?.user) {
+      if (sessionData && (sessionData as any)?.session?.user) {
         sessionProcessed = true
-        await processSession(sessionData.session)
+        clearTimeout(timeoutId)
+        await processSession((sessionData as any).session)
         authListener.data.subscription.unsubscribe()
-        return
       }
     } catch (err) {
       console.warn('⚠️ [Callback] Établissement session manuel échoué:', err)
+      // Le timeout global (12s) affichera l'erreur si sessionProcessed reste false
     }
   }
-
-  // ✅ TIMEOUT: Si aucune session après 10 secondes, afficher erreur
-  timeoutId = setTimeout(() => {
-    if (!sessionProcessed) {
-      console.error('❌ [Callback] Timeout - aucune session établie')
-      handleError(new Error('Le lien de confirmation a peut-être expiré ou est invalide.'))
-      authListener.data.subscription.unsubscribe()
-    }
-  }, 10000)
 })
 
 // ✅ GESTION DES ERREURS
