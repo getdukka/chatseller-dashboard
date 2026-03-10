@@ -372,20 +372,44 @@ const processSession = async (session: any) => {
 onMounted(async () => {
   console.log('🔗 [Callback] Début traitement confirmation email')
 
+  // ✅ ÉTAPE 0 : Si l'utilisateur a déjà une session valide → aller au dashboard directement
+  const { data: quickCheck } = await supabase.auth.getSession()
+  if (quickCheck?.session?.user) {
+    console.log('✅ [Callback] Session active trouvée, redirection dashboard')
+    return navigateTo('/')
+  }
+
+  // ✅ ÉTAPE 0b : Si l'URL ne contient aucun token → inutile d'attendre, aller au login
+  const urlHasToken = window.location.hash.includes('access_token') ||
+                      window.location.hash.includes('token_hash') ||
+                      window.location.search.includes('code=') ||
+                      window.location.search.includes('token_hash=')
+
+  if (!urlHasToken) {
+    console.log('ℹ️ [Callback] Pas de token dans l\'URL → redirection login')
+    return navigateTo('/login')
+  }
+
   let sessionProcessed = false
   let timeoutId: ReturnType<typeof setTimeout>
+  let listenerRef: any = null
 
-  // ✅ TIMEOUT EN PREMIER — avant tout await, pour garantir qu'il se déclenche
-  // même si une des opérations async ci-dessous hang indéfiniment
+  // Fonction centralisée pour signaler l'échec immédiatement
+  const failNow = (err: Error) => {
+    if (sessionProcessed) return
+    sessionProcessed = true
+    clearTimeout(timeoutId)
+    listenerRef?.data?.subscription?.unsubscribe()
+    handleError(err)
+  }
+
+  // Timeout de sécurité (si tout hang)
   timeoutId = setTimeout(() => {
-    if (!sessionProcessed) {
-      console.error('❌ [Callback] Timeout 12s - aucune session établie')
-      handleError(new Error('Le lien de confirmation a peut-être expiré ou est invalide.'))
-    }
+    failNow(new Error('Le lien a expiré ou est invalide.'))
   }, 12000)
 
   // ✅ APPROCHE 1: Écouter l'événement SIGNED_IN / INITIAL_SESSION de Supabase
-  const authListener = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+  listenerRef = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
     console.log('🔄 [Callback] Auth event reçu:', event)
 
     if (sessionProcessed) return
@@ -393,7 +417,7 @@ onMounted(async () => {
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
       sessionProcessed = true
       clearTimeout(timeoutId)
-      console.log('✅ [Callback] Session établie via événement', event)
+      console.log('✅ [Callback] Session via événement', event)
       currentStep.value = '🔑 Session établie...'
 
       try {
@@ -402,13 +426,13 @@ onMounted(async () => {
         handleError(err)
       }
 
-      authListener.data.subscription.unsubscribe()
+      listenerRef?.data?.subscription?.unsubscribe()
     }
   })
 
-  // ✅ APPROCHE 2: Vérifier si une session existe déjà (fallback rapide)
-  currentStep.value = '🔍 Analyse du lien de confirmation...'
-  await new Promise(resolve => setTimeout(resolve, 500))
+  // ✅ APPROCHE 2: Attendre que Supabase traite le hash (detectSessionInUrl)
+  currentStep.value = '🔍 Vérification du lien...'
+  await new Promise(resolve => setTimeout(resolve, 800))
 
   if (!sessionProcessed) {
     const { data: sessionData } = await supabase.auth.getSession()
@@ -416,7 +440,7 @@ onMounted(async () => {
     if (sessionData?.session?.user) {
       sessionProcessed = true
       clearTimeout(timeoutId)
-      console.log('✅ [Callback] Session trouvée via getSession')
+      console.log('✅ [Callback] Session via getSession')
       currentStep.value = '🔑 Session établie...'
 
       try {
@@ -425,35 +449,43 @@ onMounted(async () => {
         handleError(err)
       }
 
-      authListener.data.subscription.unsubscribe()
+      listenerRef?.data?.subscription?.unsubscribe()
       return
     }
   }
 
-  // ✅ APPROCHE 3: Parser l'URL manuellement et établir la session
-  // (quand Supabase SPA singleton ne re-détecte pas le hash)
+  // ✅ APPROCHE 3: setSession manuel avec les tokens de l'URL
   if (!sessionProcessed) {
-    currentStep.value = '🔑 Récupération des informations...'
+    currentStep.value = '🔑 Vérification des credentials...'
     const tokens = parseCallbackUrl()
 
+    // Erreur explicite dans l'URL (ex: OAuth refusé)
+    if (tokens.error) {
+      failNow(new Error(tokens.error_description || tokens.error))
+      return
+    }
+
     try {
-      // Wrapper avec timeout pour éviter que setSession hang indéfiniment
       const sessionData = await Promise.race([
         establishSupabaseSession(tokens),
         new Promise<null>((_, reject) =>
-          setTimeout(() => reject(new Error('setSession timeout (8s)')), 8000)
+          setTimeout(() => reject(new Error('Délai dépassé (8s)')), 8000)
         )
       ])
 
       if (sessionData && (sessionData as any)?.session?.user) {
         sessionProcessed = true
         clearTimeout(timeoutId)
+        listenerRef?.data?.subscription?.unsubscribe()
         await processSession((sessionData as any).session)
-        authListener.data.subscription.unsubscribe()
+      } else {
+        // setSession a répondu mais sans session valide → token expiré ou déjà utilisé
+        failNow(new Error('Le lien a expiré ou a déjà été utilisé.'))
       }
-    } catch (err) {
-      console.warn('⚠️ [Callback] Établissement session manuel échoué:', err)
-      // Le timeout global (12s) affichera l'erreur si sessionProcessed reste false
+    } catch (err: any) {
+      // Erreur réseau ou token rejeté → afficher immédiatement
+      console.error('❌ [Callback] setSession échoué:', err.message)
+      failNow(err)
     }
   }
 })
