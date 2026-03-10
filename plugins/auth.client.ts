@@ -54,13 +54,19 @@ export default defineNuxtPlugin(async () => {
       }
     }
     
+    // ✅ SKIP Supabase listeners sur /auth/callback — cette page gère tout elle-même
+    // et ne doit PAS créer le singleton Supabase (detectSessionInUrl: true
+    // déclenche getUser() sur les tokens de l'URL → appel réseau qui hang)
+    if (currentPath.startsWith('/auth/callback')) {
+      console.log('⏭️ [Plugin Auth] Page callback, skip listeners Supabase')
+      return
+    }
+
     // ✅ REFRESH PROACTIF AU RETOUR SUR L'ONGLET
-    // Quand l'utilisateur revient après une période d'inactivité,
-    // on rafraîchit la session pour éviter que les clics ne fonctionnent plus
     const supabase = useSupabase()
 
     let lastRefreshTime = 0
-    const MIN_REFRESH_INTERVAL = 60_000 // 1 minute minimum entre refreshes
+    const MIN_REFRESH_INTERVAL = 60_000
 
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState !== 'visible') return
@@ -79,12 +85,11 @@ export default defineNuxtPlugin(async () => {
           }
         }
       } catch (e) {
-        // Silencieux - le middleware gérera les cas d'erreur
+        // Silencieux
       }
     })
 
     // ✅ ÉCOUTER LES CHANGEMENTS D'AUTHENTIFICATION SUPABASE
-
     supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       console.log('🔄 [Plugin Auth] Changement état auth Supabase:', event)
 

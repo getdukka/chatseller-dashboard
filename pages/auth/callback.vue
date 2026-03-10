@@ -45,23 +45,25 @@
 
 <script setup lang="ts">
 /**
- * ARCHITECTURE CALLBACK AUTH
+ * CALLBACK AUTH — ZERO SDK DEPENDENCY
  *
- * Problem: The singleton Supabase client (useSupabase) uses detectSessionInUrl: true.
- * On the callback page, Supabase's _initialize() tries to process the URL tokens
- * via getUser() network call. If this call hangs (network, rate limit, expired token),
- * initializePromise never resolves → ALL auth methods block forever (setSession,
- * getSession, onAuthStateChange's INITIAL_SESSION callback — they all await initializePromise).
+ * Problem diagnosed across 4 iterations:
+ * - The Supabase JS SDK's setSession() internally calls getUser() (network)
+ * - This network call hangs from Vercel production (works locally)
+ * - ALL SDK methods (setSession, getSession, onAuthStateChange) are blocked
+ *   because they all await initializePromise which also makes network calls
+ * - Even a dedicated lightweight client with detectSessionInUrl:false hangs
+ *   because setSession() itself calls getUser()
  *
- * Solution: Create a DEDICATED lightweight Supabase client for the callback page only.
- * - persistSession: false → no localStorage read/write → no stale session recovery
- * - detectSessionInUrl: false → no automatic URL processing → initializePromise resolves instantly
- * - We process the tokens manually with our own timeouts
- * - On success, we persist the session to the MAIN singleton client's localStorage
- *   so the rest of the app picks it up seamlessly
+ * Solution: BYPASS THE SDK ENTIRELY for session establishment.
+ * 1. Parse tokens directly from URL (no SDK)
+ * 2. Decode the JWT locally to extract user info (no network call)
+ * 3. For PKCE: direct fetch() to /auth/v1/token (no SDK, with AbortController timeout)
+ * 4. For token_hash: direct fetch() to /auth/v1/verify (no SDK)
+ * 5. Write session to localStorage in Supabase's format
+ * 6. Redirect — the rest of the app picks up the session from localStorage
  */
 
-import { createClient } from '@supabase/supabase-js'
 import { useAuthStore } from '~~/stores/auth'
 
 definePageMeta({ layout: false })
@@ -69,217 +71,242 @@ definePageMeta({ layout: false })
 const config = useRuntimeConfig()
 const authStore = useAuthStore()
 
-// Lightweight Supabase client — initializePromise resolves instantly
-const callbackSupabase = createClient(
-  config.public.supabaseUrl,
-  config.public.supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false
-    }
-  }
-)
-
 const loading = ref(true)
 const currentStep = ref('Vérification de votre identité...')
 
-// ─── Persist session to main singleton's localStorage ────────────────────────
-// So the rest of the app (middleware, plugins, composables) picks it up.
-const persistSessionToStorage = (session: any) => {
-  try {
-    // Supabase stores the session under key: sb-<project-ref>-auth-token
-    const projectRef = config.public.supabaseUrl
-      .replace('https://', '')
-      .split('.')[0]
-    const storageKey = `sb-${projectRef}-auth-token`
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-    localStorage.setItem(storageKey, JSON.stringify({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
-      expires_at: session.expires_at,
-      expires_in: session.expires_in,
-      token_type: session.token_type,
-      user: session.user
-    }))
-    console.log('✅ [Callback] Session persistée dans localStorage:', storageKey)
-  } catch (err) {
-    console.warn('[Callback] Erreur persistance localStorage:', err)
+const getSupabaseStorageKey = () => {
+  const projectRef = config.public.supabaseUrl
+    .replace('https://', '')
+    .split('.')[0]
+  return `sb-${projectRef}-auth-token`
+}
+
+/** Decode a JWT payload without any library */
+const decodeJwtPayload = (token: string): any => {
+  try {
+    const base64 = token.split('.')[1]
+    const json = atob(base64.replace(/-/g, '+').replace(/_/g, '/'))
+    return JSON.parse(json)
+  } catch {
+    return null
   }
 }
 
-// ─── MAIN HANDLER ────────────────────────────────────────────────────────────
+/** Build a Supabase-compatible session object from raw tokens + JWT decode */
+const buildSession = (accessToken: string, refreshToken: string, user?: any) => {
+  const payload = decodeJwtPayload(accessToken)
+  if (!payload) return null
+
+  // Check if token is expired
+  const now = Math.floor(Date.now() / 1000)
+  if (payload.exp && payload.exp < now) {
+    console.warn('[Callback] Token expiré:', { exp: payload.exp, now })
+    return null
+  }
+
+  const sessionUser = user || {
+    id: payload.sub,
+    email: payload.email,
+    email_confirmed_at: payload.email_confirmed_at || new Date().toISOString(),
+    created_at: payload.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    aud: payload.aud || 'authenticated',
+    role: payload.role || 'authenticated',
+    user_metadata: payload.user_metadata || {},
+    app_metadata: payload.app_metadata || {}
+  }
+
+  return {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_at: payload.exp,
+    expires_in: payload.exp ? payload.exp - now : 3600,
+    token_type: 'bearer',
+    user: sessionUser
+  }
+}
+
+/** Persist session to localStorage in Supabase's expected format */
+const persistSession = (session: any) => {
+  try {
+    const key = getSupabaseStorageKey()
+    localStorage.setItem(key, JSON.stringify(session))
+    console.log('✅ [Callback] Session persistée:', key)
+  } catch (err) {
+    console.warn('[Callback] localStorage error:', err)
+  }
+}
+
+/** fetch() with AbortController timeout */
+const fetchWithTimeout = (url: string, options: RequestInit, timeoutMs: number): Promise<Response> => {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer))
+}
+
+// ─── MAIN ────────────────────────────────────────────────────────────────────
+
 onMounted(async () => {
-  let done = false
-
   const redirectUser = async (session: any) => {
-    if (done) return
-    done = true
-
-    // Persist to localStorage for the main Supabase singleton
-    persistSessionToStorage(session)
-
-    // Sync auth store in background
+    persistSession(session)
     authStore.restoreSession().catch(() => {})
 
-    // New user = account created less than 5 minutes ago
     const createdAt = new Date(session.user.created_at).getTime()
     const isNew = (Date.now() - createdAt) < 5 * 60 * 1000
 
-    console.log('✅ [Callback] Redirection:', isNew ? 'onboarding' : 'dashboard')
+    console.log('✅ [Callback] Redirect:', isNew ? 'onboarding' : 'dashboard')
     await navigateTo(isNew ? '/onboarding?from=oauth&welcome=true' : '/')
   }
 
   const fail = (reason: string) => {
-    if (done) return
-    done = true
     loading.value = false
     console.error('❌ [Callback] Échec:', reason)
   }
 
-  // Global timeout
-  const timer = setTimeout(() => fail('Timeout 10s'), 10000)
-
   try {
-    // ── Parse URL ───────────────────────────────────────────────────────
     const search = new URLSearchParams(window.location.search)
     const hash   = new URLSearchParams(window.location.hash.slice(1))
 
     const code         = search.get('code')
-    const tokenHash    = search.get('token_hash')
-    const type         = search.get('type') || 'email'
+    const tokenHash    = search.get('token_hash') || hash.get('token_hash')
+    const type         = search.get('type') || hash.get('type') || 'email'
     const errorParam   = search.get('error') || hash.get('error')
     const accessToken  = hash.get('access_token')
     const refreshToken = hash.get('refresh_token') || ''
+    const expiresIn    = hash.get('expires_in')
 
     console.log('[Callback] URL params:', {
-      code: !!code, tokenHash: !!tokenHash, accessToken: !!accessToken, type, error: errorParam
+      code: !!code, tokenHash: !!tokenHash, accessToken: !!accessToken,
+      refreshToken: !!refreshToken, type, error: errorParam
     })
 
-    // Error from provider
+    // ── Error from provider ──────────────────────────────────────────────
     if (errorParam) {
-      clearTimeout(timer)
       fail(search.get('error_description') || hash.get('error_description') || errorParam)
       return
     }
 
-    // No auth params
+    // ── No auth params ───────────────────────────────────────────────────
     if (!code && !tokenHash && !accessToken) {
-      clearTimeout(timer)
       fail('Pas de token dans l\'URL')
       await navigateTo('/login')
       return
     }
 
-    // ── #access_token= (Google OAuth implicit flow) ─────────────────────
+    // ── #access_token= (Google OAuth implicit flow) ──────────────────────
+    // ZERO SDK calls. Decode JWT locally, persist to localStorage, redirect.
     if (accessToken) {
-      console.log('🔑 [Callback] access_token → setSession...')
+      console.log('🔑 [Callback] access_token → décodage JWT local (aucun appel réseau)')
       currentStep.value = 'Connexion Google en cours...'
 
-      const { data, error } = await callbackSupabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      })
-
-      clearTimeout(timer)
-
-      if (error) {
-        fail(`setSession: ${error.message}`)
+      const session = buildSession(accessToken, refreshToken)
+      if (!session) {
+        fail('Token invalide ou expiré')
         return
       }
-      if (data?.session?.user) {
-        await redirectUser(data.session)
-      } else {
-        fail('Pas de session après setSession')
-      }
+
+      await redirectUser(session)
       return
     }
 
     // ── ?code= (PKCE flow) ──────────────────────────────────────────────
+    // Direct fetch to Supabase /auth/v1/token — bypass SDK completely.
     if (code) {
-      console.log('🔑 [Callback] PKCE code → exchangeCodeForSession...')
+      console.log('🔑 [Callback] PKCE code → fetch direct /auth/v1/token')
       currentStep.value = 'Connexion Google en cours...'
 
-      // The PKCE code_verifier was stored by the main Supabase client
-      // when signInWithOAuth was called. Read it from localStorage.
-      const projectRef = config.public.supabaseUrl
-        .replace('https://', '')
-        .split('.')[0]
+      const projectRef = config.public.supabaseUrl.replace('https://', '').split('.')[0]
       const verifierKey = `sb-${projectRef}-auth-token-code-verifier`
-      const codeVerifier = localStorage.getItem(verifierKey)
+      const codeVerifier = localStorage.getItem(verifierKey) || ''
 
-      console.log('[Callback] PKCE verifier found:', !!codeVerifier)
+      try {
+        const response = await fetchWithTimeout(
+          `${config.public.supabaseUrl}/auth/v1/token?grant_type=authorization_code`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': config.public.supabaseAnonKey
+            },
+            body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier })
+          },
+          8000
+        )
 
-      // Use the main client's exchangeCodeForSession since it has the verifier
-      // But if it hangs, we need a workaround. Try direct API call instead.
-      const response = await fetch(`${config.public.supabaseUrl}/auth/v1/token?grant_type=authorization_code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': config.public.supabaseAnonKey
-        },
-        body: JSON.stringify({
-          auth_code: code,
-          code_verifier: codeVerifier || ''
-        })
-      })
-
-      clearTimeout(timer)
-
-      if (!response.ok) {
-        const body = await response.text()
-        console.error('[Callback] PKCE exchange failed:', response.status, body)
-        fail(`Échange PKCE: ${response.status}`)
-        return
-      }
-
-      const tokenData = await response.json()
-      if (tokenData.access_token && tokenData.user) {
-        // Build a session-like object and persist it
-        const session = {
-          access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
-          expires_at: tokenData.expires_at,
-          expires_in: tokenData.expires_in,
-          token_type: tokenData.token_type || 'bearer',
-          user: tokenData.user
+        if (!response.ok) {
+          const body = await response.text()
+          console.error('[Callback] PKCE exchange failed:', response.status, body)
+          fail(`Échange PKCE échoué (${response.status})`)
+          return
         }
-        // Clean up the code verifier
-        if (codeVerifier) localStorage.removeItem(verifierKey)
-        await redirectUser(session)
-      } else {
-        fail('Réponse PKCE invalide')
+
+        const tokenData = await response.json()
+        if (tokenData.access_token) {
+          const session = buildSession(
+            tokenData.access_token,
+            tokenData.refresh_token || '',
+            tokenData.user
+          )
+          if (!session) { fail('Session PKCE invalide'); return }
+          if (codeVerifier) localStorage.removeItem(verifierKey)
+          await redirectUser(session)
+        } else {
+          fail('Réponse PKCE sans access_token')
+        }
+      } catch (err: any) {
+        fail(err.name === 'AbortError' ? 'Timeout échange PKCE' : err.message)
       }
       return
     }
 
     // ── ?token_hash= (email confirmation) ────────────────────────────────
+    // Direct fetch to Supabase /auth/v1/verify — bypass SDK.
     if (tokenHash) {
-      console.log('🔑 [Callback] token_hash → verifyOtp...')
+      console.log('🔑 [Callback] token_hash → fetch direct /auth/v1/verify')
       currentStep.value = 'Vérification de votre email...'
 
-      const { data, error } = await callbackSupabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type: type as any
-      })
+      try {
+        const response = await fetchWithTimeout(
+          `${config.public.supabaseUrl}/auth/v1/verify`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': config.public.supabaseAnonKey
+            },
+            body: JSON.stringify({ token_hash: tokenHash, type })
+          },
+          8000
+        )
 
-      clearTimeout(timer)
+        if (!response.ok) {
+          const body = await response.text()
+          console.error('[Callback] verifyOtp failed:', response.status, body)
+          fail(`Vérification email échouée (${response.status})`)
+          return
+        }
 
-      if (error) {
-        fail(`verifyOtp: ${error.message}`)
-        return
-      }
-      if (data?.session?.user) {
-        await redirectUser(data.session)
-      } else {
-        fail('Pas de session après verifyOtp')
+        const tokenData = await response.json()
+        if (tokenData.access_token) {
+          const session = buildSession(
+            tokenData.access_token,
+            tokenData.refresh_token || '',
+            tokenData.user
+          )
+          if (!session) { fail('Session email invalide'); return }
+          await redirectUser(session)
+        } else {
+          fail('Réponse vérification sans access_token')
+        }
+      } catch (err: any) {
+        fail(err.name === 'AbortError' ? 'Timeout vérification email' : err.message)
       }
       return
     }
 
   } catch (err: any) {
-    clearTimeout(timer)
     fail(err.message || 'Erreur inattendue')
   }
 })

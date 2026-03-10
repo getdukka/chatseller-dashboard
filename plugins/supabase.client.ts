@@ -14,12 +14,17 @@ export default defineNuxtPlugin(async () => {
                      currentPath === '/reset-password' ||
                      currentPath === '/onboarding'
 
+  // ✅ SKIP TOTAL sur /auth/callback — cette page gère son propre flow
+  // et ne doit PAS créer le singleton Supabase (detectSessionInUrl: true
+  // déclenche getUser() sur les tokens de l'URL → appel réseau qui hang)
+  if (currentPath.startsWith('/auth/callback')) {
+    console.log('⏭️ [Supabase Plugin] Page callback détectée, skip complet')
+    return
+  }
+
   const authStore = useAuthStore()
   const supabase = useSupabase()
 
-  // ✅ NE PAS configurer de listener sur les pages auth
-  // Le plugin auth.client.ts gère déjà les événements auth
-  // et les pages auth (callback, onboarding) gèrent leur propre flow
   if (!isAuthPage) {
     // ✅ ÉCOUTER LES CHANGEMENTS D'AUTHENTIFICATION SUPABASE - SEULEMENT SUR PAGES NON-AUTH
     supabase.auth.onAuthStateChange(async (event, session) => {
