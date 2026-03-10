@@ -149,15 +149,21 @@ const fetchWithTimeout = (url: string, options: RequestInit, timeoutMs: number):
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
-  const redirectUser = async (session: any) => {
+  const redirectUser = (session: any) => {
     persistSession(session)
-    authStore.restoreSession().catch(() => {})
 
     const createdAt = new Date(session.user.created_at).getTime()
     const isNew = (Date.now() - createdAt) < 5 * 60 * 1000
 
     console.log('✅ [Callback] Redirect:', isNew ? 'onboarding' : 'dashboard')
-    await navigateTo(isNew ? '/onboarding?from=oauth&welcome=true' : '/')
+
+    // FULL PAGE RELOAD — not SPA navigateTo().
+    // The plugins skipped creating the Supabase singleton on /auth/callback.
+    // navigateTo() would trigger the auth middleware in a context where the
+    // singleton doesn't exist → getSession() blocks → redirect to /login.
+    // A full reload lets plugins create the singleton fresh on the target page
+    // and read the session we just persisted in localStorage.
+    window.location.href = isNew ? '/onboarding?from=oauth&welcome=true' : '/'
   }
 
   const fail = (reason: string) => {
