@@ -1,31 +1,39 @@
-// middleware/admin.ts 
+// middleware/admin.ts — Super admin access (email-based, returns 404 for non-admin)
 import { useAuthStore } from '~/stores/auth'
+import { useSupabase } from '~/composables/useSupabase'
+
+const ADMIN_EMAIL = 'ibuka.ndjoli@gmail.com'
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  // Ne pas exécuter côté serveur
   if (process.server) return
 
   try {
     const authStore = useAuthStore()
+    const supabase = useSupabase()
 
-    // Vérifier si l'utilisateur est connecté
-    if (!authStore.isLoggedIn) {
+    // Check Supabase session directly (more reliable than store on cold load)
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session?.user) {
       return navigateTo('/login')
     }
 
-    // Vérifier les permissions admin
-    const user = authStore.user
-    if (!user || user.role !== 'admin') {
-      console.log('⛔ Middleware admin: Accès refusé - role insuffisant')
+    const email = session.user.email
+
+    if (email !== ADMIN_EMAIL) {
+      // Return 404 — admin pages must be invisible to non-admin users
       throw createError({
-        statusCode: 403,
-        statusMessage: 'Accès refusé - Permissions insuffisantes'
+        statusCode: 404,
+        statusMessage: 'Page not found'
       })
     }
 
-    console.log('✅ Middleware admin: Accès autorisé')
-  } catch (error) {
-    console.error('❌ Middleware admin: Erreur:', error)
-    return navigateTo('/')
+    // Ensure auth store is synced
+    if (!authStore.isAuthenticated) {
+      await authStore.restoreSession()
+    }
+  } catch (error: any) {
+    if (error?.statusCode === 404) throw error
+    throw createError({ statusCode: 404, statusMessage: 'Page not found' })
   }
 })
