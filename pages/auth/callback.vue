@@ -44,49 +44,86 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * ARCHITECTURE CALLBACK AUTH
+ *
+ * Problem: The singleton Supabase client (useSupabase) uses detectSessionInUrl: true.
+ * On the callback page, Supabase's _initialize() tries to process the URL tokens
+ * via getUser() network call. If this call hangs (network, rate limit, expired token),
+ * initializePromise never resolves → ALL auth methods block forever (setSession,
+ * getSession, onAuthStateChange's INITIAL_SESSION callback — they all await initializePromise).
+ *
+ * Solution: Create a DEDICATED lightweight Supabase client for the callback page only.
+ * - persistSession: false → no localStorage read/write → no stale session recovery
+ * - detectSessionInUrl: false → no automatic URL processing → initializePromise resolves instantly
+ * - We process the tokens manually with our own timeouts
+ * - On success, we persist the session to the MAIN singleton client's localStorage
+ *   so the rest of the app picks it up seamlessly
+ */
+
+import { createClient } from '@supabase/supabase-js'
 import { useAuthStore } from '~~/stores/auth'
 
-// ─── CRITICAL: Clear stale Supabase session from localStorage BEFORE creating
-// the Supabase client. Without this, Supabase's _recoverAndRefresh() tries to
-// refresh the expired token via a network call that can hang indefinitely,
-// blocking initializePromise → onAuthStateChange INITIAL_SESSION never fires.
-if (process.client) {
-  try {
-    const staleKeys = Object.keys(localStorage).filter(
-      k => k.startsWith('sb-') && k.endsWith('-auth-token')
-    )
-    if (staleKeys.length) {
-      console.log('[Callback] Clearing stale sessions:', staleKeys)
-      staleKeys.forEach(k => localStorage.removeItem(k))
-    }
-  } catch { /* ignore storage errors */ }
-}
+definePageMeta({ layout: false })
 
-// Import Supabase AFTER clearing stale storage
-import { useSupabase } from '~~/composables/useSupabase'
-const supabase = useSupabase()
+const config = useRuntimeConfig()
 const authStore = useAuthStore()
 
-definePageMeta({ layout: false })
+// Lightweight Supabase client — initializePromise resolves instantly
+const callbackSupabase = createClient(
+  config.public.supabaseUrl,
+  config.public.supabaseAnonKey,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false
+    }
+  }
+)
 
 const loading = ref(true)
 const currentStep = ref('Vérification de votre identité...')
 
-// ─── MAIN HANDLER ───────────────────────────────────────────────────────────
-onMounted(() => {
-  let resolved = false
-  let subRef: any = null
-  let timer: ReturnType<typeof setTimeout>
+// ─── Persist session to main singleton's localStorage ────────────────────────
+// So the rest of the app (middleware, plugins, composables) picks it up.
+const persistSessionToStorage = (session: any) => {
+  try {
+    // Supabase stores the session under key: sb-<project-ref>-auth-token
+    const projectRef = config.public.supabaseUrl
+      .replace('https://', '')
+      .split('.')[0]
+    const storageKey = `sb-${projectRef}-auth-token`
+
+    localStorage.setItem(storageKey, JSON.stringify({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      expires_at: session.expires_at,
+      expires_in: session.expires_in,
+      token_type: session.token_type,
+      user: session.user
+    }))
+    console.log('✅ [Callback] Session persistée dans localStorage:', storageKey)
+  } catch (err) {
+    console.warn('[Callback] Erreur persistance localStorage:', err)
+  }
+}
+
+// ─── MAIN HANDLER ────────────────────────────────────────────────────────────
+onMounted(async () => {
+  let done = false
 
   const redirectUser = async (session: any) => {
-    if (resolved) return
-    resolved = true
-    clearTimeout(timer)
-    subRef?.unsubscribe()
+    if (done) return
+    done = true
 
-    // Sync auth store in background — don't block redirect
+    // Persist to localStorage for the main Supabase singleton
+    persistSessionToStorage(session)
+
+    // Sync auth store in background
     authStore.restoreSession().catch(() => {})
 
+    // New user = account created less than 5 minutes ago
     const createdAt = new Date(session.user.created_at).getTime()
     const isNew = (Date.now() - createdAt) < 5 * 60 * 1000
 
@@ -94,123 +131,157 @@ onMounted(() => {
     await navigateTo(isNew ? '/onboarding?from=oauth&welcome=true' : '/')
   }
 
-  const fail = () => {
-    if (resolved) return
-    resolved = true
-    clearTimeout(timer)
-    subRef?.unsubscribe()
+  const fail = (reason: string) => {
+    if (done) return
+    done = true
     loading.value = false
-    console.warn('❌ [Callback] Échec')
+    console.error('❌ [Callback] Échec:', reason)
   }
 
-  // ── Step 1: auth listener (registered synchronously) ────────────────────
-  const { data } = supabase.auth.onAuthStateChange((event, session) => {
-    if (resolved) return
-    console.log('🔄 [Callback] Auth event:', event, '| has user:', !!session?.user)
-    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-      redirectUser(session)
-    }
-  })
-  subRef = data.subscription
+  // Global timeout
+  const timer = setTimeout(() => fail('Timeout 10s'), 10000)
 
-  // ── Step 2: timeout (registered synchronously) ──────────────────────────
-  timer = setTimeout(() => {
-    console.warn('⏰ [Callback] Timeout 12s')
-    fail()
-  }, 12000)
-
-  // ── Step 3: async IIFE ───────────────────────────────────────────────────
-  ;(async () => {
+  try {
+    // ── Parse URL ───────────────────────────────────────────────────────
     const search = new URLSearchParams(window.location.search)
     const hash   = new URLSearchParams(window.location.hash.slice(1))
 
-    const code        = search.get('code')
-    const tokenHash   = search.get('token_hash')
-    const type        = search.get('type') || 'email'
-    const errorParam  = search.get('error')
-    const accessToken = hash.get('access_token')
+    const code         = search.get('code')
+    const tokenHash    = search.get('token_hash')
+    const type         = search.get('type') || 'email'
+    const errorParam   = search.get('error') || hash.get('error')
+    const accessToken  = hash.get('access_token')
     const refreshToken = hash.get('refresh_token') || ''
 
-    console.log('[Callback] URL params:', { code: !!code, tokenHash: !!tokenHash, accessToken: !!accessToken, type, error: errorParam })
+    console.log('[Callback] URL params:', {
+      code: !!code, tokenHash: !!tokenHash, accessToken: !!accessToken, type, error: errorParam
+    })
 
-    // Error from provider (e.g. user denied Google access)
+    // Error from provider
     if (errorParam) {
-      fail()
+      clearTimeout(timer)
+      fail(search.get('error_description') || hash.get('error_description') || errorParam)
       return
     }
 
-    // No auth params → check for existing session or go to login
+    // No auth params
     if (!code && !tokenHash && !accessToken) {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) { await redirectUser(session) }
-        else { fail(); await navigateTo('/login') }
-      } catch {
-        fail(); await navigateTo('/login')
-      }
+      clearTimeout(timer)
+      fail('Pas de token dans l\'URL')
+      await navigateTo('/login')
       return
     }
 
-    // ── Google OAuth with PKCE (?code=) ─────────────────────────────────
-    // Supabase auto-exchanges via detectSessionInUrl → fires SIGNED_IN.
-    // Just wait for the listener above. The stale session was cleared above
-    // so initializePromise resolves fast and processes the code immediately.
-    if (code) {
-      console.log('🔑 [Callback] PKCE code → Supabase auto-exchange...')
-      currentStep.value = 'Connexion Google en cours...'
-      // Listener will catch SIGNED_IN. No manual exchange needed.
-      return
-    }
-
-    // ── Google OAuth implicit flow (#access_token=) ──────────────────────
-    // Supabase auto-processes via detectSessionInUrl. But we also call
-    // setSession() explicitly with a timeout as a reliable fallback.
+    // ── #access_token= (Google OAuth implicit flow) ─────────────────────
     if (accessToken) {
-      console.log('🔑 [Callback] access_token → setSession explicite...')
-      currentStep.value = 'Établissement de la session...'
-      try {
-        const { data: sessData, error } = await Promise.race([
-          supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }),
-          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
-        ])
-        if (error) {
-          console.error('[Callback] setSession error:', error.message)
-          fail()
-          return
-        }
-        if (sessData?.session?.user) {
-          await redirectUser(sessData.session)
-        }
-        // else: wait for SIGNED_IN from auto-detection listener
-      } catch (err: any) {
-        if (err.message === 'timeout') {
-          console.warn('[Callback] setSession timeout — waiting for listener...')
-          // Don't fail yet, listener might still fire
-        } else {
-          fail()
-        }
+      console.log('🔑 [Callback] access_token → setSession...')
+      currentStep.value = 'Connexion Google en cours...'
+
+      const { data, error } = await callbackSupabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      })
+
+      clearTimeout(timer)
+
+      if (error) {
+        fail(`setSession: ${error.message}`)
+        return
+      }
+      if (data?.session?.user) {
+        await redirectUser(data.session)
+      } else {
+        fail('Pas de session après setSession')
       }
       return
     }
 
-    // ── Email confirmation (?token_hash=) ────────────────────────────────
-    // Must call verifyOtp explicitly — Supabase does NOT auto-process token_hash.
+    // ── ?code= (PKCE flow) ──────────────────────────────────────────────
+    if (code) {
+      console.log('🔑 [Callback] PKCE code → exchangeCodeForSession...')
+      currentStep.value = 'Connexion Google en cours...'
+
+      // The PKCE code_verifier was stored by the main Supabase client
+      // when signInWithOAuth was called. Read it from localStorage.
+      const projectRef = config.public.supabaseUrl
+        .replace('https://', '')
+        .split('.')[0]
+      const verifierKey = `sb-${projectRef}-auth-token-code-verifier`
+      const codeVerifier = localStorage.getItem(verifierKey)
+
+      console.log('[Callback] PKCE verifier found:', !!codeVerifier)
+
+      // Use the main client's exchangeCodeForSession since it has the verifier
+      // But if it hangs, we need a workaround. Try direct API call instead.
+      const response = await fetch(`${config.public.supabaseUrl}/auth/v1/token?grant_type=authorization_code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': config.public.supabaseAnonKey
+        },
+        body: JSON.stringify({
+          auth_code: code,
+          code_verifier: codeVerifier || ''
+        })
+      })
+
+      clearTimeout(timer)
+
+      if (!response.ok) {
+        const body = await response.text()
+        console.error('[Callback] PKCE exchange failed:', response.status, body)
+        fail(`Échange PKCE: ${response.status}`)
+        return
+      }
+
+      const tokenData = await response.json()
+      if (tokenData.access_token && tokenData.user) {
+        // Build a session-like object and persist it
+        const session = {
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: tokenData.expires_at,
+          expires_in: tokenData.expires_in,
+          token_type: tokenData.token_type || 'bearer',
+          user: tokenData.user
+        }
+        // Clean up the code verifier
+        if (codeVerifier) localStorage.removeItem(verifierKey)
+        await redirectUser(session)
+      } else {
+        fail('Réponse PKCE invalide')
+      }
+      return
+    }
+
+    // ── ?token_hash= (email confirmation) ────────────────────────────────
     if (tokenHash) {
       console.log('🔑 [Callback] token_hash → verifyOtp...')
       currentStep.value = 'Vérification de votre email...'
-      try {
-        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as any })
-        if (error) {
-          console.error('[Callback] verifyOtp error:', error.message)
-          fail()
-        }
-        // On success, SIGNED_IN fires via listener → redirectUser
-      } catch (err: any) {
-        console.error('[Callback] verifyOtp exception:', err.message)
-        fail()
+
+      const { data, error } = await callbackSupabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: type as any
+      })
+
+      clearTimeout(timer)
+
+      if (error) {
+        fail(`verifyOtp: ${error.message}`)
+        return
       }
+      if (data?.session?.user) {
+        await redirectUser(data.session)
+      } else {
+        fail('Pas de session après verifyOtp')
+      }
+      return
     }
-  })()
+
+  } catch (err: any) {
+    clearTimeout(timer)
+    fail(err.message || 'Erreur inattendue')
+  }
 })
 
 useHead({
