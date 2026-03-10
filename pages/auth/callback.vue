@@ -2,7 +2,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rose-50 via-white to-rose-50 flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
-      
+
       <!-- Loading State -->
       <div v-if="loading" class="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
         <div class="flex justify-center mb-4">
@@ -13,61 +13,12 @@
             </svg>
           </div>
         </div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Votre Vendeuse IA vous attend...
-        </h2>
-        <p class="text-gray-600 mb-4">
-          Nous préparons votre espace de gestion
-        </p>
-        <div class="text-sm text-gray-500">
-          {{ currentStep }}
-        </div>
-      </div>
-
-      <!-- Success State -->
-      <div v-else-if="success" class="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
-        <div class="flex justify-center mb-4">
-          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-          </div>
-        </div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          {{ isReturningUser ? '👋 Bon retour !' : '🎉 Email confirmé !' }}
-        </h2>
-        <p class="text-gray-600 mb-4">
-          {{ isReturningUser ? 'Mia vous attend dans votre espace de gestion' : 'Mia est prête à rejoindre votre boutique' }}
-        </p>
-        <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6">
-          <p class="text-rose-800 text-sm">
-            <strong>{{ isReturningUser ? 'Redirection :' : 'Prochaine étape :' }}</strong>
-            {{ isReturningUser ? 'Vous allez accéder à votre espace de gestion' : 'Finalisons ensemble le recrutement de Mia pour votre boutique' }}
-          </p>
-        </div>
-        
-        <div class="mb-6">
-          <p class="text-sm text-gray-500 mb-2">
-            Redirection automatique dans {{ countdown }} secondes...
-          </p>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              class="bg-gradient-to-r from-rose-600 to-pink-600 h-2 rounded-full transition-all duration-100 ease-linear"
-              :style="{ width: `${countdownProgress}%` }"
-            ></div>
-          </div>
-        </div>
-        
-        <button
-          @click="redirectAfterAuth"
-          class="w-full bg-gradient-to-r from-rose-600 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:from-rose-700 hover:to-pink-700 transition-all shadow-lg transform hover:scale-105"
-        >
-          {{ isReturningUser ? 'Accéder à mon espace de gestion' : 'Finaliser le recrutement de Mia' }}
-        </button>
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Connexion en cours...</h2>
+        <p class="text-sm text-gray-500">{{ currentStep }}</p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
+      <div v-else class="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
         <div class="flex justify-center mb-4">
           <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
             <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,16 +26,9 @@
             </svg>
           </div>
         </div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Lien expiré
-        </h2>
-        <p class="text-gray-600 mb-2">
-          Ce lien de confirmation n'est plus valide.
-        </p>
-        <p class="text-sm text-gray-500 mb-6">
-          Connectez-vous directement avec votre email et mot de passe.
-        </p>
-
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Lien expiré</h2>
+        <p class="text-gray-600 mb-2">Ce lien de confirmation n'est plus valide.</p>
+        <p class="text-sm text-gray-500 mb-6">Connectez-vous directement avec votre email et mot de passe.</p>
         <div class="space-y-3">
           <NuxtLink
             to="/login"
@@ -109,445 +53,159 @@
 import { useSupabase } from '~~/composables/useSupabase'
 import { useAuthStore } from '~~/stores/auth'
 
-// ✅ IMPORTS SIMPLIFIÉS - UTILISER useApi() au lieu de mélanger
-const auth = useAuth()
 const authStore = useAuthStore()
-const api = useApi() // ✅ NOUVEAU : Utiliser le composable API
 const supabase = useSupabase()
 
-definePageMeta({
-  layout: false
-})
+definePageMeta({ layout: false })
 
-// ✅ STATE SIMPLIFIÉ
 const loading = ref(true)
-const success = ref(false)
-const error = ref(false)
-const errorMessage = ref('')
-const countdown = ref(1) // Fast redirect
-const countdownProgress = ref(0)
-const currentStep = ref('Analyse du lien de confirmation...')
-const isReturningUser = ref(false) // ✅ NOUVEAU: Distinguer login vs register
+const currentStep = ref('Vérification de votre identité...')
 
-// ✅ FONCTION SIMPLIFIÉE : Analyser URL callback
-const parseCallbackUrl = () => {
-  const url = window.location.href
-  const hash = window.location.hash
-  const search = window.location.search
-
-  console.log('🔍 [Callback] Analyse URL:', url)
-
-  let tokens: Record<string, string> = {
-    access_token: '',
-    refresh_token: '',
-    token_hash: '',
-    type: '',
-    code: '',  // ✅ AJOUT: Pour PKCE flow
-    error: '',
-    error_description: ''
-  }
-
-  // Hash fragments (#)
-  if (hash && hash.length > 1) {
-    const hashContent = hash.substring(1)
-    const hashParams = new URLSearchParams(hashContent)
-
-    tokens.access_token = hashParams.get('access_token') || ''
-    tokens.refresh_token = hashParams.get('refresh_token') || ''
-    tokens.token_hash = hashParams.get('token_hash') || ''
-    tokens.type = hashParams.get('type') || ''
-    tokens.code = hashParams.get('code') || ''
-    tokens.error = hashParams.get('error') || ''
-    tokens.error_description = hashParams.get('error_description') || ''
-  }
-
-  // Query parameters (?)
-  if (search) {
-    const urlParams = new URLSearchParams(search)
-
-    if (!tokens.access_token) tokens.access_token = urlParams.get('access_token') || ''
-    if (!tokens.refresh_token) tokens.refresh_token = urlParams.get('refresh_token') || ''
-    if (!tokens.token_hash) tokens.token_hash = urlParams.get('token_hash') || ''
-    if (!tokens.type) tokens.type = urlParams.get('type') || ''
-    if (!tokens.code) tokens.code = urlParams.get('code') || ''
-    if (!tokens.error) tokens.error = urlParams.get('error') || ''
-    if (!tokens.error_description) tokens.error_description = urlParams.get('error_description') || ''
-  }
-
-  console.log('🔍 [Callback] Tokens parsés:', {
-    hasAccessToken: !!tokens.access_token,
-    hasRefreshToken: !!tokens.refresh_token,
-    hasTokenHash: !!tokens.token_hash,
-    hasCode: !!tokens.code,
-    type: tokens.type,
-    error: tokens.error
-  })
-
-  return tokens
-}
-
-// ✅ FONCTION SIMPLIFIÉE : Établir session Supabase
-const establishSupabaseSession = async (tokens: any) => {
-  console.log('🔐 [Callback] Création session Supabase')
-  currentStep.value = '🔑 Vérification de votre identité...'
-
-  // ✅ MÉTHODE 1: Vérifier si Supabase a déjà établi une session automatiquement
-  // (Supabase gère le callback automatiquement dans certains cas)
-  const { data: existingSession } = await supabase.auth.getSession()
-  if (existingSession?.session?.user) {
-    console.log('✅ [Callback] Session Supabase déjà établie automatiquement')
-    return existingSession
-  }
-
-  // Vérifier les erreurs dans les tokens
-  if (tokens.error) {
-    throw new Error(tokens.error_description || tokens.error)
-  }
-
-  let sessionData = null
-
-  // ✅ MÉTHODE 2: Utiliser token_hash (format moderne Supabase)
-  if (tokens.token_hash) {
-    console.log('🔑 [Callback] Utilisation token_hash')
-
-    const { data, error } = await supabase.auth.verifyOtp({
-      token_hash: tokens.token_hash,
-      type: tokens.type || 'email'
-    })
-
-    if (error) {
-      throw new Error(`Erreur vérification: ${error.message}`)
-    }
-
-    sessionData = data
-  }
-  // ✅ MÉTHODE 3: Utiliser access_token + refresh_token (format classique)
-  else if (tokens.access_token && tokens.refresh_token) {
-    console.log('🔑 [Callback] Utilisation access_token + refresh_token')
-
-    const { data, error } = await supabase.auth.setSession({
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token
-    })
-
-    if (error) {
-      throw new Error(`Erreur session: ${error.message}`)
-    }
-
-    sessionData = data
-  }
-  // ✅ MÉTHODE 4: Essayer exchangeCodeForSession si un 'code' est présent
-  else if (tokens.code) {
-    console.log('🔑 [Callback] Utilisation code PKCE')
-
-    const { data, error } = await supabase.auth.exchangeCodeForSession(tokens.code)
-
-    if (error) {
-      throw new Error(`Erreur échange code: ${error.message}`)
-    }
-
-    sessionData = data
-  }
-  // ✅ MÉTHODE 5: Dernière tentative - attendre que Supabase traite l'URL
-  else {
-    console.log('⏳ [Callback] Attente traitement automatique Supabase...')
-
-    // Attendre un peu car Supabase peut avoir besoin de temps pour traiter
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    const { data: retrySession } = await supabase.auth.getSession()
-    if (retrySession?.session?.user) {
-      console.log('✅ [Callback] Session établie après attente')
-      return retrySession
-    }
-
-    throw new Error('Aucun token valide trouvé. Le lien de confirmation a peut-être expiré.')
-  }
-
-  return sessionData
-}
-
-// ✅ FONCTION SIMPLIFIÉE : Assurer l'existence du shop - UTILISER useApi()
-const ensureShopExists = async (user: any) => {
-  console.log('🏪 [Callback] Vérification/création shop beauté pour:', user.id)
-  currentStep.value = '✨ Préparation de votre espace Mia...'
-
-  // ✅ ÉTAPE 1: Vérifier si le shop existe
-  const shopResponse = await api.shops.get(user.id)
-
-  if (shopResponse.success && shopResponse.data) {
-    console.log('✅ [Callback] Shop beauté existant trouvé:', shopResponse.data.id)
-    return shopResponse.data
-  }
-
-  // ✅ ÉTAPE 2: Le shop n'existe pas, on le crée
-  console.log('ℹ️ [Callback] Shop non trouvé, création en cours...')
-
-  const createData = {
-    id: user.id,
-    name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} Beauté` : `Shop de ${user.email?.split('@')[0]}`,
-    email: user.email,
-    subscription_plan: 'starter',
-    is_active: true,
-    onboarding_completed: false,
-    widget_config: {
-      theme: 'beauty_modern',
-      primaryColor: '#E91E63',
-      position: 'bottom-right',
-      buttonText: 'Parler à Mia',
-      language: 'fr'
-    }
-  }
-
-  console.log('📝 [Callback] Données de création shop:', JSON.stringify(createData, null, 2))
-
-  const createResponse = await api.shops.create(createData)
-
-  if (!createResponse.success) {
-    console.error('❌ [Callback] Erreur création shop:', createResponse.error)
-    throw new Error(createResponse.error || 'Erreur création shop beauté')
-  }
-
-  console.log('✅ [Callback] Shop beauté créé avec succès:', createResponse.data?.id)
-  return createResponse.data
-}
-
-// ✅ FONCTION PRINCIPALE: Traiter la session une fois établie
-const processSession = async (session: any) => {
-  try {
-    const user = session.user
-
-    console.log('✅ [Callback] Email confirmé pour:', user.email)
-
-    // ✅ ÉTAPE 3: Assurer l'existence du shop beauté AVANT de synchroniser le store
-    currentStep.value = '✨ Préparation de votre espace de gestion...'
-
-    try {
-      const shopData = await ensureShopExists(user)
-      console.log('✅ [Callback] Shop beauté configuré:', shopData?.id)
-
-      // ✅ DÉTECTER SI L'UTILISATEUR A DÉJÀ COMPLÉTÉ L'ONBOARDING
-      if (shopData?.onboarding_completed) {
-        isReturningUser.value = true
-        console.log('✅ [Callback] Utilisateur existant détecté (onboarding déjà complété)')
-      }
-    } catch (shopError: any) {
-      console.error('❌ [Callback] Erreur configuration Mia:', shopError)
-      throw new Error(`Configuration de Mia échouée: ${shopError.message}`)
-    }
-
-    // ✅ ÉTAPE 4: Synchroniser store (maintenant que le shop existe)
-    currentStep.value = '💾 Chargement de vos données...'
-
-    try {
-      // ✅ UTILISER fetchCompleteUserData du composable auth
-      const userData = await auth.fetchCompleteUserData(user)
-      authStore.setUser(userData, session.access_token)
-      console.log('✅ [Callback] Store synchronisé')
-    } catch (storeError) {
-      console.warn('⚠️ [Callback] Erreur store (non critique):', storeError)
-    }
-
-    // ✅ FINALISATION - Redirect immediately for returning users
-    window.history.replaceState({}, '', window.location.pathname)
-    console.log('✅ [Callback] Confirmation terminée')
-
-    // Returning users: skip success screen, redirect immediately
-    if (isReturningUser.value) {
-      return navigateTo('/')
-    }
-
-    // New users: brief success then redirect to onboarding
-    loading.value = false
-    success.value = true
-    startCountdown()
-
-  } catch (err: any) {
-    console.error('❌ [Callback] Erreur traitement session:', err)
-    throw err
-  }
-}
-
-// ✅ TRAITEMENT PRINCIPAL
+// ─── TRAITEMENT PRINCIPAL ───────────────────────────────────────────────────
 onMounted(() => {
-  console.log('🔗 [Callback] Début traitement confirmation email')
+  let resolved = false
+  let subRef: any = null
+  let timer: ReturnType<typeof setTimeout>
 
-  let sessionProcessed = false
-  let listenerRef: any = null
-  let timeoutId: ReturnType<typeof setTimeout>
+  // ── Redirect after successful auth ──────────────────────────────────────
+  const redirectUser = async (session: any) => {
+    if (resolved) return
+    resolved = true
+    clearTimeout(timer)
+    subRef?.unsubscribe()
 
-  // ─── Helpers ────────────────────────────────────────────────────────────────
+    // Restore auth store in background — don't block redirect
+    authStore.restoreSession().catch(() => {})
 
-  const finishOk = async (session: any) => {
-    if (sessionProcessed) return
-    sessionProcessed = true
-    clearTimeout(timeoutId)
-    listenerRef?.data?.subscription?.unsubscribe()
-    currentStep.value = '🔑 Session établie...'
-    try {
-      await processSession(session)
-    } catch (err: any) {
-      handleError(err)
+    // New user = account created less than 5 minutes ago
+    const createdAt = new Date(session.user.created_at).getTime()
+    const isNew = (Date.now() - createdAt) < 5 * 60 * 1000
+
+    if (isNew) {
+      console.log('✅ [Callback] Nouvel utilisateur → onboarding')
+      await navigateTo('/onboarding?from=oauth&welcome=true')
+    } else {
+      console.log('✅ [Callback] Utilisateur existant → dashboard')
+      await navigateTo('/')
     }
   }
 
-  const failNow = (err: Error) => {
-    if (sessionProcessed) return
-    sessionProcessed = true
-    clearTimeout(timeoutId)
-    listenerRef?.data?.subscription?.unsubscribe()
-    handleError(err)
+  // ── Show error state ─────────────────────────────────────────────────────
+  const fail = () => {
+    if (resolved) return
+    resolved = true
+    clearTimeout(timer)
+    subRef?.unsubscribe()
+    loading.value = false
+    console.warn('❌ [Callback] Échec — lien expiré ou invalide')
   }
 
-  // ─── ÉTAPE 1 : listener AVANT tout await ────────────────────────────────────
-  // Pour Google OAuth (PKCE), Supabase échange le code ?code= de façon async
-  // pendant l'init du client. Le SIGNED_IN/INITIAL_SESSION fire quand c'est fini.
-  // On doit être abonné AVANT que ce fire se produise.
-  listenerRef = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
-    console.log('🔄 [Callback] Auth event:', event, '| user:', !!session?.user)
-    if (sessionProcessed) return
+  // ── STEP 1: Register auth listener synchronously (BEFORE any await) ──────
+  // For Google OAuth (PKCE): Supabase auto-exchanges ?code= during client init.
+  // SIGNED_IN fires when done. We just listen and redirect.
+  // For email confirmation (token_hash): we call verifyOtp manually below,
+  // which also triggers SIGNED_IN.
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    if (resolved) return
+    console.log('🔄 [Callback] Auth event:', event, '| has user:', !!session?.user)
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-      await finishOk(session)
+      redirectUser(session)
     }
   })
+  subRef = data.subscription
 
-  // ─── ÉTAPE 2 : timeout de sécurité ─────────────────────────────────────────
-  timeoutId = setTimeout(() => {
-    failNow(new Error('Le lien a expiré ou est invalide.'))
+  // ── STEP 2: Timeout (registered synchronously) ───────────────────────────
+  timer = setTimeout(() => {
+    console.warn('⏰ [Callback] Timeout 15s atteint')
+    fail()
   }, 15000)
 
-  // ─── ÉTAPE 3 : traitement async ─────────────────────────────────────────────
+  // ── STEP 3: Async work (non-blocking IIFE) ───────────────────────────────
   ;(async () => {
-    // Vérification rapide : session déjà active ?
-    // (ex: utilisateur qui revient sur la page callback alors qu'il est déjà connecté)
-    try {
-      const { data: existing } = await Promise.race([
-        supabase.auth.getSession(),
-        new Promise<any>((_, reject) => setTimeout(() => reject(new Error('getSession timeout')), 3000))
-      ])
-      if (existing?.session?.user && !sessionProcessed) {
-        clearTimeout(timeoutId)
-        listenerRef?.data?.subscription?.unsubscribe()
-        return navigateTo('/')
-      }
-    } catch {
-      // getSession a timeout → probable PKCE exchange en cours, continuer
-      console.log('⏳ [Callback] getSession lent (PKCE en cours), on attend le listener...')
-    }
+    const search = new URLSearchParams(window.location.search)
+    const hash   = new URLSearchParams(window.location.hash.slice(1))
 
-    // Si l'URL ne contient aucun token → redirection login
-    const urlHasToken = window.location.hash.includes('access_token') ||
-                        window.location.hash.includes('token_hash') ||
-                        window.location.search.includes('code=') ||
-                        window.location.search.includes('token_hash=')
+    const code       = search.get('code')
+    const tokenHash  = search.get('token_hash')
+    const type       = search.get('type') || 'email'
+    const errorParam = search.get('error')
+    const hasToken   = code || tokenHash || hash.get('access_token')
 
-    if (!urlHasToken && !sessionProcessed) {
-      clearTimeout(timeoutId)
-      listenerRef?.data?.subscription?.unsubscribe()
-      return navigateTo('/login')
-    }
+    console.log('🔍 [Callback] URL params:', { code: !!code, tokenHash: !!tokenHash, type, error: errorParam })
 
-    currentStep.value = '🔍 Vérification du lien...'
-
-    // Attendre que Supabase finisse l'échange PKCE ou traite le hash
-    // (le listener intercepte quand c'est prêt)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    if (sessionProcessed) return
-
-    // Dernier recours : getSession après le délai
-    try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (sessionData?.session?.user) {
-        return finishOk(sessionData.session)
-      }
-    } catch { /* ignore */ }
-
-    if (sessionProcessed) return
-
-    // Fallback manuel : exchange du code ou setSession
-    currentStep.value = '🔑 Vérification des credentials...'
-    const tokens = parseCallbackUrl()
-
-    if (tokens.error) {
-      failNow(new Error(tokens.error_description || tokens.error))
+    // Error in URL (e.g. user denied Google access)
+    if (errorParam) {
+      console.warn('❌ [Callback] Erreur dans URL:', errorParam)
+      fail()
       return
     }
 
-    // Pas de token du tout → attendre le timeout (le listener gère le PKCE async)
-    if (!tokens.access_token && !tokens.token_hash && !tokens.code) {
-      console.log('⏳ [Callback] Pas de token parsé, on laisse le listener (PKCE async)')
+    // No auth params at all → check for existing session or redirect to login
+    if (!hasToken) {
+      console.log('🔍 [Callback] Pas de token dans URL, vérification session existante...')
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          redirectUser(session)
+        } else {
+          fail()
+          await navigateTo('/login')
+        }
+      } catch {
+        fail()
+        await navigateTo('/login')
+      }
       return
     }
 
-    try {
-      const sessionData = await Promise.race([
-        establishSupabaseSession(tokens),
-        new Promise<null>((_, reject) => setTimeout(() => reject(new Error('Délai dépassé (8s)')), 8000))
-      ])
-
-      if (sessionData && (sessionData as any)?.session?.user) {
-        await finishOk((sessionData as any).session)
-      } else {
-        failNow(new Error('Le lien a expiré ou a déjà été utilisé.'))
-      }
-    } catch (err: any) {
-      console.error('❌ [Callback] Token exchange failed:', err.message)
-      failNow(err)
+    // Google OAuth (?code=) → Supabase handles exchange automatically via detectSessionInUrl.
+    // SIGNED_IN will fire via the listener above. Nothing to do here.
+    if (code) {
+      console.log('🔑 [Callback] PKCE code détecté — Supabase échange automatiquement')
+      currentStep.value = 'Connexion Google en cours...'
+      // Just wait for SIGNED_IN from the listener
+      return
     }
+
+    // Email confirmation (?token_hash=) → must call verifyOtp explicitly.
+    // This triggers SIGNED_IN via the listener above.
+    if (tokenHash) {
+      console.log('🔑 [Callback] token_hash détecté — vérification email...')
+      currentStep.value = 'Vérification de votre email...'
+      try {
+        const { error: otpError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: type as any
+        })
+        if (otpError) {
+          console.error('❌ [Callback] verifyOtp error:', otpError.message)
+          fail()
+        }
+        // On success, SIGNED_IN fires via listener → redirectUser called
+      } catch (err: any) {
+        console.error('❌ [Callback] verifyOtp exception:', err.message)
+        fail()
+      }
+      return
+    }
+
+    // Legacy: #access_token= in hash → Supabase handles automatically
+    // SIGNED_IN will fire via listener. Nothing to do.
+    console.log('🔑 [Callback] access_token dans hash — Supabase gère automatiquement')
   })()
 })
 
-// ✅ GESTION DES ERREURS
-const handleError = (err: any) => {
-  console.error('❌ [Callback] Erreur:', err)
-
-  loading.value = false
-  error.value = true
-
-  // Tous les cas → message générique + bouton Se connecter bien visible
-  errorMessage.value = err.message || 'Lien invalide ou expiré.'
-}
-
-// ✅ COUNTDOWN SIMPLIFIÉ
-const startCountdown = () => {
-  const interval = setInterval(() => {
-    countdown.value--
-    countdownProgress.value = ((1 - countdown.value) / 1) * 100
-    
-    if (countdown.value <= 0) {
-      clearInterval(interval)
-      redirectAfterAuth()
-    }
-  }, 1000)
-}
-
-// ✅ REDIRECTION INTELLIGENTE : DASHBOARD OU ONBOARDING
-const redirectAfterAuth = async () => {
-  if (isReturningUser.value) {
-    console.log('🚀 [Callback] Utilisateur existant → redirection vers Dashboard')
-    await navigateTo('/')
-  } else {
-    console.log('🚀 [Callback] Nouvel utilisateur → redirection vers Onboarding')
-    await navigateTo('/onboarding?from=email-confirmation&beauty=true&welcome=true')
-  }
-}
-
 useHead({
-  title: 'Mia vous attend | ChatSeller',
-  meta: [
-    { name: 'description', content: 'Confirmez votre email et Finalisez le recrutement de Mia' },
-    { name: 'robots', content: 'noindex' }
-  ]
+  title: 'Connexion | ChatSeller',
+  meta: [{ name: 'robots', content: 'noindex' }]
 })
 </script>
 
 <style scoped>
 @keyframes spin {
   from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  to   { transform: rotate(360deg); }
 }
-
 .animate-spin {
   animation: spin 1s linear infinite;
 }
