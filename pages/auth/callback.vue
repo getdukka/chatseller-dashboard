@@ -69,31 +69,34 @@
       <!-- Error State -->
       <div v-else-if="error" class="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
         <div class="flex justify-center mb-4">
-          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
             </svg>
           </div>
         </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Erreur de confirmation
+          Lien expiré
         </h2>
-        <p class="text-gray-600 mb-6">
-          {{ errorMessage }}
+        <p class="text-gray-600 mb-2">
+          Ce lien de confirmation n'est plus valide.
         </p>
-        
+        <p class="text-sm text-gray-500 mb-6">
+          Connectez-vous directement avec votre email et mot de passe.
+        </p>
+
         <div class="space-y-3">
           <NuxtLink
-            to="/register"
-            class="w-full inline-flex justify-center items-center px-4 py-2 bg-rose-600 text-white font-medium rounded-lg hover:bg-rose-700 transition-colors"
+            to="/login"
+            class="w-full inline-flex justify-center items-center px-4 py-3 bg-rose-600 text-white font-medium rounded-lg hover:bg-rose-700 transition-colors"
           >
-            Recruter Mia
+            Se connecter
           </NuxtLink>
           <NuxtLink
-            to="/login"
-            class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            to="/register"
+            class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-gray-500 text-sm rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Rejoindre Mia
+            Créer un compte
           </NuxtLink>
         </div>
       </div>
@@ -462,16 +465,8 @@ const handleError = (err: any) => {
   loading.value = false
   error.value = true
 
-  // Messages d'erreur beauté appropriés
-  if (err.message?.includes('expired') || err.message?.includes('expiré')) {
-    errorMessage.value = 'Le lien de confirmation a expiré. Créez un nouveau compte.'
-  } else if (err.message?.includes('invalid') || err.message?.includes('token') || err.message?.includes('invalide')) {
-    errorMessage.value = 'Lien de confirmation invalide. Vérifiez votre email.'
-  } else if (err.message?.includes('shop') || err.message?.includes('Mia')) {
-    errorMessage.value = 'Email confirmé mais le recrutement de Mia a échoué. Contactez le support.'
-  } else {
-    errorMessage.value = err.message || 'Erreur de confirmation. Contactez le support si cela persiste.'
-  }
+  // Tous les cas → message générique + bouton Se connecter bien visible
+  errorMessage.value = err.message || 'Lien invalide ou expiré.'
 }
 
 // ✅ COUNTDOWN SIMPLIFIÉ
