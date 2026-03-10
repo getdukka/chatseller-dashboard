@@ -152,10 +152,11 @@ onMounted(async () => {
   const redirectUser = (session: any) => {
     persistSession(session)
 
-    const createdAt = new Date(session.user.created_at).getTime()
-    const isNew = (Date.now() - createdAt) < 5 * 60 * 1000
-
-    console.log('✅ [Callback] Redirect:', isNew ? 'onboarding' : 'dashboard')
+    // ALWAYS redirect to / — the auth middleware checks onboarding_completed
+    // and redirects new users to /onboarding automatically.
+    // Using created_at to detect "new user" is unreliable with Google OAuth
+    // because Supabase may reuse an existing auth.users row.
+    console.log('✅ [Callback] Redirect → / (middleware gère onboarding)')
 
     // FULL PAGE RELOAD — not SPA navigateTo().
     // The plugins skipped creating the Supabase singleton on /auth/callback.
@@ -163,7 +164,7 @@ onMounted(async () => {
     // singleton doesn't exist → getSession() blocks → redirect to /login.
     // A full reload lets plugins create the singleton fresh on the target page
     // and read the session we just persisted in localStorage.
-    window.location.href = isNew ? '/onboarding?from=oauth&welcome=true' : '/'
+    window.location.href = '/'
   }
 
   const fail = (reason: string) => {

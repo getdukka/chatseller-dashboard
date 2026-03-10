@@ -162,7 +162,7 @@
                 <p class="text-gray-500">Son ton s'adaptera à votre marque.</p>
               </div>
 
-              <div class="space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button
                   v-for="tone in communicationTones"
                   :key="tone.value"
@@ -337,7 +337,7 @@
                         {{ (form.agentName || getDefaultAgentName()).charAt(0) }}
                       </div>
                       <div class="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2 max-w-xs">
-                        <p class="text-sm text-gray-800">{{ msg.content }}</p>
+                        <div class="text-sm text-gray-800 ai-message-content" v-html="formatAiMessage(msg.content)"></div>
                       </div>
                     </div>
                   </template>
@@ -392,9 +392,9 @@
               </div>
 
               <!-- Navigation -->
-              <div class="flex items-center justify-between pt-2">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                 <p class="text-sm text-gray-400 italic">Elle apprendra encore mieux dans les prochains jours.</p>
-                <button @click="nextSubStep" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all">
+                <button @click="nextSubStep" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all whitespace-nowrap">
                   Installer sur ma boutique →
                 </button>
               </div>
@@ -648,9 +648,9 @@ const getBeautyCategoryLabel = (value: string) => {
 const nextSubStep = async () => {
   if (!canProceed.value) return
 
-  // After step 3 (platform selected) -> launch sync
+  // After step 3 (platform selected) -> launch sync (non-blocking)
   if (subStep.value === 3) {
-    await launchStep1Sync()
+    launchStep1Sync().catch(err => console.warn('Sync error:', err))
   }
 
   if (subStep.value < totalSubSteps) {
@@ -915,6 +915,18 @@ const scrollChatToBottom = () => {
 }
 
 // Message de bienvenue affiché dans le chat de test
+/** Format AI message: convert **bold**, newlines, and basic markdown to HTML */
+const formatAiMessage = (content: string): string => {
+  if (!content) return ''
+  return content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>')
+}
+
 const getWelcomeMessage = () => {
   const name = form.agentName || getDefaultAgentName()
   const specialties: Record<string, string> = {
@@ -1107,16 +1119,22 @@ useHead({
 </script>
 
 <style scoped>
-.slide-enter-active,
+.slide-enter-active {
+  transition: all 0.2s ease-out;
+}
 .slide-leave-active {
-  transition: all 0.25s ease;
+  transition: all 0.15s ease-in;
 }
 .slide-enter-from {
   opacity: 0;
-  transform: translateX(30px);
+  transform: translateX(20px);
 }
 .slide-leave-to {
   opacity: 0;
-  transform: translateX(-30px);
+  transform: translateX(-20px);
+}
+.ai-message-content :deep(strong) {
+  font-weight: 600;
+  color: #1f2937;
 }
 </style>

@@ -12,7 +12,11 @@
       leave-to-class="opacity-0"
     >
       <div v-if="showWelcomeModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+        <!-- Confetti -->
+        <div class="confetti-container" aria-hidden="true">
+          <div v-for="i in 40" :key="i" class="confetti-piece" :style="confettiStyle(i)"></div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden relative z-10">
           <!-- Header -->
           <div class="px-8 pt-10 pb-6 text-center">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -37,7 +41,7 @@
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
                 </div>
-                <span class="text-sm text-green-800 font-medium">{{ agentInfo?.name || 'Mia' }} a rejoint votre equipe</span>
+                <span class="text-sm text-green-800 font-medium">{{ agentInfo?.name || 'Mia' }} a rejoint votre équipe</span>
               </div>
               <div
                 class="flex items-center gap-3 p-3 rounded-xl"
@@ -53,7 +57,7 @@
                   <span v-else class="text-xs text-white font-bold">2</span>
                 </div>
                 <span class="text-sm font-medium" :class="setupStatus.productsSynced ? 'text-green-800' : 'text-amber-800'">
-                  {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits memorises` : 'Produits a importer' }}
+                  {{ setupStatus.productsSynced ? `${dashboardStats.products.total} produits mémorisés` : 'Produits à importer' }}
                 </span>
               </div>
               <div class="flex items-center gap-3 p-3 bg-rose-50 rounded-xl">
@@ -109,7 +113,7 @@
             <div class="flex items-start justify-between mb-6">
               <div>
                 <h2 class="text-lg font-semibold text-gray-900">
-                  Preparez {{ agentInfo?.name || 'Mia' }} pour vos clients
+                  Préparez {{ agentInfo?.name || 'Mia' }} pour vos clients
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
                   {{ completedSteps }} sur 3 étapes terminées
@@ -848,6 +852,15 @@ const navigateToTestAgent = () => {
   }
 }
 
+const confettiColors = ['#f43f5e', '#ec4899', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444']
+const confettiStyle = (i: number) => ({
+  left: `${Math.random() * 100}%`,
+  animationDelay: `${Math.random() * 2}s`,
+  animationDuration: `${2 + Math.random() * 2}s`,
+  backgroundColor: confettiColors[i % confettiColors.length],
+  transform: `rotate(${Math.random() * 360}deg)`,
+})
+
 const closeWelcomeModal = () => {
   showWelcomeModal.value = false
   localStorage.setItem('chatseller_welcome_shown', 'true')
@@ -1145,6 +1158,42 @@ useHead({
 @media (pointer: coarse) {
   button, a {
     min-height: 44px;
+  }
+}
+
+/* Confetti animation */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 51;
+}
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confetti-fall linear forwards;
+  opacity: 0.9;
+}
+.confetti-piece:nth-child(odd) {
+  width: 6px;
+  height: 14px;
+  border-radius: 3px;
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
   }
 }
 </style>
