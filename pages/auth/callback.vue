@@ -368,33 +368,29 @@ const processSession = async (session: any) => {
   }
 }
 
-// ✅ TRAITEMENT PRINCIPAL - APPROCHE ROBUSTE
-onMounted(async () => {
+// ✅ TRAITEMENT PRINCIPAL
+onMounted(() => {
   console.log('🔗 [Callback] Début traitement confirmation email')
 
-  // ✅ ÉTAPE 0 : Si l'utilisateur a déjà une session valide → aller au dashboard directement
-  const { data: quickCheck } = await supabase.auth.getSession()
-  if (quickCheck?.session?.user) {
-    console.log('✅ [Callback] Session active trouvée, redirection dashboard')
-    return navigateTo('/')
-  }
-
-  // ✅ ÉTAPE 0b : Si l'URL ne contient aucun token → inutile d'attendre, aller au login
-  const urlHasToken = window.location.hash.includes('access_token') ||
-                      window.location.hash.includes('token_hash') ||
-                      window.location.search.includes('code=') ||
-                      window.location.search.includes('token_hash=')
-
-  if (!urlHasToken) {
-    console.log('ℹ️ [Callback] Pas de token dans l\'URL → redirection login')
-    return navigateTo('/login')
-  }
-
   let sessionProcessed = false
-  let timeoutId: ReturnType<typeof setTimeout>
   let listenerRef: any = null
+  let timeoutId: ReturnType<typeof setTimeout>
 
-  // Fonction centralisée pour signaler l'échec immédiatement
+  // ─── Helpers ────────────────────────────────────────────────────────────────
+
+  const finishOk = async (session: any) => {
+    if (sessionProcessed) return
+    sessionProcessed = true
+    clearTimeout(timeoutId)
+    listenerRef?.data?.subscription?.unsubscribe()
+    currentStep.value = '🔑 Session établie...'
+    try {
+      await processSession(session)
+    } catch (err: any) {
+      handleError(err)
+    }
+  }
+
   const failNow = (err: Error) => {
     if (sessionProcessed) return
     sessionProcessed = true
@@ -403,91 +399,103 @@ onMounted(async () => {
     handleError(err)
   }
 
-  // Timeout de sécurité (si tout hang)
-  timeoutId = setTimeout(() => {
-    failNow(new Error('Le lien a expiré ou est invalide.'))
-  }, 12000)
-
-  // ✅ APPROCHE 1: Écouter l'événement SIGNED_IN / INITIAL_SESSION de Supabase
+  // ─── ÉTAPE 1 : listener AVANT tout await ────────────────────────────────────
+  // Pour Google OAuth (PKCE), Supabase échange le code ?code= de façon async
+  // pendant l'init du client. Le SIGNED_IN/INITIAL_SESSION fire quand c'est fini.
+  // On doit être abonné AVANT que ce fire se produise.
   listenerRef = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
-    console.log('🔄 [Callback] Auth event reçu:', event)
-
+    console.log('🔄 [Callback] Auth event:', event, '| user:', !!session?.user)
     if (sessionProcessed) return
-
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-      sessionProcessed = true
-      clearTimeout(timeoutId)
-      console.log('✅ [Callback] Session via événement', event)
-      currentStep.value = '🔑 Session établie...'
-
-      try {
-        await processSession(session)
-      } catch (err: any) {
-        handleError(err)
-      }
-
-      listenerRef?.data?.subscription?.unsubscribe()
+      await finishOk(session)
     }
   })
 
-  // ✅ APPROCHE 2: Attendre que Supabase traite le hash (detectSessionInUrl)
-  currentStep.value = '🔍 Vérification du lien...'
-  await new Promise(resolve => setTimeout(resolve, 800))
+  // ─── ÉTAPE 2 : timeout de sécurité ─────────────────────────────────────────
+  timeoutId = setTimeout(() => {
+    failNow(new Error('Le lien a expiré ou est invalide.'))
+  }, 15000)
 
-  if (!sessionProcessed) {
-    const { data: sessionData } = await supabase.auth.getSession()
-
-    if (sessionData?.session?.user) {
-      sessionProcessed = true
-      clearTimeout(timeoutId)
-      console.log('✅ [Callback] Session via getSession')
-      currentStep.value = '🔑 Session établie...'
-
-      try {
-        await processSession(sessionData.session)
-      } catch (err: any) {
-        handleError(err)
+  // ─── ÉTAPE 3 : traitement async ─────────────────────────────────────────────
+  ;(async () => {
+    // Vérification rapide : session déjà active ?
+    // (ex: utilisateur qui revient sur la page callback alors qu'il est déjà connecté)
+    try {
+      const { data: existing } = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<any>((_, reject) => setTimeout(() => reject(new Error('getSession timeout')), 3000))
+      ])
+      if (existing?.session?.user && !sessionProcessed) {
+        clearTimeout(timeoutId)
+        listenerRef?.data?.subscription?.unsubscribe()
+        return navigateTo('/')
       }
-
-      listenerRef?.data?.subscription?.unsubscribe()
-      return
+    } catch {
+      // getSession a timeout → probable PKCE exchange en cours, continuer
+      console.log('⏳ [Callback] getSession lent (PKCE en cours), on attend le listener...')
     }
-  }
 
-  // ✅ APPROCHE 3: setSession manuel avec les tokens de l'URL
-  if (!sessionProcessed) {
+    // Si l'URL ne contient aucun token → redirection login
+    const urlHasToken = window.location.hash.includes('access_token') ||
+                        window.location.hash.includes('token_hash') ||
+                        window.location.search.includes('code=') ||
+                        window.location.search.includes('token_hash=')
+
+    if (!urlHasToken && !sessionProcessed) {
+      clearTimeout(timeoutId)
+      listenerRef?.data?.subscription?.unsubscribe()
+      return navigateTo('/login')
+    }
+
+    currentStep.value = '🔍 Vérification du lien...'
+
+    // Attendre que Supabase finisse l'échange PKCE ou traite le hash
+    // (le listener intercepte quand c'est prêt)
+    await new Promise(resolve => setTimeout(resolve, 1500))
+
+    if (sessionProcessed) return
+
+    // Dernier recours : getSession après le délai
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (sessionData?.session?.user) {
+        return finishOk(sessionData.session)
+      }
+    } catch { /* ignore */ }
+
+    if (sessionProcessed) return
+
+    // Fallback manuel : exchange du code ou setSession
     currentStep.value = '🔑 Vérification des credentials...'
     const tokens = parseCallbackUrl()
 
-    // Erreur explicite dans l'URL (ex: OAuth refusé)
     if (tokens.error) {
       failNow(new Error(tokens.error_description || tokens.error))
+      return
+    }
+
+    // Pas de token du tout → attendre le timeout (le listener gère le PKCE async)
+    if (!tokens.access_token && !tokens.token_hash && !tokens.code) {
+      console.log('⏳ [Callback] Pas de token parsé, on laisse le listener (PKCE async)')
       return
     }
 
     try {
       const sessionData = await Promise.race([
         establishSupabaseSession(tokens),
-        new Promise<null>((_, reject) =>
-          setTimeout(() => reject(new Error('Délai dépassé (8s)')), 8000)
-        )
+        new Promise<null>((_, reject) => setTimeout(() => reject(new Error('Délai dépassé (8s)')), 8000))
       ])
 
       if (sessionData && (sessionData as any)?.session?.user) {
-        sessionProcessed = true
-        clearTimeout(timeoutId)
-        listenerRef?.data?.subscription?.unsubscribe()
-        await processSession((sessionData as any).session)
+        await finishOk((sessionData as any).session)
       } else {
-        // setSession a répondu mais sans session valide → token expiré ou déjà utilisé
         failNow(new Error('Le lien a expiré ou a déjà été utilisé.'))
       }
     } catch (err: any) {
-      // Erreur réseau ou token rejeté → afficher immédiatement
-      console.error('❌ [Callback] setSession échoué:', err.message)
+      console.error('❌ [Callback] Token exchange failed:', err.message)
       failNow(err)
     }
-  }
+  })()
 })
 
 // ✅ GESTION DES ERREURS
