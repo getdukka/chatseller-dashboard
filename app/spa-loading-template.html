@@ -1,0 +1,35 @@
+<div style="
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9f9f9;
+  z-index: 9999;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+">
+  <div style="text-align: center;">
+    <!-- Logo spinner -->
+    <div style="
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      border: 3px solid #e8e8e8;
+      border-top-color: #ea4242;
+      animation: cs-spin 0.7s linear infinite;
+    "></div>
+    <p style="
+      color: #555555;
+      font-size: 14px;
+      font-weight: 500;
+      margin: 0;
+      letter-spacing: -0.01em;
+    ">ChatSeller</p>
+  </div>
+</div>
+<style>
+  @keyframes cs-spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
