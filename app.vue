@@ -91,8 +91,6 @@ import {
   InformationCircleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
-import { useAuthStore } from './stores/auth'
-
 // Types
 interface NotificationApp {
   id: string
@@ -104,30 +102,14 @@ interface NotificationApp {
 }
 
 // État global de l'application
-const pending = ref(true)
+const pending = ref(false) // No blocking loader — plugins handle auth
 const isMaintenanceMode = ref(false)
 const notifications = ref<NotificationApp[]>([])
 
-// Initialisation de l'application
-onMounted(async () => {
-  try {
-    // Vérifier le statut du service
-    await checkServiceStatus()
-    
-    // Autres initialisations...
-    await initializeApplication()
-    
-  } catch (error) {
-    console.error('Erreur lors de l\'initialisation:', error)
-    addNotification({
-      type: 'error',
-      title: 'Erreur de connexion',
-      message: 'Impossible de se connecter aux services ChatSeller',
-      autoHide: false
-    })
-  } finally {
-    pending.value = false
-  }
+// Initialisation de l'application (non-bloquante)
+onMounted(() => {
+  initializeTheme()
+  setupErrorHandling()
 })
 
 // ===========================================
@@ -196,55 +178,13 @@ const getProgressWidth = (notification: NotificationApp) => {
   return Math.max(0, 100 - (elapsed / total) * 100)
 }
 
-// ===========================================
-// INITIALISATION DE L'APPLICATION
-// ===========================================
-
-const checkServiceStatus = async () => {
-  try {
-    const response = await $fetch('/api/health', { timeout: 5000 })
-    if (response.status !== 'ok') {
-      throw new Error('Service unavailable')
-    }
-  } catch (error) {
-    console.warn('Health check failed:', error)
-    // Continuer même si le health check échoue
-  }
-}
-
-const initializeApplication = async () => {
-  // ✅ CORRECTION: Ne pas restaurer la session sur les pages auth (callback, login, register)
-  // Ces pages gèrent leur propre authentification
-  const currentPath = window.location.pathname
-  const isAuthPage = currentPath.startsWith('/auth/') ||
-                     currentPath === '/login' ||
-                     currentPath === '/register' ||
-                     currentPath === '/reset-password'
-
-  if (!isAuthPage) {
-    try {
-      const authStore = useAuthStore()
-      await authStore.restoreSession()
-      console.log('✅ Session restaurée avec succès')
-    } catch (error) {
-      console.error('❌ Erreur initialisation auth:', error)
-    }
-  } else {
-    console.log('⏭️ [App] Page auth détectée, skip restoreSession')
-  }
-
-  // Autres initialisations...
-  await initializeTheme()
-  await setupErrorHandling()
-}
-
-const initializeTheme = async () => {
+const initializeTheme = () => {
   // Gérer les préférences de thème (dark mode, etc.)
   const theme = localStorage.getItem('theme') || 'light'
   document.documentElement.setAttribute('data-theme', theme)
 }
 
-const setupErrorHandling = async () => {
+const setupErrorHandling = () => {
   // Gestion globale des erreurs
   window.addEventListener('error', (event) => {
     console.error('Erreur globale:', event.error)
