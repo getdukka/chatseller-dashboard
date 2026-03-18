@@ -1119,19 +1119,19 @@ useHead({
 </script>
 
 <style scoped>
+/* ✅ Opacity-only transition: évite le flash causé par translateX
+   (les 7 <Transition> s'animent en parallèle, pas en séquence) */
 .slide-enter-active {
-  transition: all 0.2s ease-out;
+  transition: opacity 0.15s ease;
 }
 .slide-leave-active {
-  transition: all 0.15s ease-in;
+  transition: opacity 0.1s ease;
 }
 .slide-enter-from {
   opacity: 0;
-  transform: translateX(20px);
 }
 .slide-leave-to {
   opacity: 0;
-  transform: translateX(-20px);
 }
 .ai-message-content :deep(strong) {
   font-weight: 600;
