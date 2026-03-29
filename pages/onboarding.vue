@@ -43,11 +43,13 @@
 
       <!-- Scrollable content centered -->
       <div class="min-h-[calc(100vh-65px)] flex items-center justify-center px-6 py-8">
-        <div class="w-full max-w-lg">
+        <!-- Single Transition keyed by subStep: proper out-in with no gap between steps -->
+        <div class="w-full max-w-2xl">
+          <Transition name="slide" mode="out-in">
+          <div :key="subStep">
 
           <!-- ===== SUB-STEP 1: Brand name + website ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 1" key="s1" class="space-y-8">
+            <div v-if="subStep === 1" class="space-y-8">
               <div class="text-center">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Parlez-nous de votre marque</h1>
                 <p class="text-gray-500">Mia a besoin de connaître votre marque pour bien la représenter.</p>
@@ -84,11 +86,9 @@
                 </button>
               </div>
             </div>
-          </Transition>
 
           <!-- ===== SUB-STEP 2: Beauty category ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 2" key="s2" class="space-y-8">
+            <div v-if="subStep === 2" class="space-y-8">
               <div class="text-center">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Dans quel domaine travaillez-vous ?</h1>
                 <p class="text-gray-500">Mia sera specialisee dans ce domaine.</p>
@@ -116,11 +116,9 @@
                 <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
               </div>
             </div>
-          </Transition>
 
           <!-- ===== SUB-STEP 3: Platform ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 3" key="s3" class="space-y-8">
+            <div v-if="subStep === 3" class="space-y-8">
               <div class="text-center">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Sur quelle plateforme est votre boutique ?</h1>
                 <p class="text-gray-500">Pour que Mia puisse importer vos produits automatiquement.</p>
@@ -152,11 +150,9 @@
                 <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
               </div>
             </div>
-          </Transition>
 
           <!-- ===== SUB-STEP 4: Communication tone (was step 8) ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 4" key="s4" class="space-y-8">
+            <div v-if="subStep === 4" class="space-y-8">
               <div class="text-center">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Comment Mia doit-elle parler ?</h1>
                 <p class="text-gray-500">Son ton s'adaptera à votre marque.</p>
@@ -193,11 +189,9 @@
                 <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
               </div>
             </div>
-          </Transition>
 
           <!-- ===== SUB-STEP 5: Agent name + launch (was step 9, simplified) ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 5" key="s5" class="space-y-8">
+            <div v-if="subStep === 5" class="space-y-8">
               <div class="text-center">
                 <!-- Dynamic title based on sync status -->
                 <div v-if="syncStore.isSyncComplete && syncStore.hasAnySuccess" class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -275,11 +269,9 @@
                 </div>
               </div>
             </div>
-          </Transition>
 
           <!-- ===== SUB-STEP 6: Test immédiat ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 6" key="s6" class="space-y-6">
+            <div v-if="subStep === 6" class="space-y-6">
 
               <!-- En-tête -->
               <div class="text-center">
@@ -400,11 +392,9 @@
               </div>
 
             </div>
-          </Transition>
 
           <!-- ===== SUB-STEP 7: Activation guidée ===== -->
-          <Transition name="slide" mode="out-in">
-            <div v-if="subStep === 7" key="s7" class="space-y-8">
+            <div v-if="subStep === 7" class="space-y-8">
 
               <div class="text-center">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -500,6 +490,8 @@
               </button>
 
             </div>
+
+          </div>
           </Transition>
 
         </div>
