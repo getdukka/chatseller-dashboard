@@ -507,7 +507,7 @@ const exporting = ref(false)
 const searchQuery = ref('')
 const error = ref<string | null>(null)
 const agentName = ref('Mia')
-const shopCurrency = ref('XOF')
+const shopCurrency = ref('EUR')
 
 const filters = ref({
   status: ''

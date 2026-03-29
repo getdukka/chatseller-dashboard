@@ -730,7 +730,7 @@ const beautyProfile = ref<BeautyProfile>({
 
 const agentId = ref<string | null>(null)
 const agentInfo = ref<AgentInfo | null>(null)
-const shopCurrency = ref('XOF')
+const shopCurrency = ref('EUR')
 
 // ========== COMPUTED ==========
 const greeting = computed(() => {
@@ -779,7 +779,7 @@ const hasNoData = computed(() => {
 
 // ========== UTILITY METHODS ==========
 const formatCurrency = (amount: number, currency?: string): string => {
-  const cur = currency || shopCurrency.value || 'XOF'
+  const cur = currency || shopCurrency.value || 'EUR'
   if (cur === 'XOF') {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -935,7 +935,7 @@ const loadBeautyProfile = async () => {
       }
 
       setupStatus.value.widgetIntegrated = shop.widget_integrated === true
-      shopCurrency.value = shop.default_currency || 'XOF'
+      shopCurrency.value = shop.default_currency || 'EUR'
     }
   } catch (error) {
     console.error('[Dashboard] Erreur chargement beauty profile:', error)

@@ -409,7 +409,7 @@ const filteredProducts = computed(() => {
 
 // UTILITY METHODS
 const formatPrice = (price) => {
-  const shopCurrency = authStore.user?.shop?.default_currency || 'XOF'
+  const shopCurrency = authStore.user?.shop?.default_currency || 'EUR'
 
   const localeMap = {
     'XOF': 'fr-SN',

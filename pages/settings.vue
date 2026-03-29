@@ -818,7 +818,7 @@ const brandForm = reactive({
   beautyCategory: '',
   platform: '',
   website: '',
-  defaultCurrency: 'XOF',
+  defaultCurrency: 'EUR',
   priceRange: '',
   targetAge: ''
 })
@@ -914,7 +914,7 @@ const showNotification = (message: string) => {
 }
 
 const formatCurrency = (amount: number) => {
-  const shopCurrency = authStore.user?.shop?.default_currency || brandForm.defaultCurrency || 'XOF'
+  const shopCurrency = authStore.user?.shop?.default_currency || brandForm.defaultCurrency || 'EUR'
 
   const localeMap: Record<string, string> = {
     'XOF': 'fr-SN',
@@ -951,7 +951,7 @@ const loadBeautyData = async () => {
       brandForm.beautyCategory = response.data.beauty_category || 'multi'
       brandForm.platform = response.data.platform || ''
       brandForm.website = response.data.domain || response.data.website || ''
-      brandForm.defaultCurrency = response.data.default_currency || 'XOF'
+      brandForm.defaultCurrency = response.data.default_currency || 'EUR'
       brandForm.priceRange = response.data.price_range || ''
       brandForm.targetAge = response.data.target_age_range || response.data.target_age || ''
 
@@ -1075,7 +1075,7 @@ const cancelBrandEdit = () => {
   brandForm.beautyCategory = shopData.value?.beauty_category || 'multi'
   brandForm.platform = shopData.value?.platform || ''
   brandForm.website = shopData.value?.domain || shopData.value?.website || ''
-  brandForm.defaultCurrency = shopData.value?.default_currency || 'XOF'
+  brandForm.defaultCurrency = shopData.value?.default_currency || 'EUR'
   brandForm.priceRange = shopData.value?.price_range || ''
   brandForm.targetAge = shopData.value?.target_age_range || shopData.value?.target_age || ''
 }
