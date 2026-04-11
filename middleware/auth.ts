@@ -29,9 +29,25 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     // Si la session est expirée ou invalide, tenter un refresh avant d'abandonner
     if (sessionError || !session?.user) {
       console.log('[AUTH] Session invalide/expirée, tentative de refresh...')
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
 
-      if (refreshError || !refreshData.session?.user) {
+      // ✅ Timeout 8s sur le refresh pour éviter un blocage prolongé
+      let refreshData: any = null
+      let refreshError: any = null
+      try {
+        const refreshResult = await Promise.race([
+          supabase.auth.refreshSession(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('refresh_timeout')), 8000)
+          )
+        ]) as any
+        refreshData = refreshResult.data
+        refreshError = refreshResult.error
+      } catch (e: any) {
+        refreshError = e
+        console.warn('[AUTH] refreshSession timeout ou erreur:', e?.message)
+      }
+
+      if (refreshError || !refreshData?.session?.user) {
         authStore.clearAuth()
         return navigateTo('/login')
       }
@@ -75,12 +91,23 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       const config = useRuntimeConfig()
       const apiUrl = config.public.apiBaseUrl || 'https://chatseller-api-production.up.railway.app'
 
-      const response = await fetch(`${apiUrl}/api/v1/shops/${user.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      // ✅ AbortController avec timeout 5s : évite que le fetch bloque la navigation indéfiniment
+      // (ex: Railway cold start, réseau lent après inactivité)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+      let response: Response
+      try {
+        response = await fetch(`${apiUrl}/api/v1/shops/${user.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        })
+      } finally {
+        clearTimeout(timeoutId)
+      }
 
       if (!response.ok) {
         return navigateTo('/onboarding')
@@ -95,8 +122,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
       // Cache le résultat pour le reste de la session
       sessionStorage.setItem(ONBOARDING_CACHE_KEY, user.id)
-    } catch (error) {
-      console.warn('⚠️ [AUTH] Erreur vérification onboarding, passage autorisé')
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        console.warn('⚠️ [AUTH] Vérification onboarding timeout (>5s), passage autorisé')
+      } else {
+        console.warn('⚠️ [AUTH] Erreur vérification onboarding, passage autorisé')
+      }
     }
 
   } catch (error) {

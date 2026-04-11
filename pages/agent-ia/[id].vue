@@ -868,43 +868,160 @@
             </div>
 
             <!-- Instructions Shopify -->
-            <ol v-if="activePlatform === 'shopify'" class="space-y-4">
-              <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
-                <div>
-                  <p class="font-medium text-gray-900">Copiez le code d'intégration</p>
-                  <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier" dans le bloc ci-dessus</p>
+            <div v-if="activePlatform === 'shopify'" class="space-y-6">
+
+              <!-- Option 1 : Installation automatique (recommandée) -->
+              <div class="rounded-xl border-2 border-green-200 bg-green-50 p-4">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <p class="font-semibold text-green-800 flex items-center gap-2">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                      Installation automatique
+                      <span class="text-xs font-normal bg-green-200 text-green-800 px-2 py-0.5 rounded-full">Recommandé</span>
+                    </p>
+                    <p class="text-sm text-green-700 mt-1">Un clic suffit. Aucune modification de code nécessaire.</p>
+                  </div>
+                  <button
+                    @click="openShopifyInstallModal"
+                    class="flex items-center gap-2 px-4 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition-colors whitespace-nowrap"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Installer sur Shopify
+                  </button>
                 </div>
-              </li>
-              <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
-                <div>
-                  <p class="font-medium text-gray-900">Accédez à l'éditeur de thème Shopify</p>
-                  <p class="text-sm text-gray-500">Dans votre admin Shopify : <strong>Boutique en ligne → Thèmes → Actions → Modifier le code</strong></p>
+              </div>
+
+              <!-- Séparateur -->
+              <div class="flex items-center gap-3">
+                <div class="flex-1 h-px bg-gray-200"></div>
+                <span class="text-xs text-gray-400 font-medium">ou manuellement</span>
+                <div class="flex-1 h-px bg-gray-200"></div>
+              </div>
+
+              <!-- Option 2 : Installation manuelle (fallback) -->
+              <ol class="space-y-4">
+                <li class="flex items-start">
+                  <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+                  <div>
+                    <p class="font-medium text-gray-900">Copiez le code d'intégration</p>
+                    <p class="text-sm text-gray-500">Cliquez sur le bouton "Copier" dans le bloc ci-dessus</p>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+                  <div>
+                    <p class="font-medium text-gray-900">Accédez à l'éditeur de thème Shopify</p>
+                    <p class="text-sm text-gray-500">Dans votre admin Shopify : <strong>Boutique en ligne → Thèmes → Actions → Modifier le code</strong></p>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
+                  <div>
+                    <p class="font-medium text-gray-900">Ouvrez le fichier <code class="bg-gray-100 px-1 rounded text-xs">theme.liquid</code></p>
+                    <p class="text-sm text-gray-500">Dans la colonne de gauche, sous "Layout", cliquez sur <strong>theme.liquid</strong></p>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">4</span>
+                  <div>
+                    <p class="font-medium text-gray-900">Collez le code avant <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code></p>
+                    <p class="text-sm text-gray-500">Trouvez la balise <strong>&lt;/body&gt;</strong> en bas du fichier et collez le code juste avant</p>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">✓</span>
+                  <div>
+                    <p class="font-medium text-gray-900">Sauvegardez et testez !</p>
+                    <p class="text-sm text-gray-500">Cliquez sur <strong>Sauvegarder</strong> en haut à droite. {{ localConfig.agent.name || 'Mia' }} apparaîtra sur votre boutique.</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <!-- Modal : Installation automatique Shopify -->
+            <Teleport to="body">
+              <Transition name="modal-fade">
+                <div v-if="showShopifyInstallModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeShopifyInstallModal"></div>
+                  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                    <!-- Header modal -->
+                    <div class="flex items-center justify-between mb-5">
+                      <div>
+                        <h3 class="text-lg font-bold text-gray-900">Installer sur Shopify</h3>
+                        <p class="text-sm text-gray-500 mt-0.5">{{ localConfig.agent.name || 'Votre vendeuse IA' }} sera active sur toutes vos pages</p>
+                      </div>
+                      <button @click="closeShopifyInstallModal" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                      </button>
+                    </div>
+
+                    <!-- Succès -->
+                    <div v-if="shopifyInstallSuccess" class="text-center py-4">
+                      <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                      </div>
+                      <p class="font-semibold text-gray-900 mb-1">{{ shopifyInstallMessage }}</p>
+                      <p class="text-sm text-gray-500 mb-4">Visitez votre boutique pour voir {{ localConfig.agent.name || 'Mia' }} en action.</p>
+                      <button @click="closeShopifyInstallModal" class="px-5 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+                        Fermer
+                      </button>
+                    </div>
+
+                    <!-- Formulaire -->
+                    <div v-else class="space-y-4">
+                      <!-- URL boutique -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">URL de votre boutique Shopify</label>
+                        <input
+                          v-model="shopifyInstallForm.shopUrl"
+                          type="text"
+                          placeholder="monshop.myshopify.com"
+                          class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          :disabled="shopifyInstalling"
+                        />
+                        <p class="text-xs text-gray-400 mt-1">Format : monshop.myshopify.com (sans https://)</p>
+                      </div>
+
+                      <!-- Token admin -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                          Access Token Admin Shopify
+                          <a href="https://help.shopify.com/fr/manual/apps/app-types/custom-apps" target="_blank" class="text-rose-500 hover:underline ml-1 font-normal">Comment l'obtenir ?</a>
+                        </label>
+                        <input
+                          v-model="shopifyInstallForm.accessToken"
+                          type="password"
+                          placeholder="shpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                          class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent font-mono"
+                          :disabled="shopifyInstalling"
+                        />
+                        <p class="text-xs text-gray-400 mt-1">Le token doit avoir la permission <strong>write_script_tags</strong></p>
+                      </div>
+
+                      <!-- Erreur -->
+                      <div v-if="shopifyInstallError" class="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <svg class="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-sm text-red-700">{{ shopifyInstallError }}</p>
+                      </div>
+
+                      <!-- Bouton installer -->
+                      <button
+                        @click="installShopifyWidget"
+                        :disabled="shopifyInstalling || !shopifyInstallForm.shopUrl || !shopifyInstallForm.accessToken"
+                        class="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg v-if="shopifyInstalling" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        {{ shopifyInstalling ? 'Installation en cours...' : 'Installer le widget' }}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </li>
-              <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
-                <div>
-                  <p class="font-medium text-gray-900">Ouvrez le fichier <code class="bg-gray-100 px-1 rounded text-xs">theme.liquid</code></p>
-                  <p class="text-sm text-gray-500">Dans la colonne de gauche, sous "Layout", cliquez sur <strong>theme.liquid</strong></p>
-                </div>
-              </li>
-              <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">4</span>
-                <div>
-                  <p class="font-medium text-gray-900">Collez le code avant <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code></p>
-                  <p class="text-sm text-gray-500">Trouvez la balise <strong>&lt;/body&gt;</strong> en bas du fichier et collez le code juste avant</p>
-                </div>
-              </li>
-              <li class="flex items-start">
-                <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">✓</span>
-                <div>
-                  <p class="font-medium text-gray-900">Sauvegardez et testez !</p>
-                  <p class="text-sm text-gray-500">Cliquez sur <strong>Sauvegarder</strong> en haut à droite. {{ localConfig.agent.name || 'Mia' }} apparaîtra sur votre boutique.</p>
-                </div>
-              </li>
-            </ol>
+              </Transition>
+            </Teleport>
 
             <!-- Instructions WordPress -->
             <ol v-else-if="activePlatform === 'wordpress'" class="space-y-4">
@@ -1277,6 +1394,67 @@ const savingKnowledge = ref(false)
 const showSendDevModal = ref(false)
 const devEmail = ref('')
 const activePlatform = ref('shopify')
+
+// ─── Shopify Auto-Install ───────────────────────────────────────
+const showShopifyInstallModal = ref(false)
+const shopifyInstalling = ref(false)
+const shopifyInstallSuccess = ref(false)
+const shopifyInstallMessage = ref('')
+const shopifyInstallError = ref('')
+const shopifyInstallForm = ref({ shopUrl: '', accessToken: '' })
+
+function openShopifyInstallModal() {
+  showShopifyInstallModal.value = true
+  shopifyInstallSuccess.value = false
+  shopifyInstallError.value = ''
+  // Pré-remplir avec l'URL du shop si disponible
+  if (!shopifyInstallForm.value.shopUrl && authStore.user?.shop?.domain) {
+    shopifyInstallForm.value.shopUrl = authStore.user.shop.domain
+  }
+}
+
+function closeShopifyInstallModal() {
+  showShopifyInstallModal.value = false
+  shopifyInstallError.value = ''
+}
+
+async function installShopifyWidget() {
+  if (!shopifyInstallForm.value.shopUrl || !shopifyInstallForm.value.accessToken) return
+
+  shopifyInstalling.value = true
+  shopifyInstallError.value = ''
+
+  try {
+    const config = useRuntimeConfig()
+    const apiUrl = config.public.apiBaseUrl
+    const token = authStore.token
+
+    const response = await $fetch<{ success: boolean; message?: string; alreadyInstalled?: boolean; error?: string }>(
+      `${apiUrl}/api/v1/shopify/install-widget`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: {
+          shopifyAdminUrl: shopifyInstallForm.value.shopUrl,
+          accessToken: shopifyInstallForm.value.accessToken,
+          shopId: authStore.userShopId
+        }
+      }
+    )
+
+    if (response.success) {
+      shopifyInstallSuccess.value = true
+      shopifyInstallMessage.value = response.message || 'Widget installé avec succès !'
+    } else {
+      shopifyInstallError.value = response.error || 'Une erreur est survenue.'
+    }
+  } catch (error: any) {
+    shopifyInstallError.value = error?.data?.error || error?.message || 'Une erreur est survenue. Vérifiez l\'URL et le token.'
+  } finally {
+    shopifyInstalling.value = false
+  }
+}
+// ───────────────────────────────────────────────────────────────
 
 /// URL du tutoriel vidéo Vimeo
 const installVideoUrl = 'https://player.vimeo.com/video/1168462401?badge=0&autopause=0&player_id=0&app_id=58479'
