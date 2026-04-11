@@ -407,15 +407,51 @@
 
               <!-- CAS SHOPIFY -->
               <div v-if="form.platform === 'shopify'" class="space-y-5">
-                <div class="border border-gray-200 rounded-2xl p-6 space-y-4">
-                  <div class="flex items-center space-x-3">
-                    <img :src="shopifyLogo" alt="Shopify" class="h-7 w-auto" />
-                    <span class="font-semibold text-gray-900">Installation Shopify</span>
+
+                <!-- Statut : déjà connecté via OAuth (retour callback) -->
+                <div v-if="shopifyConnected" class="rounded-xl border-2 border-green-200 bg-green-50 p-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-green-800">Boutique connectée !</p>
+                      <p class="text-sm text-green-700">{{ shopifyConnectedHost || form.website }} · Widget actif sur toutes vos pages</p>
+                    </div>
                   </div>
+                </div>
+
+                <!-- Bouton OAuth principal (si pas encore connecté) -->
+                <div v-else class="rounded-xl border-2 border-gray-900 bg-gray-900 p-5">
+                  <div class="flex items-center space-x-3 mb-3">
+                    <img :src="shopifyLogo" alt="Shopify" class="h-6 w-auto brightness-200 saturate-0" />
+                    <div>
+                      <p class="font-semibold text-white flex items-center gap-2">
+                        Installer en 1 clic
+                        <span class="text-xs font-normal bg-white/20 text-white px-2 py-0.5 rounded-full">Recommandé</span>
+                      </p>
+                      <p class="text-sm text-gray-300">Aucun code à copier. Vous serez redirigé(e) vers Shopify.</p>
+                    </div>
+                  </div>
+                  <button
+                    @click="startShopifyOAuth"
+                    class="w-full flex items-center justify-center gap-2 py-2.5 bg-white text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Installer {{ form.agentName || 'le widget' }} sur Shopify
+                  </button>
+                </div>
+
+                <!-- Séparateur + fallback copier-coller -->
+                <div class="flex items-center gap-3">
+                  <div class="flex-1 h-px bg-gray-200"></div>
+                  <span class="text-xs text-gray-400 font-medium">ou manuellement</span>
+                  <div class="flex-1 h-px bg-gray-200"></div>
+                </div>
+                <div class="border border-gray-200 rounded-2xl p-4 space-y-3">
                   <p class="text-sm text-gray-500">
-                    Copiez ce code et collez-le dans votre thème Shopify
-                    (<strong>Online Store → Themes → Edit code → theme.liquid</strong>)
-                    juste avant la balise <code class="bg-gray-100 px-1 rounded">&lt;/body&gt;</code>.
+                    Collez ce code dans <strong>Online Store → Themes → Edit code → theme.liquid</strong>
+                    juste avant <code class="bg-gray-100 px-1 rounded">&lt;/body&gt;</code>.
                   </p>
                   <div class="relative">
                     <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto">
@@ -1027,6 +1063,24 @@ const sendTestMessage = async (message?: string) => {
 
 // ========== STEP 7: ACTIVATION GUIDÉE ==========
 
+// ─── Shopify OAuth ───────────────────────────────────────────────
+const shopifyConnected = ref(false)
+const shopifyConnectedHost = ref('')
+
+function startShopifyOAuth() {
+  const raw = (form.website || '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/$/, '')
+
+  const apiUrl = runtimeConfig.public.apiBaseUrl
+  const shopId = authStore.userShopId
+
+  const oauthUrl = `${apiUrl}/api/v1/shopify/oauth/start?shop=${encodeURIComponent(raw)}&shopId=${encodeURIComponent(shopId)}`
+  window.location.href = oauthUrl
+}
+// ────────────────────────────────────────────────────────────────
+
 // Snippet d'intégration du widget
 const getWidgetSnippet = (): string => {
   const shopId = authStore.user?.id || 'YOUR_SHOP_ID'
@@ -1091,6 +1145,16 @@ onMounted(async () => {
 
     if (user.user_metadata?.company) {
       form.company = user.user_metadata.company
+    }
+
+    // Détection retour OAuth Shopify
+    const route = useRoute()
+    if (route.query.shopify === 'connected') {
+      shopifyConnected.value = true
+      const shopParam = route.query.shop as string
+      shopifyConnectedHost.value = shopParam ? shopParam.replace(/^https?:\/\//i, '') : ''
+      subStep.value = 7 // S'assurer qu'on est sur l'étape d'installation
+      useRouter().replace({ query: { ...route.query, shopify: undefined, shop: undefined } })
     }
 
     console.log('✅ [Onboarding] Init for:', user.email)
