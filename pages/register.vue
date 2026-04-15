@@ -12,97 +12,91 @@
       </p>
     </div>
 
-    <!-- Message de succès après inscription -->
-    <div v-if="registrationSuccess" class="bg-white py-6 px-5 shadow-2xl rounded-2xl border border-rose-100 backdrop-blur-sm">
+    <!-- Écran OTP (après inscription réussie) -->
+    <div v-if="registrationSuccess" class="bg-white py-8 px-6 shadow-2xl rounded-2xl border border-rose-100 backdrop-blur-sm">
       <div class="text-center">
-        <div class="flex justify-center mb-4">
-          <div class="w-14 h-14 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
-            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Icône -->
+        <div class="flex justify-center mb-5">
+          <div class="w-16 h-16 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 3.26a2 2 0 001.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
           </div>
         </div>
 
-        <h3 class="text-lg font-bold text-gray-900 mb-3">
-          Confirmez votre email pour démarrer
+        <h3 class="text-xl font-bold text-gray-900 mb-2">
+          Code envoyé !
         </h3>
-        <p class="text-gray-600 mb-4 text-sm">
-          Un email de confirmation a été envoyé à<br>
+        <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+          Entrez le code à 6 chiffres envoyé à<br>
           <strong class="text-rose-600">{{ form.email }}</strong>
         </p>
 
-        <!-- Étapes visuelles compactes -->
-        <div class="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-3 mb-4">
-          <h4 class="font-semibold text-rose-800 mb-2 text-xs">
-            Prochaines étapes (3 minutes) :
-          </h4>
-          <div class="space-y-2 text-xs">
-            <div class="flex items-center text-rose-700">
-              <div class="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center mr-2 text-xs font-bold">1</div>
-              <div class="text-left">
-                <div class="font-semibold">Confirmation de votre e-mail</div>
-              </div>
-            </div>
-            <div class="flex items-center text-rose-700">
-              <div class="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center mr-2 text-xs font-bold">2</div>
-              <div class="text-left">
-                <div class="font-semibold">Configuration de votre compte</div>
-              </div>
-            </div>
-            <div class="flex items-center text-rose-700">
-              <div class="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center mr-2 text-xs font-bold">3</div>
-              <div class="text-left">
-                <div class="font-semibold">Création de votre Vendeuse IA</div>
-              </div>
-            </div>
-          </div>
+        <!-- 6 cases OTP -->
+        <div class="flex justify-center gap-2 mb-6" @paste.prevent="handleOtpPaste">
+          <input
+            v-for="(_, idx) in 6"
+            :key="idx"
+            :ref="(el) => { if (el) otpRefs[idx] = el as HTMLInputElement }"
+            v-model="otpDigits[idx]"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            autocomplete="one-time-code"
+            class="otp-box"
+            :class="{
+              'border-rose-500 ring-2 ring-rose-200': otpDigits[idx],
+              'border-red-400 ring-2 ring-red-200': otpError && !otpLoading
+            }"
+            @input="handleOtpInput(idx)"
+            @keydown="handleOtpKeydown(idx, $event)"
+            @focus="($event.target as HTMLInputElement).select()"
+          />
         </div>
 
-        <!-- Boutons email compacts -->
-        <div class="flex gap-2 mb-4">
-          <a
-            :href="getGmailUrl(form.email)"
-            target="_blank"
-            class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 text-xs"
-          >
-            <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
-            </svg>
-            Gmail
-          </a>
-
-          <a
-            :href="getOutlookUrl(form.email)"
-            target="_blank"
-            class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 text-xs"
-          >
-            <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7.88 12.04q0 .45-.11.87-.1.41-.33.74-.22.33-.58.52-.37.2-.87.2t-.85-.2q-.35-.21-.57-.55-.22-.33-.33-.75-.1-.42-.1-.83 0-.46.1-.87.1-.41.33-.74.22-.33.57-.52.36-.19.85-.19t.87.19q.36.19.58.52.22.33.33.74.11.41.11.87zM21.5 12v.13q0 2.06-1.32 3.54-1.32 1.48-3.5 1.48-2.04 0-3.44-1.48Q12 14.19 12 12.13v-.26q0-2.06 1.24-3.54 1.24-1.48 3.44-1.48 2.18 0 3.5 1.48Q21.5 9.81 21.5 12z"/>
-            </svg>
-            Outlook
-          </a>
+        <!-- Erreur OTP -->
+        <div v-if="otpError" class="mb-4 p-3 rounded-xl bg-red-50 border border-red-200">
+          <p class="text-xs text-red-800 font-medium">{{ otpError }}</p>
         </div>
 
-        <!-- Troubleshooting compact -->
-        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 mb-4">
-          <div class="text-xs text-amber-800">
-            <p class="font-semibold mb-1">Pas d'email ?</p>
-            <div class="text-left space-y-1">
-              <div>• Vérifiez vos spams</div>
-              <div>• Patientez 2-3 minutes</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bouton renvoyer -->
+        <!-- Bouton vérifier (visible uniquement si auto-submit ne s'est pas déclenché) -->
         <button
-          @click="resendEmail"
+          v-if="otpDigits.join('').length === 6 && !otpLoading"
+          @click="handleOtpVerify"
+          class="w-full flex justify-center items-center py-3 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-rose-600 via-pink-600 to-purple-600 hover:from-rose-700 hover:via-pink-700 hover:to-purple-700 transition-all duration-300 shadow-xl mb-4"
+        >
+          Confirmer mon inscription
+        </button>
+
+        <!-- Loading -->
+        <div v-if="otpLoading" class="flex justify-center items-center gap-2 py-3 mb-4 text-rose-600">
+          <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm font-medium">Vérification en cours...</span>
+        </div>
+
+        <!-- Renvoyer le code -->
+        <button
+          @click="resendOtp"
           :disabled="resendLoading || resendCooldown > 0"
           class="text-xs font-semibold transition-all duration-300 px-3 py-2 rounded-lg"
-          :class="resendCooldown > 0 ? 'text-gray-400 cursor-not-allowed bg-gray-100' : 'text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-rose-200'"
+          :class="resendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-rose-600 hover:text-rose-800 hover:bg-rose-50'"
         >
-          {{ resendCooldown > 0 ? `Renvoyer dans ${resendCooldown}s` : (resendLoading ? 'Renvoi en cours...' : 'Renvoyer l\'email') }}
+          {{ resendCooldown > 0 ? `Renvoyer dans ${resendCooldown}s` : (resendLoading ? 'Renvoi...' : 'Renvoyer le code') }}
         </button>
+
+        <!-- Changer d'email -->
+        <div class="mt-4 pt-4 border-t border-gray-100">
+          <button
+            @click="registrationSuccess = false; otpDigits = Array(6).fill(''); otpError = ''"
+            class="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            ← Modifier mon adresse email
+          </button>
+        </div>
       </div>
     </div>
 
@@ -186,9 +180,7 @@
               </svg>
             </button>
           </div>
-          <p class="mt-1 text-xs text-gray-500">
-            Minimum 8 caractères
-          </p>
+          <p class="mt-1 text-xs text-gray-500">Minimum 8 caractères</p>
         </div>
 
         <!-- Conditions -->
@@ -205,13 +197,9 @@
           <div class="ml-2 text-xs leading-relaxed">
             <label for="terms" class="text-gray-700">
               J'accepte les
-              <a href="https://chatseller.app/terms" class="font-semibold text-rose-600 hover:text-rose-800 transition-colors underline" target="_blank">
-                conditions
-              </a>
+              <a href="https://chatseller.app/terms" class="font-semibold text-rose-600 hover:text-rose-800 transition-colors underline" target="_blank">conditions</a>
               et la
-              <a href="https://chatseller.app/privacy" class="font-semibold text-rose-600 hover:text-rose-800 transition-colors underline" target="_blank">
-                confidentialité
-              </a>
+              <a href="https://chatseller.app/privacy" class="font-semibold text-rose-600 hover:text-rose-800 transition-colors underline" target="_blank">confidentialité</a>
             </label>
           </div>
         </div>
@@ -222,11 +210,7 @@
             <svg class="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
-            <div class="ml-2">
-              <p class="text-xs text-red-800 font-medium">
-                {{ registerError }}
-              </p>
-            </div>
+            <p class="ml-2 text-xs text-red-800 font-medium">{{ registerError }}</p>
           </div>
         </div>
 
@@ -243,10 +227,7 @@
           {{ loading ? 'Recrutement en cours...' : 'Essayer Mia pendant 14 jours' }}
         </button>
 
-        <!-- Réassurance -->
-        <p class="text-center text-xs text-gray-500">
-          14 jours d'essai, sans engagement
-        </p>
+        <p class="text-center text-xs text-gray-500">14 jours d'essai, sans engagement</p>
       </form>
 
       <!-- Lien connexion -->
@@ -259,7 +240,6 @@
             <span class="px-3 bg-white rounded-xl text-rose-500 font-semibold">Mia vous attend déjà ?</span>
           </div>
         </div>
-
         <div class="mt-4 text-center">
           <NuxtLink
             to="/login"
@@ -281,50 +261,47 @@
 import { useSupabase } from '~~/composables/useSupabase'
 
 const auth = useAuth()
+const config = useRuntimeConfig()
 
 definePageMeta({
   layout: 'auth'
 })
 
-// État du composant
+// ── État formulaire ────────────────────────────────────────────────────────────
 const loading = ref(false)
 const googleLoading = ref(false)
 const showPassword = ref(false)
 const registerError = ref('')
 const registrationSuccess = ref(false)
-const resendLoading = ref(false)
-const resendCooldown = ref(0)
 
-// Formulaire simplifié (sans prénom/nom)
 const form = reactive({
   email: '',
   password: '',
   acceptTerms: false
 })
 
-// INSCRIPTION VIA GOOGLE OAUTH
+// ── État OTP ───────────────────────────────────────────────────────────────────
+const otpDigits = ref(Array(6).fill('') as string[])
+const otpRefs = ref([] as HTMLInputElement[])
+const otpLoading = ref(false)
+const otpError = ref('')
+const resendLoading = ref(false)
+const resendCooldown = ref(0)
+
+// ── INSCRIPTION VIA GOOGLE OAUTH ───────────────────────────────────────────────
 const handleGoogleSignIn = async () => {
   googleLoading.value = true
   registerError.value = ''
-
   try {
-    console.log('🔐 [Register] Connexion via Google...')
     const result = await auth.signInWithGoogle()
-
-    if (!result.success) {
-      throw new Error(result.error || 'Erreur de connexion Google')
-    }
-
-    // La redirection est gérée par Supabase
-    console.log('✅ [Register] Redirection Google OAuth en cours...')
+    if (!result.success) throw new Error(result.error || 'Erreur de connexion Google')
   } catch (error: any) {
-    console.error('❌ [Register] Erreur Google OAuth:', error)
-    registerError.value = error.message || 'Erreur de connexion avec Google. Veuillez réessayer.'
+    registerError.value = error.message || 'Erreur de connexion avec Google.'
     googleLoading.value = false
   }
 }
 
-// INSCRIPTION VIA EMAIL/PASSWORD
+// ── INSCRIPTION VIA EMAIL/PASSWORD ─────────────────────────────────────────────
 const handleRegister = async () => {
   if (!validateForm()) return
 
@@ -332,8 +309,6 @@ const handleRegister = async () => {
   registerError.value = ''
 
   try {
-    console.log('📝 [Register] Inscription via email...')
-
     const result = await auth.register({
       email: form.email.trim().toLowerCase(),
       password: form.password,
@@ -344,164 +319,282 @@ const handleRegister = async () => {
       newsletter: true
     })
 
-    if (!result.success) {
-      throw new Error(result.error || 'Erreur de création de compte')
-    }
+    if (!result.success) throw new Error(result.error || 'Erreur de création de compte')
 
-    console.log('✅ [Register] Inscription réussie')
+    // Afficher l'écran OTP et focus la première case
     registrationSuccess.value = true
     startResendCooldown()
+    await nextTick()
+    otpRefs.value[0]?.focus()
 
   } catch (error: any) {
-    console.error('❌ [Register] Erreur inscription:', error)
     registerError.value = getErrorMessage(error)
   } finally {
     loading.value = false
   }
 }
 
-// MESSAGES D'ERREUR PERSONNALISÉS
-const getErrorMessage = (error: any): string => {
-  const message = error.message || error
+// ── OTP : SAISIE ───────────────────────────────────────────────────────────────
+const handleOtpInput = async (idx: number) => {
+  const val = otpDigits.value[idx]
 
-  if (message.includes('User already registered') || message.includes('already registered')) {
-    return 'Cette adresse email est déjà utilisée. Essayez de vous connecter.'
+  // Garder uniquement le dernier chiffre tapé (au cas où maxlength ne suffit pas)
+  if (val && val.length > 1) {
+    otpDigits.value[idx] = val.slice(-1)
   }
 
-  if (message.includes('email')) {
-    return 'Problème avec l\'adresse email fournie'
+  // Autoriser uniquement les chiffres
+  if (val && !/^\d$/.test(otpDigits.value[idx])) {
+    otpDigits.value[idx] = ''
+    return
   }
 
-  if (message.includes('password')) {
-    return 'Le mot de passe ne respecte pas les critères (minimum 8 caractères)'
+  otpError.value = ''
+
+  // Avancer automatiquement au champ suivant
+  if (otpDigits.value[idx] && idx < 5) {
+    await nextTick()
+    otpRefs.value[idx + 1]?.focus()
   }
 
-  if (message.includes('rate limit')) {
-    return 'Trop de tentatives. Veuillez patienter quelques minutes.'
+  // Auto-submit quand les 6 cases sont remplies
+  if (otpDigits.value.join('').length === 6) {
+    await nextTick()
+    handleOtpVerify()
   }
-
-  return message || 'Une erreur s\'est produite lors de la création de votre compte'
 }
 
-// VALIDATION
-const validateForm = () => {
-  registerError.value = ''
-
-  if (!form.email.trim() || !form.password || !form.acceptTerms) {
-    registerError.value = 'Veuillez remplir tous les champs et accepter les conditions'
-    return false
+const handleOtpKeydown = (idx: number, event: KeyboardEvent) => {
+  if (event.key === 'Backspace') {
+    if (otpDigits.value[idx]) {
+      otpDigits.value[idx] = ''
+    } else if (idx > 0) {
+      otpDigits.value[idx - 1] = ''
+      otpRefs.value[idx - 1]?.focus()
+    }
+  } else if (event.key === 'ArrowLeft' && idx > 0) {
+    otpRefs.value[idx - 1]?.focus()
+  } else if (event.key === 'ArrowRight' && idx < 5) {
+    otpRefs.value[idx + 1]?.focus()
   }
-
-  if (form.password.length < 8) {
-    registerError.value = 'Le mot de passe doit contenir au moins 8 caractères'
-    return false
-  }
-
-  if (!form.email.includes('@') || !form.email.includes('.')) {
-    registerError.value = 'Veuillez saisir une adresse email valide'
-    return false
-  }
-
-  return true
 }
 
-// RENVOYER EMAIL
-const resendEmail = async () => {
-  if (resendCooldown.value > 0) return
+// Coller 6 chiffres depuis le presse-papier (ex: code copié depuis l'email)
+const handleOtpPaste = async (event: ClipboardEvent) => {
+  const pasted = event.clipboardData?.getData('text')?.replace(/\D/g, '').slice(0, 6)
+  if (!pasted) return
 
-  resendLoading.value = true
+  for (let i = 0; i < 6; i++) {
+    otpDigits.value[i] = pasted[i] || ''
+  }
+
+  await nextTick()
+  const lastFilled = Math.min(pasted.length - 1, 5)
+  otpRefs.value[lastFilled]?.focus()
+
+  if (pasted.length === 6) {
+    handleOtpVerify()
+  }
+}
+
+// ── OTP : VÉRIFICATION ─────────────────────────────────────────────────────────
+const handleOtpVerify = async () => {
+  const otp = otpDigits.value.join('')
+  if (otp.length !== 6 || otpLoading.value) return
+
+  otpLoading.value = true
+  otpError.value = ''
 
   try {
     const supabase = useSupabase()
 
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: form.email.trim().toLowerCase(),
+      token: otp,
+      type: 'signup'
+    })
+
+    if (error) throw error
+
+    // Session disponible → créer le shop puis rediriger
+    if (data.session && data.user) {
+      await createShop(data.user.id, data.session.access_token)
+    }
+
+    // Full reload pour que le Supabase singleton relise la session depuis localStorage
+    window.location.href = '/onboarding'
+
+  } catch (error: any) {
+    console.error('❌ [OTP] Erreur vérification:', error)
+    otpError.value = getOtpErrorMessage(error)
+    otpLoading.value = false
+    // Vider les cases et refocus la première
+    otpDigits.value = Array(6).fill('')
+    await nextTick()
+    otpRefs.value[0]?.focus()
+  }
+}
+
+// ── CRÉATION DU SHOP APRÈS VÉRIFICATION ──────────────────────────────────────
+const createShop = async (userId: string, accessToken: string) => {
+  try {
+    const baseURL = config.public.apiBaseUrl
+    await $fetch('/api/v1/shops', {
+      method: 'POST',
+      baseURL,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: {
+        id: userId,
+        name: 'Ma Boutique',
+        email: form.email.trim().toLowerCase(),
+        subscription_plan: 'starter',
+        is_active: true,
+        widget_config: {
+          theme: 'beauty_modern',
+          primaryColor: '#E91E63',
+          position: 'above-cta',
+          buttonText: 'Parler à votre vendeuse beauté',
+          language: 'fr'
+        },
+        agent_config: {
+          name: 'Mia',
+          title: 'Vendeuse IA',
+          type: 'beauty_expert',
+          avatar: `https://ui-avatars.com/api/?name=Mia&background=E91E63&color=fff`,
+          welcomeMessage: 'Bonjour ! Je suis Mia, votre experte beauté. Comment puis-je vous aider ?',
+          fallbackMessage: 'Je transmets votre question à notre équipe beauté.',
+          collectBeautyProfile: true,
+          upsellEnabled: true
+        }
+      }
+    })
+    console.log('✅ [Register] Shop créé après vérification OTP')
+  } catch (err) {
+    // Non bloquant — le shop peut être créé lors du premier chargement du dashboard
+    console.warn('⚠️ [Register] Création shop échouée (sera re-tentée):', err)
+  }
+}
+
+// ── RENVOYER LE CODE ──────────────────────────────────────────────────────────
+const resendOtp = async () => {
+  if (resendCooldown.value > 0 || resendLoading.value) return
+
+  resendLoading.value = true
+  otpError.value = ''
+
+  try {
+    const supabase = useSupabase()
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: form.email.trim().toLowerCase()
     })
+    if (error) throw error
 
-    if (error) {
-      throw new Error(error.message)
-    }
-
+    otpDigits.value = Array(6).fill('')
+    await nextTick()
+    otpRefs.value[0]?.focus()
     startResendCooldown()
 
   } catch (error: any) {
-    console.error('❌ [Register] Erreur renvoi email:', error)
-    registerError.value = `Erreur lors du renvoi: ${error.message}`
+    otpError.value = `Erreur lors du renvoi : ${error.message}`
   } finally {
     resendLoading.value = false
   }
 }
 
-// COOLDOWN
+// ── COOLDOWN ───────────────────────────────────────────────────────────────────
 const startResendCooldown = () => {
   resendCooldown.value = 60
   const timer = setInterval(() => {
     resendCooldown.value--
-    if (resendCooldown.value <= 0) {
-      clearInterval(timer)
-    }
+    if (resendCooldown.value <= 0) clearInterval(timer)
   }, 1000)
 }
 
-// Générer URL Gmail
-const getGmailUrl = (email: string) => {
-  const domain = email.split('@')[1]
-  if (domain === 'gmail.com') {
-    return 'https://mail.google.com/mail/u/0/#inbox'
-  }
-  return 'https://mail.google.com/'
+// ── MESSAGES D'ERREUR ──────────────────────────────────────────────────────────
+const getErrorMessage = (error: any): string => {
+  const msg = error.message || error
+  if (msg.includes('User already registered') || msg.includes('already registered'))
+    return 'Cette adresse email est déjà utilisée. Essayez de vous connecter.'
+  if (msg.includes('email')) return "Problème avec l'adresse email fournie"
+  if (msg.includes('password')) return 'Le mot de passe doit contenir au moins 8 caractères'
+  if (msg.includes('rate limit')) return 'Trop de tentatives. Veuillez patienter quelques minutes.'
+  return msg || "Une erreur s'est produite lors de la création de votre compte"
 }
 
-// Générer URL Outlook
-const getOutlookUrl = (email: string) => {
-  const domain = email.split('@')[1]
-  if (['outlook.com', 'hotmail.com', 'live.com'].includes(domain)) {
-    return 'https://outlook.live.com/mail/0/inbox'
-  }
-  return 'https://outlook.office.com/mail/'
+const getOtpErrorMessage = (error: any): string => {
+  const msg = error.message || ''
+  if (msg.includes('expired') || msg.includes('expiré')) return 'Ce code a expiré. Cliquez sur "Renvoyer le code".'
+  if (msg.includes('invalid') || msg.includes('Token')) return 'Code incorrect. Vérifiez et réessayez.'
+  if (msg.includes('rate')) return 'Trop de tentatives. Patientez quelques minutes.'
+  return 'Code incorrect. Vérifiez votre email et réessayez.'
 }
 
-// REDIRECTION SI DÉJÀ CONNECTÉ
+// ── VALIDATION ─────────────────────────────────────────────────────────────────
+const validateForm = () => {
+  registerError.value = ''
+  if (!form.email.trim() || !form.password || !form.acceptTerms) {
+    registerError.value = 'Veuillez remplir tous les champs et accepter les conditions'
+    return false
+  }
+  if (form.password.length < 8) {
+    registerError.value = 'Le mot de passe doit contenir au moins 8 caractères'
+    return false
+  }
+  if (!form.email.includes('@') || !form.email.includes('.')) {
+    registerError.value = 'Veuillez saisir une adresse email valide'
+    return false
+  }
+  return true
+}
+
+// ── REDIRECTION SI DÉJÀ CONNECTÉ ───────────────────────────────────────────────
 onMounted(async () => {
   if (auth.isAuthenticated.value) {
     await navigateTo('/')
   }
 })
 
-// SEO
+// ── SEO ────────────────────────────────────────────────────────────────────────
 useHead({
   title: 'Créer un compte - ChatSeller',
   meta: [
-    { name: 'description', content: 'Créez votre vendeuse IA beauté en 5 minutes. +150% de conversions en moyenne. 14 jours d\'essai gratuits.' },
-    { name: 'keywords', content: 'ChatSeller, vendeuse IA, marque beauté, conversion, e-commerce beauté' }
+    { name: 'description', content: "Créez votre vendeuse IA beauté en 5 minutes. +150% de conversions en moyenne. 14 jours d'essai gratuits." }
   ]
 })
 </script>
 
 <style scoped>
-.animate-spin {
-  animation: spin 1s linear infinite;
+.otp-box {
+  width: 44px;
+  height: 54px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2937;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: #fafafa;
+  caret-color: transparent;
+}
+
+.otp-box:focus {
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15);
+  background: #fff;
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+.animate-spin { animation: spin 1s linear infinite; }
 
-.transform {
-  transition: transform 0.3s ease;
-}
-
-.hover\:scale-105:hover {
-  transform: scale(1.05);
-}
-
-.backdrop-blur-sm {
-  backdrop-filter: blur(4px);
-}
-
-.focus\:ring-rose-500:focus {
-  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.1);
-}
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+.focus\:ring-rose-500:focus { box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.1); }
 </style>
