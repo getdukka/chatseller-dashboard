@@ -416,13 +416,18 @@ const handleOtpVerify = async () => {
 
     if (error) throw error
 
-    // Session disponible → créer le shop puis rediriger
+    // Session disponible → créer le shop, charger le store, puis navigation SPA
     if (data.session && data.user) {
       await createShop(data.user.id, data.session.access_token)
+
+      // Charger le store Pinia avec la session fraîche pour éviter le flash /login
+      const { useAuthStore } = await import('~/stores/auth')
+      const authStore = useAuthStore()
+      await authStore.restoreSession()
     }
 
-    // Full reload pour que le Supabase singleton relise la session depuis localStorage
-    window.location.href = '/onboarding'
+    // Navigation SPA : pas de rechargement → pas de flash login
+    await navigateTo('/onboarding')
 
   } catch (error: any) {
     console.error('❌ [OTP] Erreur vérification:', error)
