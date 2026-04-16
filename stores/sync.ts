@@ -83,6 +83,8 @@ export const useSyncStore = defineStore('sync', {
       platform: string
       beautyCategory: string
       companyName: string
+      wooConsumerKey?: string
+      wooConsumerSecret?: string
     }) {
       const api = useApi()
       const normalizedWebsite = params.website.startsWith('http')
@@ -91,7 +93,8 @@ export const useSyncStore = defineStore('sync', {
 
       console.log('🚀 [SyncStore] Lancement sync background:', {
         website: normalizedWebsite,
-        platform: params.platform
+        platform: params.platform,
+        hasWooCredentials: !!(params.wooConsumerKey && params.wooConsumerSecret)
       })
 
       // --- KB (toujours si website fourni) ---
@@ -119,11 +122,23 @@ export const useSyncStore = defineStore('sync', {
 
       // --- Produits (seulement si plateforme supportée) ---
       if (params.platform && params.platform !== 'custom') {
+        // WooCommerce requires credentials — skip if not provided
+        if (params.platform === 'woocommerce' && (!params.wooConsumerKey || !params.wooConsumerSecret)) {
+          console.warn('⚠️ [SyncStore] WooCommerce: credentials manquants, sync produits ignoré')
+          return
+        }
+
         this.productsStatus = 'pending'
-        this._productsPromise = api.products.sync(params.platform, {
+        const syncCredentials: any = {
           shop_url: normalizedWebsite,
           auto_enrich: true
-        }).then(res => {
+        }
+        if (params.platform === 'woocommerce') {
+          syncCredentials.api_key = params.wooConsumerKey
+          syncCredentials.api_secret = params.wooConsumerSecret
+        }
+
+        this._productsPromise = api.products.sync(params.platform, syncCredentials).then(res => {
           if (res.success) {
             this.productsStatus = 'success'
             // L'API retourne { success, data: Product[], summary: {...} }

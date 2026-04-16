@@ -145,6 +145,37 @@
                 </button>
               </div>
 
+              <!-- WooCommerce credentials (shown only when WooCommerce selected) -->
+              <div v-if="form.platform === 'woocommerce'" class="mt-2 space-y-4 border border-orange-200 bg-orange-50 rounded-xl p-4">
+                <div class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <p class="text-sm text-orange-700">
+                    Pour importer vos produits WooCommerce, créez des clés API dans
+                    <strong>WooCommerce → Réglages → Avancé → API REST</strong>, avec les droits en <strong>Lecture</strong>.
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1.5">Consumer Key</label>
+                  <input
+                    v-model="form.wooConsumerKey"
+                    type="text"
+                    autocomplete="off"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-gray-900 placeholder-gray-400 text-sm transition-all"
+                    placeholder="ck_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1.5">Consumer Secret</label>
+                  <input
+                    v-model="form.wooConsumerSecret"
+                    type="password"
+                    autocomplete="off"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-gray-900 placeholder-gray-400 text-sm transition-all"
+                    placeholder="cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  />
+                </div>
+              </div>
+
               <div class="flex items-center justify-between pt-2">
                 <button @click="prevSubStep" class="px-5 py-2.5 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-all">Retour</button>
                 <button @click="nextSubStep" :disabled="!canProceed" class="px-8 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
@@ -578,6 +609,8 @@ const form = reactive({
   website: '',
   beautyCategory: '',
   platform: '',
+  wooConsumerKey: '',
+  wooConsumerSecret: '',
   communicationTone: '',
   agentName: '',
   newsletter: true,
@@ -644,7 +677,10 @@ const canProceed = computed(() => {
   switch (subStep.value) {
     case 1: return form.company.trim() !== '' && form.website.trim() !== ''
     case 2: return form.beautyCategory !== ''
-    case 3: return form.platform !== ''
+    case 3: {
+      if (form.platform !== 'woocommerce') return form.platform !== ''
+      return form.platform !== '' && form.wooConsumerKey.trim() !== '' && form.wooConsumerSecret.trim() !== ''
+    }
     case 4: return form.communicationTone !== ''
     case 5: return true // agentName est optionnel
     case 6: return true // test immédiat — non bloquant
@@ -720,7 +756,9 @@ const launchStep1Sync = async () => {
     website: form.website,
     platform: form.platform,
     beautyCategory: form.beautyCategory,
-    companyName: form.company
+    companyName: form.company,
+    wooConsumerKey: form.wooConsumerKey || undefined,
+    wooConsumerSecret: form.wooConsumerSecret || undefined
   })
 }
 
@@ -891,7 +929,9 @@ const completeOnboarding = async () => {
         website: form.website,
         platform: form.platform,
         beautyCategory: form.beautyCategory,
-        companyName: form.company
+        companyName: form.company,
+        wooConsumerKey: form.wooConsumerKey || undefined,
+        wooConsumerSecret: form.wooConsumerSecret || undefined
       })
       await syncStore.waitForCompletion(90000)
     }
