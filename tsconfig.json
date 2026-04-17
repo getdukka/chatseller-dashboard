@@ -13,25 +13,8 @@
     "isolatedModules": true,
     "preserveWatchOutput": true,
     "types": [
-      "node",
-      "@types/bcrypt",
-      "@types/jsonwebtoken",
-      "@types/uuid",
-      "@vueuse/nuxt"
-    ],
-    "paths": {
-      "~/*": ["./src/*"],
-      "@/*": ["./src/*"],
-      "~~/*": ["./*"],
-      "@@/*": ["./*"],
-      "~/components/*": ["./components/*"],
-      "~/composables/*": ["./composables/*"],
-      "~/stores/*": ["./stores/*"],
-      "~/server/*": ["./server/*"],
-      "~/types/*": ["./types/*"],
-      "~/utils/*": ["./utils/*"],
-      "~/assets/*": ["./assets/*"]
-    }
+      "node"
+    ]
   },
   "include": [
     "**/*.ts",
